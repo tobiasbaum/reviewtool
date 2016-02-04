@@ -25,6 +25,8 @@
 	<modules>
 		<module>de.setsoftware.reviewtool</module>
 		<module>de.setsoftware.reviewtool.tests</module>
+		<module>de.setsoftware.reviewtool.feature</module>
+		<module>de.setsoftware.reviewtool.updatesite</module>
 	</modules>
    <build>
         <plugins>
