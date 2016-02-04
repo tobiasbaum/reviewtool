@@ -10,5 +10,5 @@
   <groupId>de.setsoftware.reviewtool</groupId>
   <artifactId>de.setsoftware.reviewtool.updatesite</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>eclipse-update-site</packaging>
+  <packaging>eclipse-repository</packaging>
 </project>
