@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point="org.eclipse.ui.menus">
+	 <!--<menuContribution locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+	   <command commandId="de.setsoftware.reviewtool.commands.addremark"
+	   		 label="Reviewanmerkung hinzufügen" 
+	   		 style="push">
+	   		 <!- -<visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="activeMenuSelection">
+                  <iterate
+                        ifEmpty="false"
+                        operator="or">
+                     <adapt
+                           type="org.eclipse.jdt.core.ICompilationUnit">
+                     </adapt>
+                  </iterate>
+               </with>
+            </visibleWhen>- ->
+	   </command>
+	 </menuContribution>-->
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.startreview"
+	   		 label="Review beginnen ..." 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+                  <equals value="IDLE"/>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.endreview"
+	   		 label="Review beenden" 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+                  <equals value="REVIEWING"/>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.startfixing"
+	   		 label="Reviewkorrektur beginnen ..." 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+                  <equals value="IDLE"/>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.endfixing"
+	   		 label="Reviewkorrektur beenden ..." 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+                  <equals value="FIXING"/>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.addremark"
+	   		 label="Reviewanmerkung hinzufügen" 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+                  <equals value="REVIEWING"/>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.refreshmarkers"
+	   		 label="Reviewanmerkungen erneut laden" 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+               	  <or>
+                    <equals value="REVIEWING"/>
+                    <equals value="FIXING"/>
+                  </or>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+   </extension>
+   <extension point="org.eclipse.ui.commands">
+     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.AddRemarkAction"
+        id="de.setsoftware.reviewtool.commands.addremark" name="Add remark">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.StartReviewAction"
+        id="de.setsoftware.reviewtool.commands.startreview" name="Start review">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.EndReviewAction"
+        id="de.setsoftware.reviewtool.commands.endreview" name="End review">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.StartFixingAction"
+        id="de.setsoftware.reviewtool.commands.startfixing" name="Start fixing">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.EndFixingAction"
+        id="de.setsoftware.reviewtool.commands.endfixing" name="End fixing">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.RefreshReviewMarkersAction"
+        id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh markers">
+     </command>
+   </extension>
+
+	<extension id="de.setsoftware.reviewtool.reviewmarker" point="org.eclipse.core.resources.markers" name="Review-Anmerkung">
+		<super type="org.eclipse.core.resources.problemmarker"/>
+		<super type="org.eclipse.core.resources.textmarker"/>
+		<persistent value="false"/>
+		<attribute name="de.setsoftware.reviewtool.markerattributes.remarktype"/>
+		<attribute name="de.setsoftware.reviewtool.markerattributes.resolution"/>
+		<attribute name="de.setsoftware.reviewtool.markerattributes.position"/>
+	</extension>
+	
+	<extension
+		point="org.eclipse.ui.ide.markerResolution">
+		<markerResolutionGenerator
+			markerType="de.setsoftware.reviewtool.reviewmarker"
+			class="de.setsoftware.reviewtool.popup.actions.MarkerResolutionGenerator">
+		</markerResolutionGenerator>
+	</extension>
+ <extension
+       point="org.eclipse.ui.bindings">
+    <key
+          commandId="de.setsoftware.reviewtool.commands.addremark"
+          contextId="org.eclipse.ui.contexts.window"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M3+4">
+    </key>
+ </extension>
+ <extension
+       point="org.eclipse.ui.services">
+    <sourceProvider
+          provider="de.setsoftware.reviewtool.plugin.ReviewPluginModeService">
+       <variable
+             name="de.setsoftware.reviewtool.mode"
+             priorityLevel="workbench">
+       </variable>
+    </sourceProvider>
+ </extension>
+ <extension
+       point="org.eclipse.ui.preferencePages">
+    <page
+          class="de.setsoftware.reviewtool.plugin.WorkbenchPreferencePage"
+          id="de.setsoftware.reviewtool.preferences"
+          name="Review-Einstellungen">
+    </page>
+ </extension>
+</plugin>
