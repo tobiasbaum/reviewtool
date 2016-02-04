@@ -5,7 +5,7 @@
   <parent>
     <groupId>de.setsoftware.reviewtool</groupId>
     <artifactId>workspaceReviewtool</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
   </parent>
   <groupId>de.setsoftware.reviewtool</groupId>
   <artifactId>de.setsoftware.reviewtool</artifactId>
