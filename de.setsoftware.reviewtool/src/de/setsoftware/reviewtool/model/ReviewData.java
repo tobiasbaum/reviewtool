@@ -21,7 +21,7 @@ public class ReviewData {
 	}
 
 	public static ReviewData parse(
-			IReviewPersistence p, IMarkerFactory m, String oldReviewData) {
+			ReviewStateManager p, IMarkerFactory m, String oldReviewData) {
 		try {
 			final BufferedReader r = new BufferedReader(new StringReader(oldReviewData));
 			String line;

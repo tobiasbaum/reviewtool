@@ -19,7 +19,7 @@ class ReviewDataParser {
 
 	private enum ParseState {BEFORE_ROUND, IN_ROUND, IN_REMARK, IN_COMMENT};
 
-	private final IReviewPersistence persistence;
+	private final ReviewStateManager persistence;
 	private final IMarkerFactory markerFactory;
 
 	private ParseState state = ParseState.BEFORE_ROUND;
@@ -29,7 +29,7 @@ class ReviewDataParser {
 	private final StringBuilder currentText = new StringBuilder();
 	private ReviewRemark currentRemark;
 
-	public ReviewDataParser(IReviewPersistence persistence, IMarkerFactory markerFactory) {
+	public ReviewDataParser(ReviewStateManager persistence, IMarkerFactory markerFactory) {
 		this.persistence = persistence;
 		this.markerFactory = markerFactory;
 	}

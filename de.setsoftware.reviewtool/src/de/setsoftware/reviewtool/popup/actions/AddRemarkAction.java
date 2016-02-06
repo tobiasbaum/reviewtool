@@ -23,10 +23,10 @@ import org.eclipse.ui.part.FileEditorInput;
 
 import de.setsoftware.reviewtool.dialogs.CreateRemarkDialog;
 import de.setsoftware.reviewtool.dialogs.CreateRemarkDialog.CreateDialogCallback;
-import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.RemarkType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
+import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 
@@ -106,7 +106,7 @@ public class AddRemarkAction extends AbstractHandler {
 			@Override
 			public void execute(String text, RemarkType type) {
 				try {
-					final IReviewPersistence p = ReviewPlugin.getPersistence();
+					final ReviewStateManager p = ReviewPlugin.getPersistence();
 					ReviewRemark.create(
 							p,
 							resource,

@@ -9,7 +9,7 @@ public class ReviewRound {
 	public static final String MUST_FIX_HEADER = "wichtig";
 	public static final String CAN_FIX_HEADER = "optional / weniger wichtig";
 	public static final String ALREADY_FIXED_HEADER = "direkt eingepflegt";
-	public static final String TEMPORARY_HEADER = "tempor‰rer Marker";
+	public static final String TEMPORARY_HEADER = "tempor√§rer Marker";
 
 	private final int nbr;
 	private final List<ReviewRemark> remarks = new ArrayList<>();

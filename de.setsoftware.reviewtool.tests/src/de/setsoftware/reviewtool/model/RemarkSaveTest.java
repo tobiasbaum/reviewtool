@@ -9,12 +9,12 @@ public class RemarkSaveTest {
 
 	//	Review 1 (Std.rev 12345):
 	//	* wichtig
-	//	*# (Testklasse, 1234) das ist blöd
+	//	*# (Testklasse, 1234) das ist blï¿½d
 	//	*#* stimmt gar nicht
 	//	*#* stimmt doch
-	//	*# das ist auch blöd
+	//	*# das ist auch blï¿½d
 	//	* weniger wichtig
-	//	** asdf jklö
+	//	** asdf jklï¿½
 	//
 	//	Review 2:
 	//	- hier wurde was vergessen
@@ -29,7 +29,7 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testSaveNewRemarkInEmptyReviewData() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r =
 				ReviewRemark.create(p, newMarker(), "TB", global(), "globale Review-Anmerkung", RemarkType.MUST_FIX);
 		r.save();
@@ -43,7 +43,7 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testWithMultilineRemark() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r =
 				ReviewRemark.create(p, newMarker(), "TB", global(), "globale\nReview-Anmerkung", RemarkType.MUST_FIX);
 		r.save();
@@ -58,7 +58,7 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testSaveTwoRemarksInEmptyReviewData() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r1 =
 				ReviewRemark.create(p, newMarker(), "TB", global(), "globale Review-Anmerkung", RemarkType.MUST_FIX);
 		r1.save();
@@ -76,7 +76,7 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testSaveRemarksWithDifferentTypes() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "Anm A", RemarkType.CAN_FIX);
 		r1.save();
 		final ReviewRemark r2 = ReviewRemark.create(p, newMarker(), "TB", global(), "Anm B", RemarkType.ALREADY_FIXED);
@@ -110,13 +110,14 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testWithDifferentReviewRounds() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final PersistenceStub stubPersistence = new PersistenceStub();
+		final ReviewStateManager p = new ReviewStateManager("TB", stubPersistence, stubTicketChooser());
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "Anm A", RemarkType.MUST_FIX);
 		r1.save();
 		final ReviewRemark r2 = ReviewRemark.create(p, newMarker(), "TB", global(), "Anm B", RemarkType.MUST_FIX);
 		r2.save();
 
-		p.setReviewRound(2);
+		stubPersistence.setReviewRound(2);
 
 		final ReviewRemark r3 = ReviewRemark.create(p, newMarker(), "TB", global(), "Anm C", RemarkType.MUST_FIX);
 		r3.save();
@@ -138,7 +139,7 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testWithComments() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "stimmt nicht", RemarkType.MUST_FIX);
 		r1.addComment("XY", "stimmt doch");
 		r1.addComment("VW", "gar nicht");
@@ -154,7 +155,7 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testWithCommentsAndMultipleSaves() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "stimmt nicht", RemarkType.MUST_FIX);
 		r1.save();
 		r1.addComment("XY", "stimmt doch");
@@ -172,11 +173,11 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testResolutionsAtRemark() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "asdf", RemarkType.MUST_FIX);
 		r1.setResolution(ResolutionType.FIXED);
 		r1.save();
-		final ReviewRemark r2 = ReviewRemark.create(p, newMarker(), "TB", global(), "jklö", RemarkType.MUST_FIX);
+		final ReviewRemark r2 = ReviewRemark.create(p, newMarker(), "TB", global(), "jklï¿½", RemarkType.MUST_FIX);
 		r2.setResolution(ResolutionType.WONT_FIX);
 		r2.save();
 		final ReviewRemark r3 = ReviewRemark.create(p, newMarker(), "TB", global(), "qwer", RemarkType.MUST_FIX);
@@ -186,19 +187,19 @@ public class RemarkSaveTest {
 		assertEquals("Review 1:\n"
 				+ "* wichtig\n"
 				+ "*# asdf (/)\n"
-				+ "*# jklö (x)\n"
+				+ "*# jklï¿½ (x)\n"
 				+ "*# qwer (?)\n",
 				p.getCurrentReviewData());
 	}
 
 	@Test
 	public void testResolutionsAtComment() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "asdf", RemarkType.MUST_FIX);
 		r1.addComment("NN", "blabla");
 		r1.setResolution(ResolutionType.FIXED);
 		r1.save();
-		final ReviewRemark r2 = ReviewRemark.create(p, newMarker(), "TB", global(), "jklö", RemarkType.MUST_FIX);
+		final ReviewRemark r2 = ReviewRemark.create(p, newMarker(), "TB", global(), "jklï¿½", RemarkType.MUST_FIX);
 		r2.addComment("NN", "blablub");
 		r2.setResolution(ResolutionType.WONT_FIX);
 		r2.save();
@@ -211,7 +212,7 @@ public class RemarkSaveTest {
 				+ "* wichtig\n"
 				+ "*# asdf\n"
 				+ "*#* (/) NN: blabla\n"
-				+ "*# jklö\n"
+				+ "*# jklï¿½\n"
 				+ "*#* (x) NN: blablub\n"
 				+ "*# qwer\n"
 				+ "*#* (?) NN: blablo\n",
@@ -221,7 +222,7 @@ public class RemarkSaveTest {
 
 	@Test
 	public void testWithFilePosition() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", new FilePosition("xyz.java"), "asdf", RemarkType.MUST_FIX);
 		r1.addComment("NN", "blabla");
 		r1.save();
@@ -236,9 +237,22 @@ public class RemarkSaveTest {
 				p.getCurrentReviewData());
 	}
 
+	private static ReviewStateManager createPersistence() {
+		return new ReviewStateManager("TB", new PersistenceStub(), stubTicketChooser());
+	}
+
+	private static ITicketChooser stubTicketChooser() {
+		return new ITicketChooser() {
+			@Override
+			public String choose(IReviewPersistence persistence, String ticketKeyDefault, boolean forReview) {
+				return "TEST-1234";
+			}
+		};
+	}
+
 	@Test
 	public void testDeleteRemark() throws Exception {
-		final PersistenceStub p = new PersistenceStub();
+		final ReviewStateManager p = createPersistence();
 		p.saveCurrentReviewData("Review 2:\n"
 				+ "* wichtig\n"
 				+ "*# Anm C\n"

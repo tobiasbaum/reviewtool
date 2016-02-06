@@ -51,7 +51,7 @@ public class SelectTicketDialog extends Dialog {
 	@Override
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
-		newShell.setText("Ticket auswählen");
+		newShell.setText("Ticket auswÃ¤hlen");
 		newShell.setSize(400, 500);
 	}
 
@@ -106,8 +106,8 @@ public class SelectTicketDialog extends Dialog {
 	@Override
 	protected void okPressed() {
 		if (this.keyField.getText().isEmpty()) {
-			MessageDialog.openError(this.getShell(), "Schlüssel fehlt",
-					"Bitte einen Ticket-Schlüssel eingeben");
+			MessageDialog.openError(this.getShell(), "SchlÃ¼ssel fehlt",
+					"Bitte einen Ticket-SchlÃ¼ssel eingeben");
 			return;
 		}
 		this.selectedKey = this.keyField.getText();

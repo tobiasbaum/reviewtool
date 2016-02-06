@@ -76,7 +76,7 @@ public class CreateRemarkDialog extends Dialog {
 			}
 		});
 
-		//für noch schnelleres Tippen: Wenn mit einem Buchstaben die Kategorie gewählt
+		//fï¿½r noch schnelleres Tippen: Wenn mit einem Buchstaben die Kategorie gewï¿½hlt
 		//  wurde springt er direkt in das Textfeld
 		this.typeCombo.addKeyListener(new KeyListener() {
 			@Override
@@ -105,7 +105,7 @@ public class CreateRemarkDialog extends Dialog {
 		}
 		if (this.typeCombo.getText().isEmpty()) {
 			MessageDialog.openError(this.getShell(), "Art fehlt",
-					"Bitte die Art der Anmerkung auswählen");
+					"Bitte die Art der Anmerkung auswÃ¤hlen");
 			return;
 		}
 		this.callback.execute(

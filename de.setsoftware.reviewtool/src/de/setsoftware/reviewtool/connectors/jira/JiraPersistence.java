@@ -16,11 +16,58 @@ import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.ParseException;
 
-import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
 
 public class JiraPersistence implements IReviewPersistence {
+
+	private final class JiraTicket implements ITicketData {
+
+		private final JsonObject ticket;
+
+		public JiraTicket(JsonObject object) {
+			this.ticket = object;
+		}
+
+		@Override
+		public String getReviewData() {
+			final JsonValue reviewData = this.ticket.get("fields").asObject().get(JiraPersistence.this.getReviewFieldId());
+			if (reviewData == null || reviewData.isNull()) {
+				return "";
+			} else {
+				return reviewData.asString();
+			}
+		}
+
+		@Override
+		public String getReviewerForRound(int number) {
+			final JsonArray histories = JiraPersistence.this.getHistories(this.ticket);
+			int count = 0;
+			for (final JsonValue v : histories) {
+				if (JiraPersistence.this.isToReview(v)) {
+					count++;
+					if (count == number) {
+						return JiraPersistence.this.getToUser(v).toUpperCase();
+					}
+				}
+			}
+			return null;
+		}
+
+		@Override
+		public int getCurrentRound() {
+			final JsonArray histories = JiraPersistence.this.getHistories(this.ticket);
+			int count = 0;
+			for (final JsonValue v : histories) {
+				if (JiraPersistence.this.isToReview(v)) {
+					count++;
+				}
+			}
+			return count > 0 ? count - 1 : 0;
+		}
+
+	}
 
 	private final String url;
 	private final String reviewFieldName;
@@ -29,7 +76,6 @@ public class JiraPersistence implements IReviewPersistence {
 	private final String password;
 
 	private String reviewFieldId;
-	private String ticketKey;
 
 	public JiraPersistence(String url, String reviewFieldName, String reviewState, String user, String password) {
 		this.url = url;
@@ -39,61 +85,15 @@ public class JiraPersistence implements IReviewPersistence {
 		this.password = password;
 	}
 
-
 	@Override
-	public String getCurrentReviewData() {
-		final JsonObject ticket = this.loadTicketDataAndCheckExistence(true);
-		if (ticket == null) {
-			return null;
-		}
-		final JsonValue reviewData = ticket.get("fields").asObject().get(this.getReviewFieldId());
-		if (reviewData == null || reviewData.isNull()) {
-			return "";
-		} else {
-			return reviewData.asString();
-		}
-	}
-
-	@Override
-	public void saveCurrentReviewData(String newData) {
-		this.loadTicketDataAndCheckExistence(true);
-
+	public void saveReviewData(String ticketKey, String newData) {
 		final String putUrl = String.format(
-				"%s/rest/api/latest/issue/%s?%s", this.url, this.ticketKey, this.getAuthParams());
+				"%s/rest/api/latest/issue/%s?%s", this.url, ticketKey, this.getAuthParams());
 		final JsonObject fields = new JsonObject();
 		fields.add(this.getReviewFieldId(), newData);
 		final JsonObject json = new JsonObject();
 		json.add("fields", fields);
 		this.performPut(putUrl, json);
-	}
-
-	@Override
-	public int getCurrentRound() {
-		final JsonObject ticket = this.loadTicketDataAndCheckExistence(true);
-		final JsonArray histories = this.getHistories(ticket);
-		int count = 0;
-		for (final JsonValue v : histories) {
-			if (this.isToReview(v)) {
-				count++;
-			}
-		}
-		return count > 0 ? count - 1 : 0;
-	}
-
-	@Override
-	public String getReviewerForRound(int number) {
-		final JsonObject ticket = this.loadTicketDataAndCheckExistence(true);
-		final JsonArray histories = this.getHistories(ticket);
-		int count = 0;
-		for (final JsonValue v : histories) {
-			if (this.isToReview(v)) {
-				count++;
-				if (count == number) {
-					return this.getToUser(v).toUpperCase();
-				}
-			}
-		}
-		return this.user.toUpperCase();
 	}
 
 	private boolean isToReview(JsonValue v) {
@@ -116,39 +116,16 @@ public class JiraPersistence implements IReviewPersistence {
 		return ticket.get("changelog").asObject().get("histories").asArray();
 	}
 
-	private JsonObject loadTicketDataAndCheckExistence(boolean forReview) {
-		if (this.ticketKey == null) {
-			JsonObject data;
-			do {
-				this.ticketKey = SelectTicketDialog.get(this, "", forReview);
-				if (this.ticketKey == null) {
-					return null;
-				}
-				data = this.loadTicket();
-			} while (data == null);
-			return data;
-		} else {
-			JsonObject data = this.loadTicket();
-			while (data == null) {
-				this.ticketKey = SelectTicketDialog.get(this, this.ticketKey, forReview);
-				if (this.ticketKey == null) {
-					return null;
-				}
-				data = this.loadTicket();
-			}
-			return data;
-		}
-	}
-
-	private JsonObject loadTicket() {
+	@Override
+	public ITicketData loadTicket(String ticketKey) {
 		final JsonObject object = (JsonObject)
-				this.performGet(this.url + "/rest/api/latest/issue/" + this.ticketKey
+				this.performGet(this.url + "/rest/api/latest/issue/" + ticketKey
 						+ "?fields=" + this.getReviewFieldId() + "&expand=changelog"
 						+ this.getAuthParams());
 		if (object.get("key") == null) {
 			return null;
 		}
-		return object;
+		return new JiraTicket(object);
 	}
 
 	@Override
@@ -259,7 +236,7 @@ public class JiraPersistence implements IReviewPersistence {
 	}
 
 	/**
-	 * Sendet und empfängt Daten.
+	 * Sendet und empfï¿½ngt Daten.
 	 */
 	private void communicate(final String url, final String method, final String data) throws IOException {
 		final HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
@@ -291,14 +268,6 @@ public class JiraPersistence implements IReviewPersistence {
 		while ((r = s.read()) >= 0) {
 			System.err.write(r);
 		}
-	}
-
-	public boolean selectTicket(boolean forReview) {
-		return this.loadTicketDataAndCheckExistence(forReview) != null;
-	}
-
-	public void resetKey() {
-		this.ticketKey = null;
 	}
 
 }

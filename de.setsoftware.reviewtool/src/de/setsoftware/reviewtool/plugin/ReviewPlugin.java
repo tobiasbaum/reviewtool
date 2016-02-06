@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.plugin;
 
+import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -10,11 +11,14 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
 
-import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
+import de.setsoftware.reviewtool.connectors.file.FilePersistence;
+import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.ReviewData;
+import de.setsoftware.reviewtool.model.ReviewStateManager;
 
 public class ReviewPlugin {
 
@@ -25,21 +29,31 @@ public class ReviewPlugin {
 	}
 
 	private static final ReviewPlugin INSTANCE = new ReviewPlugin();
-	private final JiraPersistence persistence;
+	private final ReviewStateManager persistence;
 	private Mode mode = Mode.IDLE;
 	private final List<WeakReference<ReviewPluginModeService>> modeListeners = new ArrayList<>();
 
 	private ReviewPlugin() {
 		final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-		this.persistence = new JiraPersistence(
-				pref.getString("url"),
-				pref.getString("reviewRemarkField"),
-				pref.getString("reviewState"),
-				pref.getString("user"),
-				pref.getString("password"));
+		final IReviewPersistence persistence = new FilePersistence(new File("C:\\Temp\\reviewData"));
+		final String user = pref.getString("user");
+		//		this.persistence = new ReviewStateManager(user, new JiraPersistence(
+		//				pref.getString("url"),
+		//				pref.getString("reviewRemarkField"),
+		//				pref.getString("reviewState"),
+		//				pref.getString("user"),
+		//				pref.getString("password")));
+		final ITicketChooser ticketChooser = new ITicketChooser() {
+			@Override
+			public String choose(
+					IReviewPersistence persistence, String ticketKeyDefault, boolean forReview) {
+				return SelectTicketDialog.get(persistence, ticketKeyDefault, forReview);
+			}
+		};
+		this.persistence = new ReviewStateManager(user, persistence, ticketChooser);
 	}
 
-	public static IReviewPersistence getPersistence() {
+	public static ReviewStateManager getPersistence() {
 		return INSTANCE.persistence;
 	}
 

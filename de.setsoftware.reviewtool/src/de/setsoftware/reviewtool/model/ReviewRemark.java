@@ -13,21 +13,21 @@ public class ReviewRemark {
 	public static final String RESOLUTION_MARKER_WONTFIX = "(x)";
 	public static final String RESOLUTION_MARKER_QUESTION = "(?)";
 
-	private final IReviewPersistence persistence;
+	private final ReviewStateManager persistence;
 	private final IMarker marker;
 
-	private ReviewRemark(IReviewPersistence p, IMarker marker) {
+	private ReviewRemark(ReviewStateManager p, IMarker marker) {
 		this.persistence = p;
 		this.marker = marker;
 	}
 
-	public static ReviewRemark create(IReviewPersistence p, IResource resource, String user, String text, int line, RemarkType type) throws CoreException {
+	public static ReviewRemark create(ReviewStateManager p, IResource resource, String user, String text, int line, RemarkType type) throws CoreException {
 		final IMarker marker = resource.createMarker(Constants.REVIEWMARKER_ID);
 		return create(p, marker, user, PositionTransformer.toPosition(resource, line), text, type);
 	}
 
 	static ReviewRemark create(
-			IReviewPersistence p,
+			ReviewStateManager p,
 			IMarker marker,
 			String user,
 			Position position,
@@ -50,7 +50,7 @@ public class ReviewRemark {
 		return this.marker.getAttribute(Constants.REMARK_POSITION, new GlobalPosition().serialize());
 	}
 
-	public static ReviewRemark getFor(IReviewPersistence p, IMarker marker) {
+	public static ReviewRemark getFor(ReviewStateManager p, IMarker marker) {
 		return new ReviewRemark(p, marker);
 	}
 
