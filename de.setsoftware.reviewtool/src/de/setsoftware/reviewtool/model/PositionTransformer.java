@@ -3,10 +3,13 @@ package de.setsoftware.reviewtool.model;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -85,7 +88,7 @@ public class PositionTransformer {
 		final List<IPath> cachedPaths = cache.get(filename);
 		if (cachedPaths == null) {
 			//entweder noch komplett leer, oder es gibt eine Datei die wir nicht im
-			//  Cache haben. In beiden Fällen ein Grund um den Cache neu zu befüllen
+			//  Cache haben. In beiden FÃ¤llen ein Grund um den Cache neu zu befÃ¼llen
 			fillCache(resource);
 			return cache.get(filename);
 		} else {
@@ -96,24 +99,28 @@ public class PositionTransformer {
 	private static synchronized void fillCache(IResource resource) {
 		cache.clear();
 
-		fillCacheIfEmpty(resource.getWorkspace().getRoot().getLocation());
+		final LinkedHashSet<IPath> allRoots = new LinkedHashSet<>();
+
+		fillCacheIfEmpty(resource.getWorkspace());
 	}
 
-	private static synchronized void fillCacheIfEmpty(IPath rootPath) {
+	private static synchronized void fillCacheIfEmpty(IWorkspace workspace) {
 		if (!cache.isEmpty()) {
 			return;
 		}
-		//TEST
-		System.out.println("root: " + rootPath.toFile().getAbsolutePath());
-		fillCacheRecursive(rootPath);
+		for (final IProject project : workspace.getRoot().getProjects()) {
+			//TEST
+			System.out.println("project root: " + project.getFullPath().toFile().getAbsolutePath());
+			fillCacheRecursive(project.getLocation());
+		}
 	}
 
 	public static void initializeCacheInBackground() {
-		final IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+		final IWorkspace root = ResourcesPlugin.getWorkspace();
 		final Thread t = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				fillCacheIfEmpty(root.getLocation());
+				fillCacheIfEmpty(root);
 			}
 		});
 		t.setDaemon(true);
@@ -195,8 +202,7 @@ public class PositionTransformer {
 	}
 
 	private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, IPath fittingPath) {
-		final IPath relative = fittingPath.makeRelativeTo(workspaceRoot.getLocation());
-		final IFile file = workspaceRoot.getFile(relative);
+		final IFile file = workspaceRoot.getFileForLocation(fittingPath);
 		if (!file.exists()) {
 			return workspaceRoot;
 		}

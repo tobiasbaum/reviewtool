@@ -24,7 +24,7 @@ IWorkbenchPreferencePage {
 	@Override
 	public void init(IWorkbench workbench) {
 		this.setPreferenceStore(Activator.getDefault().getPreferenceStore());
-		this.setDescription("Einstellung für das Review-Tool");
+		this.setDescription("Einstellung fÃ¼r das Review-Tool");
 	}
 
 }

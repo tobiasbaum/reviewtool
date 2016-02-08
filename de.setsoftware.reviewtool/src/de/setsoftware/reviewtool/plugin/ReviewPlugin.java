@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
+import de.setsoftware.reviewtool.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
@@ -35,8 +36,9 @@ public class ReviewPlugin {
 
 	private ReviewPlugin() {
 		final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-		final IReviewPersistence persistence = new FilePersistence(new File("C:\\Temp\\reviewData"));
+		pref.setDefault("user", System.getProperty("user.name"));
 		final String user = pref.getString("user");
+		final IReviewPersistence persistence = new FilePersistence(new File("C:\\Temp\\reviewData"), user);
 		//		this.persistence = new ReviewStateManager(user, new JiraPersistence(
 		//				pref.getString("url"),
 		//				pref.getString("reviewRemarkField"),
@@ -50,7 +52,7 @@ public class ReviewPlugin {
 				return SelectTicketDialog.get(persistence, ticketKeyDefault, forReview);
 			}
 		};
-		this.persistence = new ReviewStateManager(user, persistence, ticketChooser);
+		this.persistence = new ReviewStateManager(persistence, ticketChooser);
 	}
 
 	public static ReviewStateManager getPersistence() {
@@ -81,15 +83,12 @@ public class ReviewPlugin {
 			return;
 		}
 		this.clearMarkers();
-		final String currentReviewData = this.persistence.getCurrentReviewData();
+		final ReviewData currentReviewData = CorrectSyntaxDialog.getCurrentReviewDataParsed(
+				this.persistence, new RealMarkerFactory());
 		if (currentReviewData == null) {
 			this.setMode(Mode.IDLE);
 			return;
 		}
-		ReviewData.parse(
-				this.persistence,
-				new RealMarkerFactory(),
-				currentReviewData);
 		this.setMode(targetMode);
 	}
 
@@ -128,28 +127,18 @@ public class ReviewPlugin {
 	}
 
 	public boolean hasUnresolvedRemarks() {
-		final ReviewData d = ReviewData.parse(
-				this.persistence,
-				DummyMarker.FACTORY,
-				this.persistence.getCurrentReviewData());
+		final ReviewData d = CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
 		return d.hasUnresolvedRemarks();
 	}
 
 	public boolean hasTemporaryMarkers() {
-		final ReviewData d = ReviewData.parse(
-				this.persistence,
-				DummyMarker.FACTORY,
-				this.persistence.getCurrentReviewData());
+		final ReviewData d = CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
 		return d.hasTemporaryMarkers();
 	}
 
 	public void refreshMarkers() throws CoreException {
 		this.clearMarkers();
-		final String currentReviewData = this.persistence.getCurrentReviewData();
-		ReviewData.parse(
-				this.persistence,
-				new RealMarkerFactory(),
-				currentReviewData);
+		CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, new RealMarkerFactory());
 	}
 
 }

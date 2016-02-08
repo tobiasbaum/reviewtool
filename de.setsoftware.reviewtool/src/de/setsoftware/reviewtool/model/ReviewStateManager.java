@@ -4,13 +4,10 @@ public class ReviewStateManager {
 
 	private final IReviewPersistence persistence;
 	private final ITicketChooser ticketChooser;
-	private final String defaultReviewer;
 
 	private String ticketKey;
 
-	public ReviewStateManager(
-			String defaultReviewer, IReviewPersistence persistence, ITicketChooser ticketChooser) {
-		this.defaultReviewer = defaultReviewer;
+	public ReviewStateManager(IReviewPersistence persistence, ITicketChooser ticketChooser) {
 		this.persistence = persistence;
 		this.ticketChooser = ticketChooser;
 	}
@@ -38,8 +35,7 @@ public class ReviewStateManager {
 
 	public String getReviewerForRound(int number) {
 		final ITicketData ticket = this.loadTicketDataAndCheckExistence(true);
-		final String reviewer = ticket.getReviewerForRound(number);
-		return reviewer == null ? this.defaultReviewer : reviewer;
+		return ticket.getReviewerForRound(number);
 	}
 
 	private ITicketData loadTicketDataAndCheckExistence(boolean forReview) {
@@ -67,7 +63,16 @@ public class ReviewStateManager {
 	}
 
 	public boolean selectTicket(boolean forReview) {
-		return this.loadTicketDataAndCheckExistence(forReview) != null;
+		final boolean success = this.loadTicketDataAndCheckExistence(forReview) != null;
+		if (!success) {
+			return false;
+		}
+		if (forReview) {
+			this.persistence.startReviewing(this.ticketKey);
+		} else {
+			this.persistence.startFixing(this.ticketKey);
+		}
+		return true;
 	}
 
 	public void resetKey() {

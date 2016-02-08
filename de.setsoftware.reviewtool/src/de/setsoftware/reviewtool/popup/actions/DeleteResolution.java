@@ -21,7 +21,7 @@ public class DeleteResolution extends WorkbenchMarkerResolution {
 
 	@Override
 	public String getLabel() {
-		return "Review-Anmerkung löschen";
+		return "Review-Anmerkung lÃ¶schen";
 	}
 
 	@Override

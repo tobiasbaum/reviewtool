@@ -15,4 +15,16 @@ public interface IReviewPersistence {
 
 	public abstract ITicketData loadTicket(String ticketKey);
 
+	/**
+	 * Changes the state of the given ticket to "in review".
+	 * If it already is in this state or the transition is not allowed, nothing happens.
+	 */
+	public abstract void startReviewing(String ticketKey);
+
+	/**
+	 * Changes the state of the given ticket to "in implementation (for fixing)".
+	 * If it already is in this state or the transition is not allowed, nothing happens.
+	 */
+	public abstract void startFixing(String ticketKey);
+
 }

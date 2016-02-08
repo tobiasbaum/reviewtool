@@ -7,6 +7,8 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.dialogs.CorrectSyntaxDialog;
+
 public class ReviewRemark {
 
 	public static final String RESOLUTION_MARKER_FIXED = "(/)";
@@ -112,7 +114,7 @@ public class ReviewRemark {
 	}
 
 	public void save() {
-		final ReviewData r = ReviewData.parse(this.persistence, DummyMarker.FACTORY, this.persistence.getCurrentReviewData());
+		final ReviewData r = CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
 		r.merge(this, this.persistence.getCurrentRound());
 		this.persistence.saveCurrentReviewData(r.serialize());
 	}
@@ -154,10 +156,7 @@ public class ReviewRemark {
 	}
 
 	public void delete() throws CoreException {
-		final ReviewData data = ReviewData.parse(
-				this.persistence,
-				DummyMarker.FACTORY,
-				this.persistence.getCurrentReviewData());
+		final ReviewData data = CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
 		data.deleteRemark(this);
 		this.persistence.saveCurrentReviewData(data.serialize());
 		this.marker.delete();

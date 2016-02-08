@@ -52,7 +52,7 @@ public class JiraPersistence implements IReviewPersistence {
 					}
 				}
 			}
-			return null;
+			return JiraPersistence.this.user.toUpperCase();
 		}
 
 		@Override
@@ -268,6 +268,16 @@ public class JiraPersistence implements IReviewPersistence {
 		while ((r = s.read()) >= 0) {
 			System.err.write(r);
 		}
+	}
+
+	@Override
+	public void startReviewing(String ticketKey) {
+		// TODO implement
+	}
+
+	@Override
+	public void startFixing(String ticketKey) {
+		// TODO implement
 	}
 
 }

@@ -7,7 +7,7 @@ public interface ITicketData {
 	/**
 	 * Returns the reviewer id for the review round with the given number.
 	 * number starts with 1.
-	 * When there is no review round with the given number, returns null.
+	 * When there is no review round with the given number, returns the current user.
 	 */
 	public abstract String getReviewerForRound(int number);
 

@@ -45,4 +45,12 @@ public class PersistenceStub implements IReviewPersistence {
 		};
 	}
 
+	@Override
+	public void startReviewing(String ticketKey) {
+	}
+
+	@Override
+	public void startFixing(String ticketKey) {
+	}
+
 }

@@ -111,7 +111,7 @@ public class RemarkSaveTest {
 	@Test
 	public void testWithDifferentReviewRounds() throws Exception {
 		final PersistenceStub stubPersistence = new PersistenceStub();
-		final ReviewStateManager p = new ReviewStateManager("TB", stubPersistence, stubTicketChooser());
+		final ReviewStateManager p = new ReviewStateManager(stubPersistence, stubTicketChooser());
 		final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "Anm A", RemarkType.MUST_FIX);
 		r1.save();
 		final ReviewRemark r2 = ReviewRemark.create(p, newMarker(), "TB", global(), "Anm B", RemarkType.MUST_FIX);
@@ -238,7 +238,7 @@ public class RemarkSaveTest {
 	}
 
 	private static ReviewStateManager createPersistence() {
-		return new ReviewStateManager("TB", new PersistenceStub(), stubTicketChooser());
+		return new ReviewStateManager(new PersistenceStub(), stubTicketChooser());
 	}
 
 	private static ITicketChooser stubTicketChooser() {

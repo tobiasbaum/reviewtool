@@ -17,6 +17,14 @@ import de.setsoftware.reviewtool.model.TicketInfo;
 
 public class FilePersistence implements IReviewPersistence {
 
+	private static final String REVIEW_DATA_TXT = "reviewData.txt";
+	private static final String REVIEW_HISTORY_TXT = "reviewHistory.txt";
+	private static final String STATE_PREFIX = "state.";
+	private static final String IN_IMPLEMENTATION = "inImplementation";
+	private static final String REJECTED = "rejected";
+	private static final String IN_REVIEW = "inReview";
+	private static final String READY_FOR_REVIEW = "readyForReview";
+
 	private final class TicketDir implements ITicketData {
 
 		private final File ticketDir;
@@ -42,7 +50,7 @@ public class FilePersistence implements IReviewPersistence {
 		public String getReviewerForRound(int number) {
 			final List<String> lines = this.readReviewHistory();
 			if (number > lines.size()) {
-				return null;
+				return FilePersistence.this.defaultReviewer;
 			} else {
 				return lines.get(number - 1);
 			}
@@ -54,7 +62,7 @@ public class FilePersistence implements IReviewPersistence {
 		}
 
 		private List<String> readReviewHistory() {
-			final Path historyFile = this.ticketDir.toPath().resolve(REVIEW_HISTORY_TXT);
+			final Path historyFile = this.getHistoryFile();
 			if (!historyFile.toFile().exists()) {
 				return Collections.emptyList();
 			}
@@ -65,25 +73,28 @@ public class FilePersistence implements IReviewPersistence {
 			}
 		}
 
+		private Path getHistoryFile() {
+			return this.ticketDir.toPath().resolve(REVIEW_HISTORY_TXT);
+		}
+
 	}
 
-	private static final String REVIEW_DATA_TXT = "reviewData.txt";
-	private static final String REVIEW_HISTORY_TXT = "reviewHistory.txt";
-	private static final String STATE_PREFIX = "state.";
 	private final File rootDir;
+	private final String defaultReviewer;
 
-	public FilePersistence(File rootDir) {
+	public FilePersistence(File rootDir, String defaultReviewer) {
 		this.rootDir = rootDir;
+		this.defaultReviewer = defaultReviewer;
 	}
 
 	@Override
 	public List<TicketInfo> getReviewableTickets() {
-		return this.getTicketsWithState("readyForReview", "inReview");
+		return this.getTicketsWithState(READY_FOR_REVIEW, IN_REVIEW);
 	}
 
 	@Override
 	public List<TicketInfo> getFixableTickets() {
-		return this.getTicketsWithState("rejected", "inImplementation");
+		return this.getTicketsWithState(REJECTED, IN_IMPLEMENTATION);
 	}
 
 	private List<TicketInfo> getTicketsWithState(String... states) {
@@ -151,7 +162,7 @@ public class FilePersistence implements IReviewPersistence {
 	}
 
 	@Override
-	public ITicketData loadTicket(String ticketKey) {
+	public TicketDir loadTicket(String ticketKey) {
 		return new TicketDir(new File(this.rootDir, ticketKey));
 	}
 
@@ -162,6 +173,36 @@ public class FilePersistence implements IReviewPersistence {
 		if (!this.rootDir.isDirectory()) {
 			throw new RuntimeException(this.rootDir + " ist kein Verzeichnis.");
 		}
+	}
+
+	@Override
+	public void startReviewing(String ticketKey) {
+		final boolean changeSuccess = this.changeState(ticketKey, READY_FOR_REVIEW, IN_REVIEW);
+		if (changeSuccess) {
+			this.addUserToReviewHistory(ticketKey, this.defaultReviewer);
+		}
+	}
+
+	private void addUserToReviewHistory(String ticketKey, String user) {
+		final TicketDir ticketDir = this.loadTicket(ticketKey);
+		final List<String> lines = new ArrayList<String>(ticketDir.readReviewHistory());
+		lines.add(user);
+		try {
+			Files.write(ticketDir.getHistoryFile(), lines, Charset.forName("UTF-8"));
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	@Override
+	public void startFixing(String ticketKey) {
+		this.changeState(ticketKey, REJECTED, IN_IMPLEMENTATION);
+	}
+
+	private boolean changeState(String ticketKey, String from, String to) {
+		final File ticketDir = new File(this.rootDir, ticketKey);
+		return new File(ticketDir, STATE_PREFIX + from).renameTo(
+				new File(ticketDir, STATE_PREFIX + to));
 	}
 
 }
