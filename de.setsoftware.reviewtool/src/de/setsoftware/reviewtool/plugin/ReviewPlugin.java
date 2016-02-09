@@ -10,6 +10,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
@@ -36,6 +38,26 @@ public class ReviewPlugin {
 	private final List<WeakReference<ReviewPluginModeService>> modeListeners = new ArrayList<>();
 
 	private ReviewPlugin() {
+		final IReviewPersistence persistence = this.createPersistenceFromPreferences();
+		final ITicketChooser ticketChooser = new ITicketChooser() {
+			@Override
+			public String choose(
+					IReviewPersistence persistence, String ticketKeyDefault, boolean forReview) {
+				return SelectTicketDialog.get(persistence, ticketKeyDefault, forReview);
+			}
+		};
+		this.persistence = new ReviewStateManager(persistence, ticketChooser);
+		Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent event) {
+				if (ReviewToolPreferencePage.getAllPreferenceIds().contains(event.getProperty())) {
+					ReviewPlugin.this.persistence.setPersistence(ReviewPlugin.this.createPersistenceFromPreferences());
+				}
+			}
+		});
+	}
+
+	private IReviewPersistence createPersistenceFromPreferences() {
 		final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
 		pref.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
 		final String user = pref.getString(ReviewToolPreferencePage.USER);
@@ -45,19 +67,13 @@ public class ReviewPlugin {
 					pref.getString(ReviewToolPreferencePage.JIRA_URL),
 					pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_REMARK_FIELD),
 					pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_STATE),
+					pref.getString(ReviewToolPreferencePage.JIRA_IMPLEMENTATION_STATE),
 					user,
 					pref.getString(ReviewToolPreferencePage.JIRA_PASSWORD));
 		} else {
 			persistence = new FilePersistence(new File(pref.getString(ReviewToolPreferencePage.FILE_PATH)), user);
 		}
-		final ITicketChooser ticketChooser = new ITicketChooser() {
-			@Override
-			public String choose(
-					IReviewPersistence persistence, String ticketKeyDefault, boolean forReview) {
-				return SelectTicketDialog.get(persistence, ticketKeyDefault, forReview);
-			}
-		};
-		this.persistence = new ReviewStateManager(persistence, ticketChooser);
+		return persistence;
 	}
 
 	public static ReviewStateManager getPersistence() {

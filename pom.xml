@@ -9,14 +9,20 @@
     <properties>
         <tycho.version>0.24.0</tycho.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>  
-        <mars-repo.url>http://download.eclipse.org/releases/mars</mars-repo.url>
+        <juno-repo.url>http://download.eclipse.org/releases/juno</juno-repo.url>
+        <!--<mars-repo.url>http://download.eclipse.org/releases/mars</mars-repo.url>-->
         
     </properties>
 
     <repositories>
-        <repository>
+        <!--<repository>
             <id>mars</id>
             <url>${mars-repo.url}</url>
+            <layout>p2</layout>
+        </repository>-->
+        <repository>
+            <id>juno</id>
+            <url>${juno-repo.url}</url>
             <layout>p2</layout>
         </repository>
 

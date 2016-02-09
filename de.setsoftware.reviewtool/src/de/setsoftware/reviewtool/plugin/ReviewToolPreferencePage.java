@@ -1,6 +1,8 @@
 package de.setsoftware.reviewtool.plugin;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
@@ -20,6 +22,7 @@ IWorkbenchPreferencePage {
 	public static final String JIRA_URL = "url";
 	public static final String JIRA_REVIEW_REMARK_FIELD = "reviewRemarkField";
 	public static final String JIRA_REVIEW_STATE = "reviewState";
+	public static final String JIRA_IMPLEMENTATION_STATE = "implementationState";
 	public static final String FILE_PATH = "filePath";
 
 	private BooleanFieldEditor jiraActive;
@@ -39,17 +42,22 @@ IWorkbenchPreferencePage {
 
 		this.addField(this.jiraFields, new StringFieldEditor(JIRA_URL, "JIRA-URL", this.getFieldEditorParent()));
 		this.addField(this.jiraFields, new StringFieldEditor(JIRA_REVIEW_REMARK_FIELD, "Feldname Reviewanmerkungen", this.getFieldEditorParent()));
-		this.addField(this.jiraFields, new StringFieldEditor(JIRA_REVIEW_STATE, "Statusname Review", this.getFieldEditorParent()));
+		this.addField(this.jiraFields, new StringFieldEditor(JIRA_REVIEW_STATE, "Statusname \"In Review\"", this.getFieldEditorParent()));
+		this.addField(this.jiraFields, new StringFieldEditor(JIRA_IMPLEMENTATION_STATE, "Statusname \"In Fixing\"", this.getFieldEditorParent()));
 		this.addField(this.jiraFields, new StringFieldEditor(JIRA_PASSWORD, "JIRA-Passwort", this.getFieldEditorParent()));
 
 		this.addField(this.fileFields, new StringFieldEditor(FILE_PATH, "Verzeichnis", this.getFieldEditorParent()));
-
-		this.updateFieldEnabledStates();
 	}
 
 	private void addField(List<FieldEditor> list, FieldEditor editor) {
 		list.add(editor);
 		this.addField(editor);
+	}
+
+	@Override
+	protected void initialize() {
+		super.initialize();
+		this.updateFieldEnabledStates();
 	}
 
 	@Override
@@ -74,6 +82,18 @@ IWorkbenchPreferencePage {
 	public void init(IWorkbench workbench) {
 		this.setPreferenceStore(Activator.getDefault().getPreferenceStore());
 		this.setDescription("Einstellung für das Review-Tool");
+	}
+
+	public static Collection<String> getAllPreferenceIds() {
+		return Arrays.asList(
+				USER,
+				JIRA_SOURCE,
+				JIRA_PASSWORD,
+				JIRA_URL,
+				JIRA_REVIEW_REMARK_FIELD,
+				JIRA_REVIEW_STATE,
+				JIRA_IMPLEMENTATION_STATE,
+				FILE_PATH);
 	}
 
 }

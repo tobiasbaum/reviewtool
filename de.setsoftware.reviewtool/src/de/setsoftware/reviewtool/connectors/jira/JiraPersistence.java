@@ -10,6 +10,8 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -19,6 +21,7 @@ import com.eclipsesource.json.ParseException;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
+import de.setsoftware.reviewtool.plugin.Logger;
 
 public class JiraPersistence implements IReviewPersistence {
 
@@ -72,15 +75,19 @@ public class JiraPersistence implements IReviewPersistence {
 	private final String url;
 	private final String reviewFieldName;
 	private final String reviewState;
+	private final String implementationState;
 	private final String user;
 	private final String password;
 
 	private String reviewFieldId;
 
-	public JiraPersistence(String url, String reviewFieldName, String reviewState, String user, String password) {
+	public JiraPersistence(
+			String url, String reviewFieldName, String reviewState, String implementationState,
+			String user, String password) {
 		this.url = url;
 		this.reviewFieldName = reviewFieldName;
 		this.reviewState = reviewState;
+		this.implementationState = implementationState;
 		this.user = user;
 		this.password = password;
 	}
@@ -237,6 +244,14 @@ public class JiraPersistence implements IReviewPersistence {
 		}
 	}
 
+	private void performPost(final String postUrl, final JsonObject json) {
+		try {
+			this.communicate(postUrl, "POST", json.toString());
+		} catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
 	/**
 	 * Sendet und empfängt Daten.
 	 */
@@ -274,12 +289,57 @@ public class JiraPersistence implements IReviewPersistence {
 
 	@Override
 	public void startReviewing(String ticketKey) {
-		// TODO implement
+		this.performTransitionIfPossible(ticketKey, this.reviewState);
 	}
 
 	@Override
 	public void startFixing(String ticketKey) {
-		// TODO implement
+		this.performTransitionIfPossible(ticketKey, this.implementationState);
 	}
 
+	private void performTransitionIfPossible(String ticketKey, String reviewState2) {
+		final TreeSet<String> possibleTransitions = new TreeSet<>();
+		final String transition = this.getTransitionId(ticketKey, this.reviewState, possibleTransitions);
+		if (transition == null) {
+			Logger.info("Could not transition " + ticketKey + " to " + this.reviewState
+					+ ". Possible transitions: " + possibleTransitions);
+		} else {
+			this.performTransition(ticketKey, transition);
+		}
+	}
+
+	private void performTransition(final String ticket, final String transition) {
+		final String postUrl = String.format(
+				"%s/rest/api/latest/issue/%s/transitions?%s",
+				this.url,
+				ticket,
+				this.getAuthParams());
+
+		final JsonObject to = new JsonObject();
+		to.add("id", transition);
+
+		final JsonObject command = new JsonObject();
+		command.add("transition", to);
+
+		this.performPost(postUrl, command);
+	}
+
+	private String getTransitionId(final String ticket, String targetStateName, Set<String> possibleTransitions) {
+		final String getUrl = String.format(
+				"%s/rest/api/latest/issue/%s/transitions?%s",
+				this.url,
+				ticket,
+				this.getAuthParams());
+
+		final JsonObject result = this.performGet(getUrl).asObject();
+		for (final JsonValue curValue : result.get("transitions").asArray()) {
+			final JsonObject transition = curValue.asObject();
+			final String transitionTarget = transition.get("to").asObject().get("name").asString();
+			possibleTransitions.add(transitionTarget);
+			if (targetStateName.equals(transitionTarget)) {
+				return transition.get("id").asString();
+			}
+		}
+		return null;
+	}
 }

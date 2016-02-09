@@ -24,7 +24,7 @@ public class DummyMarker implements IMarker {
 	}
 
 	@Override
-	public <T> T getAdapter(Class<T> adapter) {
+	public Object getAdapter(Class adapter) {
 		throw new RuntimeException("not yet implemented");
 	}
 

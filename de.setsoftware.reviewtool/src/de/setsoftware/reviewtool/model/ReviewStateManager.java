@@ -2,7 +2,7 @@ package de.setsoftware.reviewtool.model;
 
 public class ReviewStateManager {
 
-	private final IReviewPersistence persistence;
+	private IReviewPersistence persistence;
 	private final ITicketChooser ticketChooser;
 
 	private String ticketKey;
@@ -77,6 +77,10 @@ public class ReviewStateManager {
 
 	public void resetKey() {
 		this.ticketKey = null;
+	}
+
+	public void setPersistence(IReviewPersistence newPersistence) {
+		this.persistence = newPersistence;
 	}
 
 }

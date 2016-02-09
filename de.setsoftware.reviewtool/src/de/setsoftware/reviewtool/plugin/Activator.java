@@ -16,11 +16,12 @@ public class Activator extends AbstractUIPlugin {
 
 	public void initializeDefaultPreferences() {
 		final IPreferenceStore store = this.getPreferenceStore();
-		store.setDefault("url", "http://jira.intranet.set.de:8080");
-		store.setDefault("reviewRemarkField", "Reviewanmerkungen");
-		store.setDefault("reviewState", "In Review");
-		store.setDefault("user", "");
-		store.setDefault("password", ""); //$NON-NLS-1$
+		store.setDefault(ReviewToolPreferencePage.JIRA_URL, "http://jira:8080");
+		store.setDefault(ReviewToolPreferencePage.JIRA_REVIEW_REMARK_FIELD, "Reviewanmerkungen");
+		store.setDefault(ReviewToolPreferencePage.JIRA_REVIEW_STATE, "In Review");
+		store.setDefault(ReviewToolPreferencePage.JIRA_IMPLEMENTATION_STATE, "In Implementation");
+		store.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
+		store.setDefault(ReviewToolPreferencePage.JIRA_PASSWORD, ""); //$NON-NLS-1$
 	}
 
 	@Override
