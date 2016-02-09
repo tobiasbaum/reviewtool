@@ -9,13 +9,18 @@ import java.util.List;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
 import de.setsoftware.reviewtool.dialogs.CorrectSyntaxDialog;
+import de.setsoftware.reviewtool.dialogs.EndReviewDialog;
+import de.setsoftware.reviewtool.dialogs.ReviewInfoDialog;
 import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
@@ -68,6 +73,9 @@ public class ReviewPlugin {
 					pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_REMARK_FIELD),
 					pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_STATE),
 					pref.getString(ReviewToolPreferencePage.JIRA_IMPLEMENTATION_STATE),
+					pref.getString(ReviewToolPreferencePage.JIRA_READY_FOR_REVIEW_STATE),
+					pref.getString(ReviewToolPreferencePage.JIRA_REJECTED_STATE),
+					pref.getString(ReviewToolPreferencePage.JIRA_DONE_STATE),
 					user,
 					pref.getString(ReviewToolPreferencePage.JIRA_PASSWORD));
 		} else {
@@ -138,28 +146,61 @@ public class ReviewPlugin {
 	}
 
 	public void endReview() throws CoreException {
+		final EndReviewDialog.TypeOfEnd typeOfEnd =
+				EndReviewDialog.selectTypeOfEnd(this.persistence, this.getCurrentReviewDataParsed());
+		if (typeOfEnd == null) {
+			return;
+		}
+		if (typeOfEnd != EndReviewDialog.TypeOfEnd.PAUSE &&
+				this.getCurrentReviewDataParsed().hasTemporaryMarkers()) {
+			final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+			final boolean yes = MessageDialog.openQuestion(shell, "Offene Marker",
+					"Es gibt noch temporäre Marker. Trotzdem abschließen?");
+			if (!yes) {
+				return;
+			}
+		}
+		switch (typeOfEnd) {
+		case ANOTHER_REVIEW:
+			this.persistence.changeStateToReadyForReview();
+			break;
+		case OK:
+			this.persistence.changeStateToDone();
+			break;
+		case REJECTED:
+			this.persistence.changeStateToRejected();
+			break;
+		case PAUSE:
+			break;
+		}
+		this.leaveReviewMode();
+	}
+
+	private void leaveReviewMode() throws CoreException {
 		this.clearMarkers();
 		this.setMode(Mode.IDLE);
 	}
 
 	public void endFixing() throws CoreException {
-		this.clearMarkers();
-		this.setMode(Mode.IDLE);
+		this.persistence.changeStateToReadyForReview();
+		this.leaveReviewMode();
 	}
 
 	public boolean hasUnresolvedRemarks() {
-		final ReviewData d = CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
-		return d.hasUnresolvedRemarks();
+		return this.getCurrentReviewDataParsed().hasUnresolvedRemarks();
 	}
 
-	public boolean hasTemporaryMarkers() {
-		final ReviewData d = CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
-		return d.hasTemporaryMarkers();
+	private ReviewData getCurrentReviewDataParsed() {
+		return CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
 	}
 
 	public void refreshMarkers() throws CoreException {
 		this.clearMarkers();
 		CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, new RealMarkerFactory());
+	}
+
+	public void showReviewInfo() {
+		ReviewInfoDialog.show(this.persistence);
 	}
 
 }

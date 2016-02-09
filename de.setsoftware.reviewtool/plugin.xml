@@ -34,6 +34,18 @@
 	   </command>
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.reviewinfo"
+	   		 label="Informationen zum Review ..." 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+                  <equals value="REVIEWING"/>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.endreview"
 	   		 label="Review beenden" 
 	   		 style="push">
@@ -106,6 +118,9 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.popup.actions.EndReviewAction"
         id="de.setsoftware.reviewtool.commands.endreview" name="End review">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.ReviewInfoAction"
+        id="de.setsoftware.reviewtool.commands.reviewinfo" name="Review info">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.popup.actions.StartFixingAction"
         id="de.setsoftware.reviewtool.commands.startfixing" name="Start fixing">

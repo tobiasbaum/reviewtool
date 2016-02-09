@@ -17,4 +17,6 @@ public interface ITicketData {
 	 */
 	public abstract int getCurrentRound();
 
+	public abstract TicketInfo getTicketInfo();
+
 }

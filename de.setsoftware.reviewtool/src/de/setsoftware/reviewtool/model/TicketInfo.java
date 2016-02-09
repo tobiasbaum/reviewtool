@@ -7,9 +7,9 @@ public class TicketInfo {
 	private final String state;
 	private final String component;
 
-	public TicketInfo(String key, String description, String state, String component) {
+	public TicketInfo(String key, String summary, String state, String component) {
 		this.key = key;
-		this.description = description;
+		this.description = summary;
 		this.state = state;
 		this.component = component;
 	}
@@ -18,7 +18,7 @@ public class TicketInfo {
 		return this.key;
 	}
 
-	public String getDescription() {
+	public String getSummary() {
 		return this.description;
 	}
 

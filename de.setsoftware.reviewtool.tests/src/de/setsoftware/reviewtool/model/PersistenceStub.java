@@ -42,6 +42,10 @@ public class PersistenceStub implements IReviewPersistence {
 			public int getCurrentRound() {
 				return PersistenceStub.this.roundIndex;
 			}
+			@Override
+			public TicketInfo getTicketInfo() {
+				return new TicketInfo("123", "asdf", "hjkl", "qwer");
+			}
 		};
 	}
 
@@ -51,6 +55,18 @@ public class PersistenceStub implements IReviewPersistence {
 
 	@Override
 	public void startFixing(String ticketKey) {
+	}
+
+	@Override
+	public void changeStateToReadyForReview(String ticketKey) {
+	}
+
+	@Override
+	public void changeStateToDone(String ticketKey) {
+	}
+
+	@Override
+	public void changeStateToRejected(String ticketKey) {
 	}
 
 }

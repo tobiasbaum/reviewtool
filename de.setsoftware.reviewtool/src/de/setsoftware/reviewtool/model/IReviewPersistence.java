@@ -27,4 +27,22 @@ public interface IReviewPersistence {
 	 */
 	public abstract void startFixing(String ticketKey);
 
+	/**
+	 * Changes the state of the given ticket to "ready for review".
+	 * If it already is in this state or the transition is not allowed, nothing happens.
+	 */
+	public abstract void changeStateToReadyForReview(String ticketKey);
+
+	/**
+	 * Changes the state of the given ticket to "done".
+	 * If it already is in this state or the transition is not allowed, nothing happens.
+	 */
+	public abstract void changeStateToDone(String ticketKey);
+
+	/**
+	 * Changes the state of the given ticket to "rejected".
+	 * If it already is in this state or the transition is not allowed, nothing happens.
+	 */
+	public abstract void changeStateToRejected(String ticketKey);
+
 }

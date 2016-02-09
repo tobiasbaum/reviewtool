@@ -24,6 +24,7 @@ public class FilePersistence implements IReviewPersistence {
 	private static final String REJECTED = "rejected";
 	private static final String IN_REVIEW = "inReview";
 	private static final String READY_FOR_REVIEW = "readyForReview";
+	private static final String DONE = "done";
 
 	private final class TicketDir implements ITicketData {
 
@@ -75,6 +76,11 @@ public class FilePersistence implements IReviewPersistence {
 
 		private Path getHistoryFile() {
 			return this.ticketDir.toPath().resolve(REVIEW_HISTORY_TXT);
+		}
+
+		@Override
+		public TicketInfo getTicketInfo() {
+			return FilePersistence.this.createTicketInfo(this.ticketDir);
 		}
 
 	}
@@ -203,6 +209,22 @@ public class FilePersistence implements IReviewPersistence {
 		final File ticketDir = new File(this.rootDir, ticketKey);
 		return new File(ticketDir, STATE_PREFIX + from).renameTo(
 				new File(ticketDir, STATE_PREFIX + to));
+	}
+
+	@Override
+	public void changeStateToReadyForReview(String ticketKey) {
+		this.changeState(ticketKey, IN_REVIEW, READY_FOR_REVIEW);
+		this.changeState(ticketKey, IN_IMPLEMENTATION, READY_FOR_REVIEW);
+	}
+
+	@Override
+	public void changeStateToDone(String ticketKey) {
+		this.changeState(ticketKey, IN_REVIEW, DONE);
+	}
+
+	@Override
+	public void changeStateToRejected(String ticketKey) {
+		this.changeState(ticketKey, IN_REVIEW, REJECTED);
 	}
 
 }

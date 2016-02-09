@@ -66,8 +66,9 @@ public class ReviewRemark {
 				this.marker.getAttribute(Constants.REMARK_TYPE, RemarkType.MUST_FIX.toString()));
 	}
 
-	public boolean isOpen() {
-		return this.getResolution() == ResolutionType.OPEN;
+	public boolean needsFixing() {
+		return this.getResolution() == ResolutionType.OPEN
+				&& (this.getRemarkType() == RemarkType.CAN_FIX || this.getRemarkType() == RemarkType.MUST_FIX);
 	}
 
 	public void setResolution(ResolutionType value) throws CoreException {

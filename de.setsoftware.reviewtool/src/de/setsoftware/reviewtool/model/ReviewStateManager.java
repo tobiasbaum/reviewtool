@@ -38,6 +38,10 @@ public class ReviewStateManager {
 		return ticket.getReviewerForRound(number);
 	}
 
+	public ITicketData getCurrentTicketData() {
+		return this.loadTicketDataAndCheckExistence(true);
+	}
+
 	private ITicketData loadTicketDataAndCheckExistence(boolean forReview) {
 		if (this.ticketKey == null) {
 			ITicketData data;
@@ -81,6 +85,18 @@ public class ReviewStateManager {
 
 	public void setPersistence(IReviewPersistence newPersistence) {
 		this.persistence = newPersistence;
+	}
+
+	public void changeStateToReadyForReview() {
+		this.persistence.changeStateToReadyForReview(this.ticketKey);
+	}
+
+	public void changeStateToDone() {
+		this.persistence.changeStateToDone(this.ticketKey);
+	}
+
+	public void changeStateToRejected() {
+		this.persistence.changeStateToRejected(this.ticketKey);
 	}
 
 }

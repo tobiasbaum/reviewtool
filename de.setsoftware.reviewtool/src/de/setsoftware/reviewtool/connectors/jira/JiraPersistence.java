@@ -70,24 +70,41 @@ public class JiraPersistence implements IReviewPersistence {
 			return count > 0 ? count - 1 : 0;
 		}
 
+		@Override
+		public TicketInfo getTicketInfo() {
+			return JiraPersistence.this.queryTickets("key=" + this.ticket.get("key").asString()).get(0);
+		}
+
 	}
 
 	private final String url;
 	private final String reviewFieldName;
 	private final String reviewState;
 	private final String implementationState;
+	private final String readyForReviewState;
+	private final String rejectedState;
+	private final String doneState;
 	private final String user;
 	private final String password;
 
 	private String reviewFieldId;
 
 	public JiraPersistence(
-			String url, String reviewFieldName, String reviewState, String implementationState,
+			String url,
+			String reviewFieldName,
+			String reviewState,
+			String implementationState,
+			String readyForReviewState,
+			String rejectedState,
+			String doneState,
 			String user, String password) {
 		this.url = url;
 		this.reviewFieldName = reviewFieldName;
 		this.reviewState = reviewState;
 		this.implementationState = implementationState;
+		this.readyForReviewState = readyForReviewState;
+		this.rejectedState = rejectedState;
+		this.doneState = doneState;
 		this.user = user;
 		this.password = password;
 	}
@@ -297,11 +314,26 @@ public class JiraPersistence implements IReviewPersistence {
 		this.performTransitionIfPossible(ticketKey, this.implementationState);
 	}
 
-	private void performTransitionIfPossible(String ticketKey, String reviewState2) {
+	@Override
+	public void changeStateToReadyForReview(String ticketKey) {
+		this.performTransitionIfPossible(ticketKey, this.readyForReviewState);
+	}
+
+	@Override
+	public void changeStateToDone(String ticketKey) {
+		this.performTransitionIfPossible(ticketKey, this.doneState);
+	}
+
+	@Override
+	public void changeStateToRejected(String ticketKey) {
+		this.performTransitionIfPossible(ticketKey, this.rejectedState);
+	}
+
+	private void performTransitionIfPossible(String ticketKey, String targetState) {
 		final TreeSet<String> possibleTransitions = new TreeSet<>();
-		final String transition = this.getTransitionId(ticketKey, this.reviewState, possibleTransitions);
+		final String transition = this.getTransitionId(ticketKey, targetState, possibleTransitions);
 		if (transition == null) {
-			Logger.info("Could not transition " + ticketKey + " to " + this.reviewState
+			Logger.info("Could not transition " + ticketKey + " to " + targetState
 					+ ". Possible transitions: " + possibleTransitions);
 		} else {
 			this.performTransition(ticketKey, transition);
@@ -342,4 +374,5 @@ public class JiraPersistence implements IReviewPersistence {
 		}
 		return null;
 	}
+
 }

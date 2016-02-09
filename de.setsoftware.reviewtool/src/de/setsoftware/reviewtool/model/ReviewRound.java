@@ -93,7 +93,7 @@ public class ReviewRound {
 
 	public boolean hasUnresolvedRemarks() {
 		for (final ReviewRemark r : this.remarks) {
-			if (r.isOpen()) {
+			if (r.needsFixing()) {
 				return true;
 			}
 		}
