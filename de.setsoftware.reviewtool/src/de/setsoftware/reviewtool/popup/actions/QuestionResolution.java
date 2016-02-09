@@ -19,7 +19,7 @@ public class QuestionResolution implements IMarkerResolution {
 
 	@Override
 	public String getLabel() {
-		return "Rückfrage";
+		return "RÃ¼ckfrage";
 	}
 
 	@Override

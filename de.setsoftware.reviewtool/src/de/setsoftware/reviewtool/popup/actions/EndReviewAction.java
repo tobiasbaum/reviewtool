@@ -18,7 +18,7 @@ public class EndReviewAction extends AbstractHandler {
 			if (ReviewPlugin.getInstance().hasTemporaryMarkers()) {
 				final Shell shell = HandlerUtil.getActiveShell(event);
 				final boolean yes = MessageDialog.openQuestion(shell, "Offene Marker",
-						"Es gibt noch tempor‰re Marker. Trotzdem abschlieﬂen?");
+						"Es gibt noch tempor√§re Marker. Trotzdem abschlie√üen?");
 				if (!yes) {
 					return null;
 				}

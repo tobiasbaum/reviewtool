@@ -23,7 +23,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 					QuestionResolution.INSTANCE
 			};
 		case REVIEWING:
-			//TODO ändern
+			//TODO  Ã¤ndern
 			return new IMarkerResolution[] {
 					DeleteResolution.INSTANCE,
 					CommentResolution.INSTANCE

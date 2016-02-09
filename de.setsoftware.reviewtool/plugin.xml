@@ -156,7 +156,7 @@
  <extension
        point="org.eclipse.ui.preferencePages">
     <page
-          class="de.setsoftware.reviewtool.plugin.WorkbenchPreferencePage"
+          class="de.setsoftware.reviewtool.plugin.ReviewToolPreferencePage"
           id="de.setsoftware.reviewtool.preferences"
           name="Review-Einstellungen">
     </page>

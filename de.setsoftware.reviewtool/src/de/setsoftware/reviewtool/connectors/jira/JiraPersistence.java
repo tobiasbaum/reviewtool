@@ -130,11 +130,13 @@ public class JiraPersistence implements IReviewPersistence {
 
 	@Override
 	public List<TicketInfo> getReviewableTickets() {
+		//TODO variable Anteile auslagern
 		return this.queryTickets("(status = \"Ready for Review\" and assignee != currentUser()) or (status = \"In Review\" and assignee = currentUser())");
 	}
 
 	@Override
 	public List<TicketInfo> getFixableTickets() {
+		//TODO variable Anteile auslagern
 		return this.queryTickets("assignee = currentUser() and (status = Rejected or (status = \"In Progress\" and Reviewanmerkungen is not EMPTY))");
 	}
 
@@ -236,7 +238,7 @@ public class JiraPersistence implements IReviewPersistence {
 	}
 
 	/**
-	 * Sendet und empf�ngt Daten.
+	 * Sendet und empfängt Daten.
 	 */
 	private void communicate(final String url, final String method, final String data) throws IOException {
 		final HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();

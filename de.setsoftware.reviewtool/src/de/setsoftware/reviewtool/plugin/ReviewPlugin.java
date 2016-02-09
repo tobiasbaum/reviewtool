@@ -12,6 +12,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.preference.IPreferenceStore;
 
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
+import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
 import de.setsoftware.reviewtool.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.model.Constants;
@@ -36,15 +37,19 @@ public class ReviewPlugin {
 
 	private ReviewPlugin() {
 		final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-		pref.setDefault("user", System.getProperty("user.name"));
-		final String user = pref.getString("user");
-		final IReviewPersistence persistence = new FilePersistence(new File("C:\\Temp\\reviewData"), user);
-		//		this.persistence = new ReviewStateManager(user, new JiraPersistence(
-		//				pref.getString("url"),
-		//				pref.getString("reviewRemarkField"),
-		//				pref.getString("reviewState"),
-		//				pref.getString("user"),
-		//				pref.getString("password")));
+		pref.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
+		final String user = pref.getString(ReviewToolPreferencePage.USER);
+		final IReviewPersistence persistence;
+		if (pref.getBoolean(ReviewToolPreferencePage.JIRA_SOURCE)) {
+			persistence = new JiraPersistence(
+					pref.getString(ReviewToolPreferencePage.JIRA_URL),
+					pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_REMARK_FIELD),
+					pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_STATE),
+					user,
+					pref.getString(ReviewToolPreferencePage.JIRA_PASSWORD));
+		} else {
+			persistence = new FilePersistence(new File(pref.getString(ReviewToolPreferencePage.FILE_PATH)), user);
+		}
 		final ITicketChooser ticketChooser = new ITicketChooser() {
 			@Override
 			public String choose(
