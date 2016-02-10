@@ -141,7 +141,8 @@ public class FilePersistence implements IReviewPersistence {
 				child.getName(),
 				ticketProperties.getProperty("description", ""),
 				this.getState(child),
-				ticketProperties.getProperty("component", ""));
+				ticketProperties.getProperty("component", ""),
+				ticketProperties.getProperty("parentSummary"));
 	}
 
 	private boolean hasState(File child, String state) {

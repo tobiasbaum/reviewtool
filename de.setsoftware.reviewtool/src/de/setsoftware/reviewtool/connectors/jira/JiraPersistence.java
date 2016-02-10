@@ -169,7 +169,7 @@ public class JiraPersistence implements IReviewPersistence {
 			final String searchUrl = String.format(
 					"%s/rest/api/latest/search" +
 							"?maxResults=200" +
-							"&fields=summary,components,status" +
+							"&fields=summary,components,status,parent" +
 							"&jql=%s" +
 							"%s",
 							this.url,
@@ -188,11 +188,13 @@ public class JiraPersistence implements IReviewPersistence {
 	}
 
 	private TicketInfo mapTicket(JsonObject ticket) {
+		final JsonValue parent = ticket.get("fields").asObject().get("parent");
 		return new TicketInfo(
 				ticket.get("key").asString(),
 				ticket.get("fields").asObject().get("summary").asString(),
 				ticket.get("fields").asObject().get("status").asObject().get("name").asString(),
-				this.formatComponents(ticket.get("fields").asObject().get("components").asArray()));
+				this.formatComponents(ticket.get("fields").asObject().get("components").asArray()),
+				parent == null ? null : parent.asObject().get("fields").asObject().get("summary").asString());
 	}
 
 	private String formatComponents(JsonArray components) {

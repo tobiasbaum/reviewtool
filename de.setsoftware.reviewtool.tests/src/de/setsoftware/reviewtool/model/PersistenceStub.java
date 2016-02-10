@@ -44,7 +44,7 @@ public class PersistenceStub implements IReviewPersistence {
 			}
 			@Override
 			public TicketInfo getTicketInfo() {
-				return new TicketInfo("123", "asdf", "hjkl", "qwer");
+				return new TicketInfo("123", "asdf", "hjkl", "qwer", null);
 			}
 		};
 	}

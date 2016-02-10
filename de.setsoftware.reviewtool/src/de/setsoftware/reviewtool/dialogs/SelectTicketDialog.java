@@ -76,7 +76,7 @@ public class SelectTicketDialog extends Dialog {
 		for (final TicketInfo ticket : this.tickets) {
 			final TableItem item = new TableItem(this.selectionTable, SWT.NULL);
 			item.setText(0, ticket.getID());
-			item.setText(1, ticket.getSummary());
+			item.setText(1, ticket.getSummaryIncludingParent());
 			item.setText(2, ticket.getState());
 			item.setText(3, ticket.getComponent());
 		}
