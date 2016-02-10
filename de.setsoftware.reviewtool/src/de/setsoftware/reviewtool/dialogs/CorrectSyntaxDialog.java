@@ -34,7 +34,7 @@ public class CorrectSyntaxDialog extends Dialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("Syntaxfehler-Korrektur");
-		newShell.setSize(500, 500);
+		DialogHelper.restoreSavedSize(newShell, this, 500, 500);
 	}
 
 	@Override
@@ -58,11 +58,13 @@ public class CorrectSyntaxDialog extends Dialog {
 	@Override
 	protected void okPressed() {
 		this.correctedText = this.textField.getText();
+		DialogHelper.saveDialogSize(this);
 		super.okPressed();
 	}
 
 	@Override
 	protected void cancelPressed() {
+		DialogHelper.saveDialogSize(this);
 		super.cancelPressed();
 	}
 

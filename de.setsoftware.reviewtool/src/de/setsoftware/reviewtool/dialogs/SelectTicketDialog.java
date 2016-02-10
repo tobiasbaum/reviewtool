@@ -52,7 +52,7 @@ public class SelectTicketDialog extends Dialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("Ticket auswählen");
-		newShell.setSize(400, 500);
+		DialogHelper.restoreSavedSize(newShell, this, 700, 500);
 	}
 
 	@Override
@@ -111,11 +111,13 @@ public class SelectTicketDialog extends Dialog {
 			return;
 		}
 		this.selectedKey = this.keyField.getText();
+		DialogHelper.saveDialogSize(this);
 		super.okPressed();
 	}
 
 	@Override
 	protected void cancelPressed() {
+		DialogHelper.saveDialogSize(this);
 		super.cancelPressed();
 	}
 

@@ -29,7 +29,7 @@ public class ReviewInfoDialog extends Dialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("Review von Ticket " + this.ticketData.getTicketInfo().getID());
-		newShell.setSize(500, 500);
+		DialogHelper.restoreSavedSize(newShell, this, 500, 500);
 	}
 
 	@Override
@@ -63,4 +63,16 @@ public class ReviewInfoDialog extends Dialog {
 		dialog.open();
 	}
 
+
+	@Override
+	protected void okPressed() {
+		DialogHelper.saveDialogSize(this);
+		super.okPressed();
+	}
+
+	@Override
+	protected void cancelPressed() {
+		DialogHelper.saveDialogSize(this);
+		super.cancelPressed();
+	}
 }

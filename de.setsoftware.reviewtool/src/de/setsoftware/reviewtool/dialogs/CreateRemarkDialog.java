@@ -111,11 +111,13 @@ public class CreateRemarkDialog extends Dialog {
 		this.callback.execute(
 				this.textField.getText(),
 				ReviewRound.parseType(this.typeCombo.getText()));
+		DialogHelper.saveDialogSize(this);
 		super.okPressed();
 	}
 
 	@Override
 	protected void cancelPressed() {
+		DialogHelper.saveDialogSize(this);
 		super.cancelPressed();
 	}
 }

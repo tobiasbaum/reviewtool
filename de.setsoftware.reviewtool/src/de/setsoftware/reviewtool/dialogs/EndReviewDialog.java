@@ -44,7 +44,7 @@ public class EndReviewDialog extends Dialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("Review beenden - " + this.persistence.getCurrentTicketData().getTicketInfo().getID());
-		newShell.setSize(500, 500);
+		DialogHelper.restoreSavedSize(newShell, this, 500, 500);
 	}
 
 	@Override
@@ -97,11 +97,13 @@ public class EndReviewDialog extends Dialog {
 			this.typeOfEnd = TypeOfEnd.ANOTHER_REVIEW;
 		}
 		this.persistence.saveCurrentReviewData(this.textField.getText());
+		DialogHelper.saveDialogSize(this);
 		super.okPressed();
 	}
 
 	@Override
 	protected void cancelPressed() {
+		DialogHelper.saveDialogSize(this);
 		super.cancelPressed();
 	}
 

@@ -39,6 +39,7 @@ public class AddReplyDialog extends Dialog {
 	protected void configureShell(Shell newShell) {
 		super.configureShell(newShell);
 		newShell.setText("Anmerkung eingeben");
+		DialogHelper.restoreSavedSize(newShell, this, 300, 200);
 	}
 
 	@Override
@@ -82,11 +83,13 @@ public class AddReplyDialog extends Dialog {
 	@Override
 	protected void okPressed() {
 		this.callback.execute(this.textField.getText());
+		DialogHelper.saveDialogSize(this);
 		super.okPressed();
 	}
 
 	@Override
 	protected void cancelPressed() {
+		DialogHelper.saveDialogSize(this);
 		super.cancelPressed();
 	}
 }
