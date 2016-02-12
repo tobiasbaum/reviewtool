@@ -6,6 +6,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaProject;
@@ -87,6 +88,16 @@ public class AddRemarkAction extends AbstractHandler {
 			this.createMarker((ICompilationUnit) firstElement, 0);
 		} else if (firstElement instanceof IPackageFragment) {
 			this.createMarker((IPackageFragment) firstElement, 0);
+		} else if (firstElement instanceof IResource) {
+			this.createMarker((IResource) firstElement, 0);
+		} else if (firstElement instanceof IAdaptable) {
+			final IResource res = ((IAdaptable) firstElement).getAdapter(IResource.class);
+			if (res != null) {
+				this.createMarker(res, 0);
+			} else {
+				MessageDialog.openInformation(shell, "Unsupported selection 3",
+						"type=" + firstElement.getClass());
+			}
 		} else {
 			MessageDialog.openInformation(shell, "Unsupported selection 2",
 					"type=" + firstElement.getClass());
