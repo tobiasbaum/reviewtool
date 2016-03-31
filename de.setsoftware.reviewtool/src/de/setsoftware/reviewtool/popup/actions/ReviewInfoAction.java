@@ -8,10 +8,10 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 public class ReviewInfoAction extends AbstractHandler {
 
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-		ReviewPlugin.getInstance().showReviewInfo();
-		return null;
-	}
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+        ReviewPlugin.getInstance().showReviewInfo();
+        return null;
+    }
 
 }

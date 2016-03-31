@@ -10,16 +10,16 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 public class StartReviewAction extends AbstractHandler {
 
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-		PositionTransformer.initializeCacheInBackground();
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+        PositionTransformer.initializeCacheInBackground();
 
-		try {
-			ReviewPlugin.getInstance().startReview();
-		} catch (final CoreException e) {
-			throw new ExecutionException("problem while starting review", e);
-		}
-		return null;
-	}
+        try {
+            ReviewPlugin.getInstance().startReview();
+        } catch (final CoreException e) {
+            throw new ExecutionException("problem while starting review", e);
+        }
+        return null;
+    }
 
 }

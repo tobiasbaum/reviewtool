@@ -12,41 +12,41 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 public class WontFixResolution implements IMarkerResolution {
 
-	public static final WontFixResolution INSTANCE = new WontFixResolution();
+    public static final WontFixResolution INSTANCE = new WontFixResolution();
 
-	private WontFixResolution() {
-	}
+    private WontFixResolution() {
+    }
 
-	@Override
-	public String getLabel() {
-		return "Ablehnen";
-	}
+    @Override
+    public String getLabel() {
+        return "Ablehnen";
+    }
 
-	@Override
-	public void run(IMarker marker) {
-		final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
-		AddReplyDialog.get(review, new InputDialogCallback() {
-			@Override
-			public void execute(String text) {
-				try {
-					review.addComment(text);
-					review.setResolution(ResolutionType.WONT_FIX);
-					review.save();
-				} catch (final CoreException e) {
-					throw new RuntimeException(e);
-				}
-			}
-		});
-	}
+    @Override
+    public void run(IMarker marker) {
+        final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
+        AddReplyDialog.get(review, new InputDialogCallback() {
+            @Override
+            public void execute(String text) {
+                try {
+                    review.addComment(text);
+                    review.setResolution(ResolutionType.WONT_FIX);
+                    review.save();
+                } catch (final CoreException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		return o instanceof WontFixResolution;
-	}
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof WontFixResolution;
+    }
 
-	@Override
-	public int hashCode() {
-		return 6547659;
-	}
+    @Override
+    public int hashCode() {
+        return 6547659;
+    }
 
 }

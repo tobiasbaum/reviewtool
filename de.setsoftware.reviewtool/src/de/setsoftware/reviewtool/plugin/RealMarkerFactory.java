@@ -10,9 +10,9 @@ import de.setsoftware.reviewtool.model.PositionTransformer;
 
 public class RealMarkerFactory implements IMarkerFactory {
 
-	@Override
-	public IMarker createMarker(Position pos) throws CoreException {
-		return PositionTransformer.toResource(pos).createMarker(Constants.REVIEWMARKER_ID);
-	}
+    @Override
+    public IMarker createMarker(Position pos) throws CoreException {
+        return PositionTransformer.toResource(pos).createMarker(Constants.REVIEWMARKER_ID);
+    }
 
 }

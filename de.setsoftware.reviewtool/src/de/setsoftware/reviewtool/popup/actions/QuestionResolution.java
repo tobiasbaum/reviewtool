@@ -12,41 +12,41 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 public class QuestionResolution implements IMarkerResolution {
 
-	public static final QuestionResolution INSTANCE = new QuestionResolution();
+    public static final QuestionResolution INSTANCE = new QuestionResolution();
 
-	private QuestionResolution() {
-	}
+    private QuestionResolution() {
+    }
 
-	@Override
-	public String getLabel() {
-		return "Rückfrage";
-	}
+    @Override
+    public String getLabel() {
+        return "Rückfrage";
+    }
 
-	@Override
-	public void run(IMarker marker) {
-		final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
-		AddReplyDialog.get(review, new InputDialogCallback() {
-			@Override
-			public void execute(String text) {
-				try {
-					review.addComment(text);
-					review.setResolution(ResolutionType.QUESTION);
-					review.save();
-				} catch (final CoreException e) {
-					throw new RuntimeException(e);
-				}
-			}
-		});
-	}
+    @Override
+    public void run(IMarker marker) {
+        final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
+        AddReplyDialog.get(review, new InputDialogCallback() {
+            @Override
+            public void execute(String text) {
+                try {
+                    review.addComment(text);
+                    review.setResolution(ResolutionType.QUESTION);
+                    review.save();
+                } catch (final CoreException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+    }
 
-	@Override
-	public boolean equals(Object o) {
-		return o instanceof QuestionResolution;
-	}
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof QuestionResolution;
+    }
 
-	@Override
-	public int hashCode() {
-		return 1231232;
-	}
+    @Override
+    public int hashCode() {
+        return 1231232;
+    }
 
 }

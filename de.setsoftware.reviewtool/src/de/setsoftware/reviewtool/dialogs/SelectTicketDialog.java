@@ -23,102 +23,103 @@ import de.setsoftware.reviewtool.model.TicketInfo;
 
 public class SelectTicketDialog extends Dialog {
 
-	private Table selectionTable;
-	private Text keyField;
+    private Table selectionTable;
+    private Text keyField;
 
-	private final List<TicketInfo> tickets;
-	private final String oldValue;
-	private String selectedKey;
+    private final List<TicketInfo> tickets;
+    private final String oldValue;
+    private String selectedKey;
 
-	protected SelectTicketDialog(Shell parentShell, String oldValue, List<TicketInfo> tickets) {
-		super(parentShell);
-		this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
-		this.oldValue = oldValue;
-		this.tickets = tickets;
-	}
+    protected SelectTicketDialog(Shell parentShell, String oldValue, List<TicketInfo> tickets) {
+        super(parentShell);
+        this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
+        this.oldValue = oldValue;
+        this.tickets = tickets;
+    }
 
-	public static String get(IReviewPersistence p, String oldValue, boolean forReview) {
-		final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-		final SelectTicketDialog dialog = new SelectTicketDialog(
-				s, oldValue, forReview ? p.getReviewableTickets() : p.getFixableTickets());
-		final int ret = dialog.open();
-		if (ret != OK) {
-			return null;
-		}
-		return dialog.selectedKey;
-	}
+    public static String get(IReviewPersistence p, String oldValue, boolean forReview) {
+        final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+        final SelectTicketDialog dialog = new SelectTicketDialog(
+                s, oldValue, forReview ? p.getReviewableTickets() : p.getFixableTickets());
+        final int ret = dialog.open();
+        if (ret != OK) {
+            return null;
+        }
+        return dialog.selectedKey;
+    }
 
-	@Override
-	protected void configureShell(Shell newShell) {
-		super.configureShell(newShell);
-		newShell.setText("Ticket auswählen");
-		DialogHelper.restoreSavedSize(newShell, this, 700, 500);
-	}
+    @Override
+    protected void configureShell(Shell newShell) {
+        super.configureShell(newShell);
+        newShell.setText("Ticket auswählen");
+        DialogHelper.restoreSavedSize(newShell, this, 700, 500);
+    }
 
-	@Override
-	protected Control createDialogArea(Composite parent) {
-		final Composite comp = (Composite) super.createDialogArea(parent);
+    @Override
+    protected Control createDialogArea(Composite parent) {
+        final Composite comp = (Composite) super.createDialogArea(parent);
 
-		final GridLayout layout = (GridLayout) comp.getLayout();
-		layout.numColumns = 1;
+        final GridLayout layout = (GridLayout) comp.getLayout();
+        layout.numColumns = 1;
 
-		this.selectionTable = new Table(comp,
-				SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
-		this.selectionTable.setHeaderVisible(true);
-		this.selectionTable.setLayoutData(new GridData(GridData.FILL_BOTH));
-		final String[] titles = {"ID", "Beschreibung", "Status", "Komponente"};
+        this.selectionTable = new Table(comp,
+                SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
+        this.selectionTable.setHeaderVisible(true);
+        this.selectionTable.setLayoutData(new GridData(GridData.FILL_BOTH));
+        final String[] titles = {"ID", "Beschreibung", "Status", "Komponente"};
 
-		for (int i = 0; i < titles.length; i++) {
-			final TableColumn column = new TableColumn(this.selectionTable, SWT.NULL);
-			column.setText(titles[i]);
-		}
+        for (int i = 0; i < titles.length; i++) {
+            final TableColumn column = new TableColumn(this.selectionTable, SWT.NULL);
+            column.setText(titles[i]);
+        }
 
-		for (final TicketInfo ticket : this.tickets) {
-			final TableItem item = new TableItem(this.selectionTable, SWT.NULL);
-			item.setText(0, ticket.getID());
-			item.setText(1, ticket.getSummaryIncludingParent());
-			item.setText(2, ticket.getState());
-			item.setText(3, ticket.getComponent());
-		}
+        for (final TicketInfo ticket : this.tickets) {
+            final TableItem item = new TableItem(this.selectionTable, SWT.NULL);
+            item.setText(0, ticket.getId());
+            item.setText(1, ticket.getSummaryIncludingParent());
+            item.setText(2, ticket.getState());
+            item.setText(3, ticket.getComponent());
+        }
 
-		for (int i = 0; i < titles.length; i++) {
-			this.selectionTable.getColumn(i).pack();
-		}
+        for (int i = 0; i < titles.length; i++) {
+            this.selectionTable.getColumn(i).pack();
+        }
 
-		this.keyField = new Text(comp, SWT.BORDER);
-		this.keyField.setText(this.oldValue);
-		this.keyField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        this.keyField = new Text(comp, SWT.BORDER);
+        this.keyField.setText(this.oldValue);
+        this.keyField.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-		this.selectionTable.addSelectionListener(new SelectionListener() {
-			@Override
-			public void widgetDefaultSelected(SelectionEvent event) {
-				final TableItem item = (TableItem) event.item;
-				SelectTicketDialog.this.keyField.setText(item.getText(0));
-				SelectTicketDialog.this.okPressed();
-			}
-			@Override
-			public void widgetSelected(SelectionEvent arg0) { }
-		});
+        this.selectionTable.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetDefaultSelected(SelectionEvent event) {
+                final TableItem item = (TableItem) event.item;
+                SelectTicketDialog.this.keyField.setText(item.getText(0));
+                SelectTicketDialog.this.okPressed();
+            }
 
-		return comp;
-	}
+            @Override
+            public void widgetSelected(SelectionEvent arg0) { }
+        });
 
-	@Override
-	protected void okPressed() {
-		if (this.keyField.getText().isEmpty()) {
-			MessageDialog.openError(this.getShell(), "Schlüssel fehlt",
-					"Bitte einen Ticket-Schlüssel eingeben");
-			return;
-		}
-		this.selectedKey = this.keyField.getText();
-		DialogHelper.saveDialogSize(this);
-		super.okPressed();
-	}
+        return comp;
+    }
 
-	@Override
-	protected void cancelPressed() {
-		DialogHelper.saveDialogSize(this);
-		super.cancelPressed();
-	}
+    @Override
+    protected void okPressed() {
+        if (this.keyField.getText().isEmpty()) {
+            MessageDialog.openError(this.getShell(), "Schlüssel fehlt",
+                    "Bitte einen Ticket-Schlüssel eingeben");
+            return;
+        }
+        this.selectedKey = this.keyField.getText();
+        DialogHelper.saveDialogSize(this);
+        super.okPressed();
+    }
+
+    @Override
+    protected void cancelPressed() {
+        DialogHelper.saveDialogSize(this);
+        super.cancelPressed();
+    }
 
 }

@@ -28,12 +28,6 @@
 
     </repositories>
 
-	<modules>
-		<module>de.setsoftware.reviewtool</module>
-		<module>de.setsoftware.reviewtool.tests</module>
-		<module>de.setsoftware.reviewtool.feature</module>
-		<module>de.setsoftware.reviewtool.updatesite</module>
-	</modules>
    <build>
         <plugins>
             <plugin>
@@ -77,6 +71,64 @@
                     </environments>
                 </configuration>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>2.17</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>de.setsoftware.reviewtool</groupId>
+                        <artifactId>build-tools</artifactId>
+                        <version>1.0</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>analysis/checkstyle.xml</configLocation>
+                    <encoding>UTF-8</encoding>
+                    <consoleOutput>true</consoleOutput>
+                    <failOnViolation>true</failOnViolation>
+                    <!--<failsOnError>true</failsOnError>-->
+                    <linkXRef>false</linkXRef>
+                </configuration>
+            </plugin>
         </plugins>
+
+        <pluginManagement>
+            <plugins>
+
+                <plugin>
+                    <groupId>org.pitest</groupId>
+                    <artifactId>classycle-maven-plugin</artifactId>
+                    <version>0.4</version>
+                    <executions>
+                        <execution>
+                            <id>verify</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>check</goal>
+                            </goals>
+                            <configuration>
+                                <dependencyDefinition>
+                                show allResults
+                                {package} = de.setsoftware.reviewtool
+                                check absenceOfPackageCycles > 1 in ${package}.*
+                                </dependencyDefinition>
+                                <!--<resultRenderer>classycle.dependency.XMLResultRenderer</resultRenderer>-->
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+
     </build>
+
+    <modules>
+        <module>build-tools</module>
+        <module>de.setsoftware.reviewtool</module>
+        <module>de.setsoftware.reviewtool.tests</module>
+        <module>de.setsoftware.reviewtool.feature</module>
+        <module>de.setsoftware.reviewtool.updatesite</module>
+    </modules>
 </project>

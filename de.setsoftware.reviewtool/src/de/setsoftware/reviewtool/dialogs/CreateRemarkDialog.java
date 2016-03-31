@@ -21,103 +21,104 @@ import de.setsoftware.reviewtool.model.ReviewRound;
 
 public class CreateRemarkDialog extends Dialog {
 
-	public interface CreateDialogCallback {
-		public abstract void execute(String text, RemarkType type);
-	}
+    public interface CreateDialogCallback {
+        public abstract void execute(String text, RemarkType type);
+    }
 
-	private Combo typeCombo;
-	private Text textField;
-	private final CreateDialogCallback callback;
+    private Combo typeCombo;
+    private Text textField;
+    private final CreateDialogCallback callback;
 
-	protected CreateRemarkDialog(Shell parentShell, CreateDialogCallback callback) {
-		super(parentShell);
-		this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
-		this.callback = callback;
-	}
+    protected CreateRemarkDialog(Shell parentShell, CreateDialogCallback callback) {
+        super(parentShell);
+        this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
+        this.callback = callback;
+    }
 
-	public static void get(CreateDialogCallback callback) {
-		final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-		new CreateRemarkDialog(s, callback).open();
-	}
+    public static void get(CreateDialogCallback callback) {
+        final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+        new CreateRemarkDialog(s, callback).open();
+    }
 
-	@Override
-	protected void configureShell(Shell newShell) {
-		super.configureShell(newShell);
-		newShell.setText("Anmerkung eingeben");
-		newShell.setSize(300, 200);
-	}
+    @Override
+    protected void configureShell(Shell newShell) {
+        super.configureShell(newShell);
+        newShell.setText("Anmerkung eingeben");
+        newShell.setSize(300, 200);
+    }
 
-	@Override
-	protected Control createDialogArea(Composite parent) {
-		final Composite comp = (Composite) super.createDialogArea(parent);
+    @Override
+    protected Control createDialogArea(Composite parent) {
+        final Composite comp = (Composite) super.createDialogArea(parent);
 
-		final GridLayout layout = (GridLayout) comp.getLayout();
-		layout.numColumns = 1;
+        final GridLayout layout = (GridLayout) comp.getLayout();
+        layout.numColumns = 1;
 
-		this.typeCombo = new Combo(comp, SWT.BORDER | SWT.READ_ONLY);
-		this.typeCombo.add(ReviewRound.MUST_FIX_HEADER);
-		this.typeCombo.add(ReviewRound.CAN_FIX_HEADER);
-		this.typeCombo.add(ReviewRound.ALREADY_FIXED_HEADER);
-		this.typeCombo.add(ReviewRound.POSITIVE_HEADER);
-		this.typeCombo.add(ReviewRound.TEMPORARY_HEADER);
+        this.typeCombo = new Combo(comp, SWT.BORDER | SWT.READ_ONLY);
+        this.typeCombo.add(ReviewRound.MUST_FIX_HEADER);
+        this.typeCombo.add(ReviewRound.CAN_FIX_HEADER);
+        this.typeCombo.add(ReviewRound.ALREADY_FIXED_HEADER);
+        this.typeCombo.add(ReviewRound.POSITIVE_HEADER);
+        this.typeCombo.add(ReviewRound.TEMPORARY_HEADER);
 
-		this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.RESIZE);
+        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.RESIZE);
 
-		final GridData data = new GridData(GridData.FILL_BOTH);
-		this.textField.setLayoutData(data);
-		this.textField.addTraverseListener(new TraverseListener() {
-			@Override
-			public void keyTraversed(TraverseEvent e) {
-				if (e.detail == SWT.TRAVERSE_TAB_NEXT
-						|| e.detail == SWT.TRAVERSE_TAB_PREVIOUS
-						|| e.detail == SWT.TRAVERSE_RETURN) {
-					e.doit = true;
-				}
-			}
-		});
+        final GridData data = new GridData(GridData.FILL_BOTH);
+        this.textField.setLayoutData(data);
+        this.textField.addTraverseListener(new TraverseListener() {
+            @Override
+            public void keyTraversed(TraverseEvent e) {
+                if (e.detail == SWT.TRAVERSE_TAB_NEXT
+                        || e.detail == SWT.TRAVERSE_TAB_PREVIOUS
+                        || e.detail == SWT.TRAVERSE_RETURN) {
+                    e.doit = true;
+                }
+            }
+        });
 
-		//f�r noch schnelleres Tippen: Wenn mit einem Buchstaben die Kategorie gew�hlt
-		//  wurde springt er direkt in das Textfeld
-		this.typeCombo.addKeyListener(new KeyListener() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-			}
-			@Override
-			public void keyPressed(KeyEvent e) {
-				for (int i = 0; i < CreateRemarkDialog.this.typeCombo.getItemCount(); i++) {
-					if (e.character == CreateRemarkDialog.this.typeCombo.getItem(i).charAt(0)) {
-						CreateRemarkDialog.this.typeCombo.select(i);
-						CreateRemarkDialog.this.textField.setFocus();
-					}
-				}
-			}
-		});
+        //für noch schnelleres Tippen: Wenn mit einem Buchstaben die Kategorie gewählt
+        //  wurde springt er direkt in das Textfeld
+        this.typeCombo.addKeyListener(new KeyListener() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+            }
 
-		return comp;
-	}
+            @Override
+            public void keyPressed(KeyEvent e) {
+                for (int i = 0; i < CreateRemarkDialog.this.typeCombo.getItemCount(); i++) {
+                    if (e.character == CreateRemarkDialog.this.typeCombo.getItem(i).charAt(0)) {
+                        CreateRemarkDialog.this.typeCombo.select(i);
+                        CreateRemarkDialog.this.textField.setFocus();
+                    }
+                }
+            }
+        });
 
-	@Override
-	protected void okPressed() {
-		if (this.textField.getText().isEmpty()) {
-			MessageDialog.openError(this.getShell(), "Anmerkung fehlt",
-					"Bitte eine Anmerkung eingeben");
-			return;
-		}
-		if (this.typeCombo.getText().isEmpty()) {
-			MessageDialog.openError(this.getShell(), "Art fehlt",
-					"Bitte die Art der Anmerkung auswählen");
-			return;
-		}
-		this.callback.execute(
-				this.textField.getText(),
-				ReviewRound.parseType(this.typeCombo.getText()));
-		DialogHelper.saveDialogSize(this);
-		super.okPressed();
-	}
+        return comp;
+    }
 
-	@Override
-	protected void cancelPressed() {
-		DialogHelper.saveDialogSize(this);
-		super.cancelPressed();
-	}
+    @Override
+    protected void okPressed() {
+        if (this.textField.getText().isEmpty()) {
+            MessageDialog.openError(this.getShell(), "Anmerkung fehlt",
+                    "Bitte eine Anmerkung eingeben");
+            return;
+        }
+        if (this.typeCombo.getText().isEmpty()) {
+            MessageDialog.openError(this.getShell(), "Art fehlt",
+                    "Bitte die Art der Anmerkung auswählen");
+            return;
+        }
+        this.callback.execute(
+                this.textField.getText(),
+                ReviewRound.parseType(this.typeCombo.getText()));
+        DialogHelper.saveDialogSize(this);
+        super.okPressed();
+    }
+
+    @Override
+    protected void cancelPressed() {
+        DialogHelper.saveDialogSize(this);
+        super.cancelPressed();
+    }
 }

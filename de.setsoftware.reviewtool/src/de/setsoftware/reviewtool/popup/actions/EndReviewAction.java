@@ -9,14 +9,14 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 public class EndReviewAction extends AbstractHandler {
 
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-		try {
-			ReviewPlugin.getInstance().endReview();
-		} catch (final CoreException e) {
-			throw new ExecutionException("problem while ending review", e);
-		}
-		return null;
-	}
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+        try {
+            ReviewPlugin.getInstance().endReview();
+        } catch (final CoreException e) {
+            throw new ExecutionException("problem while ending review", e);
+        }
+        return null;
+    }
 
 }

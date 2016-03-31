@@ -5,6 +5,6 @@ import org.eclipse.core.runtime.CoreException;
 
 public interface IMarkerFactory {
 
-	public abstract IMarker createMarker(Position pos) throws CoreException;
+    public abstract IMarker createMarker(Position pos) throws CoreException;
 
 }

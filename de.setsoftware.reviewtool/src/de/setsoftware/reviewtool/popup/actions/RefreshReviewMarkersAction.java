@@ -9,14 +9,14 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 public class RefreshReviewMarkersAction extends AbstractHandler {
 
-	@Override
-	public Object execute(ExecutionEvent event) throws ExecutionException {
-		try {
-			ReviewPlugin.getInstance().refreshMarkers();
-		} catch (final CoreException e) {
-			throw new ExecutionException("problem while ending fixing", e);
-		}
-		return null;
-	}
+    @Override
+    public Object execute(ExecutionEvent event) throws ExecutionException {
+        try {
+            ReviewPlugin.getInstance().refreshMarkers();
+        } catch (final CoreException e) {
+            throw new ExecutionException("problem while ending fixing", e);
+        }
+        return null;
+    }
 
 }
