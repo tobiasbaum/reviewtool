@@ -170,8 +170,19 @@ public class PositionTransformer {
         }
     }
 
+    /**
+     * Returns the resource for the file from the given position.
+     * Returns the workspace root if no file resource could be found.
+     */
     public static IResource toResource(Position pos) {
-        final String filename = pos.getShortFileName();
+        return toResource(pos.getShortFileName());
+    }
+
+    /**
+     * Returns the resource for the given short filename.
+     * Returns the workspace root if no file resource could be found.
+     */
+    public static IResource toResource(String filename) {
         final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
         if (filename == null) {
             return workspaceRoot;

@@ -101,7 +101,7 @@ class ReviewDataParser {
             final Position pos = this.parsePosition();
             this.currentRemark = ReviewRemark.create(
                     this.persistence,
-                    this.markerFactory.createMarker(pos),
+                    this.markerFactory.createMarker(pos, Constants.REVIEWMARKER_ID),
                     this.persistence.getReviewerForRound(this.currentRound.getNumber()),
                     pos,
                     this.currentText.toString(),

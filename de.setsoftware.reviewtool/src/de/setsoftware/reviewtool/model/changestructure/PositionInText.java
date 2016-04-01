@@ -18,4 +18,8 @@ public class PositionInText {
         return this.line + ":" + this.column;
     }
 
+    public int getLine() {
+        return this.line;
+    }
+
 }

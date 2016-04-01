@@ -7,11 +7,19 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
+/**
+ * A dummy marker that is not represented in Eclipse.
+ */
 public class DummyMarker implements IMarker {
 
     public static final IMarkerFactory FACTORY = new IMarkerFactory() {
         @Override
-        public IMarker createMarker(Position pos) {
+        public IMarker createMarker(Position pos, String markerId) {
+            return new DummyMarker("");
+        }
+
+        @Override
+        public IMarker createMarker(IResource resource, String markerId) {
             return new DummyMarker("");
         }
     };
@@ -24,7 +32,7 @@ public class DummyMarker implements IMarker {
     }
 
     @Override
-    public Object getAdapter(Class adapter) {
+    public DummyMarker getAdapter(Class adapter) {
         throw new RuntimeException("not yet implemented");
     }
 

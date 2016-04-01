@@ -22,4 +22,8 @@ public class Slice {
         return "Slice: " + this.description + ", " + this.fragments;
     }
 
+    public List<Fragment> getFragments() {
+        return this.fragments;
+    }
+
 }

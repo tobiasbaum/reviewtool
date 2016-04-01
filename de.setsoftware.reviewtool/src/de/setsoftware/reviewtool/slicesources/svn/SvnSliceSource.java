@@ -205,7 +205,7 @@ public class SvnSliceSource implements ISliceSource {
             if (line.startsWith("@@")) {
                 final Pair<PositionInText, PositionInText> pos = this.parsePositionsFromDiff(line);
                 ret.add(new Fragment(
-                        new FileInRevision(path.getPath(), this.mapRevision(revision)),
+                        new FileInRevision(entryInfo.getPath(), this.mapRevision(revision)),
                         pos.getFirst(),
                         pos.getSecond()));
             }

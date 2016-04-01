@@ -271,6 +271,7 @@ public class ReviewPlugin {
                 this.sliceSource,
                 new BasicFragmentTracer(),
                 ticketKey);
+        this.slicesInReview.createMarkers(new RealMarkerFactory());
         this.slicesInReview.showInfo();
     }
 

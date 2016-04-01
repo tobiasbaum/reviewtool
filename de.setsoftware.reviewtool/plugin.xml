@@ -142,6 +142,10 @@
 		<attribute name="de.setsoftware.reviewtool.markerattributes.position"/>
 	</extension>
 	
+    <extension id="de.setsoftware.reviewtool.fragmentToReviewMarker" point="org.eclipse.core.resources.markers" name="Review-Fragment">
+        <super type="org.eclipse.core.resources.textmarker"/>
+    </extension>
+
 	<extension
 		point="org.eclipse.ui.ide.markerResolution">
 		<markerResolutionGenerator
@@ -175,5 +179,42 @@
           id="de.setsoftware.reviewtool.preferences"
           name="Review-Einstellungen">
     </page>
+ </extension>
+ 
+ <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+    <type
+          name="de.setsoftware.reviewtool.ui.fragmentToReviewAnnotation"
+          super="org.eclipse.ui.workbench.texteditor.info"
+          markerType="de.setsoftware.reviewtool.fragmentToReviewMarker">
+    </type>
+ </extension>
+ <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+    <specification
+            annotationType="de.setsoftware.reviewtool.ui.fragmentToReviewAnnotation"
+            colorPreferenceKey="fragmentToReview_color"
+            colorPreferenceValue="192,255,192"
+            contributesToHeader="false"
+            highlightPreferenceKey="fragmentToReview_highlight"
+            highlightPreferenceValue="true"
+            includeOnPreferencePage="true"
+            isGoToNextNavigationTarget="true"
+            isGoToNextNavigationTargetKey="fragmentToReview_isGoToNextNavigationTargetKey"
+            isGoToPreviousNavigationTarget="true"
+            isGoToPreviousNavigationTargetKey="fragmentToReview_isGoToPreviousNavigationTargetKey"
+            label="Zu reviewen"
+            overviewRulerPreferenceKey="fragmentToReview_overviewRuler"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            showInNextPrevDropdownToolbarAction="true"
+            showInNextPrevDropdownToolbarActionKey="fragmentToReview_showInNextPrevDropdownToolbarAction"
+            textPreferenceKey="fragmentToReview_text"
+            textPreferenceValue="true"
+            textStylePreferenceKey="fragmentToReview_stylePreferences"
+            textStylePreferenceValue="BOX"
+            verticalRulerPreferenceKey="fragmentToReview_verticalRuler"
+            verticalRulerPreferenceValue="true"
+            symbolicIcon="bookmark"/>
  </extension>
 </plugin>
