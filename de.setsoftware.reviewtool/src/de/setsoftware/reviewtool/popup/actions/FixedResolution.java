@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.ResolutionType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
@@ -32,7 +33,7 @@ public class FixedResolution extends WorkbenchMarkerResolution {
             review.setResolution(ResolutionType.FIXED);
             review.save();
         } catch (final CoreException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -65,7 +66,7 @@ public class FixedResolution extends WorkbenchMarkerResolution {
                     ofFittingType.add(m);
                 }
             } catch (final CoreException e) {
-                throw new RuntimeException(e);
+                throw new ReviewtoolException(e);
             }
         }
         return ofFittingType.toArray(new IMarker[ofFittingType.size()]);

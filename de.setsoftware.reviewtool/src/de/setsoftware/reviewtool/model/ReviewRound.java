@@ -3,6 +3,8 @@ package de.setsoftware.reviewtool.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 public class ReviewRound {
 
     public static final String POSITIVE_HEADER = "positiv";
@@ -87,7 +89,7 @@ public class ReviewRound {
         case TEMPORARY_HEADER:
             return RemarkType.TEMPORARY;
         default:
-            throw new RuntimeException("parse exception: " + string);
+            throw new ReviewtoolException("parse exception: " + string);
         }
     }
 

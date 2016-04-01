@@ -22,6 +22,7 @@ import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.dialogs.CreateRemarkDialog;
 import de.setsoftware.reviewtool.dialogs.CreateRemarkDialog.CreateDialogCallback;
 import de.setsoftware.reviewtool.model.PositionTransformer;
@@ -126,7 +127,7 @@ public class AddRemarkAction extends AbstractHandler {
                             line,
                             type).save();
                 } catch (final CoreException e) {
-                    throw new RuntimeException(e);
+                    throw new ReviewtoolException(e);
                 }
             }
         });

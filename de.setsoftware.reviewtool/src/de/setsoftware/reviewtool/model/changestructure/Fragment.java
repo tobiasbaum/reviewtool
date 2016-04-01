@@ -32,4 +32,9 @@ public class Fragment {
         return this.to;
     }
 
+    @Override
+    public String toString() {
+        return this.from + " - " + this.to + " in " + this.file;
+    }
+
 }

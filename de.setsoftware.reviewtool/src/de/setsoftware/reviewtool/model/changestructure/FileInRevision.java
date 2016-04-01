@@ -17,4 +17,9 @@ public class FileInRevision {
         return this.path;
     }
 
+    @Override
+    public String toString() {
+        return this.path + "@" + this.revision;
+    }
+
 }

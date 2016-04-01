@@ -8,6 +8,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
@@ -30,7 +31,7 @@ public class DeleteResolution extends WorkbenchMarkerResolution {
         try {
             review.delete();
         } catch (final CoreException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -63,7 +64,7 @@ public class DeleteResolution extends WorkbenchMarkerResolution {
                     ofFittingType.add(m);
                 }
             } catch (final CoreException e) {
-                throw new RuntimeException(e);
+                throw new ReviewtoolException(e);
             }
         }
         return ofFittingType.toArray(new IMarker[ofFittingType.size()]);

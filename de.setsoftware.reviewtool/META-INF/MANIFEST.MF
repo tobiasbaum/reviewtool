@@ -14,6 +14,13 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ui.ide
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: minimal-json.jar,
+ antlr-runtime-3.4.jar,
+ sequence-library-1.0.3.jar,
+ sqljet-1.1.10.jar,
+ svnkit-1.8.12.jar,
+ svnkit-cli-1.8.12.jar,
+ svnkit-javahl16-1.8.12.jar,
+ trilead-ssh2-1.0.0-build220.jar,
  .
 Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator
 Bundle-ActivationPolicy: lazy

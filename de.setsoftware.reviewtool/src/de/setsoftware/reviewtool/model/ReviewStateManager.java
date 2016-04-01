@@ -88,6 +88,13 @@ public class ReviewStateManager {
         this.ticketKey = null;
     }
 
+    /**
+     * Returns the currently selection ticket key, or null if none is selected.
+     */
+    public String getTicketKey() {
+        return this.ticketKey;
+    }
+
     public void setPersistence(IReviewPersistence newPersistence) {
         this.persistence = newPersistence;
     }

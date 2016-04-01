@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
@@ -43,7 +44,7 @@ public class FilePersistence implements IReviewPersistence {
             try {
                 return new String(Files.readAllBytes(reviewDataFile), "UTF-8");
             } catch (final IOException e) {
-                throw new RuntimeException(e);
+                throw new ReviewtoolException(e);
             }
         }
 
@@ -70,7 +71,7 @@ public class FilePersistence implements IReviewPersistence {
             try {
                 return Files.readAllLines(historyFile, Charset.forName("UTF-8"));
             } catch (final IOException e) {
-                throw new RuntimeException(e);
+                throw new ReviewtoolException(e);
             }
         }
 
@@ -135,7 +136,7 @@ public class FilePersistence implements IReviewPersistence {
         try (FileInputStream stream = new FileInputStream(new File(child, "ticket.properties"))) {
             ticketProperties.load(stream);
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
         return new TicketInfo(
                 child.getName(),
@@ -164,7 +165,7 @@ public class FilePersistence implements IReviewPersistence {
             Files.write(this.rootDir.toPath().resolve(ticketKey).resolve(REVIEW_DATA_TXT),
                     newData.getBytes("UTF-8"));
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -175,10 +176,10 @@ public class FilePersistence implements IReviewPersistence {
 
     private void checkRoot() {
         if (!this.rootDir.exists()) {
-            throw new RuntimeException("Das Verzeichnis " + this.rootDir + " existiert nicht.");
+            throw new ReviewtoolException("Das Verzeichnis " + this.rootDir + " existiert nicht.");
         }
         if (!this.rootDir.isDirectory()) {
-            throw new RuntimeException(this.rootDir + " ist kein Verzeichnis.");
+            throw new ReviewtoolException(this.rootDir + " ist kein Verzeichnis.");
         }
     }
 
@@ -197,7 +198,7 @@ public class FilePersistence implements IReviewPersistence {
         try {
             Files.write(ticketDir.getHistoryFile(), lines, Charset.forName("UTF-8"));
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 

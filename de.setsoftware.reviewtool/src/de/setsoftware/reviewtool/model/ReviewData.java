@@ -9,6 +9,8 @@ import java.util.ListIterator;
 
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 public class ReviewData {
 
     private final List<ReviewRound> rounds = new ArrayList<>();
@@ -33,7 +35,7 @@ public class ReviewData {
             parser.endLastItem();
             return parser.getResult();
         } catch (final IOException | CoreException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 

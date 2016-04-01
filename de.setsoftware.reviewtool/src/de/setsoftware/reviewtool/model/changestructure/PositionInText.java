@@ -5,7 +5,17 @@ package de.setsoftware.reviewtool.model.changestructure;
  */
 public class PositionInText {
 
-    private int line;
-    private int column;
+    private final int line;
+    private final int column;
+
+    public PositionInText(int line, int column) {
+        this.line = line;
+        this.column = column;
+    }
+
+    @Override
+    public String toString() {
+        return this.line + ":" + this.column;
+    }
 
 }

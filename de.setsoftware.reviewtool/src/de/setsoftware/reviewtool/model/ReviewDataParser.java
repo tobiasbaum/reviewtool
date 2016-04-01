@@ -8,6 +8,8 @@ import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 class ReviewDataParser {
 
     private static final String TYPE_PREFIX = "* ";
@@ -50,7 +52,7 @@ class ReviewDataParser {
                 this.rounds.add(this.currentRound);
                 this.state = ParseState.IN_ROUND;
             } else {
-                throw new RuntimeException("parse exception: " + trimmedLine);
+                throw new ReviewtoolException("parse exception: " + trimmedLine);
             }
         } else {
             if (trimmedLine.isEmpty()) {
@@ -74,7 +76,7 @@ class ReviewDataParser {
                         || this.state == ParseState.IN_COMMENT) {
                     this.currentText .append("\n").append(trimmedLine);
                 } else {
-                    throw new RuntimeException("parse exception: " + trimmedLine);
+                    throw new ReviewtoolException("parse exception: " + trimmedLine);
                 }
             }
         }
@@ -118,7 +120,7 @@ class ReviewDataParser {
                     this.currentRemark.setResolution(resoComment);
                 }
             } else {
-                throw new RuntimeException("parse exception: " + this.currentText);
+                throw new ReviewtoolException("parse exception: " + this.currentText);
             }
             break;
         }
@@ -165,7 +167,7 @@ class ReviewDataParser {
         final TreeMap<Integer, ReviewRound> roundMap = new TreeMap<>();
         for (final ReviewRound round : this.rounds) {
             if (roundMap.containsKey(round.getNumber())) {
-                throw new RuntimeException("duplicate round: " + round.getNumber());
+                throw new ReviewtoolException("duplicate round: " + round.getNumber());
             }
             roundMap.put(round.getNumber(), round);
         }

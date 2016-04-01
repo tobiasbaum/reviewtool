@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model;
 
+/**
+ * Interface for things that can provide the review data of a ticket and further ticket information.
+ */
 public interface ITicketData {
 
     public abstract String getReviewData();

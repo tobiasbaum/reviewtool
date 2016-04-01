@@ -6,9 +6,12 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -22,6 +25,7 @@ import de.setsoftware.reviewtool.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.dialogs.ReviewInfoDialog;
 import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
+import de.setsoftware.reviewtool.fragmenttracers.svn.BasicFragmentTracer;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
@@ -31,6 +35,9 @@ import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.changestructure.ISliceSource;
+import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
+import de.setsoftware.reviewtool.slicesources.svn.SvnSliceSource;
 
 /**
  * Plugin that handles the review workflow and ties together the different parts.
@@ -75,23 +82,26 @@ public class ReviewPlugin {
 
     private static final ReviewPlugin INSTANCE = new ReviewPlugin();
     private final ReviewStateManager persistence;
+    private final ISliceSource sliceSource;
+    private SlicesInReview slicesInReview;
     private Mode mode = Mode.IDLE;
     private final List<WeakReference<ReviewPluginModeService>> modeListeners = new ArrayList<>();
 
     private ReviewPlugin() {
-        final IReviewPersistence persistence = this.createPersistenceFromPreferences();
+        final IReviewPersistence persistence = createPersistenceFromPreferences();
+        this.sliceSource = createSliceSource();
         this.persistence = new ReviewStateManager(persistence, new RealUi());
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
                 if (ReviewToolPreferencePage.getAllPreferenceIds().contains(event.getProperty())) {
-                    ReviewPlugin.this.persistence.setPersistence(ReviewPlugin.this.createPersistenceFromPreferences());
+                    ReviewPlugin.this.persistence.setPersistence(createPersistenceFromPreferences());
                 }
             }
         });
     }
 
-    private IReviewPersistence createPersistenceFromPreferences() {
+    private static IReviewPersistence createPersistenceFromPreferences() {
         final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
         pref.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
         final String user = pref.getString(ReviewToolPreferencePage.USER);
@@ -111,6 +121,18 @@ public class ReviewPlugin {
             persistence = new FilePersistence(new File(pref.getString(ReviewToolPreferencePage.FILE_PATH)), user);
         }
         return persistence;
+    }
+
+    private static ISliceSource createSliceSource() {
+        final List<File> projectDirs = new ArrayList<>();
+        final IWorkspace root = ResourcesPlugin.getWorkspace();
+        for (final IProject project : root.getRoot().getProjects()) {
+            final IPath location = project.getLocation();
+            if (location != null) {
+                projectDirs.add(location.toFile());
+            }
+        }
+        return new SvnSliceSource(projectDirs, ".*${key}([^0-9].*)?");
     }
 
     public static ReviewStateManager getPersistence() {
@@ -138,13 +160,18 @@ public class ReviewPlugin {
         final boolean ok = this.persistence.selectTicket(targetMode == Mode.REVIEWING);
         if (!ok) {
             this.setMode(Mode.IDLE);
+            this.slicesInReview = null;
             return;
         }
         this.clearMarkers();
+
+        this.loadSlicesAndCreateMarkers();
+
         final ReviewData currentReviewData = CorrectSyntaxDialog.getCurrentReviewDataParsed(
                 this.persistence, new RealMarkerFactory());
         if (currentReviewData == null) {
             this.setMode(Mode.IDLE);
+            this.slicesInReview = null;
             return;
         }
         this.setMode(targetMode);
@@ -210,6 +237,7 @@ public class ReviewPlugin {
     private void leaveReviewMode() throws CoreException {
         this.clearMarkers();
         this.setMode(Mode.IDLE);
+        this.slicesInReview = null;
     }
 
     public void endFixing() throws CoreException {
@@ -225,9 +253,25 @@ public class ReviewPlugin {
         return CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, DummyMarker.FACTORY);
     }
 
+    /**
+     * Removes all markers, reloads the underlying data and recreates the markers with this new data.
+     */
     public void refreshMarkers() throws CoreException {
         this.clearMarkers();
+        this.loadSlicesAndCreateMarkers();
         CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, new RealMarkerFactory());
+    }
+
+    private void loadSlicesAndCreateMarkers() {
+        final String ticketKey = this.persistence.getTicketKey();
+        if (ticketKey == null) {
+            return;
+        }
+        this.slicesInReview = SlicesInReview.create(
+                this.sliceSource,
+                new BasicFragmentTracer(),
+                ticketKey);
+        this.slicesInReview.showInfo();
     }
 
     public void showReviewInfo() {

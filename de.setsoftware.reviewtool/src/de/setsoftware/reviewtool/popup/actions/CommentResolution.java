@@ -4,6 +4,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.IMarkerResolution;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.dialogs.AddReplyDialog;
 import de.setsoftware.reviewtool.dialogs.InputDialogCallback;
 import de.setsoftware.reviewtool.model.ResolutionType;
@@ -33,7 +34,7 @@ public class CommentResolution implements IMarkerResolution {
                     review.setResolution(ResolutionType.OPEN);
                     review.save();
                 } catch (final CoreException e) {
-                    throw new RuntimeException(e);
+                    throw new ReviewtoolException(e);
                 }
             }
         });

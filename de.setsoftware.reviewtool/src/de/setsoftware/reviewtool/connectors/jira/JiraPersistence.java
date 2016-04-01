@@ -19,6 +19,7 @@ import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.ParseException;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
@@ -190,7 +191,7 @@ public class JiraPersistence implements IReviewPersistence {
             }
             return ret;
         } catch (final UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -230,7 +231,7 @@ public class JiraPersistence implements IReviewPersistence {
                 return o.asObject().get("id").asString();
             }
         }
-        throw new RuntimeException("found no id for name " + name);
+        throw new ReviewtoolException("found no id for name " + name);
     }
 
     /**
@@ -248,10 +249,10 @@ public class JiraPersistence implements IReviewPersistence {
             try {
                 return JsonValue.readFrom(data);
             } catch (final ParseException e) {
-                throw new RuntimeException("exception parsing: " + data, e);
+                throw new ReviewtoolException("exception parsing: " + data, e);
             }
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -261,7 +262,7 @@ public class JiraPersistence implements IReviewPersistence {
                     URLEncoder.encode(this.user, "UTF-8"),
                     URLEncoder.encode(this.password, "UTF-8"));
         } catch (final UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -269,7 +270,7 @@ public class JiraPersistence implements IReviewPersistence {
         try {
             this.communicate(putUrl, "PUT", json.toString());
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -277,7 +278,7 @@ public class JiraPersistence implements IReviewPersistence {
         try {
             this.communicate(postUrl, "POST", json.toString());
         } catch (final IOException e) {
-            throw new RuntimeException(e);
+            throw new ReviewtoolException(e);
         }
     }
 

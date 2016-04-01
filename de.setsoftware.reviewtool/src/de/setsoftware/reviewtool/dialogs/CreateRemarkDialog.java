@@ -19,8 +19,14 @@ import org.eclipse.ui.PlatformUI;
 import de.setsoftware.reviewtool.model.RemarkType;
 import de.setsoftware.reviewtool.model.ReviewRound;
 
+/**
+ * Dialog for the creation of review remarks.
+ */
 public class CreateRemarkDialog extends Dialog {
 
+    /**
+     * Callback that is called when the user entered the remark's information.
+     */
     public interface CreateDialogCallback {
         public abstract void execute(String text, RemarkType type);
     }
