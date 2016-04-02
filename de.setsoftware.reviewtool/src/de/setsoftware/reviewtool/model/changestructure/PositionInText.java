@@ -22,4 +22,8 @@ public class PositionInText {
         return this.line;
     }
 
+    public int getColumn() {
+        return this.column;
+    }
+
 }

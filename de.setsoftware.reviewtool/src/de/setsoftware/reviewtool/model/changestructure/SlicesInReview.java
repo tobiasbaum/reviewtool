@@ -1,7 +1,11 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
@@ -52,15 +56,23 @@ public class SlicesInReview {
             return;
         }
         final Slice s = this.slices.get(this.currentSliceIndex);
+        final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
         for (final Fragment f : s.getFragments()) {
             try {
                 final IResource resource = this.determineResource(f.getFile());
                 if (resource == null) {
                     continue;
                 }
+                if (!lookupTables.containsKey(resource)) {
+                    lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
+                }
                 final IMarker marker = markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
                 marker.setAttribute(IMarker.LINE_NUMBER, f.getFrom().getLine());
-            } catch (final CoreException e) {
+                marker.setAttribute(IMarker.CHAR_START,
+                        lookupTables.get(resource).getCharsSinceFileStart(f.getFrom()) - 1);
+                marker.setAttribute(IMarker.CHAR_END,
+                        lookupTables.get(resource).getCharsSinceFileStart(f.getTo()));
+            } catch (final CoreException | IOException e) {
                 throw new ReviewtoolException(e);
             }
         }
