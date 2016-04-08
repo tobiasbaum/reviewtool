@@ -1,11 +1,8 @@
 package de.setsoftware.reviewtool.slicesources.svn;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,22 +10,22 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
-import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
-import org.tmatesoft.svn.core.wc.SVNDiffClient;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
+import de.setsoftware.reviewtool.diffalgorithms.SimpleTextDiffAlgorithm;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.ISliceSource;
@@ -43,11 +40,11 @@ public class SvnSliceSource implements ISliceSource {
 
     private static final String KEY_PLACEHOLDER = "${key}";
     private static final int LOOKUP_LIMIT = 1000;
-    private static final Pattern DIFF_POS_PATTERN = Pattern.compile("@@ -([0-9]+),([0-9]+) \\+([0-9]+),([0-9]+) @@");
 
     private final Set<File> workingCopyRoots;
     private final String logMessagePattern;
     private final SVNClientManager mgr = SVNClientManager.newInstance();
+    private final IDiffAlgorithm diffAlgorithm = new SimpleTextDiffAlgorithm();
 
 
     public SvnSliceSource(List<File> projectRoots, String logMessagePattern) {
@@ -185,45 +182,35 @@ public class SvnSliceSource implements ISliceSource {
                 continue;
             }
             ret.addAll(this.determineFragments(
-                    revision, e.getFirst().appendPath(entry.getKey(), false), entry.getValue()));
+                    revision, e.getFirst(), entry.getValue()));
         }
         return ret;
     }
 
-    private List<Fragment> determineFragments(SVNRevision revision, SVNURL path, SVNLogEntryPath entryInfo)
+    private List<Fragment> determineFragments(SVNRevision revision, SVNURL repoUrl, SVNLogEntryPath entryInfo)
             throws SVNException, IOException {
-        final SVNRevision rN = SVNRevision.create(revision.getNumber() - 1);
-        final SVNDiffClient diffClient = this.mgr.getDiffClient();
-        final ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        diffClient.doDiff(path, revision, rN, revision, SVNDepth.EMPTY, true, buffer);
-        final BufferedReader r = new BufferedReader(new InputStreamReader(
-                new ByteArrayInputStream(buffer.toByteArray()), "ISO-8859-1"));
+        final byte[] oldFile = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber() - 1);
+        final byte[] newFile = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
 
         final List<Fragment> ret = new ArrayList<>();
-        String line;
-        while ((line = r.readLine()) != null) {
-            if (line.startsWith("@@")) {
-                final Pair<PositionInText, PositionInText> pos = this.parsePositionsFromDiff(line);
-                ret.add(new Fragment(
-                        new FileInRevision(entryInfo.getPath(), this.mapRevision(revision)),
-                        pos.getFirst(),
-                        pos.getSecond()));
-            }
+        for (final Pair<PositionInText, PositionInText> pos : this.diffAlgorithm.determineDiff(
+                oldFile, newFile, "ISO-8859-1")) {
+            ret.add(new Fragment(
+                    new FileInRevision(entryInfo.getPath(), this.mapRevision(revision)),
+                    pos.getFirst(),
+                    pos.getSecond()));
         }
         return ret;
     }
 
-    private Pair<PositionInText, PositionInText> parsePositionsFromDiff(String line) {
-        final Matcher m = DIFF_POS_PATTERN.matcher(line);
-        if (!m.matches()) {
-            throw new AssertionError("wrong diff format: " + line);
+    private byte[] loadFile(SVNURL repoUrl, String path, long revision) throws SVNException {
+        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl, true);
+        final ByteArrayOutputStream contents = new ByteArrayOutputStream();
+        if (repo.checkPath(path, revision) != SVNNodeKind.FILE) {
+            return new byte[0];
         }
-        final int deletion = Integer.parseInt(m.group(2));
-        final int newPos = Integer.parseInt(m.group(3));
-        final int insertion = Integer.parseInt(m.group(4));
-        return Pair.create(
-                new PositionInText(newPos, 1),
-                new PositionInText(newPos + insertion - deletion, 0));
+        repo.getFile(path, revision, null, contents);
+        return contents.toByteArray();
     }
 
     private Revision mapRevision(SVNRevision revision) {

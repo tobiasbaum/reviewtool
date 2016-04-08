@@ -27,4 +27,27 @@ public class Pair<T1, T2> {
         return new Pair<P1, P2>(v1, v2);
     }
 
+    @Override
+    public int hashCode() {
+        return this.v1.hashCode() + this.v2.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Pair)) {
+            return false;
+        }
+        final Pair<?, ?> p = (Pair<?, ?>) o;
+        return sameOrEquals(this.v1, p.v1) && sameOrEquals(this.v2, p.v2);
+    }
+
+    private static boolean sameOrEquals(Object o1, Object o2) {
+        return o1 == o2 || (o1 != null && o1.equals(o2));
+    }
+
+    @Override
+    public String toString() {
+        return "(" + this.v1 + ", " + this.v2 + ")";
+    }
+
 }

@@ -14,6 +14,20 @@ public class PositionInText {
     }
 
     @Override
+    public int hashCode() {
+        return 100 * this.line + this.column;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PositionInText)) {
+            return false;
+        }
+        final PositionInText p = (PositionInText) o;
+        return this.line == p.line && this.column == p.column;
+    }
+
+    @Override
     public String toString() {
         return this.line + ":" + this.column;
     }
