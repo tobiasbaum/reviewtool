@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Reviewtool
-Bundle-SymbolicName: de.setsoftware.reviewtool;singleton:=true
+Bundle-SymbolicName: de.setsoftware.reviewtool.core;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: TB
 Require-Bundle: org.eclipse.ui,
