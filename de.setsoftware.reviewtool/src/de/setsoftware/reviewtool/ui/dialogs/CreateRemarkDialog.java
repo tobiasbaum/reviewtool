@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.dialogs;
+package de.setsoftware.reviewtool.ui.dialogs;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;

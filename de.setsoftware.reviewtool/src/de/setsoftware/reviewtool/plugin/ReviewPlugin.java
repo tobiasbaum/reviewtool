@@ -21,10 +21,6 @@ import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
-import de.setsoftware.reviewtool.dialogs.CorrectSyntaxDialog;
-import de.setsoftware.reviewtool.dialogs.EndReviewDialog;
-import de.setsoftware.reviewtool.dialogs.ReviewInfoDialog;
-import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.fragmenttracers.svn.BasicFragmentTracer;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
@@ -39,6 +35,10 @@ import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.ISliceSource;
 import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 import de.setsoftware.reviewtool.slicesources.svn.SvnSliceSource;
+import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
+import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
+import de.setsoftware.reviewtool.ui.dialogs.ReviewInfoDialog;
+import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 
 /**
  * Plugin that handles the review workflow and ties together the different parts.

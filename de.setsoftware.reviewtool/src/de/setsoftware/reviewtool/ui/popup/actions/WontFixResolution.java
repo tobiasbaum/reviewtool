@@ -1,26 +1,26 @@
-package de.setsoftware.reviewtool.popup.actions;
+package de.setsoftware.reviewtool.ui.popup.actions;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.IMarkerResolution;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.dialogs.AddReplyDialog;
-import de.setsoftware.reviewtool.dialogs.InputDialogCallback;
 import de.setsoftware.reviewtool.model.ResolutionType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
+import de.setsoftware.reviewtool.ui.dialogs.AddReplyDialog;
+import de.setsoftware.reviewtool.ui.dialogs.InputDialogCallback;
 
-public class QuestionResolution implements IMarkerResolution {
+public class WontFixResolution implements IMarkerResolution {
 
-    public static final QuestionResolution INSTANCE = new QuestionResolution();
+    public static final WontFixResolution INSTANCE = new WontFixResolution();
 
-    private QuestionResolution() {
+    private WontFixResolution() {
     }
 
     @Override
     public String getLabel() {
-        return "Rückfrage";
+        return "Ablehnen";
     }
 
     @Override
@@ -31,7 +31,7 @@ public class QuestionResolution implements IMarkerResolution {
             public void execute(String text) {
                 try {
                     review.addComment(text);
-                    review.setResolution(ResolutionType.QUESTION);
+                    review.setResolution(ResolutionType.WONT_FIX);
                     review.save();
                 } catch (final CoreException e) {
                     throw new ReviewtoolException(e);
@@ -42,12 +42,12 @@ public class QuestionResolution implements IMarkerResolution {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof QuestionResolution;
+        return o instanceof WontFixResolution;
     }
 
     @Override
     public int hashCode() {
-        return 1231232;
+        return 6547659;
     }
 
 }

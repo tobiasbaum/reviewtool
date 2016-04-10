@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.dialogs;
+package de.setsoftware.reviewtool.ui.dialogs;
 
 /**
  * Callback that is called when the uses finishes input into an input dialog.

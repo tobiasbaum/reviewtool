@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.popup.actions;
+package de.setsoftware.reviewtool.ui.popup.actions;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -23,14 +23,14 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import org.eclipse.ui.part.FileEditorInput;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.dialogs.CreateRemarkDialog;
-import de.setsoftware.reviewtool.dialogs.CreateRemarkDialog.CreateDialogCallback;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.RemarkType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
+import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog;
+import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.CreateDialogCallback;
 
 public class AddRemarkAction extends AbstractHandler {
 

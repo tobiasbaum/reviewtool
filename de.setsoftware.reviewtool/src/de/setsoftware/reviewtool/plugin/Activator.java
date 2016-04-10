@@ -6,7 +6,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
-import de.setsoftware.reviewtool.dialogs.DialogHelper;
+import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 
 /**
  * Main class (i.e. "Activator") for the plugin.

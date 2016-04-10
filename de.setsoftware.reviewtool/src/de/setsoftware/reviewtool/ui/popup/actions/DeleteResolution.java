@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.popup.actions;
+package de.setsoftware.reviewtool.ui.popup.actions;
 
 import java.util.ArrayList;
 import java.util.List;

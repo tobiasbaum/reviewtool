@@ -110,25 +110,25 @@
 	 </menuContribution>
    </extension>
    <extension point="org.eclipse.ui.commands">
-     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.AddRemarkAction"
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.AddRemarkAction"
         id="de.setsoftware.reviewtool.commands.addremark" name="Add remark">
      </command>
-     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.StartReviewAction"
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction"
         id="de.setsoftware.reviewtool.commands.startreview" name="Start review">
      </command>
-     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.EndReviewAction"
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EndReviewAction"
         id="de.setsoftware.reviewtool.commands.endreview" name="End review">
      </command>
-     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.ReviewInfoAction"
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.ReviewInfoAction"
         id="de.setsoftware.reviewtool.commands.reviewinfo" name="Review info">
      </command>
-     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.StartFixingAction"
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartFixingAction"
         id="de.setsoftware.reviewtool.commands.startfixing" name="Start fixing">
      </command>
-     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.EndFixingAction"
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EndFixingAction"
         id="de.setsoftware.reviewtool.commands.endfixing" name="End fixing">
      </command>
-     <command defaultHandler="de.setsoftware.reviewtool.popup.actions.RefreshReviewMarkersAction"
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.RefreshReviewMarkersAction"
         id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh markers">
      </command>
    </extension>
@@ -150,7 +150,7 @@
 		point="org.eclipse.ui.ide.markerResolution">
 		<markerResolutionGenerator
 			markerType="de.setsoftware.reviewtool.reviewmarker"
-			class="de.setsoftware.reviewtool.popup.actions.MarkerResolutionGenerator">
+			class="de.setsoftware.reviewtool.ui.popup.actions.MarkerResolutionGenerator">
 		</markerResolutionGenerator>
 	</extension>
  <extension

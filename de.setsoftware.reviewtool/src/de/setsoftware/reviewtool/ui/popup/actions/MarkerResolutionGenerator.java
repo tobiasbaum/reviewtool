@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.popup.actions;
+package de.setsoftware.reviewtool.ui.popup.actions;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.ui.IMarkerResolution;

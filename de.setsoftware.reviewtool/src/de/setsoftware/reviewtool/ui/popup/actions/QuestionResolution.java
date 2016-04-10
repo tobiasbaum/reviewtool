@@ -1,26 +1,26 @@
-package de.setsoftware.reviewtool.popup.actions;
+package de.setsoftware.reviewtool.ui.popup.actions;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.ui.IMarkerResolution;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.dialogs.AddReplyDialog;
-import de.setsoftware.reviewtool.dialogs.InputDialogCallback;
 import de.setsoftware.reviewtool.model.ResolutionType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
+import de.setsoftware.reviewtool.ui.dialogs.AddReplyDialog;
+import de.setsoftware.reviewtool.ui.dialogs.InputDialogCallback;
 
-public class CommentResolution implements IMarkerResolution {
+public class QuestionResolution implements IMarkerResolution {
 
-    public static final CommentResolution INSTANCE = new CommentResolution();
+    public static final QuestionResolution INSTANCE = new QuestionResolution();
 
-    private CommentResolution() {
+    private QuestionResolution() {
     }
 
     @Override
     public String getLabel() {
-        return "Kommentar zu Reviewanmerkung ergänzen";
+        return "Rückfrage";
     }
 
     @Override
@@ -31,7 +31,7 @@ public class CommentResolution implements IMarkerResolution {
             public void execute(String text) {
                 try {
                     review.addComment(text);
-                    review.setResolution(ResolutionType.OPEN);
+                    review.setResolution(ResolutionType.QUESTION);
                     review.save();
                 } catch (final CoreException e) {
                     throw new ReviewtoolException(e);
@@ -42,12 +42,12 @@ public class CommentResolution implements IMarkerResolution {
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof CommentResolution;
+        return o instanceof QuestionResolution;
     }
 
     @Override
     public int hashCode() {
-        return 4379876;
+        return 1231232;
     }
 
 }

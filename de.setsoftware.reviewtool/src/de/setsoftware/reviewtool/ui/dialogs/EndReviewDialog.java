@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.dialogs;
+package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.util.ArrayList;
 import java.util.List;
