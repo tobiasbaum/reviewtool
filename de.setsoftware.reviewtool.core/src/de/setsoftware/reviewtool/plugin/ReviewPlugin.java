@@ -39,6 +39,7 @@ import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.ReviewInfoDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
+import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 
 /**
  * Plugin that handles the review workflow and ties together the different parts.
@@ -86,7 +87,8 @@ public class ReviewPlugin {
     private final ISliceSource sliceSource;
     private SlicesInReview slicesInReview;
     private Mode mode = Mode.IDLE;
-    private final List<WeakReference<ReviewPluginModeService>> modeListeners = new ArrayList<>();
+    private final List<WeakReference<ReviewModeListener>> modeListeners = new ArrayList<>();
+
 
     private ReviewPlugin() {
         final IReviewPersistence persistence = createPersistenceFromPreferences();
@@ -188,20 +190,45 @@ public class ReviewPlugin {
     private void setMode(Mode mode) {
         if (mode != this.mode) {
             this.mode = mode;
-            final Iterator<WeakReference<ReviewPluginModeService>> iter = this.modeListeners.iterator();
-            while (iter.hasNext()) {
-                final ReviewPluginModeService s = iter.next().get();
-                if (s != null) {
-                    s.notifyModeChanged();
-                } else {
-                    iter.remove();
-                }
+            this.notifyModeListeners();
+        }
+    }
+
+    private void notifyModeListeners() {
+        final Iterator<WeakReference<ReviewModeListener>> iter = this.modeListeners.iterator();
+        while (iter.hasNext()) {
+            final ReviewModeListener s = iter.next().get();
+            if (s != null) {
+                this.notifyModeListener(s);
+            } else {
+                iter.remove();
             }
         }
     }
 
-    public void registerModeListener(ReviewPluginModeService reviewPluginModeService) {
+    private void notifyModeListener(ReviewModeListener s) {
+        switch (this.mode) {
+        case FIXING:
+            s.notifyFixing(this.persistence);
+            break;
+        case REVIEWING:
+            s.notifyReview(this.persistence);
+            break;
+        case IDLE:
+            s.notifyIdle();
+            break;
+        default:
+            throw new AssertionError();
+        }
+    }
+
+    public void registerModeListener(ReviewModeListener reviewPluginModeService) {
         this.modeListeners.add(new WeakReference<>(reviewPluginModeService));
+    }
+
+    public void registerAndNotifyModeListener(ReviewModeListener reviewPluginModeService) {
+        this.modeListeners.add(new WeakReference<>(reviewPluginModeService));
+        this.notifyModeListener(reviewPluginModeService);
     }
 
     /**

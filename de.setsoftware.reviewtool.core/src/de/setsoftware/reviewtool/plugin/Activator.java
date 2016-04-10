@@ -7,6 +7,8 @@ import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
+import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
+import de.setsoftware.reviewtool.ui.views.ViewDataSource;
 
 /**
  * Main class (i.e. "Activator") for the plugin.
@@ -26,6 +28,12 @@ public class Activator extends AbstractUIPlugin {
             }
         });
         DialogHelper.setPreferenceStore(this.getPreferenceStore());
+        ViewDataSource.setInstance(new ViewDataSource() {
+            @Override
+            public void registerListener(ReviewModeListener l) {
+                ReviewPlugin.getInstance().registerAndNotifyModeListener(l);
+            }
+        });
         this.initializeDefaultPreferences();
     }
 
