@@ -5,13 +5,22 @@ import java.util.List;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 
+/**
+ * A review round corresponds to the phase between implementation and fixing.
+ * When the author ends fixing and a reviewer starts to review again, this is a new
+ * review round.
+ *
+ * <p>A review round stores all remarks that were first made during this round. Comments
+ * on issues raised earlier are stored at these earlier rounds.
+ */
 public class ReviewRound {
 
     public static final String POSITIVE_HEADER = "positiv";
-    public static final String MUST_FIX_HEADER = "wichtig";
-    public static final String CAN_FIX_HEADER = "optional / weniger wichtig";
+    public static final String MUST_FIX_HEADER = "muss";
+    public static final String CAN_FIX_HEADER = "kann";
     public static final String ALREADY_FIXED_HEADER = "direkt eingepflegt";
     public static final String TEMPORARY_HEADER = "temporärer Marker";
+    public static final String OTHER_REMARK_HEADER = "sonstige Anmerkungen";
 
     private final int nbr;
     private final List<ReviewRemark> remarks = new ArrayList<>();
@@ -55,6 +64,7 @@ public class ReviewRound {
     public String serialize() {
         final StringBuilder ret = new StringBuilder();
         ret.append("Review ").append(this.nbr).append(":\n");
+        this.serializeRemarksWithType(OTHER_REMARK_HEADER, ret, RemarkType.OTHER);
         this.serializeRemarksWithType(POSITIVE_HEADER, ret, RemarkType.POSITIVE);
         this.serializeRemarksWithType(MUST_FIX_HEADER, ret, RemarkType.MUST_FIX);
         this.serializeRemarksWithType(CAN_FIX_HEADER, ret, RemarkType.CAN_FIX);
@@ -88,6 +98,8 @@ public class ReviewRound {
             return RemarkType.POSITIVE;
         case TEMPORARY_HEADER:
             return RemarkType.TEMPORARY;
+        case OTHER_REMARK_HEADER:
+            return RemarkType.OTHER;
         default:
             throw new ReviewtoolException("parse exception: " + string);
         }

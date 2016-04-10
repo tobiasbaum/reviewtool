@@ -66,6 +66,7 @@ public class CreateRemarkDialog extends Dialog {
         this.typeCombo.add(ReviewRound.ALREADY_FIXED_HEADER);
         this.typeCombo.add(ReviewRound.POSITIVE_HEADER);
         this.typeCombo.add(ReviewRound.TEMPORARY_HEADER);
+        this.typeCombo.add(ReviewRound.OTHER_REMARK_HEADER);
 
         this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.RESIZE);
 

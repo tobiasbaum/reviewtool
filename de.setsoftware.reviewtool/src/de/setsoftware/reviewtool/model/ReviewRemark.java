@@ -86,7 +86,8 @@ public class ReviewRemark {
         }
         if (type == RemarkType.ALREADY_FIXED
                 || type == RemarkType.POSITIVE
-                || type == RemarkType.TEMPORARY) {
+                || type == RemarkType.TEMPORARY
+                || type == RemarkType.OTHER) {
             return IMarker.SEVERITY_INFO;
         }
         return IMarker.SEVERITY_WARNING;

@@ -8,7 +8,7 @@ import org.junit.Test;
 public class RemarkSaveTest {
 
     //  Review 1 (Std.rev 12345):
-    //  * wichtig
+    //  * muss
     //  *# (Testklasse, 1234) das ist bl�d
     //  *#* stimmt gar nicht
     //  *#* stimmt doch
@@ -36,7 +36,7 @@ public class RemarkSaveTest {
 
         assertEquals(
                 "Review 1:\n"
-                        + "* wichtig\n"
+                        + "* muss\n"
                         + "*# globale Review-Anmerkung\n",
                         p.getCurrentReviewData());
     }
@@ -50,7 +50,7 @@ public class RemarkSaveTest {
 
         assertEquals(
                 "Review 1:\n"
-                        + "* wichtig\n"
+                        + "* muss\n"
                         + "*# globale\n"
                         + "Review-Anmerkung\n",
                         p.getCurrentReviewData());
@@ -68,7 +68,7 @@ public class RemarkSaveTest {
 
         assertEquals(
                 "Review 1:\n"
-                        + "* wichtig\n"
+                        + "* muss\n"
                         + "*# globale Review-Anmerkung\n"
                         + "*# zweite Anmerkung\n",
                         p.getCurrentReviewData());
@@ -96,10 +96,10 @@ public class RemarkSaveTest {
                 "Review 1:\n"
                         + "* positiv\n"
                         + "*# Anm D\n"
-                        + "* wichtig\n"
+                        + "* muss\n"
                         + "*# Anm E\n"
                         + "*# Anm G\n"
-                        + "* optional / weniger wichtig\n"
+                        + "* kann\n"
                         + "*# Anm A\n"
                         + "*# Anm C\n"
                         + "*# Anm F\n"
@@ -126,12 +126,12 @@ public class RemarkSaveTest {
 
         assertEquals(
                 "Review 2:\n"
-                        + "* wichtig\n"
+                        + "* muss\n"
                         + "*# Anm C\n"
                         + "*# Anm D\n"
                         + "\n"
                         + "Review 1:\n"
-                        + "* wichtig\n"
+                        + "* muss\n"
                         + "*# Anm A\n"
                         + "*# Anm B\n",
                         p.getCurrentReviewData());
@@ -146,7 +146,7 @@ public class RemarkSaveTest {
         r1.save();
 
         assertEquals("Review 1:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# stimmt nicht\n"
                 + "*#* XY: stimmt doch\n"
                 + "*#* VW: gar nicht\n",
@@ -164,7 +164,7 @@ public class RemarkSaveTest {
         r1.save();
 
         assertEquals("Review 1:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# stimmt nicht\n"
                 + "*#* XY: stimmt doch\n"
                 + "*#* VW: gar nicht\n",
@@ -185,7 +185,7 @@ public class RemarkSaveTest {
         r3.save();
 
         assertEquals("Review 1:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# asdf (/)\n"
                 + "*# jkl� (x)\n"
                 + "*# qwer (?)\n",
@@ -209,7 +209,7 @@ public class RemarkSaveTest {
         r3.save();
 
         assertEquals("Review 1:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# asdf\n"
                 + "*#* (/) NN: blabla\n"
                 + "*# jkl�\n"
@@ -230,7 +230,7 @@ public class RemarkSaveTest {
         r1.save();
 
         assertEquals("Review 1:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# (xyz.java) asdf\n"
                 + "*#* NN: blabla\n"
                 + "*#* MM: blablub\n",
@@ -273,12 +273,12 @@ public class RemarkSaveTest {
     public void testDeleteRemark() throws Exception {
         final ReviewStateManager p = createPersistence();
         p.saveCurrentReviewData("Review 2:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# Anm C\n"
                 + "*# Anm D\n"
                 + "\n"
                 + "Review 1:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# Anm A\n"
                 + "*# (DateiX) Anm A\n"
                 + "*# Anm B\n");
@@ -286,12 +286,12 @@ public class RemarkSaveTest {
         r1.delete();
 
         assertEquals("Review 2:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# Anm C\n"
                 + "*# Anm D\n"
                 + "\n"
                 + "Review 1:\n"
-                + "* wichtig\n"
+                + "* muss\n"
                 + "*# (DateiX) Anm A\n"
                 + "*# Anm B\n",
                 p.getCurrentReviewData());
