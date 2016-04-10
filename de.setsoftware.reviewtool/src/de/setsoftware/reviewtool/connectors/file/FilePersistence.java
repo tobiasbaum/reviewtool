@@ -7,15 +7,20 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
 
+/**
+ * A simple review persistence layer based on a shared directory.
+ */
 public class FilePersistence implements IReviewPersistence {
 
     private static final String REVIEW_DATA_TXT = "reviewData.txt";
@@ -27,6 +32,9 @@ public class FilePersistence implements IReviewPersistence {
     private static final String READY_FOR_REVIEW = "readyForReview";
     private static final String DONE = "done";
 
+    /**
+     * The directory containing the data for a ticket.
+     */
     private final class TicketDir implements ITicketData {
 
         private final File ticketDir;
@@ -171,7 +179,11 @@ public class FilePersistence implements IReviewPersistence {
 
     @Override
     public TicketDir loadTicket(String ticketKey) {
-        return new TicketDir(new File(this.rootDir, ticketKey));
+        return new TicketDir(this.getTicketDir(ticketKey));
+    }
+
+    private File getTicketDir(String ticketKey) {
+        return new File(this.rootDir, ticketKey);
     }
 
     private void checkRoot() {
@@ -208,7 +220,7 @@ public class FilePersistence implements IReviewPersistence {
     }
 
     private boolean changeState(String ticketKey, String from, String to) {
-        final File ticketDir = new File(this.rootDir, ticketKey);
+        final File ticketDir = this.getTicketDir(ticketKey);
         return new File(ticketDir, STATE_PREFIX + from).renameTo(
                 new File(ticketDir, STATE_PREFIX + to));
     }
@@ -220,13 +232,16 @@ public class FilePersistence implements IReviewPersistence {
     }
 
     @Override
-    public void changeStateToDone(String ticketKey) {
-        this.changeState(ticketKey, IN_REVIEW, DONE);
+    public List<EndTransition> getPossibleTransitionsForReviewEnd(String ticketKey) {
+        return Arrays.asList(
+                new EndTransition("OK", DONE, EndTransition.Type.OK),
+                new EndTransition("OK, aber Zweitreview nötig", READY_FOR_REVIEW, EndTransition.Type.OK),
+                new EndTransition("Rückläufer", REJECTED, EndTransition.Type.REJECTION));
     }
 
     @Override
-    public void changeStateToRejected(String ticketKey) {
-        this.changeState(ticketKey, IN_REVIEW, REJECTED);
+    public void changeStateAtReviewEnd(String ticketKey, EndTransition transition) {
+        this.changeState(ticketKey, this.getState(this.getTicketDir(ticketKey)), transition.getInternalName());
     }
 
 }

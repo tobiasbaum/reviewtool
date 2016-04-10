@@ -62,11 +62,12 @@ public class PersistenceStub implements IReviewPersistence {
     }
 
     @Override
-    public void changeStateToDone(String ticketKey) {
+    public void changeStateAtReviewEnd(String ticketKey, EndTransition transition) {
     }
 
     @Override
-    public void changeStateToRejected(String ticketKey) {
+    public List<EndTransition> getPossibleTransitionsForReviewEnd(String ticketKey) {
+        throw new RuntimeException("not yet implemented");
     }
 
 }

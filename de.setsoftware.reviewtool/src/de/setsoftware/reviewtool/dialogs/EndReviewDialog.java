@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.dialogs;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -12,32 +15,34 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+import de.setsoftware.reviewtool.model.EndTransition;
+import de.setsoftware.reviewtool.model.EndTransition.Type;
 import de.setsoftware.reviewtool.model.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 
+/**
+ * Dialog that is shown before the review is ended and that let's the user select
+ * the end transition to use (and so some final adjustments to the review remarks).
+ */
 public class EndReviewDialog extends Dialog {
-
-    public enum TypeOfEnd {
-        PAUSE,
-        REJECTED,
-        OK,
-        ANOTHER_REVIEW
-    }
 
     private final ReviewStateManager persistence;
     private final ReviewData reviewData;
-    private Button buttonPause;
-    private Button buttonOk;
-    private Button buttonRejected;
-    private Button buttonAnotherReview;
-    private TypeOfEnd typeOfEnd;
+    private final List<EndTransition> possibleChoices;
+    private List<Button> radioButtons;
+    private EndTransition typeOfEnd;
     private Text textField;
 
-    protected EndReviewDialog(Shell parentShell, ReviewStateManager persistence, ReviewData reviewData) {
+    protected EndReviewDialog(
+            Shell parentShell,
+            ReviewStateManager persistence,
+            ReviewData reviewData,
+            List<EndTransition> endTransitions) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.persistence = persistence;
         this.reviewData = reviewData;
+        this.possibleChoices = endTransitions;
     }
 
     @Override
@@ -61,21 +66,20 @@ public class EndReviewDialog extends Dialog {
         buttonGroup.setLayout(gridLayout);
         buttonGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        this.buttonPause = new Button(buttonGroup, SWT.RADIO);
-        this.buttonPause.setText("Pause");
-        this.buttonOk = new Button(buttonGroup, SWT.RADIO);
-        this.buttonOk.setText("OK");
-        this.buttonRejected = new Button(buttonGroup, SWT.RADIO);
-        this.buttonRejected.setText("Rückläufer");
-        this.buttonAnotherReview = new Button(buttonGroup, SWT.RADIO);
-        this.buttonAnotherReview.setText("Weiteres Review nötig");
+        this.radioButtons = new ArrayList<>();
+        for (final EndTransition t : this.possibleChoices) {
+            final Button b = new Button(buttonGroup, SWT.RADIO);
+            b.setText(t.getNameForUser());
+            b.setData(t);
+            this.radioButtons.add(b);
+        }
 
         if (this.reviewData.hasTemporaryMarkers()) {
-            this.buttonPause.setSelection(true);
+            this.selectFirstButtonWithType(EndTransition.Type.PAUSE);
         } else if (this.reviewData.hasUnresolvedRemarks()) {
-            this.buttonRejected.setSelection(true);
+            this.selectFirstButtonWithType(EndTransition.Type.REJECTION);
         } else {
-            this.buttonOk.setSelection(true);
+            this.selectFirstButtonWithType(EndTransition.Type.OK);
         }
 
         this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE);
@@ -85,16 +89,22 @@ public class EndReviewDialog extends Dialog {
         return comp;
     }
 
+    private void selectFirstButtonWithType(Type type) {
+        for (final Button b : this.radioButtons) {
+            if (((EndTransition) b.getData()).getType() == type) {
+                b.setSelection(true);
+                break;
+            }
+        }
+    }
+
     @Override
     protected void okPressed() {
-        if (this.buttonPause.getSelection()) {
-            this.typeOfEnd = TypeOfEnd.PAUSE;
-        } else if (this.buttonOk.getSelection()) {
-            this.typeOfEnd = TypeOfEnd.OK;
-        } else if (this.buttonRejected.getSelection()) {
-            this.typeOfEnd = TypeOfEnd.REJECTED;
-        } else {
-            this.typeOfEnd = TypeOfEnd.ANOTHER_REVIEW;
+        for (final Button b : this.radioButtons) {
+            if (b.getSelection()) {
+                this.typeOfEnd = (EndTransition) b.getData();
+                break;
+            }
         }
         this.persistence.saveCurrentReviewData(this.textField.getText());
         DialogHelper.saveDialogSize(this);
@@ -107,9 +117,19 @@ public class EndReviewDialog extends Dialog {
         super.cancelPressed();
     }
 
-    public static TypeOfEnd selectTypeOfEnd(ReviewStateManager persistence, ReviewData reviewData) {
+    /**
+     * Lets the use select the type of end transition to use and returns it.
+     * If the user decides to continue reviewing, null is returned.
+     */
+    public static EndTransition selectTypeOfEnd(
+            ReviewStateManager persistence, ReviewData reviewData) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-        final EndReviewDialog dialog = new EndReviewDialog(s, persistence, reviewData);
+
+        final List<EndTransition> endTransitions = new ArrayList<>();
+        endTransitions.add(new EndTransition("Pause", null, EndTransition.Type.PAUSE));
+        endTransitions.addAll(persistence.getPossibleTransitionsForReviewEnd());
+        final EndReviewDialog dialog =
+                new EndReviewDialog(s, persistence, reviewData, endTransitions);
         final int ret = dialog.open();
         if (ret != OK) {
             return null;

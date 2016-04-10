@@ -28,6 +28,7 @@ import de.setsoftware.reviewtool.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.fragmenttracers.svn.BasicFragmentTracer;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
+import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ISyntaxFixer;
@@ -203,13 +204,17 @@ public class ReviewPlugin {
         this.modeListeners.add(new WeakReference<>(reviewPluginModeService));
     }
 
+    /**
+     * Ends the review, after asking the user for confirmation and the type of end
+     * transition to use.
+     */
     public void endReview() throws CoreException {
-        final EndReviewDialog.TypeOfEnd typeOfEnd =
+        final EndTransition typeOfEnd =
                 EndReviewDialog.selectTypeOfEnd(this.persistence, this.getCurrentReviewDataParsed());
         if (typeOfEnd == null) {
             return;
         }
-        if (typeOfEnd != EndReviewDialog.TypeOfEnd.PAUSE
+        if (typeOfEnd.getType() != EndTransition.Type.PAUSE
                 && this.getCurrentReviewDataParsed().hasTemporaryMarkers()) {
             final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
             final boolean yes = MessageDialog.openQuestion(shell, "Offene Marker",
@@ -218,20 +223,8 @@ public class ReviewPlugin {
                 return;
             }
         }
-        switch (typeOfEnd) {
-        case ANOTHER_REVIEW:
-            this.persistence.changeStateToReadyForReview();
-            break;
-        case OK:
-            this.persistence.changeStateToDone();
-            break;
-        case REJECTED:
-            this.persistence.changeStateToRejected();
-            break;
-        case PAUSE:
-            break;
-        default:
-            throw new AssertionError();
+        if (typeOfEnd.getType() != EndTransition.Type.PAUSE) {
+            this.persistence.changeStateAtReviewEnd(typeOfEnd);
         }
         this.leaveReviewMode();
     }

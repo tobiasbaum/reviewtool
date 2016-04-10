@@ -34,15 +34,15 @@ public interface IReviewPersistence {
     public abstract void changeStateToReadyForReview(String ticketKey);
 
     /**
-     * Changes the state of the given ticket to "done".
-     * If it already is in this state or the transition is not allowed, nothing happens.
+     * Returns the transitions that are possible to end the review of the given ticket.
+     * At least one of these transitions should be of type "OK" and one of type "REJECTION".
      */
-    public abstract void changeStateToDone(String ticketKey);
+    public abstract List<EndTransition> getPossibleTransitionsForReviewEnd(String ticketKey);
 
     /**
-     * Changes the state of the given ticket to "rejected".
+     * Changes the state of the given ticket according to the given transition.
      * If it already is in this state or the transition is not allowed, nothing happens.
      */
-    public abstract void changeStateToRejected(String ticketKey);
+    public abstract void changeStateAtReviewEnd(String ticketKey, EndTransition transition);
 
 }

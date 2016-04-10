@@ -20,6 +20,8 @@ import com.eclipsesource.json.ParseException;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.EndTransition;
+import de.setsoftware.reviewtool.model.EndTransition.Type;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
@@ -283,7 +285,7 @@ public class JiraPersistence implements IReviewPersistence {
     }
 
     /**
-     * Sendet und empfängt Daten.
+     * Sends and receives data.
      */
     private void communicate(final String url, final String method, final String data) throws IOException {
         final HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
@@ -333,13 +335,39 @@ public class JiraPersistence implements IReviewPersistence {
     }
 
     @Override
-    public void changeStateToDone(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.doneState);
+    public List<EndTransition> getPossibleTransitionsForReviewEnd(String ticket) {
+        final String getUrl = String.format(
+                "%s/rest/api/latest/issue/%s/transitions?%s",
+                this.url,
+                ticket,
+                this.getAuthParams());
+
+        final JsonObject result = this.performGet(getUrl).asObject();
+        final List<EndTransition> ret = new ArrayList<>();
+        for (final JsonValue curValue : result.get("transitions").asArray()) {
+            final JsonObject transition = curValue.asObject();
+            final String transitionTarget = transition.get("to").asObject().get("name").asString();
+            ret.add(new EndTransition(
+                    transition.get("name").asString(),
+                    transition.get("id").asString(),
+                    this.determineTransitionType(transitionTarget)));
+        }
+        return ret;
+    }
+
+    private Type determineTransitionType(String transitionTarget) {
+        if (this.doneState.equals(transitionTarget)) {
+            return Type.OK;
+        } else if (this.rejectedState.equals(transitionTarget)) {
+            return Type.REJECTION;
+        } else {
+            return Type.UNKNOWN;
+        }
     }
 
     @Override
-    public void changeStateToRejected(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.rejectedState);
+    public void changeStateAtReviewEnd(String ticketKey, EndTransition transition) {
+        this.performTransition(ticketKey, transition.getInternalName());
     }
 
     private void performTransitionIfPossible(String ticketKey, String targetState) {
@@ -353,7 +381,7 @@ public class JiraPersistence implements IReviewPersistence {
         }
     }
 
-    private void performTransition(final String ticket, final String transition) {
+    private void performTransition(final String ticket, final String transitionId) {
         final String postUrl = String.format(
                 "%s/rest/api/latest/issue/%s/transitions?%s",
                 this.url,
@@ -361,7 +389,7 @@ public class JiraPersistence implements IReviewPersistence {
                 this.getAuthParams());
 
         final JsonObject to = new JsonObject();
-        to.add("id", transition);
+        to.add("id", transitionId);
 
         final JsonObject command = new JsonObject();
         command.add("transition", to);

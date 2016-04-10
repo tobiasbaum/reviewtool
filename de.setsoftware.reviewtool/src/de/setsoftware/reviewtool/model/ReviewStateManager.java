@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.model;
 
+import java.util.List;
+
 public class ReviewStateManager {
 
     private IReviewPersistence persistence;
@@ -103,12 +105,12 @@ public class ReviewStateManager {
         this.persistence.changeStateToReadyForReview(this.ticketKey);
     }
 
-    public void changeStateToDone() {
-        this.persistence.changeStateToDone(this.ticketKey);
+    public List<EndTransition> getPossibleTransitionsForReviewEnd() {
+        return this.persistence.getPossibleTransitionsForReviewEnd(this.ticketKey);
     }
 
-    public void changeStateToRejected() {
-        this.persistence.changeStateToRejected(this.ticketKey);
+    public void changeStateAtReviewEnd(EndTransition transition) {
+        this.persistence.changeStateAtReviewEnd(this.ticketKey, transition);
     }
 
     public IUserInteraction getUi() {
