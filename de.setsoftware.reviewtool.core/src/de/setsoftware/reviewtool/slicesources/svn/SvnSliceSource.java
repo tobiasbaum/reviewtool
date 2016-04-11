@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -179,8 +180,13 @@ public class SvnSliceSource implements ISliceSource {
             throws SVNException, IOException {
         final List<Fragment> ret = new ArrayList<>();
         final SVNRevision revision = SVNRevision.create(e.getSecond().getRevision());
+        final Set<String> moveSources = this.determineMoveSources(e.getSecond().getChangedPaths().values());
         for (final Entry<String, SVNLogEntryPath> entry : e.getSecond().getChangedPaths().entrySet()) {
             if (entry.getValue().getKind() != SVNNodeKind.FILE) {
+                continue;
+            }
+            if (moveSources.contains(entry.getValue().getPath())) {
+                //Moves are contained twice, as a copy and a deletion. The deletion shall not result in a fragment.
                 continue;
             }
             ret.addAll(this.determineFragments(
@@ -191,7 +197,8 @@ public class SvnSliceSource implements ISliceSource {
 
     private List<Fragment> determineFragments(SVNRevision revision, SVNURL repoUrl, SVNLogEntryPath entryInfo)
             throws SVNException, IOException {
-        final byte[] oldFile = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber() - 1);
+        final String oldPath = entryInfo.getCopyPath() == null ? entryInfo.getPath() : entryInfo.getCopyPath();
+        final byte[] oldFile = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
         final byte[] newFile = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
 
         final List<Fragment> ret = new ArrayList<>();
@@ -202,6 +209,26 @@ public class SvnSliceSource implements ISliceSource {
                     pos.getFirst(),
                     pos.getSecond()));
         }
+        return ret;
+    }
+
+    private Set<String> determineMoveSources(Collection<SVNLogEntryPath> entries) {
+        final Set<String> ret = new LinkedHashSet<>();
+
+        //determine all copy sources
+        for (final SVNLogEntryPath p : entries) {
+            if (p.getCopyPath() != null) {
+                ret.add(p.getCopyPath());
+            }
+        }
+
+        //if a copy source was deleted, we consider this a "move", everything else is not a move
+        for (final SVNLogEntryPath p : entries) {
+            if (p.getType() != 'D') {
+                ret.remove(p.getPath());
+            }
+        }
+
         return ret;
     }
 
