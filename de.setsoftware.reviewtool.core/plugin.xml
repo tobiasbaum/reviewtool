@@ -220,8 +220,8 @@
 
  <extension point="org.eclipse.ui.views">
         <view id="de.setsoftware.reviewtool.ui.views.reviewinfoview"
-             name="Review Info"
-             class="de.setsoftware.reviewtool.ui.views.ReviewInfoView"
-             icon="icons\view.gif"/>
+             name="Review-Info"
+             class="de.setsoftware.reviewtool.ui.views.ReviewInfoView"/>
+             <!-- icon="icons\view.gif"/> -->
  </extension>
 </plugin>

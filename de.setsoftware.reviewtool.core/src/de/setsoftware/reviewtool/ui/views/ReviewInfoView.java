@@ -1,6 +1,8 @@
 package de.setsoftware.reviewtool.ui.views;
 
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -18,53 +20,95 @@ import de.setsoftware.reviewtool.model.TicketInfo;
 public class ReviewInfoView extends ViewPart implements ReviewModeListener {
 
     private Composite comp;
+    private Composite currentContent;
 
     @Override
     public void createPartControl(Composite comp) {
-        final GridLayout layout = new GridLayout();
-        layout.numColumns = 1;
-        comp.setLayout(layout);
-
         this.comp = comp;
 
         ViewDataSource.get().registerListener(this);
     }
 
-    private void createLabelAndText(Composite comp, String labelText, String text, int style) {
+    private void createLabelAndText(Composite comp, String labelText, String text, int style, int fill) {
         final Label label = new Label(comp, SWT.NULL);
         label.setText(labelText);
 
         final Text field = new Text(comp, style | SWT.BORDER | SWT.RESIZE);
         field.setText(text);
-        field.setLayoutData(new GridData(GridData.FILL_BOTH));
+        field.setLayoutData(new GridData(fill));
         field.setEditable(false);
     }
 
     @Override
     public void setFocus() {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
     public void notifyReview(ReviewStateManager mgr) {
+        this.disposeOldContent();
+        this.currentContent = this.createReviewContent(mgr);
+        this.comp.layout();
+    }
+
+    private ScrolledComposite createReviewContent(ReviewStateManager mgr) {
+        return this.createCommonContentForReviewAndFixing(mgr, "Review aktiv für:");
+    }
+
+    private ScrolledComposite createCommonContentForReviewAndFixing(ReviewStateManager mgr, String title) {
+        final ScrolledComposite scroll = new ScrolledComposite(this.comp, SWT.VERTICAL);
+        scroll.setExpandHorizontal(true);
+        scroll.setExpandVertical(true);
+        scroll.setMinSize(300, 200);
+
+        final Composite scrollContent = new Composite(scroll, SWT.NULL);
+
+        final GridLayout layout = new GridLayout();
+        layout.numColumns = 1;
+        scrollContent.setLayout(layout);
+
         final ITicketData ticketData = mgr.getCurrentTicketData();
         final TicketInfo ticketInfo = ticketData.getTicketInfo();
-        this.createLabelAndText(this.comp, "Ticket-Schlüssel:", ticketInfo.getId(), SWT.SINGLE);
-        this.createLabelAndText(this.comp, "Titel:", ticketInfo.getSummary(), SWT.SINGLE | SWT.WRAP);
-        this.createLabelAndText(this.comp, "Reviewanmerkungen:", ticketData.getReviewData(), SWT.MULTI);
+        this.createLabelAndText(scrollContent, title, ticketInfo.getId(),
+                SWT.SINGLE, GridData.FILL_HORIZONTAL);
+        this.createLabelAndText(scrollContent, "Titel:", ticketInfo.getSummary(),
+                SWT.SINGLE | SWT.WRAP, GridData.FILL_HORIZONTAL);
+        this.createLabelAndText(scrollContent, "Reviewanmerkungen:", ticketData.getReviewData(),
+                SWT.MULTI, GridData.FILL_BOTH);
+
+        scroll.setContent(scrollContent);
+        return scroll;
     }
 
     @Override
     public void notifyFixing(ReviewStateManager mgr) {
-        // TODO Auto-generated method stub
+        this.disposeOldContent();
+        this.currentContent = this.createFixingContent(mgr);
+        this.comp.layout();
+    }
 
+    private Composite createFixingContent(ReviewStateManager mgr) {
+        return this.createCommonContentForReviewAndFixing(mgr, "Einpflegen aktiv für:");
     }
 
     @Override
     public void notifyIdle() {
-        // TODO Auto-generated method stub
+        this.disposeOldContent();
+        this.currentContent = this.createIdleContent();
+        this.comp.layout();
+    }
 
+    private Composite createIdleContent() {
+        final Composite panel = new Composite(this.comp, SWT.NULL);
+        panel.setLayout(new FillLayout());
+        final Label label = new Label(panel, SWT.NULL);
+        label.setText("Kein Review oder Einpflegen aktiv");
+        return panel;
+    }
+
+    private void disposeOldContent() {
+        if (this.currentContent != null) {
+            this.currentContent.dispose();
+        }
     }
 
 }
