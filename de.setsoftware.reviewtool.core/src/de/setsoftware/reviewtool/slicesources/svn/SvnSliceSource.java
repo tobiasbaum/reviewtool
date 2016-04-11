@@ -18,6 +18,8 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
+import org.tmatesoft.svn.core.SVNProperties;
+import org.tmatesoft.svn.core.SVNProperty;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
@@ -95,20 +97,33 @@ public class SvnSliceSource implements ISliceSource {
     }
 
     /**
+     * Helper class to wrap the information needed on a repository.
+     */
+    private class Repo {
+        private final File workingCopyRoot;
+        private final SVNURL remoteUrl;
+
+        public Repo(File workingCopyRoot, SVNURL rootUrl) {
+            this.workingCopyRoot = workingCopyRoot;
+            this.remoteUrl = rootUrl;
+        }
+    }
+
+    /**
      * Handler that filters log entries with the given pattern.
      */
     private class LookupHandler implements ISVNLogEntryHandler {
 
         private final Pattern pattern;
-        private final List<Pair<SVNURL, SVNLogEntry>> matchingEntries = new ArrayList<>();
-        private SVNURL currentRoot;
+        private final List<Pair<Repo, SVNLogEntry>> matchingEntries = new ArrayList<>();
+        private Repo currentRoot;
 
         public LookupHandler(Pattern patternForKey) {
             this.pattern = patternForKey;
         }
 
-        public void setCurrentRoot(SVNURL workingCopyRoot) {
-            this.currentRoot = workingCopyRoot;
+        public void setCurrentRepo(Repo repo) {
+            this.currentRoot = repo;
         }
 
         @Override
@@ -124,7 +139,7 @@ public class SvnSliceSource implements ISliceSource {
     @Override
     public List<Slice> getSlices(String key) {
         try {
-            final List<Pair<SVNURL, SVNLogEntry>> revisions = this.determineRelevantRevisions(key);
+            final List<Pair<Repo, SVNLogEntry>> revisions = this.determineRelevantRevisions(key);
             this.sortByDate(revisions);
             return this.convertToSlices(revisions);
         } catch (final SVNException | IOException e) {
@@ -132,11 +147,11 @@ public class SvnSliceSource implements ISliceSource {
         }
     }
 
-    private List<Pair<SVNURL, SVNLogEntry>> determineRelevantRevisions(String key) throws SVNException {
+    private List<Pair<Repo, SVNLogEntry>> determineRelevantRevisions(String key) throws SVNException {
         final LookupHandler handler = new LookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
             final SVNURL rootUrl = this.mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
-            handler.setCurrentRoot(rootUrl);
+            handler.setCurrentRepo(new Repo(workingCopyRoot, rootUrl));
             this.mgr.getLogClient().doLog(
                     rootUrl,
                     new String[] {"/"},
@@ -153,30 +168,30 @@ public class SvnSliceSource implements ISliceSource {
         return handler.matchingEntries;
     }
 
-    private void sortByDate(List<Pair<SVNURL, SVNLogEntry>> revisions) {
-        Collections.sort(revisions, new Comparator<Pair<SVNURL, SVNLogEntry>>() {
+    private void sortByDate(List<Pair<Repo, SVNLogEntry>> revisions) {
+        Collections.sort(revisions, new Comparator<Pair<Repo, SVNLogEntry>>() {
             @Override
-            public int compare(Pair<SVNURL, SVNLogEntry> o1, Pair<SVNURL, SVNLogEntry> o2) {
+            public int compare(Pair<Repo, SVNLogEntry> o1, Pair<Repo, SVNLogEntry> o2) {
                 return o1.getSecond().getDate().compareTo(o2.getSecond().getDate());
             }
         });
     }
 
-    private List<Slice> convertToSlices(List<Pair<SVNURL, SVNLogEntry>> revisions)
+    private List<Slice> convertToSlices(List<Pair<Repo, SVNLogEntry>> revisions)
             throws SVNException, IOException {
         final List<Slice> ret = new ArrayList<>();
-        for (final Pair<SVNURL, SVNLogEntry> e : revisions) {
+        for (final Pair<Repo, SVNLogEntry> e : revisions) {
             ret.add(this.convertToSlice(e));
         }
         return ret;
     }
 
-    private Slice convertToSlice(Pair<SVNURL, SVNLogEntry> e) throws SVNException, IOException {
+    private Slice convertToSlice(Pair<Repo, SVNLogEntry> e) throws SVNException, IOException {
         return new Slice(e.getSecond().getMessage() + " (Rev. " + e.getSecond().getRevision() + ")",
                 this.determineFragments(e));
     }
 
-    private List<Fragment> determineFragments(Pair<SVNURL, SVNLogEntry> e)
+    private List<Fragment> determineFragments(Pair<Repo, SVNLogEntry> e)
             throws SVNException, IOException {
         final List<Fragment> ret = new ArrayList<>();
         final SVNRevision revision = SVNRevision.create(e.getSecond().getRevision());
@@ -189,13 +204,18 @@ public class SvnSliceSource implements ISliceSource {
                 //Moves are contained twice, as a copy and a deletion. The deletion shall not result in a fragment.
                 continue;
             }
+            if (this.isBinaryFile(e.getFirst(), entry.getValue(), e.getSecond().getRevision())) {
+                ret.add(new Fragment(this.createFileInRevision(revision, entry.getValue()),
+                        PositionInText.UNKNOWN,
+                        PositionInText.UNKNOWN));
+            }
             ret.addAll(this.determineFragments(
                     revision, e.getFirst(), entry.getValue()));
         }
         return ret;
     }
 
-    private List<Fragment> determineFragments(SVNRevision revision, SVNURL repoUrl, SVNLogEntryPath entryInfo)
+    private List<Fragment> determineFragments(SVNRevision revision, Repo repoUrl, SVNLogEntryPath entryInfo)
             throws SVNException, IOException {
         final String oldPath = entryInfo.getCopyPath() == null ? entryInfo.getPath() : entryInfo.getCopyPath();
         final byte[] oldFile = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
@@ -205,11 +225,24 @@ public class SvnSliceSource implements ISliceSource {
         for (final Pair<PositionInText, PositionInText> pos : this.diffAlgorithm.determineDiff(
                 oldFile, newFile, "ISO-8859-1")) {
             ret.add(new Fragment(
-                    new FileInRevision(entryInfo.getPath(), this.mapRevision(revision)),
+                    this.createFileInRevision(revision, entryInfo),
                     pos.getFirst(),
                     pos.getSecond()));
         }
         return ret;
+    }
+
+    private FileInRevision createFileInRevision(SVNRevision revision, SVNLogEntryPath entryInfo) {
+        return new FileInRevision(entryInfo.getPath(), this.mapRevision(revision));
+    }
+
+    private boolean isBinaryFile(Repo repoUrl, SVNLogEntryPath path, long revision) throws SVNException {
+        final long revisionToUse = path.getType() == 'D' ? revision - 1 : revision;
+        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.remoteUrl, true);
+        final SVNProperties propertyBuffer = new SVNProperties();
+        repo.getFile(path.getPath(), revisionToUse, propertyBuffer, null);
+        final String mimeType = propertyBuffer.getStringValue(SVNProperty.MIME_TYPE);
+        return SVNProperty.isBinaryMimeType(mimeType);
     }
 
     private Set<String> determineMoveSources(Collection<SVNLogEntryPath> entries) {
@@ -232,8 +265,8 @@ public class SvnSliceSource implements ISliceSource {
         return ret;
     }
 
-    private byte[] loadFile(SVNURL repoUrl, String path, long revision) throws SVNException {
-        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl, true);
+    private byte[] loadFile(Repo repoUrl, String path, long revision) throws SVNException {
+        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.remoteUrl, true);
         final ByteArrayOutputStream contents = new ByteArrayOutputStream();
         if (repo.checkPath(path, revision) != SVNNodeKind.FILE) {
             return new byte[0];

@@ -5,6 +5,8 @@ package de.setsoftware.reviewtool.model.changestructure;
  */
 public class PositionInText {
 
+    public static final PositionInText UNKNOWN = new PositionInText(0, 0);
+
     private final int line;
     private final int column;
 
