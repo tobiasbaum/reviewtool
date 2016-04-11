@@ -13,6 +13,7 @@ import org.eclipse.ui.part.ViewPart;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.TicketInfo;
+import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 
 /**
  * A view that contains general information on the review and the ticket.
@@ -44,7 +45,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
     }
 
     @Override
-    public void notifyReview(ReviewStateManager mgr) {
+    public void notifyReview(ReviewStateManager mgr, SlicesInReview slices) {
         this.disposeOldContent();
         this.currentContent = this.createReviewContent(mgr);
         this.comp.layout();

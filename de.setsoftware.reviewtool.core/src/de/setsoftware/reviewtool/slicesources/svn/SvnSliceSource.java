@@ -30,6 +30,7 @@ import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.ISliceSource;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
+import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
 import de.setsoftware.reviewtool.model.changestructure.Slice;
 
@@ -51,7 +52,7 @@ public class SvnSliceSource implements ISliceSource {
         this.workingCopyRoots = this.determineWorkingCopyRoots(projectRoots);
 
         this.logMessagePattern = logMessagePattern;
-        //test pattern
+        //test that the pattern can be parsed
         this.createPatternForKey("TEST-123");
     }
 
@@ -170,7 +171,8 @@ public class SvnSliceSource implements ISliceSource {
     }
 
     private Slice convertToSlice(Pair<SVNURL, SVNLogEntry> e) throws SVNException, IOException {
-        return new Slice(e.getSecond().getMessage(), this.determineFragments(e));
+        return new Slice(e.getSecond().getMessage() + " (Rev. " + e.getSecond().getRevision() + ")",
+                this.determineFragments(e));
     }
 
     private List<Fragment> determineFragments(Pair<SVNURL, SVNLogEntry> e)
@@ -214,8 +216,7 @@ public class SvnSliceSource implements ISliceSource {
     }
 
     private Revision mapRevision(SVNRevision revision) {
-        // TODO Auto-generated method stub
-        return new Revision();
+        return new RepoRevision(revision.getNumber());
     }
 
     //TEST

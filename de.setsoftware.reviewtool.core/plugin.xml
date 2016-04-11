@@ -208,5 +208,8 @@
              name="Review-Info"
              class="de.setsoftware.reviewtool.ui.views.ReviewInfoView"/>
              <!-- icon="icons\view.gif"/> -->
+        <view id="de.setsoftware.reviewtool.ui.views.reviewcontentview"
+             name="Review-Inhalt"
+             class="de.setsoftware.reviewtool.ui.views.ReviewContentView"/>
  </extension>
 </plugin>

@@ -26,4 +26,8 @@ public class Slice {
         return this.fragments;
     }
 
+    public String getDescription() {
+        return this.description;
+    }
+
 }

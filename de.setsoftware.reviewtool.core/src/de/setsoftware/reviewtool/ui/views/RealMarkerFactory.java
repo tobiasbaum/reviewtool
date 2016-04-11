@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.plugin;
+package de.setsoftware.reviewtool.ui.views;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;

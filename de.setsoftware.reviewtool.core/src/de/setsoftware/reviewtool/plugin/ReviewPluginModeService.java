@@ -7,6 +7,7 @@ import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 
 /**
@@ -41,7 +42,7 @@ public class ReviewPluginModeService extends AbstractSourceProvider implements R
     }
 
     @Override
-    public void notifyReview(ReviewStateManager mgr) {
+    public void notifyReview(ReviewStateManager mgr, SlicesInReview slices) {
         this.notifyModeChanged();
     }
 

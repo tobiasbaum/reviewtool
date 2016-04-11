@@ -38,6 +38,7 @@ import de.setsoftware.reviewtool.slicesources.svn.SvnSliceSource;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
+import de.setsoftware.reviewtool.ui.views.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 
 /**
@@ -211,7 +212,7 @@ public class ReviewPlugin {
             s.notifyFixing(this.persistence);
             break;
         case REVIEWING:
-            s.notifyReview(this.persistence);
+            s.notifyReview(this.persistence, this.slicesInReview);
             break;
         case IDLE:
             s.notifyIdle();

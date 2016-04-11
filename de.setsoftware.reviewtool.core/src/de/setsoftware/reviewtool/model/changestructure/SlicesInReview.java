@@ -58,24 +58,43 @@ public class SlicesInReview {
         final Slice s = this.slices.get(this.currentSliceIndex);
         final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
         for (final Fragment f : s.getFragments()) {
-            try {
-                final IResource resource = this.determineResource(f.getFile());
-                if (resource == null) {
-                    continue;
-                }
-                if (!lookupTables.containsKey(resource)) {
-                    lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
-                }
-                final IMarker marker = markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
-                marker.setAttribute(IMarker.LINE_NUMBER, f.getFrom().getLine());
-                marker.setAttribute(IMarker.CHAR_START,
-                        lookupTables.get(resource).getCharsSinceFileStart(f.getFrom()) - 1);
-                marker.setAttribute(IMarker.CHAR_END,
-                        lookupTables.get(resource).getCharsSinceFileStart(f.getTo()));
-            } catch (final CoreException | IOException e) {
-                throw new ReviewtoolException(e);
-            }
+            createMarkerFor(markerFactory, lookupTables, f);
         }
+    }
+
+    private static IMarker createMarkerFor(
+            IMarkerFactory markerFactory,
+            final Map<IResource, PositionLookupTable> lookupTables,
+            final Fragment f) {
+
+        try {
+            final IResource resource = determineResource(f.getFile());
+            if (resource == null) {
+                return null;
+            }
+            if (!lookupTables.containsKey(resource)) {
+                lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
+            }
+            final IMarker marker = markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
+            marker.setAttribute(IMarker.LINE_NUMBER, f.getFrom().getLine());
+            marker.setAttribute(IMarker.CHAR_START,
+                    lookupTables.get(resource).getCharsSinceFileStart(f.getFrom()) - 1);
+            marker.setAttribute(IMarker.CHAR_END,
+                    lookupTables.get(resource).getCharsSinceFileStart(f.getTo()));
+            return marker;
+        } catch (final CoreException | IOException e) {
+            throw new ReviewtoolException(e);
+        }
+    }
+
+    /**
+     * Creates a marker for the given fragment.
+     * If multiple markers have to be created, use the method that caches lookup tables instead.
+     */
+    public static IMarker createMarkerFor(
+            IMarkerFactory markerFactory,
+            final Fragment f) {
+        return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f);
     }
 
     /**
@@ -83,7 +102,7 @@ public class SlicesInReview {
      * Heuristically drops path prefixes (like "trunk", ...) until a resource can be found.
      * If none can be found, null is returned.
      */
-    private IResource determineResource(FileInRevision file) {
+    private static IResource determineResource(FileInRevision file) {
         String path = file.getPath();
         if (path.startsWith("/")) {
             path = path.substring(1);
@@ -99,6 +118,10 @@ public class SlicesInReview {
             }
             path = path.substring(slashIndex + 1);
         }
+    }
+
+    public List<Slice> getSlices() {
+        return this.slices;
     }
 
 }
