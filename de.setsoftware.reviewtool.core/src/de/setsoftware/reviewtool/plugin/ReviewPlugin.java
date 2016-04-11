@@ -37,7 +37,6 @@ import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 import de.setsoftware.reviewtool.slicesources.svn.SvnSliceSource;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
-import de.setsoftware.reviewtool.ui.dialogs.ReviewInfoDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 
@@ -295,10 +294,6 @@ public class ReviewPlugin {
                 ticketKey);
         this.slicesInReview.createMarkers(new RealMarkerFactory());
         this.slicesInReview.showInfo();
-    }
-
-    public void showReviewInfo() {
-        ReviewInfoDialog.show(this.persistence);
     }
 
 }
