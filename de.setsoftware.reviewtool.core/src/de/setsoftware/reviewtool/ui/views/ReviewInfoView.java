@@ -73,7 +73,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
 
         final ITicketData ticketData = mgr.getCurrentTicketData();
         final TicketInfo ticketInfo = ticketData.getTicketInfo();
-        this.createLabelAndText(scrollContent, title, ticketInfo.getId(),
+        this.createLabelAndText(scrollContent, title, ticketInfo.getId() + ", Runde " + mgr.getCurrentRound(),
                 SWT.SINGLE, GridData.FILL_HORIZONTAL);
         this.createLabelAndText(scrollContent, "Titel:", ticketInfo.getSummary(),
                 SWT.SINGLE | SWT.WRAP, GridData.FILL_HORIZONTAL);

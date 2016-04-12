@@ -48,6 +48,9 @@ public class ReviewStateManager {
         this.saveListeners.add(l);
     }
 
+    /**
+     * Returns the current review round number, including running reviews (i.e. returns 1 during the first review).
+     */
     public int getCurrentRound() {
         final ITicketData ticket = this.loadTicketDataAndCheckExistence(true);
         return ticket.getCurrentRound();

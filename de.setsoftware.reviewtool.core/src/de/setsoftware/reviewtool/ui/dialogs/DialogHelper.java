@@ -28,6 +28,9 @@ public class DialogHelper {
         saveDialogSize(window.getClass().getName(), size.x, size.y);
     }
 
+    /**
+     * Returns the saved size for the dialog with the given id.
+     */
     public static Point getDialogSize(String id) {
         final int x = getSize(id, "x");
         final int y = getSize(id, "y");
@@ -47,6 +50,10 @@ public class DialogHelper {
         return PREFIX + id + "_" + coord;
     }
 
+    /**
+     * Sets the dialog's size to the saved values. If no saved values are available, the given default values
+     * are used.
+     */
     public static void restoreSavedSize(
             Shell newShell, Window dialog, int defaultWidth, int defaultHeight) {
         final Point savedSize = getDialogSize(dialog.getClass().getName());

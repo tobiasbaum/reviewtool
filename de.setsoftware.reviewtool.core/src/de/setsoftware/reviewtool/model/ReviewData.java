@@ -11,6 +11,10 @@ import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 
+/**
+ * The data (collection of remarks and comments) belonging to a ticket. It is divided into multiple review
+ * rounds, which contain the remarks.
+ */
 public class ReviewData {
 
     private final List<ReviewRound> rounds = new ArrayList<>();
@@ -22,6 +26,9 @@ public class ReviewData {
         this.rounds.addAll(sortedRounds);
     }
 
+    /**
+     * Parse a review data object that has been serialized as a string.
+     */
     public static ReviewData parse(
             ReviewStateManager p, IMarkerFactory m, String oldReviewData) {
         try {
@@ -44,12 +51,16 @@ public class ReviewData {
     }
 
     private ReviewRound getOrCreateRound(int roundNumber) {
-        while (roundNumber >= this.rounds.size()) {
+        final int roundIndex = Math.max(roundNumber - 1, 0);
+        while (roundIndex >= this.rounds.size()) {
             this.rounds.add(new ReviewRound(this.rounds.size() + 1));
         }
-        return this.rounds.get(roundNumber);
+        return this.rounds.get(roundIndex);
     }
 
+    /**
+     * Create a string representation of this review data.
+     */
     public String serialize() {
         final ListIterator<ReviewRound> iter = this.rounds.listIterator(this.rounds.size());
         final StringBuilder ret = new StringBuilder();
@@ -65,6 +76,9 @@ public class ReviewData {
         return ret.toString();
     }
 
+    /**
+     * Returns true iff there are unresolved remarks in any of the review rounds.
+     */
     public boolean hasUnresolvedRemarks() {
         for (final ReviewRound r : this.rounds) {
             if (r.hasUnresolvedRemarks()) {
@@ -74,6 +88,9 @@ public class ReviewData {
         return false;
     }
 
+    /**
+     * Returns true iff there are temporary markers in any of the review rounds.
+     */
     public boolean hasTemporaryMarkers() {
         for (final ReviewRound r : this.rounds) {
             if (r.hasTemporaryMarkers()) {
@@ -83,6 +100,9 @@ public class ReviewData {
         return false;
     }
 
+    /**
+     * Deletes the given remark.
+     */
     public void deleteRemark(ReviewRemark reviewRemark) {
         for (final ReviewRound r: this.rounds) {
             r.deleteRemark(reviewRemark);

@@ -3,10 +3,13 @@ package de.setsoftware.reviewtool.model;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * An implementation of {@link IReviewPersistence} that does not persist anything.
+ */
 public class PersistenceStub implements IReviewPersistence {
 
     private String reviewData = "";
-    private int roundIndex = 0;
+    private int roundNumber = 1;
 
     @Override
     public void saveReviewData(String ticketId, String newData) {
@@ -14,7 +17,7 @@ public class PersistenceStub implements IReviewPersistence {
     }
 
     public void setReviewRound(int i) {
-        this.roundIndex = i - 1;
+        this.roundNumber = i;
     }
 
     @Override
@@ -42,7 +45,7 @@ public class PersistenceStub implements IReviewPersistence {
 
             @Override
             public int getCurrentRound() {
-                return PersistenceStub.this.roundIndex;
+                return PersistenceStub.this.roundNumber;
             }
 
             @Override
