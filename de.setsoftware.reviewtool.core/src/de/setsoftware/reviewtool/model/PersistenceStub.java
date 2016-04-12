@@ -34,14 +34,17 @@ public class PersistenceStub implements IReviewPersistence {
             public String getReviewerForRound(int number) {
                 return "TB";
             }
+
             @Override
             public String getReviewData() {
                 return PersistenceStub.this.reviewData;
             }
+
             @Override
             public int getCurrentRound() {
                 return PersistenceStub.this.roundIndex;
             }
+
             @Override
             public TicketInfo getTicketInfo() {
                 return new TicketInfo("123", "asdf", "hjkl", "qwer", null);

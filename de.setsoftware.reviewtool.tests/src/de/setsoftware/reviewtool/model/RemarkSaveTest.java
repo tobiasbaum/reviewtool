@@ -241,32 +241,8 @@ public class RemarkSaveTest {
         return new ReviewStateManager(new PersistenceStub(), stubTicketChooser());
     }
 
-    private static final class StubUi implements IUserInteraction, ITicketChooser, ISyntaxFixer {
-
-        @Override
-        public ITicketChooser getTicketChooser() {
-            return this;
-        }
-
-        @Override
-        public String choose(IReviewPersistence persistence, String ticketKeyDefault, boolean forReview) {
-            return "TEST-1234";
-        }
-
-        @Override
-        public ISyntaxFixer getSyntaxFixer() {
-            return this;
-        }
-
-        @Override
-        public ReviewData getCurrentReviewDataParsed(ReviewStateManager persistence, IMarkerFactory factory) {
-            return ReviewData.parse(persistence, factory, persistence.getCurrentReviewData());
-        }
-
-    }
-
     private static IUserInteraction stubTicketChooser() {
-        return new StubUi();
+        return new StubUi("TEST-1234");
     }
 
     @Test

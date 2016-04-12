@@ -31,7 +31,10 @@ public class ReviewRemark {
         return create(p, marker, user, PositionTransformer.toPosition(resource, line), text, type);
     }
 
-    static ReviewRemark create(
+    /**
+     * Low level create operation.
+     */
+    public static ReviewRemark create(
             ReviewStateManager p,
             IMarker marker,
             String user,
