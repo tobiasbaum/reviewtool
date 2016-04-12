@@ -1,9 +1,7 @@
 package de.setsoftware.reviewtool.plugin;
 
 import java.io.File;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.resources.IProject;
@@ -19,6 +17,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
+import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
 import de.setsoftware.reviewtool.fragmenttracers.svn.BasicFragmentTracer;
@@ -87,7 +86,7 @@ public class ReviewPlugin {
     private final ISliceSource sliceSource;
     private SlicesInReview slicesInReview;
     private Mode mode = Mode.IDLE;
-    private final List<WeakReference<ReviewModeListener>> modeListeners = new ArrayList<>();
+    private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
 
 
     private ReviewPlugin() {
@@ -203,14 +202,8 @@ public class ReviewPlugin {
     }
 
     private void notifyModeListeners() {
-        final Iterator<WeakReference<ReviewModeListener>> iter = this.modeListeners.iterator();
-        while (iter.hasNext()) {
-            final ReviewModeListener s = iter.next().get();
-            if (s != null) {
-                this.notifyModeListener(s);
-            } else {
-                iter.remove();
-            }
+        for (final ReviewModeListener l : this.modeListeners) {
+            this.notifyModeListener(l);
         }
     }
 
@@ -231,11 +224,11 @@ public class ReviewPlugin {
     }
 
     public void registerModeListener(ReviewModeListener reviewPluginModeService) {
-        this.modeListeners.add(new WeakReference<>(reviewPluginModeService));
+        this.modeListeners.add(reviewPluginModeService);
     }
 
     public void registerAndNotifyModeListener(ReviewModeListener reviewPluginModeService) {
-        this.modeListeners.add(new WeakReference<>(reviewPluginModeService));
+        this.modeListeners.add(reviewPluginModeService);
         this.notifyModeListener(reviewPluginModeService);
     }
 

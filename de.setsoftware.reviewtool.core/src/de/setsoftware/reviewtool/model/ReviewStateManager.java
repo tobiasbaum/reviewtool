@@ -2,12 +2,19 @@ package de.setsoftware.reviewtool.model;
 
 import java.util.List;
 
+import de.setsoftware.reviewtool.base.WeakListeners;
+
+/**
+ * Manages the current ticket under review and provides a facade to the persistence layer.
+ */
 public class ReviewStateManager {
 
     private IReviewPersistence persistence;
     private final IUserInteraction userInteraction;
 
     private String ticketKey;
+
+    private final WeakListeners<IReviewDataSaveListener> saveListeners = new WeakListeners<>();
 
     public ReviewStateManager(IReviewPersistence persistence, IUserInteraction userInteraction) {
         this.persistence = persistence;
@@ -25,9 +32,20 @@ public class ReviewStateManager {
         return ticket.getReviewData();
     }
 
+    /**
+     * Save the given review data in the current ticket.
+     * Notifies all listeners of the save.
+     */
     public void saveCurrentReviewData(String newData) {
         this.loadTicketDataAndCheckExistence(true);
         this.persistence.saveReviewData(this.ticketKey, newData);
+        for (final IReviewDataSaveListener l : this.saveListeners) {
+            l.onSave(newData);
+        }
+    }
+
+    public void addSaveListener(IReviewDataSaveListener l) {
+        this.saveListeners.add(l);
     }
 
     public int getCurrentRound() {

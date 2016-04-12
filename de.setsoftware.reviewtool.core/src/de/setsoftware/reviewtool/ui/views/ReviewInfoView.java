@@ -10,6 +10,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
 
+import de.setsoftware.reviewtool.model.IReviewDataSaveListener;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.TicketInfo;
@@ -18,10 +19,11 @@ import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 /**
  * A view that contains general information on the review and the ticket.
  */
-public class ReviewInfoView extends ViewPart implements ReviewModeListener {
+public class ReviewInfoView extends ViewPart implements ReviewModeListener, IReviewDataSaveListener {
 
     private Composite comp;
     private Composite currentContent;
+    private Text reviewDataText;
 
     @Override
     public void createPartControl(Composite comp) {
@@ -30,7 +32,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
         ViewDataSource.get().registerListener(this);
     }
 
-    private void createLabelAndText(Composite comp, String labelText, String text, int style, int fill) {
+    private Text createLabelAndText(Composite comp, String labelText, String text, int style, int fill) {
         final Label label = new Label(comp, SWT.NULL);
         label.setText(labelText);
 
@@ -38,6 +40,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
         field.setText(text);
         field.setLayoutData(new GridData(fill));
         field.setEditable(false);
+        return field;
     }
 
     @Override
@@ -46,6 +49,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
 
     @Override
     public void notifyReview(ReviewStateManager mgr, SlicesInReview slices) {
+        mgr.addSaveListener(this);
         this.disposeOldContent();
         this.currentContent = this.createReviewContent(mgr);
         this.comp.layout();
@@ -73,7 +77,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
                 SWT.SINGLE, GridData.FILL_HORIZONTAL);
         this.createLabelAndText(scrollContent, "Titel:", ticketInfo.getSummary(),
                 SWT.SINGLE | SWT.WRAP, GridData.FILL_HORIZONTAL);
-        this.createLabelAndText(scrollContent, "Reviewanmerkungen:", ticketData.getReviewData(),
+        this.reviewDataText = this.createLabelAndText(scrollContent, "Reviewanmerkungen:", ticketData.getReviewData(),
                 SWT.MULTI, GridData.FILL_BOTH);
 
         scroll.setContent(scrollContent);
@@ -82,6 +86,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
 
     @Override
     public void notifyFixing(ReviewStateManager mgr) {
+        mgr.addSaveListener(this);
         this.disposeOldContent();
         this.currentContent = this.createFixingContent(mgr);
         this.comp.layout();
@@ -99,6 +104,8 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
     }
 
     private Composite createIdleContent() {
+        this.reviewDataText = null;
+
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
@@ -109,6 +116,13 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener {
     private void disposeOldContent() {
         if (this.currentContent != null) {
             this.currentContent.dispose();
+        }
+    }
+
+    @Override
+    public void onSave(String newData) {
+        if (this.reviewDataText != null) {
+            this.reviewDataText.setText(newData);
         }
     }
 
