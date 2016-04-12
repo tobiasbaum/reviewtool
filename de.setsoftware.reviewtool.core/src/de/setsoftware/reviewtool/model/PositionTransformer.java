@@ -2,9 +2,11 @@ package de.setsoftware.reviewtool.model;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.RecursiveAction;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -14,10 +16,20 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 
+/**
+ * Is able to transform short filenames into paths and positions with short filenames into positions
+ * for Eclipse. Reverse transformation is also supported.
+ */
 public class PositionTransformer {
 
-    private static final HashMap<String, List<IPath>> cache = new HashMap<>();
+    private static final long STALE_LIMIT_MS = 20 * 1000L;
 
+    private static final ConcurrentHashMap<String, PathChainNode> cache = new ConcurrentHashMap<>();
+    private static long cacheRefreshTime;
+
+    /**
+     * Creates a position identifying the given line in the given resource.
+     */
     public static Position toPosition(IResource resource, int line) {
         if (resource.getType() != IResource.FILE) {
             return new GlobalPosition();
@@ -85,21 +97,36 @@ public class PositionTransformer {
     }
 
     private static synchronized List<IPath> getCachedPathsForName(IResource resource, String filename) {
-        final List<IPath> cachedPaths = cache.get(filename);
-        if (cachedPaths == null) {
-            //entweder noch komplett leer, oder es gibt eine Datei die wir nicht im
-            //  Cache haben. In beiden Fällen ein Grund um den Cache neu zu befüllen
+        final List<IPath> cachedPaths = toList(cache.get(filename));
+        if (cachedPaths == null && cacheMightBeStale()) {
+            //The cache is either empty, or it does not contain the resource that is given. Both cases are
+            //  a good reason to refresh the cache, if this has not been done recently.
             fillCache(resource);
-            return cache.get(filename);
+            return toList(cache.get(filename));
         } else {
             return cachedPaths;
         }
     }
 
+    private static List<IPath> toList(PathChainNode startNode) {
+        if (startNode == null) {
+            return null;
+        }
+        final List<IPath> ret = new ArrayList<>();
+        PathChainNode curNode = startNode;
+        do {
+            ret.add(curNode.path);
+            curNode = curNode.next;
+        } while (curNode != null);
+        return ret;
+    }
+
+    private static boolean cacheMightBeStale() {
+        return System.currentTimeMillis() - cacheRefreshTime > STALE_LIMIT_MS;
+    }
+
     private static synchronized void fillCache(IResource resource) {
         cache.clear();
-
-        final LinkedHashSet<IPath> allRoots = new LinkedHashSet<>();
 
         fillCacheIfEmpty(resource.getWorkspace());
     }
@@ -108,13 +135,21 @@ public class PositionTransformer {
         if (!cache.isEmpty()) {
             return;
         }
+        final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
+        final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
         for (final IProject project : workspace.getRoot().getProjects()) {
-            //TEST
-            System.out.println("project root: " + project.getFullPath().toFile().getAbsolutePath());
-            fillCacheRecursive(project.getLocation());
+            tasks.add(pool.submit(new FillCacheAction(project.getLocation(), cache)));
         }
+        for (final ForkJoinTask<Void> task : tasks) {
+            task.join();
+        }
+        pool.shutdown();
+        cacheRefreshTime = System.currentTimeMillis();
     }
 
+    /**
+     * Starts a new daemon thread that initializes the cache in the background.
+     */
     public static void initializeCacheInBackground() {
         final IWorkspace root = ResourcesPlugin.getWorkspace();
         final Thread t = new Thread(new Runnable() {
@@ -127,30 +162,71 @@ public class PositionTransformer {
         t.start();
     }
 
-    private static void fillCacheRecursive(IPath path) {
-        final File[] children = path.toFile().listFiles();
-        if (children == null) {
-            return;
+    /**
+     * A linked list node in the cache.
+     */
+    private static final class PathChainNode {
+        private final PathChainNode next;
+        private final IPath path;
+
+        public PathChainNode(IPath path2, PathChainNode oldNode) {
+            this.next = oldNode;
+            this.path = path2;
         }
-        for (final File child : children) {
-            //TEST
-            System.out.println("child: " + child.getAbsolutePath());
-            final String childName = child.getName();
-            if (childName.startsWith(".") || childName.equals("bin")) {
-                continue;
+
+    }
+
+    /**
+     * Fork-join action to fill the cache. Every action is responsible for a single directory.
+     * Does not really join/merge maps to avoid unnecessary copying, uses a ConcurrentHashMap instead.
+     */
+    private static final class FillCacheAction extends RecursiveAction {
+
+        private static final long serialVersionUID = -6349559047252339690L;
+
+        private final IPath path;
+        private final ConcurrentHashMap<String, PathChainNode> sharedMap;
+
+        public FillCacheAction(IPath directory, ConcurrentHashMap<String, PathChainNode> sharedMap) {
+            this.path = directory;
+            this.sharedMap = sharedMap;
+        }
+
+        @Override
+        protected void compute() {
+            final File[] children = this.path.toFile().listFiles();
+            if (children == null) {
+                return;
             }
-            if (child.isDirectory()) {
-                fillCacheRecursive(path.append(childName));
-            } else {
-                final String childNameWithoutExtension = stripExtension(childName);
-                List<IPath> existingPaths = cache.get(childNameWithoutExtension);
-                if (existingPaths == null) {
-                    existingPaths = new ArrayList<>();
-                    cache.put(childNameWithoutExtension, existingPaths);
+            final List<FillCacheAction> subActions = new ArrayList<>();
+            for (final File child : children) {
+                final String childName = child.getName();
+                if (childName.startsWith(".") || childName.equals("bin")) {
+                    continue;
                 }
-                existingPaths.add(path.append(childName));
+                if (child.isDirectory()) {
+                    subActions.add(new FillCacheAction(this.path.append(childName), this.sharedMap));
+                } else {
+                    final String childNameWithoutExtension = stripExtension(childName);
+                    this.addToMap(childNameWithoutExtension, this.path.append(childName));
+                }
             }
+            invokeAll(subActions);
         }
+
+        private void addToMap(String childNameWithoutExtension, IPath path) {
+            boolean success;
+            do {
+                final PathChainNode oldNode = this.sharedMap.get(childNameWithoutExtension);
+                final PathChainNode newNode = new PathChainNode(path, oldNode);
+                if (oldNode == null) {
+                    success = this.sharedMap.putIfAbsent(childNameWithoutExtension, newNode) == null;
+                } else {
+                    success = this.sharedMap.replace(childNameWithoutExtension, oldNode, newNode);
+                }
+            } while (!success);
+        }
+
     }
 
     private static String stripExtension(String name) {

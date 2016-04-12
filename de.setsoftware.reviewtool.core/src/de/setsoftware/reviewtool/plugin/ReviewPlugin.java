@@ -105,8 +105,7 @@ public class ReviewPlugin {
     }
 
     private static IReviewPersistence createPersistenceFromPreferences() {
-        final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-        pref.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
+        final IPreferenceStore pref = getPrefs();
         final String user = pref.getString(ReviewToolPreferencePage.USER);
         final IReviewPersistence persistence;
         if (pref.getBoolean(ReviewToolPreferencePage.JIRA_SOURCE)) {
@@ -126,6 +125,12 @@ public class ReviewPlugin {
         return persistence;
     }
 
+    private static IPreferenceStore getPrefs() {
+        final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
+        pref.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
+        return pref;
+    }
+
     private static ISliceSource createSliceSource() {
         final List<File> projectDirs = new ArrayList<>();
         final IWorkspace root = ResourcesPlugin.getWorkspace();
@@ -135,7 +140,10 @@ public class ReviewPlugin {
                 projectDirs.add(location.toFile());
             }
         }
-        return new SvnSliceSource(projectDirs, ".*${key}([^0-9].*)?");
+        final IPreferenceStore pref = getPrefs();
+        final String user = pref.getString(ReviewToolPreferencePage.USER);
+        final String pwd = pref.getString(ReviewToolPreferencePage.JIRA_PASSWORD);
+        return new SvnSliceSource(projectDirs, ".*${key}([^0-9].*)?", user, pwd);
     }
 
     public static ReviewStateManager getPersistence() {

@@ -21,10 +21,12 @@ import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.SVNProperty;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
@@ -50,8 +52,10 @@ public class SvnSliceSource implements ISliceSource {
     private final SVNClientManager mgr = SVNClientManager.newInstance();
     private final IDiffAlgorithm diffAlgorithm = new SimpleTextDiffAlgorithm();
 
-
-    public SvnSliceSource(List<File> projectRoots, String logMessagePattern) {
+    public SvnSliceSource(
+            List<File> projectRoots, String logMessagePattern, String user, String pwd) {
+        this.mgr.setAuthenticationManager(new DefaultSVNAuthenticationManager(
+                null, false, user, pwd.toCharArray(), null, null));
         this.workingCopyRoots = this.determineWorkingCopyRoots(projectRoots);
 
         this.logMessagePattern = logMessagePattern;
@@ -67,6 +71,8 @@ public class SvnSliceSource implements ISliceSource {
                 workingCopyRoots.add(wcRoot);
             }
         }
+        //TEST
+        Logger.info("working copy roots=" + workingCopyRoots);
         return workingCopyRoots;
     }
 
@@ -128,6 +134,8 @@ public class SvnSliceSource implements ISliceSource {
 
         @Override
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
+            //TEST
+            Logger.info("log entry=" + logEntry.getMessage());
             if (logEntry.getMessage() != null && this.pattern.matcher(logEntry.getMessage()).matches()) {
                 assert this.currentRoot != null;
                 this.matchingEntries.add(Pair.create(this.currentRoot, logEntry));
@@ -156,8 +164,8 @@ public class SvnSliceSource implements ISliceSource {
                     rootUrl,
                     new String[] {"/"},
                     SVNRevision.HEAD,
-                    SVNRevision.create(0),
                     SVNRevision.HEAD,
+                    SVNRevision.create(0),
                     false,
                     true,
                     false,
@@ -217,6 +225,8 @@ public class SvnSliceSource implements ISliceSource {
 
     private List<Fragment> determineFragments(SVNRevision revision, Repo repoUrl, SVNLogEntryPath entryInfo)
             throws SVNException, IOException {
+        //TEST
+        Logger.info("changed file=" + entryInfo.getPath());
         final String oldPath = entryInfo.getCopyPath() == null ? entryInfo.getPath() : entryInfo.getCopyPath();
         final byte[] oldFile = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
         final byte[] newFile = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
@@ -282,7 +292,7 @@ public class SvnSliceSource implements ISliceSource {
     //TEST
     public static void main(String[] args) {
         final File f = new File("C:\\testworkspace\\testprojekt");
-        final SvnSliceSource src = new SvnSliceSource(Collections.singletonList(f), ".*${key}([^0-9].*)?");
+        final SvnSliceSource src = new SvnSliceSource(Collections.singletonList(f), ".*${key}([^0-9].*)?", "", "");
         System.out.println(src.getSlices("PSY-12"));
         System.out.println(src.getSlices("tralala"));
         System.out.println(src.getSlices("PSY-123"));

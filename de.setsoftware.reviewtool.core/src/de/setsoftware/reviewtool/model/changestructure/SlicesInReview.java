@@ -90,6 +90,8 @@ public class SlicesInReview {
     /**
      * Creates a marker for the given fragment.
      * If multiple markers have to be created, use the method that caches lookup tables instead.
+     * If a marker could not be created (for example because the resource is not availabel in Eclipse), null
+     * is returned.
      */
     public static IMarker createMarkerFor(
             IMarkerFactory markerFactory,

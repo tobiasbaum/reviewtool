@@ -49,10 +49,20 @@ public class PositionLookupTable {
                 ret.charCountAtEndOfLine.add(charCount);
             }
         }
+        ret.charCountAtEndOfLine.add(charCount);
         return ret;
     }
 
     public int getCharsSinceFileStart(PositionInText pos) {
+        //when tracing of changes does not work properly, there can be positions that are out of the file and
+        //  that have to be handled in some way
+        if (pos.getLine() <= 0) {
+            return 0;
+        }
+        if (pos.getLine() >= this.charCountAtEndOfLine.size()) {
+            return this.charCountAtEndOfLine.get(this.charCountAtEndOfLine.size() - 1);
+        }
+
         return this.charCountAtEndOfLine.get(pos.getLine() - 1) + pos.getColumn();
     }
 
