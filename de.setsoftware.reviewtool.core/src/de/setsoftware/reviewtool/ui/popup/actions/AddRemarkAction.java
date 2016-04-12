@@ -1,10 +1,14 @@
 package de.setsoftware.reviewtool.ui.popup.actions;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -31,7 +35,11 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.CreateDialogCallback;
+import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.PositionReference;
 
+/**
+ * Action that adds a review remark (after prompting the user for details with a dialog).
+ */
 public class AddRemarkAction extends AbstractHandler {
 
     @Override
@@ -114,17 +122,28 @@ public class AddRemarkAction extends AbstractHandler {
     }
 
     private void createMarker(final IResource resource, final int line) throws ExecutionException {
-        CreateRemarkDialog.get(new CreateDialogCallback() {
+        Set<PositionReference> allowedRefs;
+        if (resource.getType() != IResource.FILE) {
+            allowedRefs = EnumSet.of(PositionReference.GLOBAL);
+        } else if (line <= 0) {
+            allowedRefs = EnumSet.of(PositionReference.GLOBAL, PositionReference.FILE);
+        } else {
+            allowedRefs = EnumSet.allOf(PositionReference.class);
+        }
+        CreateRemarkDialog.get(allowedRefs, new CreateDialogCallback() {
             @Override
-            public void execute(String text, RemarkType type) {
+            public void execute(String text, RemarkType type, PositionReference chosenRef) {
                 try {
                     final ReviewStateManager p = ReviewPlugin.getPersistence();
+                    final IResource resourceFiltered = chosenRef != PositionReference.GLOBAL
+                            ? resource : ResourcesPlugin.getWorkspace().getRoot();
+                    final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
                     ReviewRemark.create(
                             p,
-                            resource,
+                            resourceFiltered,
                             p.getReviewerForRound(p.getCurrentRound()),
                             text,
-                            line,
+                            lineFiltered,
                             type).save();
                 } catch (final CoreException e) {
                     throw new ReviewtoolException(e);

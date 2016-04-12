@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model;
 
+/**
+ * A dummy position that is used by global remarks.
+ */
 public class GlobalPosition extends Position {
 
     @Override

@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
+import java.util.Set;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
@@ -24,33 +26,50 @@ import de.setsoftware.reviewtool.model.ReviewRound;
  */
 public class CreateRemarkDialog extends Dialog {
 
+    private static final String LINE_TEXT = "Bezug: Zeile";
+    private static final String FILE_TEXT = "Bezug: Datei";
+    private static final String GLOBAL_TEXT = "Bezug: global";
+
+    /**
+     * Types of reference points for positions.
+     */
+    public static enum PositionReference {
+        LINE,
+        FILE,
+        GLOBAL
+    }
+
     /**
      * Callback that is called when the user entered the remark's information.
      */
     public interface CreateDialogCallback {
-        public abstract void execute(String text, RemarkType type);
+        public abstract void execute(String text, RemarkType type, PositionReference referenceToUse);
     }
 
     private Combo typeCombo;
     private Text textField;
+    private Combo positionCombo;
     private final CreateDialogCallback callback;
+    private final Set<PositionReference> possibleReferences;
 
-    protected CreateRemarkDialog(Shell parentShell, CreateDialogCallback callback) {
+    protected CreateRemarkDialog(
+            Shell parentShell, CreateDialogCallback callback, Set<PositionReference> possibleReferences) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.callback = callback;
+        this.possibleReferences = possibleReferences;
     }
 
-    public static void get(CreateDialogCallback callback) {
+    public static void get(Set<PositionReference> possibleReferences, CreateDialogCallback callback) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-        new CreateRemarkDialog(s, callback).open();
+        new CreateRemarkDialog(s, callback, possibleReferences).open();
     }
 
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
         newShell.setText("Anmerkung eingeben");
-        newShell.setSize(300, 200);
+        newShell.setSize(300, 270);
     }
 
     @Override
@@ -82,6 +101,18 @@ public class CreateRemarkDialog extends Dialog {
                 }
             }
         });
+
+        this.positionCombo = new Combo(comp, SWT.BORDER | SWT.READ_ONLY);
+        if (this.possibleReferences.contains(PositionReference.LINE)) {
+            this.positionCombo.add(LINE_TEXT);
+        }
+        if (this.possibleReferences.contains(PositionReference.FILE)) {
+            this.positionCombo.add(FILE_TEXT);
+        }
+        if (this.possibleReferences.contains(PositionReference.GLOBAL)) {
+            this.positionCombo.add(GLOBAL_TEXT);
+        }
+        this.positionCombo.select(0);
 
         //für noch schnelleres Tippen: Wenn mit einem Buchstaben die Kategorie gewählt
         //  wurde springt er direkt in das Textfeld
@@ -118,9 +149,21 @@ public class CreateRemarkDialog extends Dialog {
         }
         this.callback.execute(
                 this.textField.getText(),
-                ReviewRound.parseType(this.typeCombo.getText()));
+                ReviewRound.parseType(this.typeCombo.getText()),
+                this.getSelectedPosition());
         DialogHelper.saveDialogSize(this);
         super.okPressed();
+    }
+
+    private PositionReference getSelectedPosition() {
+        final String s = this.positionCombo.getText();
+        if (s.equals(LINE_TEXT)) {
+            return PositionReference.LINE;
+        } else if (s.equals(FILE_TEXT)) {
+            return PositionReference.FILE;
+        } else {
+            return PositionReference.GLOBAL;
+        }
     }
 
     @Override
