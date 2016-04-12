@@ -18,6 +18,9 @@ import org.eclipse.ui.PlatformUI;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.model.ReviewRemarkComment;
 
+/**
+ * Dialog to add a reply to a review remark or comment.
+ */
 public class AddReplyDialog extends Dialog {
 
     private Text textField;
@@ -26,6 +29,7 @@ public class AddReplyDialog extends Dialog {
 
     protected AddReplyDialog(Shell parentShell, ReviewRemark review, InputDialogCallback callback) {
         super(parentShell);
+        this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.review = review;
         this.callback = callback;
     }
@@ -51,21 +55,24 @@ public class AddReplyDialog extends Dialog {
 
         final Font italicFont = JFaceResources.getFontRegistry().getItalic(JFaceResources.DEFAULT_FONT);
 
-        int i = 0;
+        boolean italicMode = true;
+        String lastUser = "";
         for (final ReviewRemarkComment comment : this.review.getComments()) {
             final Label oldDiscussionLabel = new Label(comp, SWT.LEFT);
             oldDiscussionLabel.setText(comment.toString());
-            if (i % 2 != 0) {
+            if (!lastUser.equals(comment.getUser())) {
+                lastUser = comment.getUser();
+                italicMode = !italicMode;
+            }
+            if (italicMode) {
                 oldDiscussionLabel.setFont(italicFont);
             }
-            i++;
         }
 
-        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.WRAP);
+        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.RESIZE);
 
-        final GridData data = new GridData(SWT.FILL, SWT.CENTER, true, false);
+        final GridData data = new GridData(GridData.FILL_BOTH);
         this.textField.setLayoutData(data);
-        this.textField.setSize(250, 50);
         this.textField.addTraverseListener(new TraverseListener() {
             @Override
             public void keyTraversed(TraverseEvent e) {

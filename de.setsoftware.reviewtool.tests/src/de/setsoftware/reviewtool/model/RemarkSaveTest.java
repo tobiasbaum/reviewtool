@@ -272,4 +272,69 @@ public class RemarkSaveTest {
                 + "*# Anm B\n",
                 p.getCurrentReviewData());
     }
+
+    @Test
+    public void testLoadWithWrongOrder() throws Exception {
+        final ReviewStateManager p = createPersistence();
+        final String input = "Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n"
+                + "\n"
+                + "Review 2:\n"
+                + "* muss\n"
+                + "*# Anm C\n"
+                + "*# Anm D\n";
+
+        final ReviewData d = ReviewData.parse(p, DummyMarker.FACTORY, input);
+
+        assertEquals("Review 2:\n"
+                + "* muss\n"
+                + "*# Anm C\n"
+                + "*# Anm D\n"
+                + "\n"
+                + "Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n",
+                d.serialize());
+    }
+
+    @Test
+    public void testGapsInRoundNumbers() throws Exception {
+        final ReviewStateManager p = createPersistence();
+        final String input = "Review 3:\n"
+                + "* muss\n"
+                + "*# Anm C\n"
+                + "*# Anm D\n"
+                + "\n"
+                + "Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n"
+                + "\n"
+                + "Review 5:\n"
+                + "* muss\n"
+                + "*# Anm E\n"
+                + "*# Anm F\n";
+
+        final ReviewData d = ReviewData.parse(p, DummyMarker.FACTORY, input);
+
+        assertEquals("Review 5:\n"
+                + "* muss\n"
+                + "*# Anm E\n"
+                + "*# Anm F\n"
+                + "\n"
+                + "Review 3:\n"
+                + "* muss\n"
+                + "*# Anm C\n"
+                + "*# Anm D\n"
+                + "\n"
+                + "Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n",
+                d.serialize());
+    }
+
 }
