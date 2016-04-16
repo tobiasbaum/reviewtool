@@ -10,7 +10,6 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.dialogs.MessageDialog;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
@@ -41,11 +40,6 @@ public class SlicesInReview {
         final List<Slice> slices = src.getSlices(ticketKey);
         //TODO tracer einbauen
         return new SlicesInReview(slices);
-    }
-
-    //TODO this is just a method for testing that should disappear some time in the future
-    public void showInfo() {
-        MessageDialog.openInformation(null, this.slices.size() + " slices", this.slices.toString());
     }
 
     /**

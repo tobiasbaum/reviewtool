@@ -295,7 +295,6 @@ public class ReviewPlugin {
                 new BasicFragmentTracer(),
                 ticketKey);
         this.slicesInReview.createMarkers(new RealMarkerFactory());
-        this.slicesInReview.showInfo();
     }
 
 }

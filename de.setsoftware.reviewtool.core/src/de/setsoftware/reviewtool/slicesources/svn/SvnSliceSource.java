@@ -26,7 +26,6 @@ import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
-import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
@@ -71,8 +70,6 @@ public class SvnSliceSource implements ISliceSource {
                 workingCopyRoots.add(wcRoot);
             }
         }
-        //TEST
-        Logger.info("working copy roots=" + workingCopyRoots);
         return workingCopyRoots;
     }
 
@@ -134,8 +131,6 @@ public class SvnSliceSource implements ISliceSource {
 
         @Override
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
-            //TEST
-            Logger.info("log entry=" + logEntry.getMessage());
             if (logEntry.getMessage() != null && this.pattern.matcher(logEntry.getMessage()).matches()) {
                 assert this.currentRoot != null;
                 this.matchingEntries.add(Pair.create(this.currentRoot, logEntry));
@@ -225,8 +220,6 @@ public class SvnSliceSource implements ISliceSource {
 
     private List<Fragment> determineFragments(SVNRevision revision, Repo repoUrl, SVNLogEntryPath entryInfo)
             throws SVNException, IOException {
-        //TEST
-        Logger.info("changed file=" + entryInfo.getPath());
         final String oldPath = entryInfo.getCopyPath() == null ? entryInfo.getPath() : entryInfo.getCopyPath();
         final byte[] oldFile = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
         final byte[] newFile = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());

@@ -24,7 +24,7 @@ class ReviewDataParser {
         IN_ROUND,
         IN_REMARK,
         IN_COMMENT
-    };
+    }
 
     private final ReviewStateManager persistence;
     private final IMarkerFactory markerFactory;
