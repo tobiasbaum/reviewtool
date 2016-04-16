@@ -135,7 +135,7 @@ public class JiraPersistence implements IReviewPersistence {
         for (final JsonValue item : items) {
             final JsonObject io = item.asObject();
             if (io.get("field").asString().equals("status")
-                    && io.get("toString").equals(this.reviewState)) {
+                    && io.get("toString").asString().equals(this.reviewState)) {
                 return true;
             }
         }
