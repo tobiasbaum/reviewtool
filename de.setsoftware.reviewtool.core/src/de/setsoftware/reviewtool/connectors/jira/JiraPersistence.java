@@ -19,6 +19,7 @@ import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.ParseException;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
@@ -372,12 +373,14 @@ public class JiraPersistence implements IReviewPersistence {
 
     private void performTransitionIfPossible(String ticketKey, String targetState) {
         final TreeSet<String> possibleTransitions = new TreeSet<>();
-        final String transition = this.getTransitionId(ticketKey, targetState, possibleTransitions);
+        final Pair<String, Boolean> transition = this.getTransitionId(ticketKey, targetState, possibleTransitions);
         if (transition == null) {
             Logger.info("Could not transition " + ticketKey + " to " + targetState
                     + ". Possible transitions: " + possibleTransitions);
+        } else if (transition.getSecond()) {
+            Logger.debug("Did not transition, already in state " + targetState);
         } else {
-            this.performTransition(ticketKey, transition);
+            this.performTransition(ticketKey, transition.getFirst());
         }
     }
 
@@ -397,7 +400,13 @@ public class JiraPersistence implements IReviewPersistence {
         this.performPost(postUrl, command);
     }
 
-    private String getTransitionId(final String ticket, String targetStateName, Set<String> possibleTransitions) {
+    /**
+     * Determines a transition that results in the given state.
+     * Also determines if this is a self transition (i.e. the current state already is the
+     * wanted one).
+     */
+    private Pair<String, Boolean> getTransitionId(
+            final String ticket, String targetStateName, Set<String> possibleTransitions) {
         final String getUrl = String.format(
                 "%s/rest/api/latest/issue/%s/transitions?%s",
                 this.url,
@@ -410,7 +419,10 @@ public class JiraPersistence implements IReviewPersistence {
             final String transitionTarget = transition.get("to").asObject().get("name").asString();
             possibleTransitions.add(transitionTarget);
             if (targetStateName.equals(transitionTarget)) {
-                return transition.get("id").asString();
+                final String transitionSource = transition.get("from").asObject().get("name").asString();
+                return Pair.create(
+                        transition.get("id").asString(),
+                        transitionSource.equals(transitionTarget));
             }
         }
         return null;

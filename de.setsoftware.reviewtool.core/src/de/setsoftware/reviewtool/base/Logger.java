@@ -13,6 +13,10 @@ public abstract class Logger {
         instance.log(IStatus.INFO, message);
     }
 
+    public static void debug(String message) {
+        instance.log(IStatus.OK, message);
+    }
+
     protected abstract void log(int status, String message);
 
     public static void setLogger(Logger logger) {
