@@ -160,4 +160,141 @@ public class SimpleTextDiffAlgorithmTest {
         assertEquals(Arrays.asList(deletionAt(4)), diff);
     }
 
+    @Test
+    public void testChangeInRepeatedLines() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "aaa\r\n"
+                        + "bbb\r\n"
+                        + "aaa\r\n"
+                        + "bbb\r\n"
+                        + "aaa\r\n"
+                        + "bbb\r\n"
+                        + "aaa\r\n"
+                        + "bbb\r\n",
+                        "aaa\r\n"
+                                + "bbb\r\n"
+                                + "AAA\r\n"
+                                + "BBB\r\n"
+                                + "AAA\r\n"
+                                + "BBB\r\n"
+                                + "aaa\r\n"
+                                + "bbb\r\n");
+        assertEquals(Arrays.asList(changeIn(3, 6)), diff);
+    }
+
+    @Test
+    public void testDeletionInRepeatedLines() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "aaa\r\n"
+                        + "bbb\r\n"
+                        + "aaa\r\n"
+                        + "bbb\r\n"
+                        + "ccc\r\n"
+                        + "aaa\r\n"
+                        + "bbb\r\n"
+                        + "ccc\r\n"
+                        + "aaa\r\n"
+                        + "bbb\r\n",
+                        "aaa\r\n"
+                                + "bbb\r\n"
+                                + "aaa\r\n"
+                                + "bbb\r\n"
+                                + "aaa\r\n"
+                                + "bbb\r\n"
+                                + "aaa\r\n"
+                                + "bbb\r\n");
+        assertEquals(Arrays.asList(deletionAt(5), deletionAt(7)), diff);
+    }
+
+    @Test
+    public void testDeleteEmptyLines() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "package a;\r\n"
+                        + "\r\n"
+                        + "class X {\r\n"
+                        + "\r\n"
+                        + "    private long a1;\r\n"
+                        + "\r\n"
+                        + "    private long a2;\r\n"
+                        + "\r\n"
+                        + "    private long a3;\r\n"
+                        + "\r\n"
+                        + "    private long a4;\r\n"
+                        + "\r\n"
+                        + "}\r\n",
+                        "package a;\r\n"
+                                + "\r\n"
+                                + "class X {\r\n"
+                                + "\r\n"
+                                + "    private long a1;\r\n"
+                                + "    private long a2;\r\n"
+                                + "    private long a3;\r\n"
+                                + "    private long a4;\r\n"
+                                + "\r\n"
+                                + "}\r\n");
+        assertEquals(
+                Arrays.asList(deletionAt(6), deletionAt(7), deletionAt(8)),
+                diff);
+    }
+
+    @Test
+    public void testAddEmptyLines() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "package a;\r\n"
+                        + "\r\n"
+                        + "class X {\r\n"
+                        + "\r\n"
+                        + "    private long a1;\r\n"
+                        + "    private long a2;\r\n"
+                        + "    private long a3;\r\n"
+                        + "    private long a4;\r\n"
+                        + "\r\n"
+                        + "}\r\n",
+                        "package a;\r\n"
+                                + "\r\n"
+                                + "class X {\r\n"
+                                + "\r\n"
+                                + "    private long a1;\r\n"
+                                + "\r\n"
+                                + "    private long a2;\r\n"
+                                + "\r\n"
+                                + "    private long a3;\r\n"
+                                + "\r\n"
+                                + "    private long a4;\r\n"
+                                + "\r\n"
+                                + "}\r\n");
+        assertEquals(
+                Arrays.asList(insertedLines(6, 6),
+                        insertedLines(8, 8),
+                        insertedLines(10, 10)),
+                diff);
+    }
+
+    @Test
+    public void testAddStuffWithEmptyLine() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "package a;\r\n"
+                        + "\r\n"
+                        + "class X {\r\n"
+                        + "\r\n"
+                        + "    private long a1;\r\n"
+                        + "    private long a2;\r\n"
+                        + "\r\n"
+                        + "}\r\n",
+                        "package a;\r\n"
+                                + "\r\n"
+                                + "class X {\r\n"
+                                + "\r\n"
+                                + "    private long a1;\r\n"
+                                + "    private long a2;\r\n"
+                                + "    private long a3;\r\n"
+                                + "    private long a4;\r\n"
+                                + "\r\n"
+                                + "\r\n"
+                                + "}\r\n");
+        assertEquals(
+                Arrays.asList(insertedLines(7, 9)),
+                diff);
+    }
+
 }
