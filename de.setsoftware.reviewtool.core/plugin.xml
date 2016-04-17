@@ -211,5 +211,8 @@
         <view id="de.setsoftware.reviewtool.ui.views.reviewcontentview"
              name="Review-Inhalt"
              class="de.setsoftware.reviewtool.ui.views.ReviewContentView"/>
+        <view id="de.setsoftware.reviewtool.ui.views.fragmentinfoview"
+             name="Review-Fragment"
+             class="de.setsoftware.reviewtool.ui.views.FragmentInfoView"/>
  </extension>
 </plugin>

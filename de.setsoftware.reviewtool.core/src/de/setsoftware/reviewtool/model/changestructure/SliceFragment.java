@@ -55,4 +55,12 @@ public class SliceFragment {
         return this.mostRecentFile;
     }
 
+    public List<FileInRevision> getHistory() {
+        return this.historyOrder;
+    }
+
+    public List<FileFragment> getContentFor(FileInRevision revision) {
+        return this.history.get(revision);
+    }
+
 }

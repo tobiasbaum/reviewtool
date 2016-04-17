@@ -34,6 +34,10 @@ public class FileFragment {
         return this.to;
     }
 
+    public String getContent() {
+        return this.content;
+    }
+
     @Override
     public String toString() {
         return this.from + " - " + this.to + " in " + this.file;

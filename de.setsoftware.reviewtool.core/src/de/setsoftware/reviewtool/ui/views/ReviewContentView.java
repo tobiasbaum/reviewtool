@@ -85,6 +85,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
     }
 
     private void jumpTo(SliceFragment fragment) {
+        CurrentFragment.setCurrentFragment(fragment);
         try {
             final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
             final IMarker marker = SlicesInReview.createMarkerFor(new RealMarkerFactory(), fragment);
