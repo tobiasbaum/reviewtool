@@ -8,13 +8,11 @@ import java.util.Map;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
-import de.setsoftware.reviewtool.model.PositionTransformer;
 
 /**
  * Manages the current state regarding the change slices under review.
@@ -61,7 +59,7 @@ public class SlicesInReview {
             final SliceFragment f) {
 
         try {
-            final IResource resource = determineResource(f.getMostRecentFile());
+            final IResource resource = f.getMostRecentFile().determineResource();
             if (resource == null) {
                 return null;
             }
@@ -95,29 +93,6 @@ public class SlicesInReview {
             IMarkerFactory markerFactory,
             final SliceFragment f) {
         return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f);
-    }
-
-    /**
-     * Finds a resource corresponding to a path that is relative to the SCM repository root.
-     * Heuristically drops path prefixes (like "trunk", ...) until a resource can be found.
-     * If none can be found, null is returned.
-     */
-    private static IResource determineResource(FileInRevision file) {
-        String path = file.getPath();
-        if (path.startsWith("/")) {
-            path = path.substring(1);
-        }
-        while (true) {
-            final IResource resource = PositionTransformer.toResource(path);
-            if (!(resource instanceof IWorkspaceRoot)) {
-                return resource;
-            }
-            final int slashIndex = path.indexOf('/');
-            if (slashIndex < 0) {
-                return null;
-            }
-            path = path.substring(slashIndex + 1);
-        }
     }
 
     public List<Slice> getSlices() {

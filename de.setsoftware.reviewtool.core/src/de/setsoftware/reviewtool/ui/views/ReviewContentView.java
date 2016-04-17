@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.ui.views;
 import java.io.File;
 
 import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -25,6 +26,7 @@ import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.Slice;
 import de.setsoftware.reviewtool.model.changestructure.SliceFragment;
@@ -200,14 +202,23 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
             } else if (element instanceof SliceFragment) {
                 final SliceFragment f = (SliceFragment) element;
                 if (f.isDetailedFragmentKnown()) {
-                    return new File(f.getMostRecentFile().getPath()).getName() + ", "
+                    return this.determineFilename(f) + ", "
                             + f.getMostRecentFragment().getFrom() + " - "
                             + f.getMostRecentFragment().getTo();
                 } else {
-                    return new File(f.getMostRecentFile().getPath()).getName();
+                    return this.determineFilename(f);
                 }
             } else {
                 return element.toString();
+            }
+        }
+
+        private String determineFilename(final SliceFragment f) {
+            final IResource resource = f.getMostRecentFile().determineResource();
+            if (resource != null) {
+                return PositionTransformer.toPosition(resource, -1).getShortFileName();
+            } else {
+                return new File(f.getMostRecentFile().getPath()).getName();
             }
         }
     }
