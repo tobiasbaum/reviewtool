@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.diffalgorithms;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -10,14 +11,24 @@ import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.diffalgorithms.SimpleTextDiffAlgorithm;
+import de.setsoftware.reviewtool.model.changestructure.FileFragment;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
 public class SimpleTextDiffAlgorithmTest {
 
     private static List<Pair<PositionInText, PositionInText>> determineDiff(String oldContent, String newContent)
             throws Exception {
-        return new SimpleTextDiffAlgorithm().determineDiff(
-                oldContent.getBytes("UTF-8"), newContent.getBytes("UTF-8"), "UTF-8");
+        return toPositionsInNewFile(new SimpleTextDiffAlgorithm().determineDiff(
+                null, oldContent.getBytes("UTF-8"), null, newContent.getBytes("UTF-8"), "UTF-8"));
+    }
+
+    private static List<Pair<PositionInText, PositionInText>> toPositionsInNewFile(
+            List<Pair<FileFragment, FileFragment>> diff) {
+        final List<Pair<PositionInText, PositionInText>> ret = new ArrayList<>();
+        for (final Pair<FileFragment, FileFragment> p : diff) {
+            ret.add(Pair.create(p.getSecond().getFrom(), p.getSecond().getTo()));
+        }
+        return ret;
     }
 
     private static Pair<PositionInText, PositionInText> insertedLines(int startIncl, int endIncl) {

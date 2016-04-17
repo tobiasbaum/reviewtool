@@ -14,6 +14,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.changestructure.FileFragment;
+import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
 /**
@@ -67,6 +69,10 @@ public class SimpleTextDiffAlgorithm implements IDiffAlgorithm {
 
         @Override
         public String toString() {
+            return this.getContent();
+        }
+
+        public String getContent() {
             final StringBuilder ret = new StringBuilder();
             for (int i = 0; i < this.getLineCount(); i++) {
                 ret.append(this.getLine(i)).append('\n');
@@ -268,8 +274,12 @@ public class SimpleTextDiffAlgorithm implements IDiffAlgorithm {
     }
 
     @Override
-    public List<Pair<PositionInText, PositionInText>> determineDiff(byte[] fileOld, byte[] fileNew, String charset)
-            throws IOException {
+    public List<Pair<FileFragment, FileFragment>> determineDiff(
+            FileInRevision fileOldInfo,
+            byte[] fileOld,
+            FileInRevision fileNewInfo,
+            byte[] fileNew,
+            String charset) throws IOException {
 
         final FullFileView lines1 = this.toLines(fileOld, charset);
         final FullFileView lines2 = this.toLines(fileNew, charset);
@@ -283,17 +293,25 @@ public class SimpleTextDiffAlgorithm implements IDiffAlgorithm {
         for (final ContentView changedFragment : matching.determineNonIdentifiedFragments()) {
             changedFragment.stripCommonPrefixAndSuffix(matching);
         }
-        return this.toPositions(matching.determineNonIdentifiedFragments());
+        return this.toFragments(fileOldInfo, fileNewInfo, matching.determineNonIdentifiedFragments());
     }
 
-    private List<Pair<PositionInText, PositionInText>> toPositions(List<ContentView> changedFragments) {
-        final List<Pair<PositionInText, PositionInText>> ret = new ArrayList<>();
+    private List<Pair<FileFragment, FileFragment>> toFragments(
+            FileInRevision fileOldInfo, FileInRevision fileNewInfo, List<ContentView> changedFragments) {
+        final List<Pair<FileFragment, FileFragment>> ret = new ArrayList<>();
         for (final ContentView v : changedFragments) {
             ret.add(Pair.create(
-                    new PositionInText(v.file2.toIndexInWholeFile(0) + 1, 1),
-                    new PositionInText(v.file2.toIndexInWholeFile(v.file2.getLineCount() - 1) + 2, 0)));
+                    this.toFileFragment(fileOldInfo, v.file1),
+                    this.toFileFragment(fileNewInfo, v.file2)));
         }
         return ret;
+    }
+
+    private FileFragment toFileFragment(FileInRevision fileInfo, OneFileView fragmentData) {
+        return new FileFragment(fileInfo,
+                new PositionInText(fragmentData.toIndexInWholeFile(0) + 1, 1),
+                new PositionInText(fragmentData.toIndexInWholeFile(fragmentData.getLineCount() - 1) + 2, 0),
+                fragmentData.getContent());
     }
 
     private FullFileView toLines(byte[] contents, String charset) throws IOException {

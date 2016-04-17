@@ -8,16 +8,18 @@ package de.setsoftware.reviewtool.model.changestructure;
  * a pure deletion, so that there is no code to point to left in that revision of the file, this is denoted
  * specially.
  */
-public class Fragment {
+public class FileFragment {
 
     private final FileInRevision file;
     private final PositionInText from;
     private final PositionInText to;
+    private final String content;
 
-    public Fragment(FileInRevision file, PositionInText from, PositionInText to) {
+    public FileFragment(FileInRevision file, PositionInText from, PositionInText to, String content) {
         this.file = file;
         this.from = from;
         this.to = to;
+        this.content = content;
     }
 
     public FileInRevision getFile() {

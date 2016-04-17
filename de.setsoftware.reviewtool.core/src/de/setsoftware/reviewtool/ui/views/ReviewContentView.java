@@ -26,8 +26,8 @@ import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Slice;
+import de.setsoftware.reviewtool.model.changestructure.SliceFragment;
 import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 
 /**
@@ -74,8 +74,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
                 final Point point = new Point(event.x, event.y);
                 final TreeItem item = tree.getItem(point);
                 if (item != null) {
-                    if (item.getData() instanceof Fragment) {
-                        ReviewContentView.this.jumpTo((Fragment) item.getData());
+                    if (item.getData() instanceof SliceFragment) {
+                        ReviewContentView.this.jumpTo((SliceFragment) item.getData());
                     }
                 }
             }
@@ -84,7 +84,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         return panel;
     }
 
-    private void jumpTo(Fragment fragment) {
+    private void jumpTo(SliceFragment fragment) {
         try {
             final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
             final IMarker marker = SlicesInReview.createMarkerFor(new RealMarkerFactory(), fragment);
@@ -160,8 +160,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
         @Override
         public Object getParent(Object element) {
-            if (element instanceof Fragment) {
-                final Fragment f = (Fragment) element;
+            if (element instanceof SliceFragment) {
+                final SliceFragment f = (SliceFragment) element;
                 for (final Slice s : this.slices.getSlices()) {
                     if (s.getFragments().contains(f)) {
                         return s;
@@ -175,7 +175,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
         @Override
         public boolean hasChildren(Object element) {
-            return !(element instanceof Fragment);
+            return !(element instanceof SliceFragment);
         }
 
         @Override
@@ -196,9 +196,15 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         public String getText(Object element) {
             if (element instanceof Slice) {
                 return ((Slice) element).getDescription();
-            } else if (element instanceof Fragment) {
-                final Fragment f = (Fragment) element;
-                return new File(f.getFile().getPath()).getName() + ", " + f.getFrom() + " - " + f.getTo();
+            } else if (element instanceof SliceFragment) {
+                final SliceFragment f = (SliceFragment) element;
+                if (f.isDetailedFragmentKnown()) {
+                    return new File(f.getMostRecentFile().getPath()).getName() + ", "
+                            + f.getMostRecentFragment().getFrom() + " - "
+                            + f.getMostRecentFragment().getTo();
+                } else {
+                    return new File(f.getMostRecentFile().getPath()).getName();
+                }
             } else {
                 return element.toString();
             }

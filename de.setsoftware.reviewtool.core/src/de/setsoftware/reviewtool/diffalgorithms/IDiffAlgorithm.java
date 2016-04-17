@@ -4,7 +4,8 @@ import java.io.IOException;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.changestructure.PositionInText;
+import de.setsoftware.reviewtool.model.changestructure.FileFragment;
+import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 
 /**
  * Interface for diff algorithms.
@@ -17,7 +18,11 @@ public interface IDiffAlgorithm {
      * Not all changes on the byte level have to result in change fragments, as an implementation can
      * choose to ignore certain changes.
      */
-    public abstract List<Pair<PositionInText, PositionInText>> determineDiff(
-            byte[] fileOld, byte[] fileNew, String charset) throws IOException;
+    public abstract List<Pair<FileFragment, FileFragment>> determineDiff(
+            FileInRevision fileOldInfo,
+            byte[] fileOldContent,
+            FileInRevision fileNewInfo,
+            byte[] fileNewContent,
+            String charset) throws IOException;
 
 }

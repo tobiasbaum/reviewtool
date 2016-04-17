@@ -10,9 +10,9 @@ import java.util.List;
 public class Slice {
 
     private final String description;
-    private final List<Fragment> fragments = new ArrayList<>();
+    private final List<SliceFragment> fragments = new ArrayList<>();
 
-    public Slice(String description, List<Fragment> list) {
+    public Slice(String description, List<SliceFragment> list) {
         this.description = description;
         this.fragments.addAll(list);
     }
@@ -22,7 +22,7 @@ public class Slice {
         return "Slice: " + this.description + ", " + this.fragments;
     }
 
-    public List<Fragment> getFragments() {
+    public List<SliceFragment> getFragments() {
         return this.fragments;
     }
 

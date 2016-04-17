@@ -18,9 +18,10 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
+import de.setsoftware.reviewtool.changesources.svn.SvnChangeSource;
+import de.setsoftware.reviewtool.changesources.svn.SvnFragmentTracer;
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
-import de.setsoftware.reviewtool.fragmenttracers.svn.BasicFragmentTracer;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
 import de.setsoftware.reviewtool.model.EndTransition;
@@ -31,9 +32,9 @@ import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
-import de.setsoftware.reviewtool.model.changestructure.ISliceSource;
+import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
-import de.setsoftware.reviewtool.slicesources.svn.SvnSliceSource;
+import de.setsoftware.reviewtool.slicingalgorithms.OneSlicePerCommit;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
@@ -83,7 +84,7 @@ public class ReviewPlugin {
 
     private static final ReviewPlugin INSTANCE = new ReviewPlugin();
     private final ReviewStateManager persistence;
-    private final ISliceSource sliceSource;
+    private final IChangeSource sliceSource;
     private SlicesInReview slicesInReview;
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
@@ -130,7 +131,7 @@ public class ReviewPlugin {
         return pref;
     }
 
-    private static ISliceSource createSliceSource() {
+    private static IChangeSource createSliceSource() {
         final List<File> projectDirs = new ArrayList<>();
         final IWorkspace root = ResourcesPlugin.getWorkspace();
         for (final IProject project : root.getRoot().getProjects()) {
@@ -142,7 +143,7 @@ public class ReviewPlugin {
         final IPreferenceStore pref = getPrefs();
         final String user = pref.getString(ReviewToolPreferencePage.USER);
         final String pwd = pref.getString(ReviewToolPreferencePage.JIRA_PASSWORD);
-        return new SvnSliceSource(projectDirs, ".*${key}([^0-9].*)?", user, pwd);
+        return new SvnChangeSource(projectDirs, ".*${key}([^0-9].*)?", user, pwd);
     }
 
     public static ReviewStateManager getPersistence() {
@@ -292,7 +293,7 @@ public class ReviewPlugin {
         }
         this.slicesInReview = SlicesInReview.create(
                 this.sliceSource,
-                new BasicFragmentTracer(),
+                new OneSlicePerCommit(new SvnFragmentTracer()),
                 ticketKey);
         this.slicesInReview.createMarkers(new RealMarkerFactory());
     }

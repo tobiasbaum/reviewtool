@@ -34,11 +34,10 @@ public class SlicesInReview {
      * object with initial settings.
      */
     public static SlicesInReview create(
-            ISliceSource src,
-            IFragmentTracer tracer,
+            IChangeSource src,
+            ISlicingStrategy slicer,
             String ticketKey) {
-        final List<Slice> slices = src.getSlices(ticketKey);
-        //TODO tracer einbauen
+        final List<Slice> slices = slicer.toSlices(src.getChanges(ticketKey));
         return new SlicesInReview(slices);
     }
 
@@ -51,7 +50,7 @@ public class SlicesInReview {
         }
         final Slice s = this.slices.get(this.currentSliceIndex);
         final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
-        for (final Fragment f : s.getFragments()) {
+        for (final SliceFragment f : s.getFragments()) {
             createMarkerFor(markerFactory, lookupTables, f);
         }
     }
@@ -59,23 +58,28 @@ public class SlicesInReview {
     private static IMarker createMarkerFor(
             IMarkerFactory markerFactory,
             final Map<IResource, PositionLookupTable> lookupTables,
-            final Fragment f) {
+            final SliceFragment f) {
 
         try {
-            final IResource resource = determineResource(f.getFile());
+            final IResource resource = determineResource(f.getMostRecentFile());
             if (resource == null) {
                 return null;
             }
-            if (!lookupTables.containsKey(resource)) {
-                lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
+            if (f.isDetailedFragmentKnown()) {
+                if (!lookupTables.containsKey(resource)) {
+                    lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
+                }
+                final FileFragment pos = f.getMostRecentFragment();
+                final IMarker marker = markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
+                marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
+                marker.setAttribute(IMarker.CHAR_START,
+                        lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()) - 1);
+                marker.setAttribute(IMarker.CHAR_END,
+                        lookupTables.get(resource).getCharsSinceFileStart(pos.getTo()));
+                return marker;
+            } else {
+                return markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
             }
-            final IMarker marker = markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
-            marker.setAttribute(IMarker.LINE_NUMBER, f.getFrom().getLine());
-            marker.setAttribute(IMarker.CHAR_START,
-                    lookupTables.get(resource).getCharsSinceFileStart(f.getFrom()) - 1);
-            marker.setAttribute(IMarker.CHAR_END,
-                    lookupTables.get(resource).getCharsSinceFileStart(f.getTo()));
-            return marker;
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -89,7 +93,7 @@ public class SlicesInReview {
      */
     public static IMarker createMarkerFor(
             IMarkerFactory markerFactory,
-            final Fragment f) {
+            final SliceFragment f) {
         return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f);
     }
 
