@@ -19,7 +19,6 @@ import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.ParseException;
 
 import de.setsoftware.reviewtool.base.Logger;
-import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
@@ -90,11 +89,11 @@ public class JiraPersistence implements IReviewPersistence {
 
     private final String url;
     private final String reviewFieldName;
-    private final String reviewState;
-    private final String implementationState;
-    private final String readyForReviewState;
-    private final String rejectedState;
-    private final String doneState;
+    private final String reviewStateId;
+    private final String implementationStateId;
+    private final String readyForReviewStateId;
+    private final String rejectedStateId;
+    private final String doneStateId;
     private final String user;
     private final String password;
 
@@ -111,13 +110,35 @@ public class JiraPersistence implements IReviewPersistence {
             String user, String password) {
         this.url = url;
         this.reviewFieldName = reviewFieldName;
-        this.reviewState = reviewState;
-        this.implementationState = implementationState;
-        this.readyForReviewState = readyForReviewState;
-        this.rejectedState = rejectedState;
-        this.doneState = doneState;
         this.user = user;
         this.password = password;
+        final JsonArray states = this.loadStates();
+        this.reviewStateId = this.getStateId(states, reviewState);
+        this.implementationStateId = this.getStateId(states, implementationState);
+        this.readyForReviewStateId = this.getStateId(states, readyForReviewState);
+        this.rejectedStateId = this.getStateId(states, rejectedState);
+        this.doneStateId = this.getStateId(states, doneState);
+    }
+
+    private JsonArray loadStates() {
+        final String getUrl = String.format(
+                "%s/rest/api/latest/status?%s",
+                this.url,
+                this.getAuthParams());
+        return this.performGet(getUrl).asArray();
+    }
+
+    private String getStateId(JsonArray states, String stateName) {
+        final List<String> possibleNames = new ArrayList<>();
+        for (final JsonValue v : states) {
+            final String name = v.asObject().get("name").asString();
+            if (name.equals(stateName)) {
+                return v.asObject().get("id").asString();
+            }
+            possibleNames.add(name);
+        }
+        throw new ReviewtoolException("Status " + stateName + " nicht in JIRA gefunden."
+                + " Mögliche Werte: " + possibleNames);
     }
 
     @Override
@@ -136,7 +157,7 @@ public class JiraPersistence implements IReviewPersistence {
         for (final JsonValue item : items) {
             final JsonObject io = item.asObject();
             if (io.get("field").asString().equals("status")
-                    && io.get("toString").asString().equals(this.reviewState)) {
+                    && io.get("to").asString().equals(this.reviewStateId)) {
                 return true;
             }
         }
@@ -322,17 +343,17 @@ public class JiraPersistence implements IReviewPersistence {
 
     @Override
     public void startReviewing(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.reviewState);
+        this.performTransitionIfPossible(ticketKey, this.reviewStateId);
     }
 
     @Override
     public void startFixing(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.implementationState);
+        this.performTransitionIfPossible(ticketKey, this.implementationStateId);
     }
 
     @Override
     public void changeStateToReadyForReview(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.readyForReviewState);
+        this.performTransitionIfPossible(ticketKey, this.readyForReviewStateId);
     }
 
     @Override
@@ -356,10 +377,10 @@ public class JiraPersistence implements IReviewPersistence {
         return ret;
     }
 
-    private Type determineTransitionType(String transitionTarget) {
-        if (this.doneState.equals(transitionTarget)) {
+    private Type determineTransitionType(String transitionTargetId) {
+        if (this.doneStateId.equals(transitionTargetId)) {
             return Type.OK;
-        } else if (this.rejectedState.equals(transitionTarget)) {
+        } else if (this.rejectedStateId.equals(transitionTargetId)) {
             return Type.REJECTION;
         } else {
             return Type.UNKNOWN;
@@ -371,17 +392,28 @@ public class JiraPersistence implements IReviewPersistence {
         this.performTransition(ticketKey, transition.getInternalName());
     }
 
-    private void performTransitionIfPossible(String ticketKey, String targetState) {
+    private void performTransitionIfPossible(String ticketKey, String targetStateId) {
         final TreeSet<String> possibleTransitions = new TreeSet<>();
-        final Pair<String, Boolean> transition = this.getTransitionId(ticketKey, targetState, possibleTransitions);
+        final String transition = this.getTransitionId(ticketKey, targetStateId, possibleTransitions);
         if (transition == null) {
-            Logger.info("Could not transition " + ticketKey + " to " + targetState
+            Logger.info("Could not transition " + ticketKey + " to " + targetStateId
                     + ". Possible transitions: " + possibleTransitions);
-        } else if (transition.getSecond()) {
-            Logger.debug("Did not transition, already in state " + targetState);
+        } else if (targetStateId.equals(this.getCurrentStatus(ticketKey))) {
+            Logger.debug("Did not transition, already in state " + targetStateId);
         } else {
-            this.performTransition(ticketKey, transition.getFirst());
+            this.performTransition(ticketKey, transition);
         }
+    }
+
+    private String getCurrentStatus(String ticketKey) {
+        final String getUrl = String.format(
+                "%s/rest/api/latest/issue/%s?fields=status&%s",
+                this.url,
+                ticketKey,
+                this.getAuthParams());
+
+        final JsonObject result = this.performGet(getUrl).asObject();
+        return result.get("fields").asObject().get("status").asObject().get("id").asString();
     }
 
     private void performTransition(final String ticket, final String transitionId) {
@@ -402,10 +434,8 @@ public class JiraPersistence implements IReviewPersistence {
 
     /**
      * Determines a transition that results in the given state.
-     * Also determines if this is a self transition (i.e. the current state already is the
-     * wanted one).
      */
-    private Pair<String, Boolean> getTransitionId(
+    private String getTransitionId(
             final String ticket, String targetStateName, Set<String> possibleTransitions) {
         final String getUrl = String.format(
                 "%s/rest/api/latest/issue/%s/transitions?%s",
@@ -416,13 +446,10 @@ public class JiraPersistence implements IReviewPersistence {
         final JsonObject result = this.performGet(getUrl).asObject();
         for (final JsonValue curValue : result.get("transitions").asArray()) {
             final JsonObject transition = curValue.asObject();
-            final String transitionTarget = transition.get("to").asObject().get("name").asString();
+            final String transitionTarget = transition.get("to").asObject().get("id").asString();
             possibleTransitions.add(transitionTarget);
             if (targetStateName.equals(transitionTarget)) {
-                final String transitionSource = transition.get("from").asObject().get("name").asString();
-                return Pair.create(
-                        transition.get("id").asString(),
-                        transitionSource.equals(transitionTarget));
+                return transition.get("id").asString();
             }
         }
         return null;
