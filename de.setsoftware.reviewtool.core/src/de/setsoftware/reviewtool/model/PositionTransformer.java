@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
@@ -15,6 +16,11 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobFunction;
+import org.eclipse.core.runtime.jobs.Job;
 
 /**
  * Is able to transform short filenames into paths and positions with short filenames into positions
@@ -22,10 +28,47 @@ import org.eclipse.core.runtime.IPath;
  */
 public class PositionTransformer {
 
-    private static final long STALE_LIMIT_MS = 20 * 1000L;
+    private static final long STALE_LIMIT_MS = 20L * 1000;
+    private static final long REALLY_OLD_LIMIT_MS = 60L * 60 * 1000;
 
-    private static final ConcurrentHashMap<String, PathChainNode> cache = new ConcurrentHashMap<>();
-    private static long cacheRefreshTime;
+    private static AtomicBoolean refreshRunning = new AtomicBoolean();
+    private static volatile ConcurrentHashMap<String, PathChainNode> cache = null;
+    private static volatile long cacheRefreshTime;
+
+    private static final IProgressMonitor NO_CANCEL_MONITOR = new IProgressMonitor() {
+        @Override
+        public void worked(int work) {
+        }
+
+        @Override
+        public void subTask(String name) {
+        }
+
+        @Override
+        public void setTaskName(String name) {
+        }
+
+        @Override
+        public void setCanceled(boolean value) {
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public void internalWorked(double work) {
+        }
+
+        @Override
+        public void done() {
+        }
+
+        @Override
+        public void beginTask(String name, int totalWork) {
+        }
+    };
 
     /**
      * Creates a position identifying the given line in the given resource.
@@ -97,15 +140,21 @@ public class PositionTransformer {
     }
 
     private static synchronized List<IPath> getCachedPathsForName(IResource resource, String filename) {
-        final List<IPath> cachedPaths = toList(cache.get(filename));
-        if (cachedPaths == null && cacheMightBeStale()) {
-            //The cache is either empty, or it does not contain the resource that is given. Both cases are
-            //  a good reason to refresh the cache, if this has not been done recently.
-            fillCache(resource);
-            return toList(cache.get(filename));
-        } else {
-            return cachedPaths;
+        if (cache == null) {
+            //should normally have already been initialized, but it wasn't, so take
+            //  the last chance to do so and do it synchronously
+            try {
+                fillCache(resource.getWorkspace(), NO_CANCEL_MONITOR);
+            } catch (final InterruptedException e) {
+                throw new AssertionError(e);
+            }
         }
+        final List<IPath> cachedPaths = toList(cache.get(filename));
+        if ((cachedPaths == null && cacheMightBeStale()) || cacheIsReallyOld()) {
+            //Perhaps the resource exists but the cache was stale => trigger refresh
+            refreshCacheInBackground(resource.getWorkspace());
+        }
+        return cachedPaths;
     }
 
     private static List<IPath> toList(PathChainNode startNode) {
@@ -125,41 +174,83 @@ public class PositionTransformer {
         return System.currentTimeMillis() - cacheRefreshTime > STALE_LIMIT_MS;
     }
 
-    private static synchronized void fillCache(IResource resource) {
-        cache.clear();
-
-        fillCacheIfEmpty(resource.getWorkspace());
+    private static boolean cacheIsReallyOld() {
+        return System.currentTimeMillis() - cacheRefreshTime > REALLY_OLD_LIMIT_MS;
     }
 
-    private static synchronized void fillCacheIfEmpty(IWorkspace workspace) {
-        if (!cache.isEmpty()) {
+    private static void fillCache(IWorkspace workspace, IProgressMonitor monitor)
+            throws InterruptedException {
+
+        if (refreshRunning.compareAndSet(false, true)) {
+            final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
+            final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
+            final ConcurrentHashMap<String, PathChainNode> newCache = new ConcurrentHashMap<>();
+            for (final IProject project : workspace.getRoot().getProjects()) {
+                if (monitor.isCanceled()) {
+                    throw new InterruptedException();
+                }
+                tasks.add(pool.submit(new FillCacheAction(project.getLocation(), newCache)));
+            }
+            for (final ForkJoinTask<Void> task : tasks) {
+                if (monitor.isCanceled()) {
+                    throw new InterruptedException();
+                }
+                task.join();
+            }
+            pool.shutdown();
+            cache = newCache;
+            cacheRefreshTime = System.currentTimeMillis();
+            refreshRunning.set(false);
+        }
+    }
+
+    private static void fillCacheIfEmpty(IWorkspace workspace, IProgressMonitor monitor)
+            throws InterruptedException {
+
+        if (cache != null) {
             return;
         }
-        final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
-        final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
-        for (final IProject project : workspace.getRoot().getProjects()) {
-            tasks.add(pool.submit(new FillCacheAction(project.getLocation(), cache)));
-        }
-        for (final ForkJoinTask<Void> task : tasks) {
-            task.join();
-        }
-        pool.shutdown();
-        cacheRefreshTime = System.currentTimeMillis();
+        fillCache(workspace, monitor);
     }
 
     /**
-     * Starts a new daemon thread that initializes the cache in the background.
+     * Starts a new job that initializes the cache in the background.
+     * If the cache has already been initialized, it does nothing.
      */
     public static void initializeCacheInBackground() {
         final IWorkspace root = ResourcesPlugin.getWorkspace();
-        final Thread t = new Thread(new Runnable() {
+        final Job job = Job.create("Review resource cache init", new IJobFunction() {
             @Override
-            public void run() {
-                fillCacheIfEmpty(root);
+            public IStatus run(IProgressMonitor monitor) {
+                try {
+                    fillCacheIfEmpty(root, monitor);
+                    return Status.OK_STATUS;
+                } catch (final InterruptedException e) {
+                    return Status.CANCEL_STATUS;
+                }
             }
+
         });
-        t.setDaemon(true);
-        t.start();
+        job.schedule();
+    }
+
+    /**
+     * Starts a new job that refreshes the cache in the background.
+     */
+    public static void refreshCacheInBackground(final IWorkspace root) {
+        final Job job = Job.create("Review resource cache refresh", new IJobFunction() {
+            @Override
+            public IStatus run(IProgressMonitor monitor) {
+                try {
+                    fillCache(root, monitor);
+                    return Status.OK_STATUS;
+                } catch (final InterruptedException e) {
+                    return Status.CANCEL_STATUS;
+                }
+            }
+
+        });
+        job.schedule();
     }
 
     /**
