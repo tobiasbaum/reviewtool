@@ -1,0 +1,5 @@
+<reviewToolConfig>
+  <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" />
+  <jiraTicketStore user="${User-ID}" password="${Passwort}" url="jira.intranet.set.de" reviewRemarkField="Review-Anmerkungen" 
+	reviewState="Im Review" implementationState="In Arbeit" readyForReviewState="Bereit für Review" rejectedState="Review-Rückläufer" doneState="Abgeschlossen" />
+</reviewToolConfig>

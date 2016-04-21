@@ -1,108 +1,233 @@
 package de.setsoftware.reviewtool.plugin;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-import org.eclipse.jface.preference.BooleanFieldEditor;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.FieldEditor;
-import org.eclipse.jface.preference.FieldEditorPreferencePage;
-import org.eclipse.jface.preference.StringFieldEditor;
+import org.eclipse.jface.preference.FileFieldEditor;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferencePage;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.TableEditor;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableColumn;
+import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
-public class ReviewToolPreferencePage extends FieldEditorPreferencePage implements
-IWorkbenchPreferencePage {
+import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
 
-    public static final String USER = "user";
-    public static final String JIRA_SOURCE = "jiraSource";
-    public static final String JIRA_PASSWORD = "password";
-    public static final String JIRA_URL = "url";
-    public static final String JIRA_REVIEW_REMARK_FIELD = "reviewRemarkField";
-    public static final String JIRA_REVIEW_STATE = "reviewState";
-    public static final String JIRA_IMPLEMENTATION_STATE = "implementationState";
-    public static final String JIRA_READY_FOR_REVIEW_STATE = "readyForReviewState";
-    public static final String JIRA_REJECTED_STATE = "rejectedState";
-    public static final String JIRA_DONE_STATE = "doneState";
-    public static final String FILE_PATH = "filePath";
+/**
+ * The preference page for the review tool. Most preferences are stored in a common file (so that they can be
+ * committed and shared by a team). This file contains placeholders, which are configured per user in eclipse.
+ */
+public class ReviewToolPreferencePage extends PreferencePage
+        implements IWorkbenchPreferencePage, IPropertyChangeListener {
 
-    private BooleanFieldEditor jiraActive;
-    private final List<FieldEditor> jiraFields = new ArrayList<>();
-    private final List<FieldEditor> fileFields = new ArrayList<>();
+    public static final String TEAM_CONFIG_FILE = "teamConfigFile";
+    private static final String USER_PARAM_PREFIX = "up_";
+
+    private FileFieldEditor fileField;
+    private Table userParamTable;
 
     public ReviewToolPreferencePage() {
-        super(GRID);
+        super();
     }
 
     @Override
-    public void createFieldEditors() {
-        this.addField(new StringFieldEditor(USER, "Benutzername", this.getFieldEditorParent()));
+    protected Control createContents(Composite parent) {
+        final Composite parentComposite = new Composite(parent, SWT.NULL);
+        final GridLayout layout = new GridLayout();
+        layout.numColumns = 1;
+        layout.marginHeight = 0;
+        layout.marginWidth = 0;
+        parentComposite.setLayout(layout);
+        parentComposite.setFont(parent.getFont());
 
-        this.jiraActive = new BooleanFieldEditor(JIRA_SOURCE, "JIRA-Anbindung aktivieren", this.getFieldEditorParent());
-        this.addField(this.jiraActive);
+        this.fileField = new FileFieldEditor(
+                TEAM_CONFIG_FILE, "Datei mit Team-Einstellungen", parentComposite);
+        this.initField(this.fileField);
 
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_URL, "JIRA-URL", this.getFieldEditorParent()));
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_REVIEW_REMARK_FIELD, "Feldname Reviewanmerkungen", this.getFieldEditorParent()));
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_IMPLEMENTATION_STATE, "Statusname \"In Fixing\"", this.getFieldEditorParent()));
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_READY_FOR_REVIEW_STATE, "Statusname \"Bereit für Review\"", this.getFieldEditorParent()));
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_REVIEW_STATE, "Statusname \"In Review\"", this.getFieldEditorParent()));
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_REJECTED_STATE, "Statusname \"Review-Rückläufer\"", this.getFieldEditorParent()));
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_DONE_STATE, "Statusname \"Abgeschlossen\"", this.getFieldEditorParent()));
-        this.addField(this.jiraFields, new StringFieldEditor(JIRA_PASSWORD, "JIRA-Passwort", this.getFieldEditorParent()));
+        this.userParamTable = new Table(parentComposite, SWT.BORDER);
+        final TableColumn tc1 = new TableColumn(this.userParamTable, SWT.LEFT);
+        final TableColumn tc2 = new TableColumn(this.userParamTable, SWT.LEFT);
+        tc1.setText("Parameter");
+        tc2.setText("Wert");
+        tc1.setWidth(100);
+        tc2.setWidth(100);
+        this.userParamTable.setHeaderVisible(true);
 
-        this.addField(this.fileFields, new StringFieldEditor(FILE_PATH, "Verzeichnis", this.getFieldEditorParent()));
+        final TableEditor editor = new TableEditor(this.userParamTable);
+        editor.horizontalAlignment = SWT.LEFT;
+        editor.grabHorizontal = true;
+        this.userParamTable.addListener(SWT.MouseDown, new Listener() {
+            @Override
+            public void handleEvent(Event event) {
+                final Rectangle clientArea = ReviewToolPreferencePage.this.userParamTable.getClientArea();
+                final Point pt = new Point(event.x, event.y);
+                int index = ReviewToolPreferencePage.this.userParamTable.getTopIndex();
+                while (index < ReviewToolPreferencePage.this.userParamTable.getItemCount()) {
+                    final TableItem item = ReviewToolPreferencePage.this.userParamTable.getItem(index);
+                    final Rectangle rect = item.getBounds(1);
+                    if (rect.contains(pt)) {
+                        final Text text = new Text(ReviewToolPreferencePage.this.userParamTable, SWT.NONE);
+                        final Listener textListener = new Listener() {
+
+                            @Override
+                            public void handleEvent(Event e) {
+                                switch (e.type) {
+                                case SWT.FocusOut:
+                                    item.setText(1, text.getText());
+                                    text.dispose();
+                                    break;
+                                case SWT.Traverse:
+                                    switch (e.detail) {
+                                        case SWT.TRAVERSE_RETURN:
+                                            item.setText(1, text.getText());
+                                            text.dispose();
+                                            e.doit = false;
+                                            break;
+                                        case SWT.TRAVERSE_ESCAPE:
+                                            text.dispose();
+                                            e.doit = false;
+                                            break;
+                                        default:
+                                            break;
+                                    }
+                                    break;
+                                default:
+                                    break;
+                                }
+                            }
+                        };
+                        text.addListener(SWT.FocusOut, textListener);
+                        text.addListener(SWT.Traverse, textListener);
+                        editor.setEditor(text, item, 1);
+                        text.setText(item.getText(1));
+                        text.selectAll();
+                        text.setFocus();
+                        return;
+                    }
+                    if (!rect.intersects(clientArea)) {
+                        return;
+                    }
+                    index++;
+                }
+            }
+        });
+
+        this.createUserTableItems();
+
+        return parentComposite;
     }
 
-    public static Collection<String> getAllPreferenceIds() {
-        return Arrays.asList(
-                USER,
-                JIRA_SOURCE,
-                JIRA_PASSWORD,
-                JIRA_URL,
-                JIRA_REVIEW_REMARK_FIELD,
-                JIRA_IMPLEMENTATION_STATE,
-                JIRA_READY_FOR_REVIEW_STATE,
-                JIRA_REVIEW_STATE,
-                JIRA_REJECTED_STATE,
-                JIRA_DONE_STATE,
-                FILE_PATH);
+    private void createUserTableItems() {
+        try {
+            final Set<String> userFieldNames = new ConfigurationInterpreter().getUserSpecificParamNames(
+                    ConfigurationInterpreter.load(this.getFilename()));
+            for (final String userFieldName : userFieldNames) {
+                final TableItem item1 = new TableItem(this.userParamTable, SWT.NONE);
+                item1.setText(new String[] { userFieldName,
+                        this.getPreferenceStore().getString(USER_PARAM_PREFIX + userFieldName) });
+            }
+        } catch (final IOException | SAXException | ParserConfigurationException | ReviewtoolException e) {
+            MessageDialog.openError(this.getShell(), "Fehler beim Laden",
+                    "Die Team-Konfiguration konnte nicht geladen werden: " + e.getMessage());
+            Logger.error("error while loading team config", e);
+        }
     }
 
-    private void addField(List<FieldEditor> list, FieldEditor editor) {
-        list.add(editor);
-        this.addField(editor);
-    }
-
-    @Override
-    protected void initialize() {
-        super.initialize();
-        this.updateFieldEnabledStates();
+    private String getFilename() {
+        final String fromField = this.fileField.getStringValue();
+        if (fromField.isEmpty()) {
+            return Activator.getDefault().getPreferenceStore().getString(this.fileField.getPreferenceName());
+        } else {
+            return fromField;
+        }
     }
 
     @Override
     public void propertyChange(PropertyChangeEvent event) {
-        super.propertyChange(event);
-        if (event.getProperty().equals(FieldEditor.VALUE) && event.getSource().equals(this.jiraActive)) {
-            this.updateFieldEnabledStates();
-        }
-    }
-
-    private void updateFieldEnabledStates() {
-        final boolean jira = this.jiraActive.getBooleanValue();
-        for (final FieldEditor f : this.jiraFields) {
-            f.setEnabled(jira, this.getFieldEditorParent());
-        }
-        for (final FieldEditor f : this.fileFields) {
-            f.setEnabled(!jira, this.getFieldEditorParent());
+        if (event.getProperty().equals(FieldEditor.VALUE) && event.getSource().equals(this.fileField)) {
+            this.userParamTable.removeAll();
+            this.createUserTableItems();
         }
     }
 
     @Override
     public void init(IWorkbench workbench) {
         this.setPreferenceStore(Activator.getDefault().getPreferenceStore());
-        this.setDescription("Einstellung für das Review-Tool");
+        this.setDescription("Einstellungen für das Review-Tool");
+    }
+
+
+    private void deinitField(final FieldEditor pe) {
+        pe.setPage(null);
+        pe.setPropertyChangeListener(null);
+        pe.setPreferenceStore(null);
+    }
+
+    private void initField(final FieldEditor pe) {
+        pe.setPage(this);
+        pe.setPropertyChangeListener(this);
+        pe.setPreferenceStore(this.getPreferenceStore());
+        pe.load();
+    }
+
+    @Override
+    protected void performDefaults() {
+        this.fileField.loadDefault();
+        for (final TableItem item : this.userParamTable.getItems()) {
+            item.setText(1, this.getPreferenceStore().getDefaultString(USER_PARAM_PREFIX + item.getText(0)));
+        }
+        super.performDefaults();
+    }
+
+    @Override
+    public boolean performOk() {
+        this.fileField.store();
+        for (final TableItem item : this.userParamTable.getItems()) {
+            this.getPreferenceStore().setValue(USER_PARAM_PREFIX + item.getText(0), item.getText(1));
+        }
+        return true;
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose();
+        this.deinitField(this.fileField);
+        this.userParamTable.dispose();
+    }
+
+    /**
+     * Extracts all user specific parameters used in the given config from the given preference store.
+     */
+    public static Map<String, String> getUserParams(Document config, IPreferenceStore pref) {
+        final Set<String> names = new ConfigurationInterpreter().getUserSpecificParamNames(config);
+        final Map<String, String> params = new HashMap<>();
+        for (final String name : names) {
+            params.put(name, pref.getString(USER_PARAM_PREFIX + name));
+        }
+        return params;
     }
 
 }

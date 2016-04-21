@@ -36,6 +36,7 @@ import de.setsoftware.reviewtool.model.changestructure.Commit;
 import de.setsoftware.reviewtool.model.changestructure.FileFragment;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
+import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.TextualChange;
 
@@ -302,6 +303,11 @@ public class SvnChangeSource implements IChangeSource {
         }
         repo.getFile(path, revision, null, contents);
         return contents.toByteArray();
+    }
+
+    @Override
+    public IFragmentTracer createTracer() {
+        return new SvnFragmentTracer();
     }
 
     //TEST

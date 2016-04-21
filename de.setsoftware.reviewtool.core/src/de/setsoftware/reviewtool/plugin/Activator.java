@@ -6,6 +6,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.ui.views.ViewDataSource;
@@ -26,6 +27,12 @@ public class Activator extends AbstractUIPlugin {
                 Activator.this.getLog().log(
                         new Status(status, Activator.this.getBundle().getSymbolicName(), message));
             }
+
+            @Override
+            protected void log(int status, String message, Throwable exception) {
+                Activator.this.getLog().log(
+                        new Status(status, Activator.this.getBundle().getSymbolicName(), message, exception));
+            }
         });
         DialogHelper.setPreferenceStore(this.getPreferenceStore());
         ViewDataSource.setInstance(new ViewDataSource() {
@@ -42,15 +49,7 @@ public class Activator extends AbstractUIPlugin {
      */
     public void initializeDefaultPreferences() {
         final IPreferenceStore store = this.getPreferenceStore();
-        store.setDefault(ReviewToolPreferencePage.JIRA_URL, "http://jira:8080");
-        store.setDefault(ReviewToolPreferencePage.JIRA_REVIEW_REMARK_FIELD, "Reviewanmerkungen");
-        store.setDefault(ReviewToolPreferencePage.JIRA_IMPLEMENTATION_STATE, "In Implementation");
-        store.setDefault(ReviewToolPreferencePage.JIRA_READY_FOR_REVIEW_STATE, "Bereit für Review");
-        store.setDefault(ReviewToolPreferencePage.JIRA_REVIEW_STATE, "In Review");
-        store.setDefault(ReviewToolPreferencePage.JIRA_REJECTED_STATE, "Review-Rückläufer");
-        store.setDefault(ReviewToolPreferencePage.JIRA_DONE_STATE, "Abgeschlossen");
-        store.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
-        store.setDefault(ReviewToolPreferencePage.JIRA_PASSWORD, ""); //$NON-NLS-1$
+        store.setDefault(ConfigurationInterpreter.USER_PARAM_NAME, System.getProperty("user.name"));
     }
 
     @Override

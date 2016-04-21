@@ -9,6 +9,10 @@ public abstract class Logger {
 
     private static Logger instance;
 
+    public static void error(String message, Throwable exception) {
+        instance.log(IStatus.ERROR, message, exception);
+    }
+
     public static void info(String message) {
         instance.log(IStatus.INFO, message);
     }
@@ -18,6 +22,8 @@ public abstract class Logger {
     }
 
     protected abstract void log(int status, String message);
+
+    protected abstract void log(int status, String message, Throwable exception);
 
     public static void setLogger(Logger logger) {
         instance = logger;

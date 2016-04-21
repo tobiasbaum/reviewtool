@@ -1,0 +1,4 @@
+<reviewToolConfig>
+  <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" />
+  <fileTicketStore defaultReviewer="${User-ID}" directory="C:\Temp\reviewData"/>
+</reviewToolConfig>

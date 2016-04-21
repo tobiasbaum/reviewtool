@@ -1,27 +1,32 @@
 package de.setsoftware.reviewtool.plugin;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.IOException;
+import java.util.Map;
 
-import org.eclipse.core.resources.IProject;
+import javax.xml.parsers.ParserConfigurationException;
+
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
-import de.setsoftware.reviewtool.changesources.svn.SvnChangeSource;
-import de.setsoftware.reviewtool.changesources.svn.SvnFragmentTracer;
+import de.setsoftware.reviewtool.changesources.svn.SvnChangesourceConfigurator;
+import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
+import de.setsoftware.reviewtool.config.IReviewConfigurable;
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
-import de.setsoftware.reviewtool.connectors.jira.JiraPersistence;
+import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
+import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
 import de.setsoftware.reviewtool.model.EndTransition;
@@ -44,7 +49,7 @@ import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 /**
  * Plugin that handles the review workflow and ties together the different parts.
  */
-public class ReviewPlugin {
+public class ReviewPlugin implements IReviewConfigurable {
 
     /**
      * The plugin can be in one of three modes: Inactive/Idle, Reviewing or Fixing of review remarks.
@@ -84,66 +89,48 @@ public class ReviewPlugin {
 
     private static final ReviewPlugin INSTANCE = new ReviewPlugin();
     private final ReviewStateManager persistence;
-    private final IChangeSource sliceSource;
+    private IChangeSource changeSource;
     private SlicesInReview slicesInReview;
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
+    private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
 
 
     private ReviewPlugin() {
-        final IReviewPersistence persistence = createPersistenceFromPreferences();
-        this.sliceSource = createSliceSource();
-        this.persistence = new ReviewStateManager(persistence, new RealUi());
+        this.persistence = new ReviewStateManager(new FilePersistence(new File("."), "please configure"), new RealUi());
+
+        this.configInterpreter.addConfigurator(new FileTicketConnectorConfigurator());
+        this.configInterpreter.addConfigurator(new JiraConnectorConfigurator());
+        this.configInterpreter.addConfigurator(new SvnChangesourceConfigurator());
+        this.reconfigure();
+
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
-                if (ReviewToolPreferencePage.getAllPreferenceIds().contains(event.getProperty())) {
-                    ReviewPlugin.this.persistence.setPersistence(createPersistenceFromPreferences());
-                }
+                ReviewPlugin.this.reconfigure();
             }
         });
     }
 
-    private static IReviewPersistence createPersistenceFromPreferences() {
-        final IPreferenceStore pref = getPrefs();
-        final String user = pref.getString(ReviewToolPreferencePage.USER);
-        final IReviewPersistence persistence;
-        if (pref.getBoolean(ReviewToolPreferencePage.JIRA_SOURCE)) {
-            persistence = new JiraPersistence(
-                    pref.getString(ReviewToolPreferencePage.JIRA_URL),
-                    pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_REMARK_FIELD),
-                    pref.getString(ReviewToolPreferencePage.JIRA_REVIEW_STATE),
-                    pref.getString(ReviewToolPreferencePage.JIRA_IMPLEMENTATION_STATE),
-                    pref.getString(ReviewToolPreferencePage.JIRA_READY_FOR_REVIEW_STATE),
-                    pref.getString(ReviewToolPreferencePage.JIRA_REJECTED_STATE),
-                    pref.getString(ReviewToolPreferencePage.JIRA_DONE_STATE),
-                    user,
-                    pref.getString(ReviewToolPreferencePage.JIRA_PASSWORD));
-        } else {
-            persistence = new FilePersistence(new File(pref.getString(ReviewToolPreferencePage.FILE_PATH)), user);
+    private void reconfigure() {
+        this.changeSource = null;
+
+        try {
+            final IPreferenceStore pref = getPrefs();
+            final Document config = ConfigurationInterpreter.load(
+                    pref.getString(ReviewToolPreferencePage.TEAM_CONFIG_FILE));
+            final Map<String, String> userParams = ReviewToolPreferencePage.getUserParams(config, pref);
+            this.configInterpreter.configure(config, userParams, this);
+        } catch (IOException | SAXException | ParserConfigurationException | ReviewtoolException e) {
+            Logger.error("error while loading config", e);
+            MessageDialog.openError(null, "Fehler beim Laden der Konfiguration", e.toString());
         }
-        return persistence;
     }
 
     private static IPreferenceStore getPrefs() {
         final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-        pref.setDefault(ReviewToolPreferencePage.USER, System.getProperty("user.name"));
+        pref.setDefault(ConfigurationInterpreter.USER_PARAM_NAME, System.getProperty("user.name"));
         return pref;
-    }
-
-    private static IChangeSource createSliceSource() {
-        final List<File> projectDirs = new ArrayList<>();
-        final IWorkspace root = ResourcesPlugin.getWorkspace();
-        for (final IProject project : root.getRoot().getProjects()) {
-            final IPath location = project.getLocation();
-            if (location != null) {
-                projectDirs.add(location.toFile());
-            }
-        }
-        final IPreferenceStore pref = getPrefs();
-        final String user = pref.getString(ReviewToolPreferencePage.USER);
-        final String pwd = pref.getString(ReviewToolPreferencePage.JIRA_PASSWORD);
-        return new SvnChangeSource(projectDirs, ".*${key}([^0-9].*)?", user, pwd);
     }
 
     public static ReviewStateManager getPersistence() {
@@ -292,10 +279,20 @@ public class ReviewPlugin {
             return;
         }
         this.slicesInReview = SlicesInReview.create(
-                this.sliceSource,
-                new OneSlicePerCommit(new SvnFragmentTracer()),
+                this.changeSource,
+                new OneSlicePerCommit(this.changeSource.createTracer()),
                 ticketKey);
         this.slicesInReview.createMarkers(new RealMarkerFactory());
+    }
+
+    @Override
+    public void setPersistence(IReviewPersistence newPersistence) {
+        this.persistence.setPersistence(newPersistence);
+    }
+
+    @Override
+    public void setChangeSource(IChangeSource changeSource) {
+        this.changeSource = changeSource;
     }
 
 }

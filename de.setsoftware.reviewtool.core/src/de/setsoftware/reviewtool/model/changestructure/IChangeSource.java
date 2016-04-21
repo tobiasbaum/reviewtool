@@ -12,4 +12,9 @@ public interface IChangeSource {
      */
     public abstract List<Commit> getChanges(String key);
 
+    /**
+     * Creates a fragment tracer that is compatible with this change source.
+     */
+    public abstract IFragmentTracer createTracer();
+
 }
