@@ -2,10 +2,11 @@ package de.setsoftware.reviewtool.ui.views;
 
 import java.io.File;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -17,7 +18,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IWorkbenchPage;
@@ -91,14 +91,14 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         try {
             final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
             final IMarker marker = SlicesInReview.createMarkerFor(new RealMarkerFactory(), fragment);
-            if (marker == null) {
-                final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-                MessageDialog.openError(shell, "Öffnen nicht möglich",
-                        "Öffnen über die Eclipse-Projekte nicht möglich für " + fragment);
-                return;
+            if (marker != null) {
+                IDE.openEditor(page, marker);
+                marker.delete();
+            } else {
+                final IFileStore fileStore =
+                        EFS.getLocalFileSystem().getStore(fragment.getMostRecentFile().toLocalPath());
+                IDE.openEditorOnFileStore(page, fileStore);
             }
-            IDE.openEditor(page, marker);
-            marker.delete();
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }

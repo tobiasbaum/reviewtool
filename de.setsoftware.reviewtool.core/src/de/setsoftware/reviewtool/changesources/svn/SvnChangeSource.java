@@ -102,32 +102,19 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     /**
-     * Helper class to wrap the information needed on a repository.
-     */
-    private class Repo {
-        private final File workingCopyRoot;
-        private final SVNURL remoteUrl;
-
-        public Repo(File workingCopyRoot, SVNURL rootUrl) {
-            this.workingCopyRoot = workingCopyRoot;
-            this.remoteUrl = rootUrl;
-        }
-    }
-
-    /**
      * Handler that filters log entries with the given pattern.
      */
     private class LookupHandler implements ISVNLogEntryHandler {
 
         private final Pattern pattern;
-        private final List<Pair<Repo, SVNLogEntry>> matchingEntries = new ArrayList<>();
-        private Repo currentRoot;
+        private final List<Pair<SvnRepo, SVNLogEntry>> matchingEntries = new ArrayList<>();
+        private SvnRepo currentRoot;
 
         public LookupHandler(Pattern patternForKey) {
             this.pattern = patternForKey;
         }
 
-        public void setCurrentRepo(Repo repo) {
+        public void setCurrentRepo(SvnRepo repo) {
             this.currentRoot = repo;
         }
 
@@ -144,7 +131,7 @@ public class SvnChangeSource implements IChangeSource {
     @Override
     public List<Commit> getChanges(String key) {
         try {
-            final List<Pair<Repo, SVNLogEntry>> revisions = this.determineRelevantRevisions(key);
+            final List<Pair<SvnRepo, SVNLogEntry>> revisions = this.determineRelevantRevisions(key);
             this.sortByDate(revisions);
             return this.convertToChanges(revisions);
         } catch (final SVNException | IOException e) {
@@ -152,11 +139,14 @@ public class SvnChangeSource implements IChangeSource {
         }
     }
 
-    private List<Pair<Repo, SVNLogEntry>> determineRelevantRevisions(String key) throws SVNException {
+    private List<Pair<SvnRepo, SVNLogEntry>> determineRelevantRevisions(String key) throws SVNException {
         final LookupHandler handler = new LookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
             final SVNURL rootUrl = this.mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
-            handler.setCurrentRepo(new Repo(workingCopyRoot, rootUrl));
+            handler.setCurrentRepo(new SvnRepo(
+                    workingCopyRoot,
+                    rootUrl,
+                    this.determineCheckoutPrefix(workingCopyRoot, rootUrl)));
             this.mgr.getLogClient().doLog(
                     rootUrl,
                     new String[] {"/"},
@@ -173,30 +163,40 @@ public class SvnChangeSource implements IChangeSource {
         return handler.matchingEntries;
     }
 
-    private void sortByDate(List<Pair<Repo, SVNLogEntry>> revisions) {
-        Collections.sort(revisions, new Comparator<Pair<Repo, SVNLogEntry>>() {
+    private int determineCheckoutPrefix(File workingCopyRoot, SVNURL rootUrl) throws SVNException {
+        SVNURL checkoutRootUrlPrefix = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.HEAD).getURL();
+        int i = 0;
+        while (!(checkoutRootUrlPrefix.equals(rootUrl) || checkoutRootUrlPrefix.getPath().equals("//"))) {
+            checkoutRootUrlPrefix = checkoutRootUrlPrefix.removePathTail();
+            i++;
+        }
+        return i;
+    }
+
+    private void sortByDate(List<Pair<SvnRepo, SVNLogEntry>> revisions) {
+        Collections.sort(revisions, new Comparator<Pair<SvnRepo, SVNLogEntry>>() {
             @Override
-            public int compare(Pair<Repo, SVNLogEntry> o1, Pair<Repo, SVNLogEntry> o2) {
+            public int compare(Pair<SvnRepo, SVNLogEntry> o1, Pair<SvnRepo, SVNLogEntry> o2) {
                 return o1.getSecond().getDate().compareTo(o2.getSecond().getDate());
             }
         });
     }
 
-    private List<Commit> convertToChanges(List<Pair<Repo, SVNLogEntry>> revisions)
+    private List<Commit> convertToChanges(List<Pair<SvnRepo, SVNLogEntry>> revisions)
             throws SVNException, IOException {
         final List<Commit> ret = new ArrayList<>();
-        for (final Pair<Repo, SVNLogEntry> e : revisions) {
+        for (final Pair<SvnRepo, SVNLogEntry> e : revisions) {
             ret.add(this.convertToCommit(e));
         }
         return ret;
     }
 
-    private Commit convertToCommit(Pair<Repo, SVNLogEntry> e) throws SVNException, IOException {
+    private Commit convertToCommit(Pair<SvnRepo, SVNLogEntry> e) throws SVNException, IOException {
         return new Commit(e.getSecond().getMessage() + " (Rev. " + e.getSecond().getRevision() + ")",
                 this.determineChangesInCommit(e));
     }
 
-    private List<Change> determineChangesInCommit(Pair<Repo, SVNLogEntry> e)
+    private List<Change> determineChangesInCommit(Pair<SvnRepo, SVNLogEntry> e)
             throws SVNException, IOException {
         final List<Change> ret = new ArrayList<>();
         final SVNRevision revision = SVNRevision.create(e.getSecond().getRevision());
@@ -210,20 +210,21 @@ public class SvnChangeSource implements IChangeSource {
                 continue;
             }
             if (this.isBinaryFile(e.getFirst(), entry.getValue(), e.getSecond().getRevision())) {
-                ret.add(this.createBinaryChange(revision, entry.getValue()));
+                ret.add(this.createBinaryChange(revision, entry.getValue(), e.getFirst()));
+            } else {
+                ret.addAll(this.determineChangesInFile(
+                        revision, e.getFirst(), entry.getValue()));
             }
-            ret.addAll(this.determineChangesInFile(
-                    revision, e.getFirst(), entry.getValue()));
         }
         return ret;
     }
 
-    private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo) {
+    private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo) {
         final String oldPath = this.determineOldPath(entryInfo);
         final FileInRevision oldFileInfo =
-                new FileInRevision(oldPath, this.previousRevision(revision));
+                new FileInRevision(oldPath, this.previousRevision(revision), repo);
         final FileInRevision newFileInfo =
-                new FileInRevision(entryInfo.getPath(), this.revision(revision));
+                new FileInRevision(entryInfo.getPath(), this.revision(revision), repo);
         return new BinaryChange(oldFileInfo, newFileInfo);
     }
 
@@ -235,16 +236,16 @@ public class SvnChangeSource implements IChangeSource {
         return new RepoRevision(revision.getNumber() - 1);
     }
 
-    private List<Change> determineChangesInFile(SVNRevision revision, Repo repoUrl, SVNLogEntryPath entryInfo)
+    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo)
             throws SVNException, IOException {
         final String oldPath = this.determineOldPath(entryInfo);
         final byte[] oldFileContent = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
         final byte[] newFileContent = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
 
         final FileInRevision oldFileInfo =
-                new FileInRevision(oldPath, this.previousRevision(revision));
+                new FileInRevision(oldPath, this.previousRevision(revision), repoUrl);
         final FileInRevision newFileInfo =
-                new FileInRevision(entryInfo.getPath(), this.revision(revision));
+                new FileInRevision(entryInfo.getPath(), this.revision(revision), repoUrl);
         final List<Change> ret = new ArrayList<>();
         final List<Pair<FileFragment, FileFragment>> changes = this.diffAlgorithm.determineDiff(
                 oldFileInfo,
@@ -266,9 +267,9 @@ public class SvnChangeSource implements IChangeSource {
         return "ISO-8859-1";
     }
 
-    private boolean isBinaryFile(Repo repoUrl, SVNLogEntryPath path, long revision) throws SVNException {
+    private boolean isBinaryFile(SvnRepo repoUrl, SVNLogEntryPath path, long revision) throws SVNException {
         final long revisionToUse = path.getType() == 'D' ? revision - 1 : revision;
-        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.remoteUrl, true);
+        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.getRemoteUrl(), true);
         final SVNProperties propertyBuffer = new SVNProperties();
         repo.getFile(path.getPath(), revisionToUse, propertyBuffer, null);
         final String mimeType = propertyBuffer.getStringValue(SVNProperty.MIME_TYPE);
@@ -295,8 +296,8 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private byte[] loadFile(Repo repoUrl, String path, long revision) throws SVNException {
-        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.remoteUrl, true);
+    private byte[] loadFile(SvnRepo repoUrl, String path, long revision) throws SVNException {
+        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.getRemoteUrl(), true);
         final ByteArrayOutputStream contents = new ByteArrayOutputStream();
         if (repo.checkPath(path, revision) != SVNNodeKind.FILE) {
             return new byte[0];

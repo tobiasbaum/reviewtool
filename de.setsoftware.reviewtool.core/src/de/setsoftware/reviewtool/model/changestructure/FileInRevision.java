@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.model.PositionTransformer;
 
@@ -12,10 +14,12 @@ public class FileInRevision {
 
     private final String path;
     private final Revision revision;
+    private final Repository repo;
 
-    public FileInRevision(String path, Revision revision) {
+    public FileInRevision(String path, Revision revision, Repository repository) {
         this.path = path;
         this.revision = revision;
+        this.repo = repository;
     }
 
     public String getPath() {
@@ -52,6 +56,10 @@ public class FileInRevision {
             }
             partOfPath = partOfPath.substring(slashIndex + 1);
         }
+    }
+
+    public IPath toLocalPath() {
+        return new Path(this.repo.toAbsolutePathInWc(this.path));
     }
 
 }
