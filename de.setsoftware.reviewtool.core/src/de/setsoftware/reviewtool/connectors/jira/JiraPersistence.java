@@ -90,9 +90,13 @@ public class JiraPersistence implements IReviewPersistence {
     private final String url;
     private final String reviewFieldName;
     private final String reviewStateId;
+    private final String reviewStateName;
     private final String implementationStateId;
+    private final String implementationStateName;
     private final String readyForReviewStateId;
+    private final String readyForReviewStateName;
     private final String rejectedStateId;
+    private final String rejectedStateName;
     private final String doneStateId;
     private final String user;
     private final String password;
@@ -114,9 +118,13 @@ public class JiraPersistence implements IReviewPersistence {
         this.password = password;
         final JsonArray states = this.loadStates();
         this.reviewStateId = this.getStateId(states, reviewState);
+        this.reviewStateName = reviewState;
         this.implementationStateId = this.getStateId(states, implementationState);
+        this.implementationStateName = implementationState;
         this.readyForReviewStateId = this.getStateId(states, readyForReviewState);
+        this.readyForReviewStateName = readyForReviewState;
         this.rejectedStateId = this.getStateId(states, rejectedState);
+        this.rejectedStateName = rejectedState;
         this.doneStateId = this.getStateId(states, doneState);
     }
 
@@ -186,14 +194,19 @@ public class JiraPersistence implements IReviewPersistence {
 
     @Override
     public List<TicketInfo> getReviewableTickets() {
-        //TODO variable Anteile auslagern
-        return this.queryTickets("(status = \"Ready for Review\" and assignee != currentUser()) or (status = \"In Review\" and assignee = currentUser())");
+        return this.queryTickets(String.format(
+                "(status = \"%s\" and assignee != currentUser()) or (status = \"%s\" and assignee = currentUser())",
+                this.readyForReviewStateName,
+                this.reviewStateName));
     }
 
     @Override
     public List<TicketInfo> getFixableTickets() {
-        //TODO variable Anteile auslagern
-        return this.queryTickets("assignee = currentUser() and (status = Rejected or (status = \"In Progress\" and Reviewanmerkungen is not EMPTY))");
+        return this.queryTickets(String.format(
+                "assignee = currentUser() and (status = \"%s\" or (status = \"%s\" and %s is not EMPTY))",
+                this.rejectedStateName,
+                this.implementationStateName,
+                this.reviewFieldName));
     }
 
     private List<TicketInfo> queryTickets(final String jql) {
