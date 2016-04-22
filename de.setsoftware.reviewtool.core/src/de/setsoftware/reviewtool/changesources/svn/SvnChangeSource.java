@@ -3,6 +3,10 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -240,7 +244,14 @@ public class SvnChangeSource implements IChangeSource {
             throws SVNException, IOException {
         final String oldPath = this.determineOldPath(entryInfo);
         final byte[] oldFileContent = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
+        if (this.contentLooksBinary(oldFileContent)) {
+            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl));
+        }
         final byte[] newFileContent = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
+        if (this.contentLooksBinary(newFileContent)) {
+            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl));
+        }
+
 
         final FileInRevision oldFileInfo =
                 new FileInRevision(oldPath, this.previousRevision(revision), repoUrl);
@@ -259,12 +270,49 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
+    private boolean contentLooksBinary(byte[] fileContent) {
+        if (fileContent.length == 0) {
+            return false;
+        }
+        final int max = Math.min(128, fileContent.length);
+        int strangeCharCount = 0;
+        for (int i = 0; i < max; i++) {
+            if (this.isStrangeChar(fileContent[i])) {
+                strangeCharCount++;
+            }
+        }
+        return strangeCharCount > 3;
+    }
+
+    private boolean isStrangeChar(byte b) {
+        return b != '\n' && b != '\r' && b != '\t' && (b < 0x20 || b > 0x80);
+    }
+
     private String determineOldPath(SVNLogEntryPath entryInfo) {
         return entryInfo.getCopyPath() == null ? entryInfo.getPath() : entryInfo.getCopyPath();
     }
 
     private String guessEncoding(byte[] oldFileContent, byte[] newFileContent) {
-        return "ISO-8859-1";
+        if (this.isValidUtf8(oldFileContent) && this.isValidUtf8(newFileContent)) {
+            return "UTF-8";
+        } else {
+            return "ISO-8859-1";
+        }
+    }
+
+    /**
+     * Returns true iff the given bytes are syntactically valid UTF-8.
+     */
+    private boolean isValidUtf8(byte[] content) {
+        try {
+            StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(content));
+            return true;
+        } catch (final CharacterCodingException e) {
+            return false;
+        }
     }
 
     private boolean isBinaryFile(SvnRepo repoUrl, SVNLogEntryPath path, long revision) throws SVNException {
