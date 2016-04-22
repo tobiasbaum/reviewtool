@@ -23,6 +23,7 @@ Bundle-ClassPath: minimal-json.jar,
  svnkit-cli-1.8.12.jar,
  svnkit-javahl16-1.8.12.jar,
  trilead-ssh2-1.0.0-build220.jar,
+ sensorbase.jar,
  .
 Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator
 Bundle-ActivationPolicy: lazy

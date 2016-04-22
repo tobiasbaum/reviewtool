@@ -33,6 +33,7 @@ import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.CreateDialogCallback;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.PositionReference;
@@ -122,34 +123,45 @@ public class AddRemarkAction extends AbstractHandler {
     }
 
     private void createMarker(final IResource resource, final int line) throws ExecutionException {
-        Set<PositionReference> allowedRefs;
-        if (resource.getType() != IResource.FILE) {
-            allowedRefs = EnumSet.of(PositionReference.GLOBAL);
-        } else if (line <= 0) {
-            allowedRefs = EnumSet.of(PositionReference.GLOBAL, PositionReference.FILE);
-        } else {
-            allowedRefs = EnumSet.allOf(PositionReference.class);
-        }
-        CreateRemarkDialog.get(allowedRefs, new CreateDialogCallback() {
-            @Override
-            public void execute(String text, RemarkType type, PositionReference chosenRef) {
-                try {
-                    final ReviewStateManager p = ReviewPlugin.getPersistence();
-                    final IResource resourceFiltered = chosenRef != PositionReference.GLOBAL
-                            ? resource : ResourcesPlugin.getWorkspace().getRoot();
-                    final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
-                    ReviewRemark.create(
-                            p,
-                            resourceFiltered,
-                            p.getReviewerForRound(p.getCurrentRound()),
-                            text,
-                            lineFiltered,
-                            type).save();
-                } catch (final CoreException e) {
-                    throw new ReviewtoolException(e);
-                }
+        try {
+            Set<PositionReference> allowedRefs;
+            if (resource.getType() != IResource.FILE) {
+                allowedRefs = EnumSet.of(PositionReference.GLOBAL);
+            } else if (line <= 0) {
+                allowedRefs = EnumSet.of(PositionReference.GLOBAL, PositionReference.FILE);
+            } else {
+                allowedRefs = EnumSet.allOf(PositionReference.class);
             }
-        });
+            CreateRemarkDialog.get(allowedRefs, new CreateDialogCallback() {
+                @Override
+                public void execute(String text, RemarkType type, PositionReference chosenRef) {
+                    try {
+                        final ReviewStateManager p = ReviewPlugin.getPersistence();
+                        final IResource resourceFiltered = chosenRef != PositionReference.GLOBAL
+                                ? resource : ResourcesPlugin.getWorkspace().getRoot();
+                        final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
+                        final String reviewer = p.getReviewerForRound(p.getCurrentRound());
+                        ReviewRemark.create(
+                                p,
+                                resourceFiltered,
+                                reviewer,
+                                text,
+                                lineFiltered,
+                                type).save();
+                        Telemetry.get().remarkCreated(
+                                p.getTicketKey(),
+                                reviewer,
+                                type.name(),
+                                resource.getFullPath().toString(),
+                                lineFiltered);
+                    } catch (final CoreException e) {
+                        throw new ReviewtoolException(e);
+                    }
+                }
+            });
+        } catch (final ReviewtoolException e) {
+            throw new ExecutionException("error creating marker", e);
+        }
     }
 
 }

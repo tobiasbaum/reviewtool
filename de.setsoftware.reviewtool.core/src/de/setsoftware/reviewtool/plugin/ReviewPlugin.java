@@ -42,6 +42,7 @@ import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 import de.setsoftware.reviewtool.slicingalgorithms.OneSlicePerCommit;
+import de.setsoftware.reviewtool.telemetry.TelemetryConfigurator;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
@@ -104,6 +105,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.configInterpreter.addConfigurator(new FileTicketConnectorConfigurator());
         this.configInterpreter.addConfigurator(new JiraConnectorConfigurator());
         this.configInterpreter.addConfigurator(new SvnChangesourceConfigurator());
+        this.configInterpreter.addConfigurator(new TelemetryConfigurator());
         this.reconfigure();
 
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {

@@ -1,6 +1,6 @@
 package de.setsoftware.reviewtool.config;
 
-import java.util.Set;
+import java.util.Collection;
 
 import org.w3c.dom.Element;
 
@@ -12,7 +12,7 @@ public interface IConfigurator {
     /**
      * Returns the element names this configurator wants to receive.
      */
-    public abstract Set<String> getRelevantElementNames();
+    public abstract Collection<String> getRelevantElementNames();
 
     /**
      * Configures something based on the given XML configuration snippet.
