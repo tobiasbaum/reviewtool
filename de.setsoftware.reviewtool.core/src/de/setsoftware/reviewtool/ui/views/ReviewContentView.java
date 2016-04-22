@@ -83,6 +83,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
             }
         });
 
+        ViewHelper.createContextMenu(this, tv.getControl(), tv);
+
         return panel;
     }
 
@@ -123,6 +125,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
         label.setText("Nicht im Review-Modus");
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
         return panel;
     }
 

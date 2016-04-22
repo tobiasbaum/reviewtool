@@ -35,11 +35,14 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     private Text createLabelAndText(Composite comp, String labelText, String text, int style, int fill) {
         final Label label = new Label(comp, SWT.NULL);
         label.setText(labelText);
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
 
         final Text field = new Text(comp, style | SWT.BORDER | SWT.RESIZE);
         field.setText(text);
         field.setLayoutData(new GridData(fill));
         field.setEditable(false);
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, field);
+
         return field;
     }
 
@@ -110,6 +113,9 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
         label.setText("Kein Review oder Einpflegen aktiv");
+
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
+
         return panel;
     }
 

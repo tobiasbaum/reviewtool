@@ -62,6 +62,7 @@ public class FragmentInfoView extends ViewPart implements FragmentSelectionListe
             final Label revLabel = new Label(scrollContent, SWT.NULL);
             revLabel.setText("Rev. " + revision.getRevision().toString());
             revLabel.setToolTipText(revision.getPath());
+            ViewHelper.createContextMenuWithoutSelectionProvider(this, revLabel);
         }
 
         for (final FileInRevision revision : fragment.getHistory()) {
@@ -73,13 +74,14 @@ public class FragmentInfoView extends ViewPart implements FragmentSelectionListe
     }
 
     private void createContentLabel(Composite scrollContent, List<FileFragment> content) {
+        final Label label;
         if (content == null) {
-            final Label label = new Label(scrollContent, SWT.NULL);
+            label = new Label(scrollContent, SWT.NULL);
             label.setText("binär");
             label.setFont(
                     JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT));
         } else {
-            final Label label = new Label(scrollContent, SWT.BORDER);
+            label = new Label(scrollContent, SWT.BORDER);
             final StringBuilder text = new StringBuilder();
             boolean first = true;
             for (final FileFragment f : content) {
@@ -95,6 +97,7 @@ public class FragmentInfoView extends ViewPart implements FragmentSelectionListe
                     JFaceResources.getFontRegistry().get(JFaceResources.TEXT_FONT));
             label.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_WHITE));
         }
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
     }
 
     private Composite createIdleContent(String text) {
@@ -102,6 +105,7 @@ public class FragmentInfoView extends ViewPart implements FragmentSelectionListe
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
         label.setText(text);
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
         return panel;
     }
 
