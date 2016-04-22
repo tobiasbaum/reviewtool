@@ -179,7 +179,7 @@
     <specification
             annotationType="de.setsoftware.reviewtool.ui.fragmentToReviewAnnotation"
             colorPreferenceKey="fragmentToReview_color"
-            colorPreferenceValue="192,255,192"
+            colorPreferenceValue="192,192,255"
             contributesToHeader="false"
             highlightPreferenceKey="fragmentToReview_highlight"
             highlightPreferenceValue="true"
@@ -215,4 +215,12 @@
              name="Review-Fragment"
              class="de.setsoftware.reviewtool.ui.views.FragmentInfoView"/>
  </extension>
+
+<extension point="org.eclipse.ui.perspectives">
+      <perspective
+            id="de.setsoftware.reviewtool.ui.perspective.reviewPerspective"
+            name="Code Review"
+            class="de.setsoftware.reviewtool.ui.perspective.ReviewPerspective">
+      </perspective>
+</extension>
 </plugin>

@@ -14,7 +14,9 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.WorkbenchException;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -147,6 +149,17 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     public void startReview() throws CoreException {
         this.loadReviewData(Mode.REVIEWING);
+        this.switchToReviewPerspective();
+    }
+
+    private void switchToReviewPerspective() {
+        final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        try {
+            PlatformUI.getWorkbench().showPerspective(
+                    "de.setsoftware.reviewtool.ui.perspective.reviewPerspective", window);
+        } catch (final WorkbenchException e) {
+            Logger.error("could not switch perspective", e);
+        }
     }
 
     public void startFixing() throws CoreException {
