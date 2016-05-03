@@ -29,10 +29,7 @@ public class TelemetryConfigurator implements IConfigurator {
         } else {
             final String optOut = xml.getAttribute("optOut");
             if (optOut.isEmpty()) {
-                Telemetry.set(new HackystatProtocolTelemetry(
-                        xml.getAttribute("url"),
-                        xml.getAttribute("user"),
-                        xml.getAttribute("password")));
+                Telemetry.set(new HackystatProtocolTelemetry(xml.getAttribute("dir")));
             } else {
                 Logger.info("opting out from telemetry");
                 Telemetry.set(new NoTelemetry());

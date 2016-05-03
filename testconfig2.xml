@@ -2,5 +2,5 @@
   <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" />
   <jiraTicketStore user="${User-ID}" password="${Passwort}" url="jira.intranet.set.de" reviewRemarkField="Review-Anmerkungen" 
 	reviewState="Im Review" implementationState="In Arbeit" readyForReviewState="Bereit für Review" rejectedState="Review-Rückläufer" doneState="Abgeschlossen" />
-  <hackystatTelemetry url="http://localhost:9876/sensorbase" user="admin@hackystat.org" password="admin@hackystat.org" optOut="${Telemetrie OptOut}"/>
+  <hackystatTelemetry dir="C:\Temp\hackybuffer" optOut="${Telemetrie OptOut}"/>
 </reviewToolConfig>

@@ -14,6 +14,52 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 public abstract class AbstractTelemetry {
 
     /**
+     * Sends the event that a review has been started at the current moment in time.
+     */
+    public final void reviewStarted(String ticketKey, String reviewer, int round) {
+        this.putData(
+                "reviewStarted",
+                ticketKey,
+                reviewer,
+                map("round", Integer.toString(round)));
+    }
+
+    /**
+     * Sends the event that a remark fixing has been started at the current moment in time.
+     */
+    public final void fixingStarted(String ticketKey, String reviewer, int round) {
+        this.putData(
+                "fixingStarted",
+                ticketKey,
+                reviewer,
+                map("round", Integer.toString(round)));
+    }
+
+    /**
+     * Sends the event that a review has been finished at the current moment in time.
+     */
+    public final void reviewEnded(String ticketKey, String reviewer, int round, String endTransition) {
+        this.putData(
+                "reviewEnded",
+                ticketKey,
+                reviewer,
+                map(
+                        "round", Integer.toString(round),
+                        "endTransition", endTransition));
+    }
+
+    /**
+     * Sends the event that a remark fixing has been finished at the current moment in time.
+     */
+    public final void fixingEnded(String ticketKey, String reviewer, int round) {
+        this.putData(
+                "fixingEnded",
+                ticketKey,
+                reviewer,
+                map("round", Integer.toString(round)));
+    }
+
+    /**
      * Sends the event that a review remark has been created at the current moment in time.
      */
     public final void remarkCreated(String ticketKey, String reviewer, String remarkType, String resource, int line) {

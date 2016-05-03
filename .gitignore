@@ -9,3 +9,5 @@
 /de.setsoftware.reviewtool.updatesite/target
 /de.setsoftware.reviewtool.feature/target
 /build-tools/target
+/hackystat-8.4.127-services-bin
+/.mvn

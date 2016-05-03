@@ -90,13 +90,9 @@ public class JiraPersistence implements IReviewPersistence {
     private final String url;
     private final String reviewFieldName;
     private final String reviewStateId;
-    private final String reviewStateName;
     private final String implementationStateId;
-    private final String implementationStateName;
     private final String readyForReviewStateId;
-    private final String readyForReviewStateName;
     private final String rejectedStateId;
-    private final String rejectedStateName;
     private final String doneStateId;
     private final String user;
     private final String password;
@@ -118,13 +114,9 @@ public class JiraPersistence implements IReviewPersistence {
         this.password = password;
         final JsonArray states = this.loadStates();
         this.reviewStateId = this.getStateId(states, reviewState);
-        this.reviewStateName = reviewState;
         this.implementationStateId = this.getStateId(states, implementationState);
-        this.implementationStateName = implementationState;
         this.readyForReviewStateId = this.getStateId(states, readyForReviewState);
-        this.readyForReviewStateName = readyForReviewState;
         this.rejectedStateId = this.getStateId(states, rejectedState);
-        this.rejectedStateName = rejectedState;
         this.doneStateId = this.getStateId(states, doneState);
     }
 
@@ -195,17 +187,17 @@ public class JiraPersistence implements IReviewPersistence {
     @Override
     public List<TicketInfo> getReviewableTickets() {
         return this.queryTickets(String.format(
-                "(status = \"%s\" and assignee != currentUser()) or (status = \"%s\" and assignee = currentUser())",
-                this.readyForReviewStateName,
-                this.reviewStateName));
+                "(status = %s and assignee != currentUser()) or (status = %s and assignee = currentUser())",
+                this.readyForReviewStateId,
+                this.reviewStateId));
     }
 
     @Override
     public List<TicketInfo> getFixableTickets() {
         return this.queryTickets(String.format(
-                "assignee = currentUser() and (status = \"%s\" or (status = \"%s\" and %s is not EMPTY))",
-                this.rejectedStateName,
-                this.implementationStateName,
+                "assignee = currentUser() and (status = %s or (status = %s and %s is not EMPTY))",
+                this.rejectedStateId,
+                this.implementationStateId,
                 this.reviewFieldName));
     }
 
@@ -381,7 +373,7 @@ public class JiraPersistence implements IReviewPersistence {
         final List<EndTransition> ret = new ArrayList<>();
         for (final JsonValue curValue : result.get("transitions").asArray()) {
             final JsonObject transition = curValue.asObject();
-            final String transitionTarget = transition.get("to").asObject().get("name").asString();
+            final String transitionTarget = transition.get("to").asObject().get("id").asString();
             ret.add(new EndTransition(
                     transition.get("name").asString(),
                     transition.get("id").asString(),

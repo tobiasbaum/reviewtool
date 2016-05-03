@@ -11,6 +11,6 @@
 	<classpathentry kind="lib" path="svnkit-cli-1.8.12.jar"/>
 	<classpathentry kind="lib" path="svnkit-javahl16-1.8.12.jar"/>
 	<classpathentry kind="lib" path="trilead-ssh2-1.0.0-build220.jar"/>
-	<classpathentry kind="lib" path="sensorbase.jar"/>
+	<classpathentry kind="lib" path="hackybuffer-1.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

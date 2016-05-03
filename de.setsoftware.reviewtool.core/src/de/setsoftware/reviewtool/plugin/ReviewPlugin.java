@@ -42,6 +42,7 @@ import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
 import de.setsoftware.reviewtool.slicingalgorithms.OneSlicePerCommit;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.telemetry.TelemetryConfigurator;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
@@ -137,6 +138,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         return pref;
     }
 
+    private static String getUserPref() {
+        return getPrefs().getString(ConfigurationInterpreter.USER_PARAM_NAME);
+    }
+
     public static ReviewStateManager getPersistence() {
         return INSTANCE.persistence;
     }
@@ -149,9 +154,19 @@ public class ReviewPlugin implements IReviewConfigurable {
         return this.mode;
     }
 
+    /**
+     * Lets the user select a ticket and starts reviewing for it.
+     */
     public void startReview() throws CoreException {
         this.loadReviewData(Mode.REVIEWING);
-        this.switchToReviewPerspective();
+        if (this.mode == Mode.REVIEWING) {
+            this.switchToReviewPerspective();
+            //TODO: mehr Daten zum Reviewumfang speichern
+            Telemetry.get().reviewStarted(
+                    this.persistence.getTicketKey(),
+                    this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),
+                    this.persistence.getCurrentRound());
+        }
     }
 
     private void switchToReviewPerspective() {
@@ -164,8 +179,17 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
+    /**
+     * Lets the user select a ticket and starts fixing for it.
+     */
     public void startFixing() throws CoreException {
         this.loadReviewData(Mode.FIXING);
+        if (this.mode == Mode.FIXING) {
+            Telemetry.get().fixingStarted(
+                    this.persistence.getTicketKey(),
+                    getUserPref(),
+                    this.persistence.getCurrentRound());
+        }
     }
 
     private void loadReviewData(Mode targetMode) throws CoreException {
@@ -254,6 +278,11 @@ public class ReviewPlugin implements IReviewConfigurable {
                 return;
             }
         }
+        Telemetry.get().reviewEnded(
+                this.persistence.getTicketKey(),
+                this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),
+                this.persistence.getCurrentRound(),
+                typeOfEnd.getNameForUser());
         if (typeOfEnd.getType() != EndTransition.Type.PAUSE) {
             this.persistence.changeStateAtReviewEnd(typeOfEnd);
         }
@@ -266,7 +295,14 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.slicesInReview = null;
     }
 
+    /**
+     * Ends fixing and changes the ticket's state accordingly.
+     */
     public void endFixing() throws CoreException {
+        Telemetry.get().fixingEnded(
+                this.persistence.getTicketKey(),
+                this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),
+                this.persistence.getCurrentRound());
         this.persistence.changeStateToReadyForReview();
         this.leaveReviewMode();
     }
