@@ -28,12 +28,12 @@ import org.eclipse.ui.part.ViewPart;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
-import de.setsoftware.reviewtool.model.changestructure.Slice;
-import de.setsoftware.reviewtool.model.changestructure.SliceFragment;
-import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
+import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.changestructure.Tour;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 
 /**
- * A review to show the content (slices and fragments) belonging to a review.
+ * A review to show the content (tours and stops) belonging to a review.
  */
 public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
@@ -52,20 +52,20 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
     }
 
     @Override
-    public void notifyReview(ReviewStateManager mgr, SlicesInReview slices) {
+    public void notifyReview(ReviewStateManager mgr, ToursInReview tours) {
         this.disposeOldContent();
-        this.currentContent = this.createReviewContent(slices);
+        this.currentContent = this.createReviewContent(tours);
         this.comp.layout();
     }
 
-    private Composite createReviewContent(SlicesInReview slices) {
+    private Composite createReviewContent(ToursInReview tours) {
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
 
         final TreeViewer tv = new TreeViewer(panel);
-        tv.setContentProvider(new ViewContentProvider(slices));
-        tv.setLabelProvider(new SliceAndFragmentLabelProvider());
-        tv.setInput(slices);
+        tv.setContentProvider(new ViewContentProvider(tours));
+        tv.setLabelProvider(new TourAndStopLabelProvider());
+        tv.setInput(tours);
 
         final Tree tree = tv.getTree();
         tree.addListener(SWT.MouseDoubleClick, new Listener() {
@@ -74,8 +74,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
                 final Point point = new Point(event.x, event.y);
                 final TreeItem item = tree.getItem(point);
                 if (item != null) {
-                    if (item.getData() instanceof SliceFragment) {
-                        ReviewContentView.this.jumpTo((SliceFragment) item.getData());
+                    if (item.getData() instanceof Stop) {
+                        ReviewContentView.this.jumpTo((Stop) item.getData());
                     }
                 }
             }
@@ -86,11 +86,11 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         return panel;
     }
 
-    private void jumpTo(SliceFragment fragment) {
+    private void jumpTo(Stop fragment) {
         CurrentFragment.setCurrentFragment(fragment);
         try {
             final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-            final IMarker marker = SlicesInReview.createMarkerFor(new RealMarkerFactory(), fragment);
+            final IMarker marker = ToursInReview.createMarkerFor(new RealMarkerFactory(), fragment);
             if (marker != null) {
                 IDE.openEditor(page, marker);
                 marker.delete();
@@ -134,29 +134,29 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
     }
 
     /**
-     * Provides the tree consisting of slices and fragments.
+     * Provides the tree consisting of tours and stops.
      */
     private static class ViewContentProvider implements ITreeContentProvider {
 
-        private final SlicesInReview slices;
+        private final ToursInReview tours;
 
-        public ViewContentProvider(SlicesInReview slices) {
-            this.slices = slices;
+        public ViewContentProvider(ToursInReview tours) {
+            this.tours = tours;
         }
 
         @Override
         public Object[] getElements(Object inputElement) {
-            assert inputElement == this.slices;
+            assert inputElement == this.tours;
             return this.getChildren(null);
         }
 
         @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement == null) {
-                return this.slices.getSlices().toArray();
-            } else if (parentElement instanceof Slice) {
-                final Slice s = (Slice) parentElement;
-                return s.getFragments().toArray();
+                return this.tours.getTours().toArray();
+            } else if (parentElement instanceof Tour) {
+                final Tour s = (Tour) parentElement;
+                return s.getStops().toArray();
             } else {
                 return new Object[0];
             }
@@ -164,10 +164,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
         @Override
         public Object getParent(Object element) {
-            if (element instanceof SliceFragment) {
-                final SliceFragment f = (SliceFragment) element;
-                for (final Slice s : this.slices.getSlices()) {
-                    if (s.getFragments().contains(f)) {
+            if (element instanceof Stop) {
+                final Stop f = (Stop) element;
+                for (final Tour s : this.tours.getTours()) {
+                    if (s.getStops().contains(f)) {
                         return s;
                     }
                 }
@@ -179,7 +179,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
         @Override
         public boolean hasChildren(Object element) {
-            return !(element instanceof SliceFragment);
+            return !(element instanceof Stop);
         }
 
         @Override
@@ -193,15 +193,15 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
     }
 
     /**
-     * Label provider for the tree with slices and fragments.
+     * Label provider for the tree with tours and stops.
      */
-    private static final class SliceAndFragmentLabelProvider extends LabelProvider {
+    private static final class TourAndStopLabelProvider extends LabelProvider {
         @Override
         public String getText(Object element) {
-            if (element instanceof Slice) {
-                return ((Slice) element).getDescription();
-            } else if (element instanceof SliceFragment) {
-                final SliceFragment f = (SliceFragment) element;
+            if (element instanceof Tour) {
+                return ((Tour) element).getDescription();
+            } else if (element instanceof Stop) {
+                final Stop f = (Stop) element;
                 if (f.isDetailedFragmentKnown()) {
                     return this.determineFilename(f) + ", "
                             + f.getMostRecentFragment().getFrom() + " - "
@@ -214,7 +214,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
             }
         }
 
-        private String determineFilename(final SliceFragment f) {
+        private String determineFilename(final Stop f) {
             final IResource resource = f.getMostRecentFile().determineResource();
             if (resource != null) {
                 return PositionTransformer.toPosition(resource, -1).getShortFileName();

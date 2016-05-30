@@ -14,7 +14,7 @@ import de.setsoftware.reviewtool.model.IReviewDataSaveListener;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.TicketInfo;
-import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 
 /**
  * A view that contains general information on the review and the ticket.
@@ -51,7 +51,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     }
 
     @Override
-    public void notifyReview(ReviewStateManager mgr, SlicesInReview slices) {
+    public void notifyReview(ReviewStateManager mgr, ToursInReview tours) {
         mgr.addSaveListener(this);
         this.disposeOldContent();
         this.currentContent = this.createReviewContent(mgr);

@@ -6,7 +6,7 @@ package de.setsoftware.reviewtool.model.changestructure;
  */
 public interface ChangeVisitor {
 
-    public abstract void handle(TextualChange visitee);
+    public abstract void handle(TextualChangeHunk visitee);
 
     public abstract void handle(BinaryChange visitee);
 

@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.changestructure.FileFragment;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 
 /**
@@ -18,7 +18,7 @@ public interface IDiffAlgorithm {
      * Not all changes on the byte level have to result in change fragments, as an implementation can
      * choose to ignore certain changes.
      */
-    public abstract List<Pair<FileFragment, FileFragment>> determineDiff(
+    public abstract List<Pair<Fragment, Fragment>> determineDiff(
             FileInRevision fileOldInfo,
             byte[] fileOldContent,
             FileInRevision fileNewInfo,

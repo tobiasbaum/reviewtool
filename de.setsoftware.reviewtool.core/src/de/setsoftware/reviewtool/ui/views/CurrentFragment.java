@@ -3,7 +3,7 @@ package de.setsoftware.reviewtool.ui.views;
 import java.lang.ref.WeakReference;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
-import de.setsoftware.reviewtool.model.changestructure.SliceFragment;
+import de.setsoftware.reviewtool.model.changestructure.Stop;
 
 /**
  * Manages the currently selected fragment and its listeners.
@@ -11,10 +11,10 @@ import de.setsoftware.reviewtool.model.changestructure.SliceFragment;
 public class CurrentFragment {
 
     private static WeakListeners<FragmentSelectionListener> listeners = new WeakListeners<>();
-    private static WeakReference<SliceFragment> currentFragment;
+    private static WeakReference<Stop> currentFragment;
 
-    static void setCurrentFragment(SliceFragment fragment) {
-        currentFragment = new WeakReference<SliceFragment>(fragment);
+    static void setCurrentFragment(Stop fragment) {
+        currentFragment = new WeakReference<Stop>(fragment);
         for (final FragmentSelectionListener l : listeners.getListeners()) {
             l.notifyFragmentChange(fragment);
         }
@@ -27,7 +27,7 @@ public class CurrentFragment {
         }
     }
 
-    private static SliceFragment getCurrentFragment() {
+    private static Stop getCurrentFragment() {
         if (currentFragment == null) {
             return null;
         }

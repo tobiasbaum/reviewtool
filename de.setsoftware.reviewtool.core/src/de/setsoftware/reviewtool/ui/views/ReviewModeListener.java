@@ -1,7 +1,7 @@
 package de.setsoftware.reviewtool.ui.views;
 
 import de.setsoftware.reviewtool.model.ReviewStateManager;
-import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 
 /**
  * Observer interface for classes listening for changes in the review mode
@@ -12,7 +12,7 @@ public interface ReviewModeListener {
     /**
      * Is called when a review is started.
      */
-    public abstract void notifyReview(ReviewStateManager mgr, SlicesInReview slicesInReview);
+    public abstract void notifyReview(ReviewStateManager mgr, ToursInReview toursInReview);
 
     /**
      * Is called when fixing is started.

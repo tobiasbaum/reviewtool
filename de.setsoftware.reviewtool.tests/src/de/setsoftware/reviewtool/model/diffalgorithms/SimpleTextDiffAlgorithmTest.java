@@ -11,7 +11,7 @@ import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.diffalgorithms.SimpleTextDiffAlgorithm;
-import de.setsoftware.reviewtool.model.changestructure.FileFragment;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
 public class SimpleTextDiffAlgorithmTest {
@@ -23,9 +23,9 @@ public class SimpleTextDiffAlgorithmTest {
     }
 
     private static List<Pair<PositionInText, PositionInText>> toPositionsInNewFile(
-            List<Pair<FileFragment, FileFragment>> diff) {
+            List<Pair<Fragment, Fragment>> diff) {
         final List<Pair<PositionInText, PositionInText>> ret = new ArrayList<>();
-        for (final Pair<FileFragment, FileFragment> p : diff) {
+        for (final Pair<Fragment, Fragment> p : diff) {
             ret.add(Pair.create(p.getSecond().getFrom(), p.getSecond().getTo()));
         }
         return ret;

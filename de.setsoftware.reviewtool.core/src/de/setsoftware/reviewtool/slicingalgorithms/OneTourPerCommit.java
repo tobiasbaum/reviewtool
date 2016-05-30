@@ -11,58 +11,59 @@ import de.setsoftware.reviewtool.model.changestructure.Commit;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.ISlicingStrategy;
 import de.setsoftware.reviewtool.model.changestructure.LocalRevision;
-import de.setsoftware.reviewtool.model.changestructure.Slice;
-import de.setsoftware.reviewtool.model.changestructure.SliceFragment;
-import de.setsoftware.reviewtool.model.changestructure.TextualChange;
+import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
+import de.setsoftware.reviewtool.model.changestructure.Tour;
 
 /**
- * Simple slicing algorithm that creates one slice per commit.
+ * Simple slicing algorithm that creates one tour per commit, without looking
+ * at the order of stops.
  */
-public class OneSlicePerCommit implements ISlicingStrategy {
+public class OneTourPerCommit implements ISlicingStrategy {
 
     private final IFragmentTracer tracer;
 
-    public OneSlicePerCommit(IFragmentTracer tracer) {
+    public OneTourPerCommit(IFragmentTracer tracer) {
         this.tracer = tracer;
     }
 
     @Override
-    public List<Slice> toSlices(List<Commit> changes) {
-        final List<Slice> ret = new ArrayList<>();
+    public List<Tour> toTours(List<Commit> changes) {
+        final List<Tour> ret = new ArrayList<>();
         for (final Commit c : changes) {
-            ret.add(new Slice(
+            ret.add(new Tour(
                     c.getMessage(),
                     this.toSliceFragments(c.getChanges())));
         }
         return ret;
     }
 
-    private List<SliceFragment> toSliceFragments(List<Change> changes) {
-        final List<SliceFragment> ret = new ArrayList<>();
+    private List<Stop> toSliceFragments(List<Change> changes) {
+        final List<Stop> ret = new ArrayList<>();
         for (final Change c : changes) {
             ret.add(this.toSliceFragment(c));
         }
         return ret;
     }
 
-    private SliceFragment toSliceFragment(Change c) {
-        final ValueWrapper<SliceFragment> ret = new ValueWrapper<>();
+    private Stop toSliceFragment(Change c) {
+        final ValueWrapper<Stop> ret = new ValueWrapper<>();
         c.accept(new ChangeVisitor() {
 
             @Override
-            public void handle(TextualChange visitee) {
-                ret.setValue(new SliceFragment(
+            public void handle(TextualChangeHunk visitee) {
+                ret.setValue(new Stop(
                         visitee.getFrom(),
                         visitee.getTo(),
-                        OneSlicePerCommit.this.tracer.traceFragment(visitee.getTo(), new LocalRevision())));
+                        OneTourPerCommit.this.tracer.traceFragment(visitee.getTo(), new LocalRevision())));
             }
 
             @Override
             public void handle(BinaryChange visitee) {
-                ret.setValue(new SliceFragment(
+                ret.setValue(new Stop(
                         visitee.getFrom(),
                         visitee.getTo(),
-                        OneSlicePerCommit.this.tracer.traceFile(visitee.getTo(), new LocalRevision())));
+                        OneTourPerCommit.this.tracer.traceFile(visitee.getTo(), new LocalRevision())));
             }
 
         });

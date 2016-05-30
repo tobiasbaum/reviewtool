@@ -3,14 +3,13 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.util.List;
 
 /**
- * Interface for strategies that automatically create a list of slices
- * from a changeset.
+ * Interface for strategies that automatically slice a changeset into a list of tours.
  */
 public interface ISlicingStrategy {
 
     /**
-     * Determine a separation of the given changes into review slices.
+     * Determine a separation of the given changes into review tours.
      */
-    public abstract List<Slice> toSlices(List<Commit> changes);
+    public abstract List<Tour> toTours(List<Commit> changes);
 
 }

@@ -3,12 +3,12 @@ package de.setsoftware.reviewtool.model.changestructure;
 /**
  * A singular change of a part of a text file.
  */
-public class TextualChange extends Change {
+public class TextualChangeHunk extends Change {
 
-    private final FileFragment from;
-    private final FileFragment to;
+    private final Fragment from;
+    private final Fragment to;
 
-    public TextualChange(FileFragment from, FileFragment to) {
+    public TextualChangeHunk(Fragment from, Fragment to) {
         this.from = from;
         this.to = to;
     }
@@ -18,11 +18,11 @@ public class TextualChange extends Change {
         visitor.handle(this);
     }
 
-    public FileFragment getFrom() {
+    public Fragment getFrom() {
         return this.from;
     }
 
-    public FileFragment getTo() {
+    public Fragment getTo() {
         return this.to;
     }
 

@@ -40,8 +40,8 @@ import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
-import de.setsoftware.reviewtool.model.changestructure.SlicesInReview;
-import de.setsoftware.reviewtool.slicingalgorithms.OneSlicePerCommit;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+import de.setsoftware.reviewtool.slicingalgorithms.OneTourPerCommit;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.telemetry.TelemetryConfigurator;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
@@ -94,7 +94,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private static final ReviewPlugin INSTANCE = new ReviewPlugin();
     private final ReviewStateManager persistence;
     private IChangeSource changeSource;
-    private SlicesInReview slicesInReview;
+    private ToursInReview toursInReview;
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
@@ -197,18 +197,18 @@ public class ReviewPlugin implements IReviewConfigurable {
         final boolean ok = this.persistence.selectTicket(targetMode == Mode.REVIEWING);
         if (!ok) {
             this.setMode(Mode.IDLE);
-            this.slicesInReview = null;
+            this.toursInReview = null;
             return;
         }
         this.clearMarkers();
 
-        this.loadSlicesAndCreateMarkers();
+        this.loadToursAndCreateMarkers();
 
         final ReviewData currentReviewData = CorrectSyntaxDialog.getCurrentReviewDataParsed(
                 this.persistence, new RealMarkerFactory());
         if (currentReviewData == null) {
             this.setMode(Mode.IDLE);
-            this.slicesInReview = null;
+            this.toursInReview = null;
             return;
         }
         this.setMode(targetMode);
@@ -240,7 +240,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             s.notifyFixing(this.persistence);
             break;
         case REVIEWING:
-            s.notifyReview(this.persistence, this.slicesInReview);
+            s.notifyReview(this.persistence, this.toursInReview);
             break;
         case IDLE:
             s.notifyIdle();
@@ -292,7 +292,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private void leaveReviewMode() throws CoreException {
         this.clearMarkers();
         this.setMode(Mode.IDLE);
-        this.slicesInReview = null;
+        this.toursInReview = null;
     }
 
     /**
@@ -320,20 +320,20 @@ public class ReviewPlugin implements IReviewConfigurable {
      */
     public void refreshMarkers() throws CoreException {
         this.clearMarkers();
-        this.loadSlicesAndCreateMarkers();
+        this.loadToursAndCreateMarkers();
         CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, new RealMarkerFactory());
     }
 
-    private void loadSlicesAndCreateMarkers() {
+    private void loadToursAndCreateMarkers() {
         final String ticketKey = this.persistence.getTicketKey();
         if (ticketKey == null) {
             return;
         }
-        this.slicesInReview = SlicesInReview.create(
+        this.toursInReview = ToursInReview.create(
                 this.changeSource,
-                new OneSlicePerCommit(this.changeSource.createTracer()),
+                new OneTourPerCommit(this.changeSource.createTracer()),
                 ticketKey);
-        this.slicesInReview.createMarkers(new RealMarkerFactory());
+        this.toursInReview.createMarkers(new RealMarkerFactory());
     }
 
     @Override

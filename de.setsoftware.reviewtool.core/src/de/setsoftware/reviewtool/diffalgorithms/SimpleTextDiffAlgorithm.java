@@ -14,7 +14,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.changestructure.FileFragment;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
@@ -274,7 +274,7 @@ public class SimpleTextDiffAlgorithm implements IDiffAlgorithm {
     }
 
     @Override
-    public List<Pair<FileFragment, FileFragment>> determineDiff(
+    public List<Pair<Fragment, Fragment>> determineDiff(
             FileInRevision fileOldInfo,
             byte[] fileOld,
             FileInRevision fileNewInfo,
@@ -296,9 +296,9 @@ public class SimpleTextDiffAlgorithm implements IDiffAlgorithm {
         return this.toFragments(fileOldInfo, fileNewInfo, matching.determineNonIdentifiedFragments());
     }
 
-    private List<Pair<FileFragment, FileFragment>> toFragments(
+    private List<Pair<Fragment, Fragment>> toFragments(
             FileInRevision fileOldInfo, FileInRevision fileNewInfo, List<ContentView> changedFragments) {
-        final List<Pair<FileFragment, FileFragment>> ret = new ArrayList<>();
+        final List<Pair<Fragment, Fragment>> ret = new ArrayList<>();
         for (final ContentView v : changedFragments) {
             ret.add(Pair.create(
                     this.toFileFragment(fileOldInfo, v.file1),
@@ -307,8 +307,8 @@ public class SimpleTextDiffAlgorithm implements IDiffAlgorithm {
         return ret;
     }
 
-    private FileFragment toFileFragment(FileInRevision fileInfo, OneFileView fragmentData) {
-        return new FileFragment(fileInfo,
+    private Fragment toFileFragment(FileInRevision fileInfo, OneFileView fragmentData) {
+        return new Fragment(fileInfo,
                 new PositionInText(fragmentData.toIndexInWholeFile(0) + 1, 1),
                 new PositionInText(fragmentData.toIndexInWholeFile(fragmentData.getLineCount() - 1) + 2, 0),
                 fragmentData.getContent());

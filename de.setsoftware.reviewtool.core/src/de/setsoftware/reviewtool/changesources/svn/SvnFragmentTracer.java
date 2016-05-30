@@ -1,6 +1,6 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
-import de.setsoftware.reviewtool.model.changestructure.FileFragment;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
@@ -11,7 +11,7 @@ import de.setsoftware.reviewtool.model.changestructure.Revision;
 public class SvnFragmentTracer implements IFragmentTracer {
 
     @Override
-    public FileFragment traceFragment(FileFragment fragment, Revision revision) {
+    public Fragment traceFragment(Fragment fragment, Revision revision) {
         //TODO implementieren
         return fragment;
     }

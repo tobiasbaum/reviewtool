@@ -15,7 +15,7 @@ public interface IReviewConfigurable {
     public abstract void setPersistence(IReviewPersistence persistence);
 
     /**
-     * Adds a source for change slices.
+     * Adds a source for changes.
      */
     public abstract void setChangeSource(IChangeSource changeSource);
 

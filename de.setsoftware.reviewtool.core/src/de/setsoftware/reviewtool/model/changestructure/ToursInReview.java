@@ -15,40 +15,40 @@ import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
 
 /**
- * Manages the current state regarding the change slices under review.
+ * Manages the current state regarding the changes/tours under review.
  */
-public class SlicesInReview {
+public class ToursInReview {
 
-    private final List<Slice> slices;
-    private final int currentSliceIndex;
+    private final List<Tour> tours;
+    private final int currentTourIndex;
 
-    private SlicesInReview(List<Slice> slices) {
-        this.slices = slices;
-        this.currentSliceIndex = 0;
+    private ToursInReview(List<Tour> tours) {
+        this.tours = tours;
+        this.currentTourIndex = 0;
     }
 
     /**
-     * Loads the slices for the given ticket and creates a corresponding {@link SlicesInReview}
+     * Loads the tours for the given ticket and creates a corresponding {@link ToursInReview}
      * object with initial settings.
      */
-    public static SlicesInReview create(
+    public static ToursInReview create(
             IChangeSource src,
             ISlicingStrategy slicer,
             String ticketKey) {
-        final List<Slice> slices = slicer.toSlices(src.getChanges(ticketKey));
-        return new SlicesInReview(slices);
+        final List<Tour> tours = slicer.toTours(src.getChanges(ticketKey));
+        return new ToursInReview(tours);
     }
 
     /**
-     * Creates markers for the fragments. Takes the currently active slice into account.
+     * Creates markers for the tour stops. Takes the currently active tour into account.
      */
     public void createMarkers(IMarkerFactory markerFactory) {
-        if (this.slices.size() <= this.currentSliceIndex) {
+        if (this.tours.size() <= this.currentTourIndex) {
             return;
         }
-        final Slice s = this.slices.get(this.currentSliceIndex);
+        final Tour s = this.tours.get(this.currentTourIndex);
         final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
-        for (final SliceFragment f : s.getFragments()) {
+        for (final Stop f : s.getStops()) {
             createMarkerFor(markerFactory, lookupTables, f);
         }
     }
@@ -56,7 +56,7 @@ public class SlicesInReview {
     private static IMarker createMarkerFor(
             IMarkerFactory markerFactory,
             final Map<IResource, PositionLookupTable> lookupTables,
-            final SliceFragment f) {
+            final Stop f) {
 
         try {
             final IResource resource = f.getMostRecentFile().determineResource();
@@ -67,7 +67,7 @@ public class SlicesInReview {
                 if (!lookupTables.containsKey(resource)) {
                     lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
                 }
-                final FileFragment pos = f.getMostRecentFragment();
+                final Fragment pos = f.getMostRecentFragment();
                 final IMarker marker = markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
                 marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
                 marker.setAttribute(IMarker.CHAR_START,
@@ -86,17 +86,17 @@ public class SlicesInReview {
     /**
      * Creates a marker for the given fragment.
      * If multiple markers have to be created, use the method that caches lookup tables instead.
-     * If a marker could not be created (for example because the resource is not availabel in Eclipse), null
+     * If a marker could not be created (for example because the resource is not available in Eclipse), null
      * is returned.
      */
     public static IMarker createMarkerFor(
             IMarkerFactory markerFactory,
-            final SliceFragment f) {
+            final Stop f) {
         return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f);
     }
 
-    public List<Slice> getSlices() {
-        return this.slices;
+    public List<Tour> getTours() {
+        return this.tours;
     }
 
 }

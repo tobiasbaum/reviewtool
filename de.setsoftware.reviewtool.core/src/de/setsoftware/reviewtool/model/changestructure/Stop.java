@@ -7,22 +7,22 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * A part of a review slice, corresponding to some notion of "singular change".
+ * A part of a review tour, corresponding to some notion of "singular change".
  * It knows the file fragment it belongs to in the most current revision, but
  * also the changes that it is based on.
  */
-public class SliceFragment {
+public class Stop {
 
     private final List<FileInRevision> historyOrder = new ArrayList<>();
-    private final Map<FileInRevision, List<FileFragment>> history = new HashMap<>();
+    private final Map<FileInRevision, List<Fragment>> history = new HashMap<>();
 
     private final FileInRevision mostRecentFile;
-    private final FileFragment mostRecentFragment;
+    private final Fragment mostRecentFragment;
 
     /**
      * Constructor for textual changes.
      */
-    public SliceFragment(FileFragment from, FileFragment to, FileFragment traceFragment) {
+    public Stop(Fragment from, Fragment to, Fragment traceFragment) {
         this.historyOrder.add(from.getFile());
         this.historyOrder.add(to.getFile());
         this.history.put(from.getFile(), Arrays.asList(from));
@@ -35,7 +35,7 @@ public class SliceFragment {
     /**
      * Constructor for binary changes.
      */
-    public SliceFragment(FileInRevision from, FileInRevision to, FileInRevision traceFile) {
+    public Stop(FileInRevision from, FileInRevision to, FileInRevision traceFile) {
         this.historyOrder.add(from);
         this.historyOrder.add(to);
 
@@ -47,7 +47,7 @@ public class SliceFragment {
         return this.mostRecentFragment != null;
     }
 
-    public FileFragment getMostRecentFragment() {
+    public Fragment getMostRecentFragment() {
         return this.mostRecentFragment;
     }
 
@@ -59,7 +59,7 @@ public class SliceFragment {
         return this.historyOrder;
     }
 
-    public List<FileFragment> getContentFor(FileInRevision revision) {
+    public List<Fragment> getContentFor(FileInRevision revision) {
         return this.history.get(revision);
     }
 

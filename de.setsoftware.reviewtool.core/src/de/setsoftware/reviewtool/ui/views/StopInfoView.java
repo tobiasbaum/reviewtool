@@ -12,14 +12,14 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
-import de.setsoftware.reviewtool.model.changestructure.FileFragment;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.SliceFragment;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.changestructure.Stop;
 
 /**
- * A view that contains detailed information on a slice fragment.
+ * A view that contains detailed information on a tour stop fragment.
  */
-public class FragmentInfoView extends ViewPart implements FragmentSelectionListener {
+public class StopInfoView extends ViewPart implements FragmentSelectionListener {
 
     private Composite comp;
     private Composite currentContent;
@@ -36,17 +36,17 @@ public class FragmentInfoView extends ViewPart implements FragmentSelectionListe
     }
 
     @Override
-    public void notifyFragmentChange(SliceFragment fragment) {
+    public void notifyFragmentChange(Stop fragment) {
         this.disposeOldContent();
         if (fragment == null) {
-            this.currentContent = this.createIdleContent("Kein Fragment gewählt");
+            this.currentContent = this.createIdleContent("Kein Stop gewählt");
         } else {
             this.currentContent = this.createFragmentContent(fragment);
         }
         this.comp.layout();
     }
 
-    private ScrolledComposite createFragmentContent(SliceFragment fragment) {
+    private ScrolledComposite createFragmentContent(Stop fragment) {
         final ScrolledComposite scroll = new ScrolledComposite(this.comp, SWT.VERTICAL | SWT.HORIZONTAL);
         scroll.setExpandHorizontal(true);
         scroll.setExpandVertical(true);
@@ -73,7 +73,7 @@ public class FragmentInfoView extends ViewPart implements FragmentSelectionListe
         return scroll;
     }
 
-    private void createContentLabel(Composite scrollContent, List<FileFragment> content) {
+    private void createContentLabel(Composite scrollContent, List<Fragment> content) {
         final Label label;
         if (content == null) {
             label = new Label(scrollContent, SWT.NULL);
@@ -84,7 +84,7 @@ public class FragmentInfoView extends ViewPart implements FragmentSelectionListe
             label = new Label(scrollContent, SWT.BORDER);
             final StringBuilder text = new StringBuilder();
             boolean first = true;
-            for (final FileFragment f : content) {
+            for (final Fragment f : content) {
                 if (first) {
                     first = false;
                 } else {

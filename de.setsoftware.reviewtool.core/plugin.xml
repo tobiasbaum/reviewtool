@@ -213,7 +213,7 @@
              class="de.setsoftware.reviewtool.ui.views.ReviewContentView"/>
         <view id="de.setsoftware.reviewtool.ui.views.fragmentinfoview"
              name="Review-Fragment"
-             class="de.setsoftware.reviewtool.ui.views.FragmentInfoView"/>
+             class="de.setsoftware.reviewtool.ui.views.StopInfoView"/>
  </extension>
 
 <extension point="org.eclipse.ui.perspectives">

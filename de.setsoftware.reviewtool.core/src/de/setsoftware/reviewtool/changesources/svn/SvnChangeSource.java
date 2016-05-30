@@ -37,15 +37,15 @@ import de.setsoftware.reviewtool.diffalgorithms.SimpleTextDiffAlgorithm;
 import de.setsoftware.reviewtool.model.changestructure.BinaryChange;
 import de.setsoftware.reviewtool.model.changestructure.Change;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
-import de.setsoftware.reviewtool.model.changestructure.FileFragment;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.TextualChange;
+import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 
 /**
- * A simple slice source that makes every commit a slice and every continuous change segment a fragment.
+ * A simple change source that loads the changes from subversion.
  */
 public class SvnChangeSource implements IChangeSource {
 
@@ -260,14 +260,14 @@ public class SvnChangeSource implements IChangeSource {
         final FileInRevision newFileInfo =
                 new FileInRevision(entryInfo.getPath(), this.revision(revision), repoUrl);
         final List<Change> ret = new ArrayList<>();
-        final List<Pair<FileFragment, FileFragment>> changes = this.diffAlgorithm.determineDiff(
+        final List<Pair<Fragment, Fragment>> changes = this.diffAlgorithm.determineDiff(
                 oldFileInfo,
                 oldFileContent,
                 newFileInfo,
                 newFileContent,
                 this.guessEncoding(oldFileContent, newFileContent));
-        for (final Pair<FileFragment, FileFragment> pos : changes) {
-            ret.add(new TextualChange(pos.getFirst(), pos.getSecond()));
+        for (final Pair<Fragment, Fragment> pos : changes) {
+            ret.add(new TextualChangeHunk(pos.getFirst(), pos.getSecond()));
         }
         return ret;
     }
