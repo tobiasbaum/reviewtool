@@ -58,7 +58,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         this.comp.layout();
     }
 
-    private Composite createReviewContent(ToursInReview tours) {
+    private Composite createReviewContent(final ToursInReview tours) {
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
 
@@ -75,7 +75,9 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
                 final TreeItem item = tree.getItem(point);
                 if (item != null) {
                     if (item.getData() instanceof Stop) {
-                        ReviewContentView.this.jumpTo((Stop) item.getData());
+                        final Stop stop = (Stop) item.getData();
+                        final Tour tour = (Tour) item.getParentItem().getData();
+                        ReviewContentView.this.jumpTo(tours, tour, stop);
                     }
                 }
             }
@@ -86,21 +88,27 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         return panel;
     }
 
-    private void jumpTo(Stop fragment) {
+    private void jumpTo(ToursInReview tours, Tour tour, Stop fragment) {
         CurrentFragment.setCurrentFragment(fragment);
         try {
-            final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-            final IMarker marker = ToursInReview.createMarkerFor(new RealMarkerFactory(), fragment);
-            if (marker != null) {
-                IDE.openEditor(page, marker);
-                marker.delete();
-            } else {
-                final IFileStore fileStore =
-                        EFS.getLocalFileSystem().getStore(fragment.getMostRecentFile().toLocalPath());
-                IDE.openEditorOnFileStore(page, fileStore);
-            }
+            tours.ensureTourActive(tour, new RealMarkerFactory());
+
+            this.openEditorFor(fragment);
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
+        }
+    }
+
+    private void openEditorFor(Stop fragment) throws CoreException {
+        final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+        final IMarker marker = ToursInReview.createMarkerFor(new RealMarkerFactory(), fragment);
+        if (marker != null) {
+            IDE.openEditor(page, marker);
+            marker.delete();
+        } else {
+            final IFileStore fileStore =
+                    EFS.getLocalFileSystem().getStore(fragment.getMostRecentFile().toLocalPath());
+            IDE.openEditorOnFileStore(page, fileStore);
         }
     }
 

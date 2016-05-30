@@ -8,6 +8,7 @@ import java.util.Map;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
@@ -20,7 +21,7 @@ import de.setsoftware.reviewtool.model.IMarkerFactory;
 public class ToursInReview {
 
     private final List<Tour> tours;
-    private final int currentTourIndex;
+    private int currentTourIndex;
 
     private ToursInReview(List<Tour> tours) {
         this.tours = tours;
@@ -68,7 +69,7 @@ public class ToursInReview {
                     lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
                 }
                 final Fragment pos = f.getMostRecentFragment();
-                final IMarker marker = markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
+                final IMarker marker = markerFactory.createMarker(resource, Constants.STOPMARKER_ID);
                 marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
                 marker.setAttribute(IMarker.CHAR_START,
                         lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()) - 1);
@@ -76,7 +77,7 @@ public class ToursInReview {
                         lookupTables.get(resource).getCharsSinceFileStart(pos.getTo()));
                 return marker;
             } else {
-                return markerFactory.createMarker(resource, Constants.FRAGMENTMARKER_ID);
+                return markerFactory.createMarker(resource, Constants.STOPMARKER_ID);
             }
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
@@ -97,6 +98,27 @@ public class ToursInReview {
 
     public List<Tour> getTours() {
         return this.tours;
+    }
+
+    /**
+     * Sets the given tour as the active tour, if it is not already active.
+     * Recreates markers accordingly.
+     */
+    public void ensureTourActive(Tour t, IMarkerFactory markerFactory) throws CoreException {
+        final int index = this.tours.indexOf(t);
+        if (index != this.currentTourIndex) {
+            this.clearMarkers();
+            this.currentTourIndex = index;
+            this.createMarkers(markerFactory);
+        }
+    }
+
+    /**
+     * Clears all current tour stop markers.
+     */
+    public void clearMarkers() throws CoreException {
+        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
+                Constants.STOPMARKER_ID, true, IResource.DEPTH_INFINITE);
     }
 
 }

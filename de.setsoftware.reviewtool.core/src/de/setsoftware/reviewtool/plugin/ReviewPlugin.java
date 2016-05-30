@@ -217,8 +217,9 @@ public class ReviewPlugin implements IReviewConfigurable {
     private void clearMarkers() throws CoreException {
         ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
                 Constants.REVIEWMARKER_ID, true, IResource.DEPTH_INFINITE);
-        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
-                Constants.FRAGMENTMARKER_ID, true, IResource.DEPTH_INFINITE);
+        if (this.toursInReview != null) {
+            this.toursInReview.clearMarkers();
+        }
     }
 
     private void setMode(Mode mode) {

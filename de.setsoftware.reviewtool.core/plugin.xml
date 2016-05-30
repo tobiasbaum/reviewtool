@@ -127,7 +127,7 @@
 		<attribute name="de.setsoftware.reviewtool.markerattributes.position"/>
 	</extension>
 	
-    <extension id="de.setsoftware.reviewtool.fragmentToReviewMarker" point="org.eclipse.core.resources.markers" name="Review-Fragment">
+    <extension id="de.setsoftware.reviewtool.tourStopMarker" point="org.eclipse.core.resources.markers" name="Review-Tour-Stop">
         <super type="org.eclipse.core.resources.textmarker"/>
     </extension>
 
@@ -169,36 +169,36 @@
  <extension
       point="org.eclipse.ui.editors.annotationTypes">
     <type
-          name="de.setsoftware.reviewtool.ui.fragmentToReviewAnnotation"
+          name="de.setsoftware.reviewtool.ui.tourStopAnnotation"
           super="org.eclipse.ui.workbench.texteditor.info"
-          markerType="de.setsoftware.reviewtool.fragmentToReviewMarker">
+          markerType="de.setsoftware.reviewtool.tourStopMarker">
     </type>
  </extension>
  <extension
       point="org.eclipse.ui.editors.markerAnnotationSpecification">
     <specification
-            annotationType="de.setsoftware.reviewtool.ui.fragmentToReviewAnnotation"
-            colorPreferenceKey="fragmentToReview_color"
-            colorPreferenceValue="192,192,255"
+            annotationType="de.setsoftware.reviewtool.ui.tourStopAnnotation"
+            colorPreferenceKey="tourStop_color"
+            colorPreferenceValue="202,202,255"
             contributesToHeader="false"
-            highlightPreferenceKey="fragmentToReview_highlight"
+            highlightPreferenceKey="tourStop_highlight"
             highlightPreferenceValue="true"
             includeOnPreferencePage="true"
             isGoToNextNavigationTarget="true"
-            isGoToNextNavigationTargetKey="fragmentToReview_isGoToNextNavigationTargetKey"
+            isGoToNextNavigationTargetKey="tourStop_isGoToNextNavigationTargetKey"
             isGoToPreviousNavigationTarget="true"
-            isGoToPreviousNavigationTargetKey="fragmentToReview_isGoToPreviousNavigationTargetKey"
+            isGoToPreviousNavigationTargetKey="tourStop_isGoToPreviousNavigationTargetKey"
             label="Zu reviewen"
-            overviewRulerPreferenceKey="fragmentToReview_overviewRuler"
+            overviewRulerPreferenceKey="tourStop_overviewRuler"
             overviewRulerPreferenceValue="true"
             presentationLayer="0"
             showInNextPrevDropdownToolbarAction="true"
-            showInNextPrevDropdownToolbarActionKey="fragmentToReview_showInNextPrevDropdownToolbarAction"
-            textPreferenceKey="fragmentToReview_text"
+            showInNextPrevDropdownToolbarActionKey="tourStop_showInNextPrevDropdownToolbarAction"
+            textPreferenceKey="tourStop_text"
             textPreferenceValue="true"
-            textStylePreferenceKey="fragmentToReview_stylePreferences"
+            textStylePreferenceKey="tourStop_stylePreferences"
             textStylePreferenceValue="BOX"
-            verticalRulerPreferenceKey="fragmentToReview_verticalRuler"
+            verticalRulerPreferenceKey="tourStop_verticalRuler"
             verticalRulerPreferenceValue="true"
             symbolicIcon="bookmark"/>
  </extension>
@@ -212,7 +212,7 @@
              name="Review-Inhalt"
              class="de.setsoftware.reviewtool.ui.views.ReviewContentView"/>
         <view id="de.setsoftware.reviewtool.ui.views.fragmentinfoview"
-             name="Review-Fragment"
+             name="Tour-Stop-Info"
              class="de.setsoftware.reviewtool.ui.views.StopInfoView"/>
  </extension>
 
