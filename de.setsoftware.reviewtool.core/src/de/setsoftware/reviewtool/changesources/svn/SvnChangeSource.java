@@ -102,7 +102,9 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private Pattern createPatternForKey(String key) {
-        return Pattern.compile(this.logMessagePattern.replace(KEY_PLACEHOLDER, Pattern.quote(key)));
+        return Pattern.compile(
+                this.logMessagePattern.replace(KEY_PLACEHOLDER, Pattern.quote(key)),
+                Pattern.DOTALL);
     }
 
     /**

@@ -49,8 +49,6 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
     @Override
     public void setFocus() {
-        // TODO Auto-generated method stub
-
     }
 
     @Override
