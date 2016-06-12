@@ -121,4 +121,12 @@ public class ToursInReview {
                 Constants.STOPMARKER_ID, true, IResource.DEPTH_INFINITE);
     }
 
+    /**
+     * Returns the currently active tour or null if there is none (which should only
+     * occur when there are no tours).
+     */
+    public Tour getActiveTour() {
+        return this.tours.get(this.currentTourIndex);
+    }
+
 }

@@ -77,26 +77,33 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
                     if (item.getData() instanceof Stop) {
                         final Stop stop = (Stop) item.getData();
                         final Tour tour = (Tour) item.getParentItem().getData();
-                        ReviewContentView.this.jumpTo(tours, tour, stop);
+                        ReviewContentView.this.jumpTo(tv, tours, tour, stop);
                     }
                 }
             }
         });
 
         ViewHelper.createContextMenu(this, tv.getControl(), tv);
+        this.ensureActiveTourExpanded(tv, tours);
 
         return panel;
     }
 
-    private void jumpTo(ToursInReview tours, Tour tour, Stop fragment) {
+    private void jumpTo(TreeViewer tv, ToursInReview tours, Tour tour, Stop fragment) {
         CurrentFragment.setCurrentFragment(fragment);
         try {
             tours.ensureTourActive(tour, new RealMarkerFactory());
+            this.ensureActiveTourExpanded(tv, tours);
 
             this.openEditorFor(fragment);
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }
+    }
+
+    private void ensureActiveTourExpanded(TreeViewer tv, ToursInReview tours) {
+        final Tour activeTour = tours.getActiveTour();
+        tv.expandToLevel(activeTour, TreeViewer.ALL_LEVELS);
     }
 
     private void openEditorFor(Stop fragment) throws CoreException {
