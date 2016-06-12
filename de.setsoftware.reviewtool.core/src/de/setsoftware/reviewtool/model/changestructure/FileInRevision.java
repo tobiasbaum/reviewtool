@@ -62,4 +62,20 @@ public class FileInRevision {
         return new Path(this.repo.toAbsolutePathInWc(this.path));
     }
 
+    @Override
+    public int hashCode() {
+        return this.path.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof FileInRevision)) {
+            return false;
+        }
+        final FileInRevision f = (FileInRevision) o;
+        return this.path.equals(f.path)
+            && this.revision.equals(f.revision)
+            && this.repo.equals(f.repo);
+    }
+
 }

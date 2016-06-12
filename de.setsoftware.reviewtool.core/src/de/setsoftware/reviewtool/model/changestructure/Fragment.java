@@ -43,4 +43,76 @@ public class Fragment {
         return this.from + " - " + this.to + " in " + this.file;
     }
 
+    /**
+     * Returns true iff this fragment can be merged with the given fragment
+     * into a (potentially larger) continuous fragment.
+     */
+    public boolean canBeMergedWith(Fragment other) {
+        if (!this.file.equals(other.file)) {
+            return false;
+        }
+        return !(this.to.nextInLine().lessThan(other.from)
+            || other.to.nextInLine().lessThan(this.from));
+    }
+
+    /**
+     * Creates a new fragment combining the area in the file spanned by this
+     * and the given other fragment.
+     */
+    public Fragment merge(Fragment other) {
+        if (other.from.lessThan(this.from)) {
+            return other.merge(this);
+        }
+
+        assert this.canBeMergedWith(other);
+        final PositionInText minFrom = this.from;
+        final PositionInText maxTo;
+        final String combinedContent;
+        if (this.to.lessThan(other.to)) {
+            maxTo = other.to;
+            combinedContent = this.content + other.subContentFrom(this.to);
+        } else {
+            maxTo = this.to;
+            combinedContent = this.content;
+        }
+        return new Fragment(this.file, minFrom, maxTo, combinedContent);
+    }
+
+    private String subContentFrom(PositionInText pos) {
+        String remainingContent = this.content;
+        PositionInText remainingFrom = this.from;
+
+        while (remainingFrom.getLine() < pos.getLine()) {
+            final int linebreak = remainingContent.indexOf('\n');
+            remainingContent = remainingContent.substring(linebreak + 1);
+            remainingFrom = new PositionInText(remainingFrom.getLine() + 1, 1);
+        }
+        final int diff = pos.getColumn() - this.from.getColumn();
+        if (diff < 0) {
+            return remainingContent;
+        }
+        return remainingContent.substring(diff);
+    }
+
+    private boolean isDeletion() {
+        return this.to.lessThan(this.from);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.from.hashCode() + 31 * this.content.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof Fragment)) {
+            return false;
+        }
+        final Fragment other = (Fragment) obj;
+        return this.file.equals(other.file)
+            && this.from.equals(other.from)
+            && this.to.equals(other.to)
+            && this.content.equals(other.content);
+    }
+
 }

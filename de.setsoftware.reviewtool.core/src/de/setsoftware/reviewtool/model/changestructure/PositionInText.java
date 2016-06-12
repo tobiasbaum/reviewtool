@@ -42,4 +42,16 @@ public class PositionInText {
         return this.column;
     }
 
+    public PositionInText nextInLine() {
+        return new PositionInText(this.line, this.column + 1);
+    }
+
+    public PositionInText toPrevLine() {
+        return new PositionInText(this.line - 1, this.column);
+    }
+
+    public boolean lessThan(PositionInText other) {
+        return this.line < other.line || (this.line == other.line && this.column < other.column);
+    }
+
 }

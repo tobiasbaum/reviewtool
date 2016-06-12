@@ -5,4 +5,14 @@ package de.setsoftware.reviewtool.model.changestructure;
  */
 public class LocalRevision extends Revision {
 
+    @Override
+    public int hashCode() {
+        return 1234987;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return o instanceof LocalRevision;
+    }
+
 }
