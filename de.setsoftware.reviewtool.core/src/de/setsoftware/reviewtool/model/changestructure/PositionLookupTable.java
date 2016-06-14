@@ -53,6 +53,9 @@ public class PositionLookupTable {
         return ret;
     }
 
+    /**
+     * Returns the number of characters from the start of the file up to the given position.
+     */
     public int getCharsSinceFileStart(PositionInText pos) {
         //when tracing of changes does not work properly, there can be positions that are out of the file and
         //  that have to be handled in some way

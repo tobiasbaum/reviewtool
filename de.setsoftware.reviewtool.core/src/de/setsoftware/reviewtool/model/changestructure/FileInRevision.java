@@ -59,7 +59,12 @@ public class FileInRevision {
         while (true) {
             final IResource resource = PositionTransformer.toResource(partOfPath);
             if (!(resource instanceof IWorkspaceRoot)) {
-                return resource;
+                //perhaps too much was dropped and a different file then the intended returned
+                //  therefore double check by using the inverse lookup
+                final String shortName = PositionTransformer.toPosition(resource, 1).getShortFileName();
+                if (partOfPath.contains(shortName)) {
+                    return resource;
+                }
             }
             final int slashIndex = partOfPath.indexOf('/');
             if (slashIndex < 0) {

@@ -2,7 +2,9 @@ package de.setsoftware.reviewtool.model;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
@@ -185,11 +187,11 @@ public class PositionTransformer {
             final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
             final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
             final ConcurrentHashMap<String, PathChainNode> newCache = new ConcurrentHashMap<>();
-            for (final IProject project : workspace.getRoot().getProjects()) {
+            for (final IPath path : determineRootPaths(workspace.getRoot().getProjects())) {
                 if (monitor.isCanceled()) {
                     throw new InterruptedException();
                 }
-                tasks.add(pool.submit(new FillCacheAction(project.getLocation(), newCache)));
+                tasks.add(pool.submit(new FillCacheAction(path, newCache)));
             }
             for (final ForkJoinTask<Void> task : tasks) {
                 if (monitor.isCanceled()) {
@@ -202,6 +204,23 @@ public class PositionTransformer {
             cacheRefreshTime = System.currentTimeMillis();
             refreshRunning.set(false);
         }
+    }
+
+    private static Set<IPath> determineRootPaths(IProject[] projects) {
+        final Set<IPath> ret = new LinkedHashSet<>();
+        //paths that are not included as a project but part of the scm repo should be included, too
+        //  as a simple hack all siblings of the project directories are added, which works when all projects
+        //  are checked out together and which scans too much (but hopefully is ok too) when the projects are
+        //  checked out one by one
+        for (final IProject project : projects) {
+            final IPath projectParent = project.getLocation().removeLastSegments(1);
+            for (final File dir : projectParent.toFile().listFiles()) {
+                if (!dir.getName().startsWith(".")) {
+                    ret.add(projectParent.append(dir.getName()));
+                }
+            }
+        }
+        return ret;
     }
 
     private static void fillCacheIfEmpty(IWorkspace workspace, IProgressMonitor monitor)
@@ -381,7 +400,7 @@ public class PositionTransformer {
 
     private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, IPath fittingPath) {
         final IFile file = workspaceRoot.getFileForLocation(fittingPath);
-        if (!file.exists()) {
+        if (file == null || !file.exists()) {
             return workspaceRoot;
         }
         return file;
