@@ -347,4 +347,8 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.changeSource = changeSource;
     }
 
+    public ToursInReview getTours() {
+        return this.toursInReview;
+    }
+
 }

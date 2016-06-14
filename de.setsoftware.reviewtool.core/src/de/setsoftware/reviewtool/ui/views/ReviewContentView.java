@@ -31,6 +31,7 @@ import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
 
 /**
  * A review to show the content (tours and stops) belonging to a review.
@@ -84,7 +85,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         });
 
         ViewHelper.createContextMenu(this, tv.getControl(), tv);
-        this.ensureActiveTourExpanded(tv, tours);
+        ensureActiveTourExpanded(tv, tours);
 
         return panel;
     }
@@ -93,7 +94,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         CurrentFragment.setCurrentFragment(fragment);
         try {
             tours.ensureTourActive(tour, new RealMarkerFactory());
-            this.ensureActiveTourExpanded(tv, tours);
+            ensureActiveTourExpanded(tv, tours);
 
             this.openEditorFor(fragment);
         } catch (final CoreException e) {
@@ -101,7 +102,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         }
     }
 
-    private void ensureActiveTourExpanded(TreeViewer tv, ToursInReview tours) {
+    private static void ensureActiveTourExpanded(TreeViewer tv, ToursInReview tours) {
         final Tour activeTour = tours.getActiveTour();
         tv.expandToLevel(activeTour, TreeViewer.ALL_LEVELS);
     }
@@ -151,12 +152,14 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
     /**
      * Provides the tree consisting of tours and stops.
      */
-    private static class ViewContentProvider implements ITreeContentProvider {
+    private static class ViewContentProvider implements ITreeContentProvider, IToursInReviewChangeListener {
 
         private final ToursInReview tours;
+        private Viewer viewer;
 
         public ViewContentProvider(ToursInReview tours) {
             this.tours = tours;
+            this.tours.registerListener(this);
         }
 
         @Override
@@ -199,10 +202,20 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
         @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
+            this.viewer = viewer;
         }
 
         @Override
         public void dispose() {
+            this.viewer = null;
+        }
+
+        @Override
+        public void toursChanged() {
+            if (this.viewer != null) {
+                this.viewer.refresh();
+                ensureActiveTourExpanded((TreeViewer) this.viewer, this.tours);
+            }
         }
 
     }

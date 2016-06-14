@@ -12,6 +12,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
 
@@ -20,8 +21,19 @@ import de.setsoftware.reviewtool.model.IMarkerFactory;
  */
 public class ToursInReview {
 
+    /**
+     * Interface for observers of instances of {@link ToursInReview}.
+     */
+    public static interface IToursInReviewChangeListener {
+        /**
+         * Is called when the available tours change (e.g. due to a merge or split).
+         */
+        public abstract void toursChanged();
+    }
+
     private final List<Tour> tours;
     private int currentTourIndex;
+    private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
     private ToursInReview(List<Tour> tours) {
         this.tours = tours;
@@ -127,6 +139,58 @@ public class ToursInReview {
      */
     public Tour getActiveTour() {
         return this.tours.get(this.currentTourIndex);
+    }
+
+    /**
+     * Merges the given tours. If one of them is currently active, the merge result will be active
+     * afterwards, otherwise the active tour stays the same. The merged tour's position is the previous
+     * position of the "biggest" part.
+     */
+    public void mergeTours(List<Tour> toursToMerge, IMarkerFactory markerFactory) throws CoreException {
+        if (toursToMerge.size() <= 1) {
+            return;
+        }
+
+        //determine the merged tour
+        Tour mergeResult = toursToMerge.get(0);
+        for (int i = 1; i < toursToMerge.size(); i++) {
+            mergeResult = mergeResult.mergeWith(toursToMerge.get(i));
+        }
+
+        //save the currently active tour
+        final Tour activeTour = this.getActiveTour();
+
+        //replace the largest part with the merge result and remove the old tours
+        final Tour largestTour = this.determineLargestTour(toursToMerge);
+        this.tours.set(this.tours.indexOf(largestTour), mergeResult);
+        this.tours.removeAll(toursToMerge);
+
+        //restore the active tour
+        this.currentTourIndex = this.tours.indexOf(activeTour);
+        if (this.currentTourIndex < 0) {
+            this.ensureTourActive(mergeResult, markerFactory);
+        }
+
+        for (final IToursInReviewChangeListener l : this.listeners) {
+            l.toursChanged();
+        }
+    }
+
+    private Tour determineLargestTour(List<Tour> toursToMerge) {
+        int largestSize = Integer.MIN_VALUE;
+        Tour largestTour = null;
+        for (final Tour t : toursToMerge) {
+            final int curSize = t.getStops().size();
+            if (curSize > largestSize) {
+                largestSize = curSize;
+                largestTour = t;
+            }
+        }
+        return largestTour;
+    }
+
+    public void registerListener(IToursInReviewChangeListener listener) {
+        this.listeners.add(listener);
     }
 
 }

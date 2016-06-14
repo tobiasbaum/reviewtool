@@ -1,10 +1,11 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+
+import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.base.Util;
 
 /**
  * A part of a review tour, corresponding to some notion of "singular change".
@@ -14,7 +15,7 @@ import java.util.Map;
 public class Stop {
 
     private final List<FileInRevision> historyOrder = new ArrayList<>();
-    private final Map<FileInRevision, List<Fragment>> history = new HashMap<>();
+    private final Multimap<FileInRevision, Fragment> history = new Multimap<>();
 
     private final FileInRevision mostRecentFile;
     private final Fragment mostRecentFragment;
@@ -25,8 +26,8 @@ public class Stop {
     public Stop(Fragment from, Fragment to, Fragment traceFragment) {
         this.historyOrder.add(from.getFile());
         this.historyOrder.add(to.getFile());
-        this.history.put(from.getFile(), Arrays.asList(from));
-        this.history.put(to.getFile(), Arrays.asList(to));
+        this.history.put(from.getFile(), from);
+        this.history.put(to.getFile(), to);
 
         this.mostRecentFile = traceFragment.getFile();
         this.mostRecentFragment = traceFragment;
@@ -41,6 +42,19 @@ public class Stop {
 
         this.mostRecentFile = traceFile;
         this.mostRecentFragment = null;
+    }
+
+    /**
+     * Constructor for internal use.
+     */
+    private Stop(List<FileInRevision> historyOrder,
+            Multimap<FileInRevision, Fragment> history,
+            FileInRevision mostRecentFile,
+            Fragment mostRecentFragment) {
+        this.historyOrder.addAll(historyOrder);
+        this.history.putAll(history);
+        this.mostRecentFile = mostRecentFile;
+        this.mostRecentFragment = mostRecentFragment;
     }
 
     public boolean isDetailedFragmentKnown() {
@@ -61,6 +75,75 @@ public class Stop {
 
     public List<Fragment> getContentFor(FileInRevision revision) {
         return this.history.get(revision);
+    }
+
+    /**
+     * Return true iff this stop can be merged with the given other stop.
+     * Two stops can be merged if they denote the same file and and directly
+     * neighboring or overlapping segments of that file (or the whole binary file).
+     */
+    public boolean canBeMergedWith(Stop other) {
+        if (!this.mostRecentFile.equals(other.mostRecentFile)) {
+            return false;
+        }
+        if (this.mostRecentFragment == null) {
+            if (other.mostRecentFragment == null) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            if (other.mostRecentFragment == null) {
+                return false;
+            } else {
+                return this.mostRecentFragment.canBeMergedWith(other.mostRecentFragment);
+            }
+        }
+    }
+
+    /**
+     * Merges this stop with the given other stop.
+     * The resulting stop has a potentially larger most recent fragment, but
+     * all the detail information of both stops is still contained in the history.
+     */
+    public Stop merge(Stop other) {
+        assert this.canBeMergedWith(other);
+
+        final LinkedHashSet<FileInRevision> mergedFileSet = new LinkedHashSet<>(this.historyOrder);
+        mergedFileSet.addAll(other.historyOrder);
+        final List<FileInRevision> mergedHistoryOrder = FileInRevision.sortByRevision(mergedFileSet);
+
+        final Multimap<FileInRevision, Fragment> mergedHistory = new Multimap<>();
+        mergedHistory.putAll(this.history);
+        mergedHistory.putAll(other.history);
+
+        return new Stop(
+                mergedHistoryOrder,
+                mergedHistory,
+                this.mostRecentFile,
+                this.mostRecentFragment == null ? null : this.mostRecentFragment.merge(other.mostRecentFragment));
+    }
+
+    @Override
+    public String toString() {
+        return "Stop at " + (this.mostRecentFragment != null ? this.mostRecentFragment : this.mostRecentFile);
+    }
+
+    @Override
+    public int hashCode() {
+        return this.mostRecentFragment != null ? this.mostRecentFragment.hashCode() : this.mostRecentFile.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Stop)) {
+            return false;
+        }
+        final Stop s = (Stop) o;
+        return this.mostRecentFile.equals(s.mostRecentFile)
+            && Util.sameOrEquals(this.mostRecentFragment, s.mostRecentFragment)
+            && this.historyOrder.equals(s.historyOrder)
+            && this.history.equals(s.history);
     }
 
 }

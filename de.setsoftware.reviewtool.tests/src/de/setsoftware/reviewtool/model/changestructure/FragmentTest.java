@@ -8,15 +8,8 @@ import org.junit.Test;
 
 public class FragmentTest {
 
-    private static final Repository STUB_REPO = new Repository() {
-        @Override
-        public String toAbsolutePathInWc(String absolutePathInRepo) {
-            return absolutePathInRepo;
-        }
-    };
-
     private static FileInRevision file() {
-        return new FileInRevision("file", new LocalRevision(), STUB_REPO);
+        return new FileInRevision("file", new LocalRevision(), StubRepo.INSTANCE);
     }
 
     private static PositionInText pos(int line, int col) {

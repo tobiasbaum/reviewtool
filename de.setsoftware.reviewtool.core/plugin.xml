@@ -96,6 +96,21 @@
             </visibleWhen>
 	   </command>
 	 </menuContribution>
+	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.reviewcontentview?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.mergetours"
+	   		 label="Touren zusammenführen" 
+	   		 style="push">
+	   		 <visibleWhen>
+	   		   <with variable="activeMenuSelection">
+                 <count value="(1-"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.changestructure.Tour">
+                   </adapt>
+                 </iterate>
+               </with>
+             </visibleWhen>
+	   </command>
+	 </menuContribution>
    </extension>
    <extension point="org.eclipse.ui.commands">
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.AddRemarkAction"
@@ -115,6 +130,9 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.RefreshReviewMarkersAction"
         id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh markers">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MergeToursAction"
+        id="de.setsoftware.reviewtool.commands.mergetours" name="Merge tours">
      </command>
    </extension>
 

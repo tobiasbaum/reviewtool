@@ -30,4 +30,8 @@ public class RepoRevision extends Revision {
         return this.id.equals(r.id);
     }
 
+    public Object getId() {
+        return this.id;
+    }
+
 }

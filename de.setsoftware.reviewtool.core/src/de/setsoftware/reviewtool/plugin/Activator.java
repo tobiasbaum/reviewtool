@@ -7,6 +7,7 @@ import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.ui.views.ViewDataSource;
@@ -39,6 +40,11 @@ public class Activator extends AbstractUIPlugin {
             @Override
             public void registerListener(ReviewModeListener l) {
                 ReviewPlugin.getInstance().registerAndNotifyModeListener(l);
+            }
+
+            @Override
+            public ToursInReview getToursInReview() {
+                return ReviewPlugin.getInstance().getTours();
             }
         });
         this.initializeDefaultPreferences();

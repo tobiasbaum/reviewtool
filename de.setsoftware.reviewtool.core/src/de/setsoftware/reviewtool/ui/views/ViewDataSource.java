@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.ui.views;
 
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+
 /**
  * Interface to allow decoupling the views from the plug-in.
  */
@@ -20,5 +22,11 @@ public abstract class ViewDataSource {
      * Additionally, new listener will be called once at registration for the current state.
      */
     public abstract void registerListener(ReviewModeListener l);
+
+    /**
+     * Returns the object that manages the tours for the current review.
+     * Returns null iff there is no current review.
+     */
+    public abstract ToursInReview getToursInReview();
 
 }

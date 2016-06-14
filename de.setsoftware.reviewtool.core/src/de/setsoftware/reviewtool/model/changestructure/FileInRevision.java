@@ -1,10 +1,17 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
+import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 
 /**
@@ -28,6 +35,10 @@ public class FileInRevision {
 
     public Revision getRevision() {
         return this.revision;
+    }
+
+    public Repository getRepository() {
+        return this.repo;
     }
 
     @Override
@@ -76,6 +87,36 @@ public class FileInRevision {
         return this.path.equals(f.path)
             && this.revision.equals(f.revision)
             && this.repo.equals(f.repo);
+    }
+
+    /**
+     * Sorts the given files topologically by their revisions.
+     * This makes most sense when they all denote different versions of the same file.
+     * For non-comparable revisions, the sort is stable.
+     * Does NOT sort in-place.
+     */
+    public static List<FileInRevision> sortByRevision(Collection<? extends FileInRevision> toSort) {
+
+        if (toSort.isEmpty()) {
+            return Collections.emptyList();
+        }
+        //TODO better handling of multiple different repos
+        final Repository repo = toSort.iterator().next().getRepository();
+
+        final LinkedHashSet<Revision> remainingRevisions = new LinkedHashSet<>();
+        final Multimap<Revision, FileInRevision> filesForRevision = new Multimap<>();
+        for (final FileInRevision f : toSort) {
+            remainingRevisions.add(f.getRevision());
+            filesForRevision.put(f.getRevision(), f);
+        }
+
+        final List<FileInRevision> ret = new ArrayList<>();
+        while (!remainingRevisions.isEmpty()) {
+            final Revision smallest = repo.getSmallestRevision(remainingRevisions);
+            ret.addAll(filesForRevision.get(smallest));
+            remainingRevisions.remove(smallest);
+        }
+        return ret;
     }
 
 }
