@@ -198,7 +198,9 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private Commit convertToCommit(Pair<SvnRepo, SVNLogEntry> e) throws SVNException, IOException {
-        return new Commit(e.getSecond().getMessage() + " (Rev. " + e.getSecond().getRevision() + ")",
+        final SVNLogEntry log = e.getSecond();
+        return new Commit(
+                String.format("%s (Rev. %s, %s)", log.getMessage(), log.getRevision(), log.getAuthor()),
                 this.determineChangesInCommit(e));
     }
 
