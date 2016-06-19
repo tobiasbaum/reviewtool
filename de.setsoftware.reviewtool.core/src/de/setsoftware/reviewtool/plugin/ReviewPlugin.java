@@ -40,6 +40,7 @@ import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
+import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.slicingalgorithms.OneTourPerCommit;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
@@ -330,8 +331,18 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (ticketKey == null) {
             return;
         }
+        final IChangeSourceUi sourceUi = new IChangeSourceUi() {
+            @Override
+            public boolean handleLocalWorkingCopyOutOfDate(String detailInfo) {
+                return MessageDialog.openQuestion(
+                        null, "Arbeitskopie veraltet",
+                        "Die Arbeitskopie (" + detailInfo
+                        + ") enthält nicht alle relevanten Änderungen. Soll ein Update durchgeführt werden?");
+            }
+        };
         this.toursInReview = ToursInReview.create(
                 this.changeSource,
+                sourceUi,
                 new OneTourPerCommit(this.changeSource.createTracer()),
                 ticketKey);
         this.toursInReview.createMarkers(new RealMarkerFactory());

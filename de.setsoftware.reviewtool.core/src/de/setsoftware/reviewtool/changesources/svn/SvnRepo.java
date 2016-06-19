@@ -40,7 +40,11 @@ public class SvnRepo extends Repository {
 
     @Override
     public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
-        return getSmallestOfComparableRevisions(revisions);
+        return this.getSmallestOfComparableRevisions(revisions);
+    }
+
+    File getLocalRoot() {
+        return this.workingCopyRoot;
     }
 
 }

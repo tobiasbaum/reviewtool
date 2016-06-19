@@ -10,7 +10,7 @@ public interface IChangeSource {
     /**
      * Returns all changes (that are relevant for the review tool) for the ticket with the given key.
      */
-    public abstract List<Commit> getChanges(String key);
+    public abstract List<Commit> getChanges(String key, IChangeSourceUi ui);
 
     /**
      * Creates a fragment tracer that is compatible with this change source.

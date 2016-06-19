@@ -46,9 +46,10 @@ public class ToursInReview {
      */
     public static ToursInReview create(
             IChangeSource src,
+            IChangeSourceUi changeSourceUi,
             ISlicingStrategy slicer,
             String ticketKey) {
-        final List<Tour> tours = slicer.toTours(src.getChanges(ticketKey));
+        final List<Tour> tours = slicer.toTours(src.getChanges(ticketKey, changeSourceUi));
         return new ToursInReview(tours);
     }
 

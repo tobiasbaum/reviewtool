@@ -11,13 +11,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
+import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
@@ -40,6 +43,7 @@ import de.setsoftware.reviewtool.model.changestructure.Commit;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
+import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
@@ -135,14 +139,50 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public List<Commit> getChanges(String key) {
+    public List<Commit> getChanges(String key, IChangeSourceUi ui) {
         try {
             final List<Pair<SvnRepo, SVNLogEntry>> revisions = this.determineRelevantRevisions(key);
             this.sortByDate(revisions);
+            this.checkWorkingCopiesUpToDate(revisions, ui);
             return this.convertToChanges(revisions);
         } catch (final SVNException | IOException e) {
             throw new ReviewtoolException(e);
         }
+    }
+
+    private void checkWorkingCopiesUpToDate(
+            List<Pair<SvnRepo, SVNLogEntry>> revisions,
+            IChangeSourceUi ui) throws SVNException {
+
+        final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
+        for (final Entry<SvnRepo, Long> e : neededRevisionPerRepo.entrySet()) {
+            final File wc = e.getKey().getLocalRoot();
+            final long wcRev = this.mgr.getStatusClient().doStatus(wc, false).getRevision().getNumber();
+            if (wcRev < e.getValue()) {
+                final boolean doUpdate = ui.handleLocalWorkingCopyOutOfDate(wc.toString());
+                if (doUpdate) {
+                    this.mgr.getUpdateClient().doUpdate(wc, SVNRevision.HEAD, SVNDepth.INFINITY, true, false);
+                }
+            }
+        }
+    }
+
+    private Map<SvnRepo, Long> determineMaxRevisionPerRepo(
+            List<Pair<SvnRepo, SVNLogEntry>> revisions) {
+        final Map<SvnRepo, Long> ret = new LinkedHashMap<>();
+        for (final Pair<SvnRepo, SVNLogEntry> p : revisions) {
+            final SvnRepo repo = p.getFirst();
+            final long curRev = p.getSecond().getRevision();
+            if (ret.containsKey(repo)) {
+                if (curRev > ret.get(repo)) {
+                    ret.put(repo, curRev);
+                }
+            } else {
+                ret.put(repo, curRev);
+            }
+
+        }
+        return ret;
     }
 
     private List<Pair<SvnRepo, SVNLogEntry>> determineRelevantRevisions(String key) throws SVNException {
@@ -361,15 +401,6 @@ public class SvnChangeSource implements IChangeSource {
     @Override
     public IFragmentTracer createTracer() {
         return new SvnFragmentTracer();
-    }
-
-    //TEST
-    public static void main(String[] args) {
-        final File f = new File("C:\\testworkspace\\testprojekt");
-        final SvnChangeSource src = new SvnChangeSource(Collections.singletonList(f), ".*${key}([^0-9].*)?", "", "");
-        System.out.println(src.getChanges("PSY-12"));
-        System.out.println(src.getChanges("tralala"));
-        System.out.println(src.getChanges("PSY-123"));
     }
 
 }
