@@ -69,7 +69,12 @@ public class EndReviewDialog extends Dialog {
         this.radioButtons = new ArrayList<>();
         for (final EndTransition t : this.possibleChoices) {
             final Button b = new Button(buttonGroup, SWT.RADIO);
-            b.setText(t.getNameForUser());
+            if (t.getType() != EndTransition.Type.UNKNOWN
+                    && t.getType() != EndTransition.Type.PAUSE) {
+                b.setText(t.getNameForUser() + " (" + t.getType() + ")");
+            } else {
+                b.setText(t.getNameForUser());
+            }
             b.setData(t);
             this.radioButtons.add(b);
         }
