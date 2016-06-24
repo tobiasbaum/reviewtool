@@ -12,9 +12,16 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Device;
+import org.eclipse.swt.graphics.GC;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -32,6 +39,10 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
+import de.setsoftware.reviewtool.viewtracking.CodeViewTracker;
+import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
+import de.setsoftware.reviewtool.viewtracking.IViewStatisticsListener;
+import de.setsoftware.reviewtool.viewtracking.TrackerManager;
 
 /**
  * A review to show the content (tours and stops) belonging to a review.
@@ -152,14 +163,16 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
     /**
      * Provides the tree consisting of tours and stops.
      */
-    private static class ViewContentProvider implements ITreeContentProvider, IToursInReviewChangeListener {
+    private static class ViewContentProvider implements ITreeContentProvider, IToursInReviewChangeListener,
+            ITrackerCreationListener, IViewStatisticsListener {
 
         private final ToursInReview tours;
-        private Viewer viewer;
+        private TreeViewer viewer;
 
         public ViewContentProvider(ToursInReview tours) {
             this.tours = tours;
             this.tours.registerListener(this);
+            TrackerManager.get().registerListener(this);
         }
 
         @Override
@@ -202,7 +215,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
 
         @Override
         public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-            this.viewer = viewer;
+            this.viewer = (TreeViewer) viewer;
         }
 
         @Override
@@ -214,16 +227,53 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         public void toursChanged() {
             if (this.viewer != null) {
                 this.viewer.refresh();
-                ensureActiveTourExpanded((TreeViewer) this.viewer, this.tours);
+                ensureActiveTourExpanded(this.viewer, this.tours);
             }
         }
 
+        @Override
+        public void trackerStarts(CodeViewTracker tracker) {
+            tracker.getStatistics().addListener(this);
+        }
+
+        @Override
+        public void statisticsChanged(File absolutePath) {
+            for (final Stop stop : this.tours.getStopsFor(absolutePath)) {
+                this.viewer.update(stop, null);
+            }
+        }
     }
 
     /**
      * Label provider for the tree with tours and stops.
      */
     private static final class TourAndStopLabelProvider extends LabelProvider {
+        private final Image[] viewStatImages = new Image[] {
+            createColoredRectangle(new RGB(255, 235, 0)),
+            createColoredRectangle(new RGB(223, 235, 0)),
+            createColoredRectangle(new RGB(191, 235, 0)),
+            createColoredRectangle(new RGB(159, 235, 0)),
+            createColoredRectangle(new RGB(127, 235, 0)),
+            createColoredRectangle(new RGB(95, 235, 0)),
+            createColoredRectangle(new RGB(63, 235, 0)),
+            createColoredRectangle(new RGB(32, 235, 0)),
+            createColoredRectangle(new RGB(0, 235, 0))
+        };
+
+        private static Image createColoredRectangle(RGB rgb) {
+            final Device dev = Display.getDefault();
+            final Rectangle rect = new Rectangle(0, 0, 7, 10);
+            final Image img = new Image(dev, rect);
+            final GC gc = new GC(img);
+            final Color color = new Color(dev, rgb);
+            gc.setBackground(color);
+            gc.setForeground(color);
+            gc.drawRectangle(rect);
+            gc.fillRectangle(rect);
+            gc.dispose();
+            return img;
+        }
+
         @Override
         public String getText(Object element) {
             if (element instanceof Tour) {
@@ -240,6 +290,27 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
             } else {
                 return element.toString();
             }
+        }
+
+        @Override
+        public Image getImage(Object element) {
+            if (element instanceof Stop) {
+                final Stop f = (Stop) element;
+                final double viewRatio = this.determineViewRatio(f);
+                if (viewRatio <= 0) {
+                    return null;
+                } else {
+                    final int index = (int) (viewRatio * (this.viewStatImages.length - 1));
+                    return this.viewStatImages[index];
+                }
+            } else {
+                return null;
+            }
+        }
+
+
+        private double determineViewRatio(Stop f) {
+            return TrackerManager.get().determineViewRatio(f);
         }
 
         private String determineFilename(final Stop f) {

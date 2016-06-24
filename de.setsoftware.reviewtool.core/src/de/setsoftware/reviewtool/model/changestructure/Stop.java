@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -144,6 +145,10 @@ public class Stop {
             && Util.sameOrEquals(this.mostRecentFragment, s.mostRecentFragment)
             && this.historyOrder.equals(s.historyOrder)
             && this.history.equals(s.history);
+    }
+
+    public File getAbsoluteFile() {
+        return this.getMostRecentFile().toLocalPath().toFile().getAbsoluteFile();
     }
 
 }

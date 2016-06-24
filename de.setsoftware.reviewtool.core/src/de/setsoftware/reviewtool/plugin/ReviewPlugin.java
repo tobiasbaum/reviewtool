@@ -50,6 +50,7 @@ import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.views.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
+import de.setsoftware.reviewtool.viewtracking.TrackerManager;
 
 /**
  * Plugin that handles the review workflow and ties together the different parts.
@@ -167,6 +168,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                     this.persistence.getTicketKey(),
                     this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),
                     this.persistence.getCurrentRound());
+            TrackerManager.get().startTracker();
         }
     }
 
@@ -280,6 +282,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                 return;
             }
         }
+        TrackerManager.get().stopTracker();
         Telemetry.get().reviewEnded(
                 this.persistence.getTicketKey(),
                 this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),

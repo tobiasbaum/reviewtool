@@ -29,6 +29,9 @@ public class FileInRevision {
         this.repo = repository;
     }
 
+    /**
+     * Returns the path of the file (relative to the SCM repository root).
+     */
     public String getPath() {
         return this.path;
     }

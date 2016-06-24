@@ -1,6 +1,8 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -192,6 +194,21 @@ public class ToursInReview {
 
     public void registerListener(IToursInReviewChangeListener listener) {
         this.listeners.add(listener);
+    }
+
+    /**
+     * Returns all stops (from all tours) that refer to the given file.
+     */
+    public List<Stop> getStopsFor(File absolutePath) {
+        final List<Stop> ret = new ArrayList<>();
+        for (final Tour t : this.tours) {
+            for (final Stop s : t.getStops()) {
+                if (absolutePath.equals(s.getAbsoluteFile())) {
+                    ret.add(s);
+                }
+            }
+        }
+        return ret;
     }
 
 }
