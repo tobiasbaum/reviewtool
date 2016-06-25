@@ -48,6 +48,7 @@ import de.setsoftware.reviewtool.telemetry.TelemetryConfigurator;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
+import de.setsoftware.reviewtool.ui.views.ImageCache;
 import de.setsoftware.reviewtool.ui.views.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
@@ -292,6 +293,9 @@ public class ReviewPlugin implements IReviewConfigurable {
             this.persistence.changeStateAtReviewEnd(typeOfEnd);
         }
         this.leaveReviewMode();
+
+        //TODO is this the the right time to clear the image cache?
+        ImageCache.dispose();
     }
 
     private void leaveReviewMode() throws CoreException {

@@ -11,8 +11,10 @@ public class ViewStatisticsForFileTest {
     @Test
     public void testRatioIsZeroWhenNothingMarked() {
         final ViewStatisticsForFile s = new ViewStatisticsForFile();
-        assertEquals(0.0, s.determineViewRatio(1, 100, 5), DELTA);
-        assertEquals(0.0, s.determineViewRatioWithoutPosition(5), DELTA);
+        assertEquals(0.0, s.determineViewRatio(1, 100, 5).getAverageRatio(), DELTA);
+        assertEquals(0.0, s.determineViewRatioWithoutPosition(5).getAverageRatio(), DELTA);
+        assertEquals(0.0, s.determineViewRatio(1, 100, 5).getMaxRatio(), DELTA);
+        assertEquals(0.0, s.determineViewRatioWithoutPosition(5).getMaxRatio(), DELTA);
     }
 
     @Test
@@ -21,7 +23,8 @@ public class ViewStatisticsForFileTest {
         s.markUnknownPosition();
         s.markUnknownPosition();
         s.markUnknownPosition();
-        assertEquals(0.5, s.determineViewRatioWithoutPosition(6), DELTA);
+        assertEquals(0.5, s.determineViewRatioWithoutPosition(6).getAverageRatio(), DELTA);
+        assertEquals(0.5, s.determineViewRatioWithoutPosition(6).getMaxRatio(), DELTA);
     }
 
     @Test
@@ -33,7 +36,7 @@ public class ViewStatisticsForFileTest {
         s.markUnknownPosition();
         s.markUnknownPosition();
         s.markUnknownPosition();
-        assertEquals(1.0, s.determineViewRatioWithoutPosition(6), DELTA);
+        assertEquals(1.0, s.determineViewRatioWithoutPosition(6).getAverageRatio(), DELTA);
     }
 
     @Test
@@ -46,7 +49,7 @@ public class ViewStatisticsForFileTest {
         s.markUnknownPosition();
         s.markUnknownPosition();
         s.markUnknownPosition();
-        assertEquals(1.0, s.determineViewRatioWithoutPosition(6), DELTA);
+        assertEquals(1.0, s.determineViewRatioWithoutPosition(6).getAverageRatio(), DELTA);
     }
 
     @Test
@@ -54,7 +57,8 @@ public class ViewStatisticsForFileTest {
         final ViewStatisticsForFile s = new ViewStatisticsForFile();
         s.markUnknownPosition();
         s.markUnknownPosition();
-        assertEquals(0.5, s.determineViewRatio(1, 100, 4), DELTA);
+        assertEquals(0.5, s.determineViewRatio(1, 100, 4).getAverageRatio(), DELTA);
+        assertEquals(0.5, s.determineViewRatio(1, 100, 4).getMaxRatio(), DELTA);
     }
 
     @Test
@@ -64,7 +68,7 @@ public class ViewStatisticsForFileTest {
         s.markUnknownPosition();
         s.markUnknownPosition();
         s.markUnknownPosition();
-        assertEquals(1.0, s.determineViewRatio(1, 100, 4), DELTA);
+        assertEquals(1.0, s.determineViewRatio(1, 100, 4).getAverageRatio(), DELTA);
     }
 
     @Test
@@ -75,7 +79,7 @@ public class ViewStatisticsForFileTest {
         s.markUnknownPosition();
         s.markUnknownPosition();
         s.markUnknownPosition();
-        assertEquals(1.0, s.determineViewRatio(1, 100, 4), DELTA);
+        assertEquals(1.0, s.determineViewRatio(1, 100, 4).getAverageRatio(), DELTA);
     }
 
     @Test
@@ -86,12 +90,12 @@ public class ViewStatisticsForFileTest {
         s.mark(3, 5);
         s.mark(4, 5);
         s.mark(5, 5);
-        assertEquals(0.2, s.determineViewRatio(1, 1, 5), DELTA);
-        assertEquals(0.4, s.determineViewRatio(2, 2, 5), DELTA);
-        assertEquals(0.6, s.determineViewRatio(3, 3, 5), DELTA);
-        assertEquals(0.8, s.determineViewRatio(4, 4, 5), DELTA);
-        assertEquals(1.0, s.determineViewRatio(5, 5, 5), DELTA);
-        assertEquals(0.0, s.determineViewRatio(6, 6, 5), DELTA);
+        assertEquals(0.2, s.determineViewRatio(1, 1, 5).getAverageRatio(), DELTA);
+        assertEquals(0.4, s.determineViewRatio(2, 2, 5).getAverageRatio(), DELTA);
+        assertEquals(0.6, s.determineViewRatio(3, 3, 5).getAverageRatio(), DELTA);
+        assertEquals(0.8, s.determineViewRatio(4, 4, 5).getAverageRatio(), DELTA);
+        assertEquals(1.0, s.determineViewRatio(5, 5, 5).getAverageRatio(), DELTA);
+        assertEquals(0.0, s.determineViewRatio(6, 6, 5).getAverageRatio(), DELTA);
     }
 
     @Test
@@ -101,8 +105,10 @@ public class ViewStatisticsForFileTest {
         s.mark(31, 40);
         s.mark(36, 40);
         s.mark(36, 40);
-        assertEquals(0.375, s.determineViewRatio(31, 40, 8), DELTA);
-        assertEquals(0.375, s.determineViewRatio(32, 39, 8), DELTA);
+        assertEquals(0.375, s.determineViewRatio(31, 40, 8).getAverageRatio(), DELTA);
+        assertEquals(0.375, s.determineViewRatio(32, 39, 8).getAverageRatio(), DELTA);
+        assertEquals(0.5, s.determineViewRatio(31, 40, 8).getMaxRatio(), DELTA);
+        assertEquals(0.5, s.determineViewRatio(32, 39, 8).getMaxRatio(), DELTA);
     }
 
 }

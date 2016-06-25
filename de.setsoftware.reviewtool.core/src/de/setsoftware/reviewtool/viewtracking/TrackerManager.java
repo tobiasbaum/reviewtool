@@ -61,9 +61,9 @@ public class TrackerManager {
      * has been viewed. Zero means "not viewed at all", one means "every line has been
      * viewed long enough".
      */
-    public double determineViewRatio(Stop f) {
+    public ViewStatDataForStop determineViewRatio(Stop f) {
         if (this.currentTracker == null) {
-            return 0.0;
+            return ViewStatDataForStop.NO_VIEWS;
         }
         //TODO the long enough count should depend on the size of the stop, because
         //  larger stops usually need more time to be understood

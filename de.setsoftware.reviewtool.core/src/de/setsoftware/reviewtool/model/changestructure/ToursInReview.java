@@ -31,6 +31,12 @@ public class ToursInReview {
          * Is called when the available tours change (e.g. due to a merge or split).
          */
         public abstract void toursChanged();
+
+        /**
+         * Is called when the active tour changes. Will not be called when the active tour
+         * changes together with the tours as a whole.
+         */
+        public abstract void activeTourChanged(Tour oldActive, Tour newActive);
     }
 
     private final List<Tour> tours;
@@ -120,11 +126,27 @@ public class ToursInReview {
      * Recreates markers accordingly.
      */
     public void ensureTourActive(Tour t, IMarkerFactory markerFactory) throws CoreException {
+        this.ensureTourActive(t, markerFactory, true);
+    }
+
+    /**
+     * Sets the given tour as the active tour, if it is not already active.
+     * Recreates markers accordingly.
+     */
+    public void ensureTourActive(Tour t, IMarkerFactory markerFactory, boolean notify)
+        throws CoreException {
+
         final int index = this.tours.indexOf(t);
         if (index != this.currentTourIndex) {
             this.clearMarkers();
+            final Tour oldActive = this.getActiveTour();
             this.currentTourIndex = index;
             this.createMarkers(markerFactory);
+            if (notify) {
+                for (final IToursInReviewChangeListener l : this.listeners) {
+                    l.activeTourChanged(oldActive, this.getActiveTour());
+                }
+            }
         }
     }
 
@@ -141,7 +163,8 @@ public class ToursInReview {
      * occur when there are no tours).
      */
     public Tour getActiveTour() {
-        return this.tours.get(this.currentTourIndex);
+        return this.currentTourIndex >= this.tours.size() || this.currentTourIndex < 0
+                ? null : this.tours.get(this.currentTourIndex);
     }
 
     /**
@@ -171,7 +194,7 @@ public class ToursInReview {
         //restore the active tour
         this.currentTourIndex = this.tours.indexOf(activeTour);
         if (this.currentTourIndex < 0) {
-            this.ensureTourActive(mergeResult, markerFactory);
+            this.ensureTourActive(mergeResult, markerFactory, false);
         }
 
         for (final IToursInReviewChangeListener l : this.listeners) {

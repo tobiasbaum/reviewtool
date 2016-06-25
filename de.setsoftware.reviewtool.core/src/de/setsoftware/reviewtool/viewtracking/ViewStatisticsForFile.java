@@ -43,8 +43,9 @@ public class ViewStatisticsForFile {
         }
     }
 
-    public double determineViewRatioWithoutPosition(int longEnoughCount) {
-        return this.determineRatio(this.unspecificCount, longEnoughCount);
+    public ViewStatDataForStop determineViewRatioWithoutPosition(int longEnoughCount) {
+        final double ratio = this.determineRatio(this.unspecificCount, longEnoughCount);
+        return new ViewStatDataForStop(ratio, ratio);
     }
 
     private double determineRatio(int actualCount, int longEnoughCount) {
@@ -57,7 +58,7 @@ public class ViewStatisticsForFile {
      * Both line numbers are inclusive. If they denote an empty span (probably deletion),
      * lineFrom is used.
      */
-    public double determineViewRatio(int lineFrom, int lineTo, int longEnoughCount) {
+    public ViewStatDataForStop determineViewRatio(int lineFrom, int lineTo, int longEnoughCount) {
         if (this.countsPerLine.isEmpty()) {
             //no marks on line basis => fallback to whole file
             return this.determineViewRatioWithoutPosition(longEnoughCount);
@@ -67,12 +68,15 @@ public class ViewStatisticsForFile {
         }
         double sum = 0.0;
         int count = 0;
+        double max = 0.0;
         for (int line = lineFrom; line <= lineTo; line++) {
             final Integer countForLine = this.countsPerLine.get(line);
-            sum += this.determineRatio(countForLine == null ? 0 : countForLine, longEnoughCount);
+            final double lineRatio = this.determineRatio(countForLine == null ? 0 : countForLine, longEnoughCount);
+            sum += lineRatio;
             count++;
+            max = Math.max(max, lineRatio);
         }
-        return sum / count;
+        return new ViewStatDataForStop(sum / count, max);
     }
 
 }

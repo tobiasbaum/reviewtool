@@ -12,16 +12,11 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Device;
-import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
@@ -43,6 +38,7 @@ import de.setsoftware.reviewtool.viewtracking.CodeViewTracker;
 import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
 import de.setsoftware.reviewtool.viewtracking.IViewStatisticsListener;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
+import de.setsoftware.reviewtool.viewtracking.ViewStatDataForStop;
 
 /**
  * A review to show the content (tours and stops) belonging to a review.
@@ -232,6 +228,12 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         }
 
         @Override
+        public void activeTourChanged(Tour oldActive, Tour newActive) {
+            this.viewer.update(oldActive, null);
+            this.viewer.update(newActive, null);
+        }
+
+        @Override
         public void trackerStarts(CodeViewTracker tracker) {
             tracker.getStatistics().addListener(this);
         }
@@ -242,37 +244,24 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
                 this.viewer.update(stop, null);
             }
         }
+
     }
 
     /**
      * Label provider for the tree with tours and stops.
      */
     private static final class TourAndStopLabelProvider extends LabelProvider {
-        private final Image[] viewStatImages = new Image[] {
-            createColoredRectangle(new RGB(255, 235, 0)),
-            createColoredRectangle(new RGB(223, 235, 0)),
-            createColoredRectangle(new RGB(191, 235, 0)),
-            createColoredRectangle(new RGB(159, 235, 0)),
-            createColoredRectangle(new RGB(127, 235, 0)),
-            createColoredRectangle(new RGB(95, 235, 0)),
-            createColoredRectangle(new RGB(63, 235, 0)),
-            createColoredRectangle(new RGB(32, 235, 0)),
-            createColoredRectangle(new RGB(0, 235, 0))
+        private static final RGB[] VIEW_COLORS = new RGB[] {
+            new RGB(255, 235, 0),
+            new RGB(223, 235, 0),
+            new RGB(191, 235, 0),
+            new RGB(159, 235, 0),
+            new RGB(127, 235, 0),
+            new RGB(95, 235, 0),
+            new RGB(63, 235, 0),
+            new RGB(32, 235, 0),
+            new RGB(0, 235, 0)
         };
-
-        private static Image createColoredRectangle(RGB rgb) {
-            final Device dev = Display.getDefault();
-            final Rectangle rect = new Rectangle(0, 0, 7, 10);
-            final Image img = new Image(dev, rect);
-            final GC gc = new GC(img);
-            final Color color = new Color(dev, rgb);
-            gc.setBackground(color);
-            gc.setForeground(color);
-            gc.drawRectangle(rect);
-            gc.fillRectangle(rect);
-            gc.dispose();
-            return img;
-        }
 
         @Override
         public String getText(Object element) {
@@ -296,20 +285,31 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         public Image getImage(Object element) {
             if (element instanceof Stop) {
                 final Stop f = (Stop) element;
-                final double viewRatio = this.determineViewRatio(f);
-                if (viewRatio <= 0) {
+                final ViewStatDataForStop viewRatio = this.determineViewRatio(f);
+                if (viewRatio.isNotViewedAtAll()) {
                     return null;
                 } else {
-                    final int index = (int) (viewRatio * (this.viewStatImages.length - 1));
-                    return this.viewStatImages[index];
+                    return ImageCache.getColoredRectangle(
+                            VIEW_COLORS[toColorIndex(viewRatio.getMaxRatio())],
+                            VIEW_COLORS[toColorIndex(viewRatio.getAverageRatio())]);
+                }
+            } else if (element instanceof Tour) {
+                final ToursInReview tours = ViewDataSource.get().getToursInReview();
+                if (tours != null && tours.getActiveTour() == element) {
+                    return ImageCache.getColoredDot(new RGB(255, 0, 0));
+                } else {
+                    return null;
                 }
             } else {
                 return null;
             }
         }
 
+        private static int toColorIndex(double ratio) {
+            return (int) (ratio * (VIEW_COLORS.length - 1));
+        }
 
-        private double determineViewRatio(Stop f) {
+        private ViewStatDataForStop determineViewRatio(Stop f) {
             return TrackerManager.get().determineViewRatio(f);
         }
 

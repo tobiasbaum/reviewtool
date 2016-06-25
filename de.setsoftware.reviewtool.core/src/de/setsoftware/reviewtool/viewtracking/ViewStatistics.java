@@ -49,11 +49,11 @@ public class ViewStatistics {
      * has been viewed. Zero means "not viewed at all", one means "every line has been
      * viewed long enough".
      */
-    public double determineViewRatio(Stop f, int longEnoughCount) {
+    public ViewStatDataForStop determineViewRatio(Stop f, int longEnoughCount) {
         final File absFile = f.getAbsoluteFile();
         final ViewStatisticsForFile stats = this.files.get(absFile);
         if (stats == null) {
-            return 0.0;
+            return ViewStatDataForStop.NO_VIEWS;
         }
         final Fragment fragment = f.getMostRecentFragment();
         if (fragment == null) {
