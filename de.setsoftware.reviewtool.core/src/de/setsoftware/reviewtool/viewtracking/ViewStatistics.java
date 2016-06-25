@@ -2,11 +2,14 @@ package de.setsoftware.reviewtool.viewtracking;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.changestructure.Tour;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 
 /**
  * Statistics on if and how long portions of files have been viewed.
@@ -75,4 +78,60 @@ public class ViewStatistics {
         this.listeners.add(listener);
     }
 
+    /**
+     * Callback for events that can occur when the next unvisited stop is determined.
+     */
+    public static interface INextStopCallback {
+        /**
+         * Is called when the next stop belongs to a new tour.
+         */
+        public abstract void newTourStarted(Tour tour);
+
+        public abstract void wrappedAround();
+    }
+
+    /**
+     * Determines the next stop that has not been viewed at all, starting from the given
+     * stop. When the tour changes during this search, the given callback will be notified.
+     * When no unvisited stop exists after the given stop, search continues from the start.
+     * If no unvisited stop exists at all, null is returned.
+     */
+    public Stop getNextUnvisitedStop(
+            ToursInReview tours, Stop currentStop, INextStopCallback nextStopCallback) {
+
+        if (tours.getTours().isEmpty()) {
+            return null;
+        }
+
+        final int startTourIndex = tours.findTourIndexWithStop(currentStop);
+
+        final int tourCount = tours.getTours().size();
+        for (int i = 0; i <= tourCount; i++) {
+            final Tour tour = tours.getTours().get((startTourIndex + i) % tourCount);
+            final List<Stop> remainingStops;
+            if (i == 0) {
+                remainingStops = tour.getStopsAfter(currentStop);
+            } else if (i == tourCount) {
+                remainingStops = tour.getStopsBefore(currentStop);
+            } else {
+                remainingStops = tour.getStops();
+            }
+
+            for (final Stop possibleNextStop : remainingStops) {
+                if (this.determineViewRatio(possibleNextStop, 1).isNotViewedAtAll()) {
+                    if (i > 0 || !tour.getStops().contains(currentStop)) {
+                        if (startTourIndex + i >= tourCount) {
+                            nextStopCallback.wrappedAround();
+                        }
+                        if (i < tourCount) {
+                            nextStopCallback.newTourStarted(tour);
+                        }
+                    }
+                    return possibleNextStop;
+                }
+            }
+        }
+
+        return null;
+    }
 }

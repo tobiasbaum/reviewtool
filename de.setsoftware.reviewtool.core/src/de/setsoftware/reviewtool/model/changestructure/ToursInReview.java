@@ -62,6 +62,13 @@ public class ToursInReview {
     }
 
     /**
+     * Creates a new object with the given tours (mainly for tests).
+     */
+    public static ToursInReview create(List<Tour> tours) {
+        return new ToursInReview(tours);
+    }
+
+    /**
      * Creates markers for the tour stops. Takes the currently active tour into account.
      */
     public void createMarkers(IMarkerFactory markerFactory) {
@@ -232,6 +239,21 @@ public class ToursInReview {
             }
         }
         return ret;
+    }
+
+    /**
+     * Returns the (first) tour that contains the given stop.
+     * If none exists, -1 is returned.
+     */
+    public int findTourIndexWithStop(Stop currentStop) {
+        for (int i = 0; i < this.tours.size(); i++) {
+            for (final Stop s : this.tours.get(i).getStops()) {
+                if (s == currentStop) {
+                    return i;
+                }
+            }
+        }
+        return 0;
     }
 
 }

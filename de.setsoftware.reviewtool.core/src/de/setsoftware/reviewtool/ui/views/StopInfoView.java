@@ -19,7 +19,7 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 /**
  * A view that contains detailed information on a tour stop fragment.
  */
-public class StopInfoView extends ViewPart implements FragmentSelectionListener {
+public class StopInfoView extends ViewPart implements StopSelectionListener {
 
     private Composite comp;
     private Composite currentContent;
@@ -28,7 +28,7 @@ public class StopInfoView extends ViewPart implements FragmentSelectionListener 
     public void createPartControl(Composite comp) {
         this.comp = comp;
 
-        CurrentFragment.registerListener(this);
+        CurrentStop.registerListener(this);
     }
 
     @Override
@@ -36,7 +36,7 @@ public class StopInfoView extends ViewPart implements FragmentSelectionListener 
     }
 
     @Override
-    public void notifyFragmentChange(Stop fragment) {
+    public void notifyStopChange(Stop fragment) {
         this.disposeOldContent();
         if (fragment == null) {
             this.currentContent = this.createIdleContent("Kein Stop gewählt");

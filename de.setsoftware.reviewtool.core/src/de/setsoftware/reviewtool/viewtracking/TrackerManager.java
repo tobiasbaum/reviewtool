@@ -70,4 +70,8 @@ public class TrackerManager {
         return this.currentTracker.getStatistics().determineViewRatio(f, LONG_ENOUGH_COUNT);
     }
 
+    public ViewStatistics getStatistics() {
+        return this.currentTracker == null ? null : this.currentTracker.getStatistics();
+    }
+
 }

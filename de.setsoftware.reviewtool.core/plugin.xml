@@ -71,7 +71,19 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.addremark"
-	   		 label="Reviewanmerkung hinzufügen" 
+	   		 label="Reviewanmerkung hinzufügen ..." 
+	   		 style="push">
+	   		 <visibleWhen
+                  checkEnabled="false">
+               <with variable="de.setsoftware.reviewtool.mode">
+                  <equals value="REVIEWING"/>
+               </with>
+            </visibleWhen>
+	   </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <command commandId="de.setsoftware.reviewtool.commands.nextunvisitedstop"
+	   		 label="Zum nächsten unbesuchten Review-Stop" 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -114,7 +126,10 @@
    </extension>
    <extension point="org.eclipse.ui.commands">
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.AddRemarkAction"
-        id="de.setsoftware.reviewtool.commands.addremark" name="Add remark">
+        id="de.setsoftware.reviewtool.commands.addremark" name="Add review remark">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextUnvisitedStopAction"
+        id="de.setsoftware.reviewtool.commands.nextunvisitedstop" name="Jump to next review stop">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction"
         id="de.setsoftware.reviewtool.commands.startreview" name="Start review">
@@ -163,6 +178,12 @@
           contextId="org.eclipse.ui.contexts.window"
           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
           sequence="M3+4">
+    </key>
+    <key
+          commandId="de.setsoftware.reviewtool.commands.nextunvisitedstop"
+          contextId="org.eclipse.ui.contexts.window"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M3+5">
     </key>
  </extension>
  <extension

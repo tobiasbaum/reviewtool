@@ -98,4 +98,22 @@ public class Tour {
         return stopsInSameFile;
     }
 
+    /**
+     * Returns a list with all stops after the given stop.
+     * If the given stop is not contained in this, all stops are returned.
+     */
+    public List<Stop> getStopsAfter(Stop currentStop) {
+        final int index = this.stops.indexOf(currentStop);
+        return this.stops.subList(index + 1, this.stops.size());
+    }
+
+    /**
+     * Returns a list with all stops after the given stop.
+     * If the given stop is not contained in this, the empty list.
+     */
+    public List<Stop> getStopsBefore(Stop currentStop) {
+        final int index = this.stops.indexOf(currentStop);
+        return index <= 0 ? Collections.<Stop>emptyList() : this.stops.subList(0, index - 1);
+    }
+
 }

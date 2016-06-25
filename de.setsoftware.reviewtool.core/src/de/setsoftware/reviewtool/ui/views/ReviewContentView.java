@@ -30,6 +30,7 @@ import org.eclipse.ui.part.ViewPart;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -85,7 +86,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
                     if (item.getData() instanceof Stop) {
                         final Stop stop = (Stop) item.getData();
                         final Tour tour = (Tour) item.getParentItem().getData();
-                        ReviewContentView.this.jumpTo(tv, tours, tour, stop);
+                        jumpTo(tours, tour, stop);
                     }
                 }
             }
@@ -97,13 +98,14 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         return panel;
     }
 
-    private void jumpTo(TreeViewer tv, ToursInReview tours, Tour tour, Stop fragment) {
-        CurrentFragment.setCurrentFragment(fragment);
+    /**
+     * Jumps to the given fragment. Ensures that the corresponding tour is active.
+     */
+    public static void jumpTo(ToursInReview tours, Tour tour, Stop fragment) {
+        CurrentStop.setCurrentStop(fragment);
         try {
             tours.ensureTourActive(tour, new RealMarkerFactory());
-            ensureActiveTourExpanded(tv, tours);
-
-            this.openEditorFor(fragment);
+            openEditorFor(fragment);
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }
@@ -114,15 +116,30 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         tv.expandToLevel(activeTour, TreeViewer.ALL_LEVELS);
     }
 
-    private void openEditorFor(Stop fragment) throws CoreException {
+    private static void openEditorFor(Stop stop) throws CoreException {
         final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-        final IMarker marker = ToursInReview.createMarkerFor(new RealMarkerFactory(), fragment);
+
+        //when jumping to a marker, Eclipse selects all the contained text. We don't want that, so
+        //  we create a copy of the fragment without size
+        Stop jumpTarget;
+        if (stop.isDetailedFragmentKnown()) {
+            final Fragment fragment = new Fragment(
+                    stop.getMostRecentFile(),
+                    stop.getMostRecentFragment().getFrom(),
+                    stop.getMostRecentFragment().getFrom(),
+                    "");
+            jumpTarget = new Stop(fragment, fragment, fragment);
+        } else {
+            jumpTarget = stop;
+        }
+
+        final IMarker marker = ToursInReview.createMarkerFor(new RealMarkerFactory(), jumpTarget);
         if (marker != null) {
             IDE.openEditor(page, marker);
             marker.delete();
         } else {
             final IFileStore fileStore =
-                    EFS.getLocalFileSystem().getStore(fragment.getMostRecentFile().toLocalPath());
+                    EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath());
             IDE.openEditorOnFileStore(page, fileStore);
         }
     }
@@ -231,6 +248,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         public void activeTourChanged(Tour oldActive, Tour newActive) {
             this.viewer.update(oldActive, null);
             this.viewer.update(newActive, null);
+            ensureActiveTourExpanded(this.viewer, this.tours);
         }
 
         @Override

@@ -2,7 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.Collection;
 
-final class StubRepo extends Repository {
+public final class StubRepo extends Repository {
 
     public static StubRepo INSTANCE = new StubRepo();
 
