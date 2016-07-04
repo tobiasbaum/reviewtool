@@ -22,6 +22,7 @@ public class FileInRevision {
     private final String path;
     private final Revision revision;
     private final Repository repo;
+    private Path localPath;
 
     public FileInRevision(String path, Revision revision, Repository repository) {
         this.path = path;
@@ -77,8 +78,14 @@ public class FileInRevision {
         }
     }
 
+    /**
+     * Returns the absolute path of the file in the local working copy.
+     */
     public IPath toLocalPath() {
-        return new Path(this.repo.toAbsolutePathInWc(this.path));
+        if (this.localPath == null) {
+            this.localPath = new Path(this.repo.toAbsolutePathInWc(this.path));
+        }
+        return this.localPath;
     }
 
     @Override

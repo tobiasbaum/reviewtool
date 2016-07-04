@@ -35,7 +35,26 @@ public class SvnRepo extends Repository {
         assert !absolutePathInRepo.contains("\\");
 
         final Path p = Paths.get(absolutePathInRepo);
-        return new File(this.workingCopyRoot, p.subpath(this.checkoutPrefix, p.getNameCount()).toString()).toString();
+        final File probableFile = this.combineWcRootAndSuffix(p, this.checkoutPrefix);
+        if (probableFile.exists()) {
+            return probableFile.toString();
+        }
+
+        //when the working copy has been switched to a branch, the checkout prefix might
+        //  be wrong and we have to heuristically find the right path (until we have a better idea)
+        for (int i = 0; i < p.getNameCount() - 1; i++) {
+            final File f = this.combineWcRootAndSuffix(p, this.checkoutPrefix);
+            if (f.exists()) {
+                return f.toString();
+            }
+        }
+
+        return probableFile.toString();
+
+    }
+
+    private File combineWcRootAndSuffix(final Path p, int prefixLength) {
+        return new File(this.workingCopyRoot, p.subpath(prefixLength, p.getNameCount()).toString());
     }
 
     @Override
