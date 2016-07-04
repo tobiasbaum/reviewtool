@@ -110,6 +110,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.configInterpreter.addConfigurator(new JiraConnectorConfigurator());
         this.configInterpreter.addConfigurator(new SvnChangesourceConfigurator());
         this.configInterpreter.addConfigurator(new TelemetryConfigurator());
+        this.configInterpreter.addConfigurator(new VersionChecker(Activator.getDefault().getBundle().getVersion()));
         this.reconfigure();
 
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
