@@ -29,6 +29,8 @@ public class ReviewPerspective implements IPerspectiveFactory {
 
         //right: review content
         layout.addView("de.setsoftware.reviewtool.ui.views.reviewcontentview", IPageLayout.RIGHT, 0.75f, editorArea);
+
+        layout.addShowInPart("de.setsoftware.reviewtool.ui.views.reviewcontentview");
     }
 
 }

@@ -12,6 +12,6 @@ public interface StopSelectionListener {
      * Is called when a new fragment is selected or when a fragment is unselected.
      * In case of unselection, the given fragment is null.
      */
-    public abstract void notifyStopChange(Stop fragment);
+    public abstract void notifyStopChange(Stop newStopOrNull);
 
 }

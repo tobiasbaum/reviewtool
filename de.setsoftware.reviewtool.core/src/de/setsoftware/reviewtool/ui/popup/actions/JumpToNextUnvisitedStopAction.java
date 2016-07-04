@@ -48,7 +48,7 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
                             throw new RuntimeException(e);
                         }
                         MessageDialog.openInformation(shell, "Wechsel der Tour",
-                                "Wechsel zu einer neuen Tour:\n" + tour.getDescription());
+                                "Beginn einer neuen Tour:\n" + tour.getDescription());
                     }
 
                     @Override

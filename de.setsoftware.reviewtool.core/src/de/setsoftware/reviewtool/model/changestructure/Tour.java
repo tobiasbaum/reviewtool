@@ -8,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.eclipse.core.resources.IResource;
+
 import de.setsoftware.reviewtool.base.Multimap;
 
 /**
@@ -114,6 +116,48 @@ public class Tour {
     public List<Stop> getStopsBefore(Stop currentStop) {
         final int index = this.stops.indexOf(currentStop);
         return index <= 0 ? Collections.<Stop>emptyList() : this.stops.subList(0, index - 1);
+    }
+
+    /**
+     * Determines a stop that is as close as possible to the given line in the given resource.
+     * The closeness measure is tweaked to (hopefully) capture the users intention as good as possible
+     * for cases where he did not click directly on a stop.
+     */
+    public Stop findNearestStop(IResource resource, int line) {
+        if (this.stops.isEmpty()) {
+            return null;
+        }
+        Stop best = null;
+        int bestDist = Integer.MAX_VALUE;
+        for (final Stop stop : this.stops) {
+            final int candidateDist = this.calculateDistance(stop, resource, line);
+            if (candidateDist < bestDist) {
+                best = stop;
+                bestDist = candidateDist;
+            }
+        }
+        return best;
+    }
+
+    private int calculateDistance(Stop stop, IResource resource, int line) {
+        if (!stop.getMostRecentFile().determineResource().equals(resource)) {
+            return Integer.MAX_VALUE;
+        }
+
+        final Fragment fragment = stop.getMostRecentFragment();
+        if (fragment == null) {
+            return Integer.MAX_VALUE - 1;
+        }
+
+        if (line < fragment.getFrom().getLine()) {
+            //there is a bias that lets lines between stops belong more closely to the stop above than below
+            //  to a certain degree
+            return (fragment.getFrom().getLine() - line) * 4;
+        } else if (line > fragment.getTo().getLine()) {
+            return line - fragment.getTo().getLine();
+        } else {
+            return 0;
+        }
     }
 
 }

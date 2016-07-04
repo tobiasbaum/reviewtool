@@ -2,13 +2,17 @@ package de.setsoftware.reviewtool.ui.views;
 
 import java.io.File;
 
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
+import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.LabelProvider;
+import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
@@ -22,11 +26,15 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
+import org.eclipse.ui.part.IShowInTarget;
+import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.part.ViewPart;
 
+import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
@@ -44,7 +52,7 @@ import de.setsoftware.reviewtool.viewtracking.ViewStatDataForStop;
 /**
  * A review to show the content (tours and stops) belonging to a review.
  */
-public class ReviewContentView extends ViewPart implements ReviewModeListener {
+public class ReviewContentView extends ViewPart implements ReviewModeListener, IShowInTarget {
 
     private Composite comp;
     private Composite currentContent;
@@ -158,6 +166,56 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
         this.comp.layout();
     }
 
+    @Override
+    public boolean show(ShowInContext context) {
+        try {
+            Pair<? extends IResource, Integer> pos = ViewHelper.extractFileAndLineFromSelection(
+                    context.getSelection(), context.getInput());
+
+            //unfortunately it seems to be very hard to get the line for a structured selection
+            //therefore try if a better selection is available if going to the active editor hard-wired
+            if (pos == null || pos.getSecond().intValue() == 0) {
+                final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+                if (page != null) {
+                    final IEditorPart activeEditor = page.getActiveEditor();
+                    if (activeEditor != null) {
+                        final ISelection sel2 = activeEditor.getEditorSite().getSelectionProvider().getSelection();
+                        final Pair<? extends IResource, Integer> pos2 =
+                                ViewHelper.extractFileAndLineFromSelection(sel2, context.getInput());
+                        if (pos2 != null) {
+                            pos = pos2;
+                        }
+                    }
+                }
+            }
+
+            if (pos == null) {
+                return false;
+            }
+
+            final ToursInReview tours = ViewDataSource.get().getToursInReview();
+            if (tours == null) {
+                return false;
+            }
+
+            final Tour activeTour = tours.getActiveTour();
+            if (activeTour == null) {
+                return false;
+            }
+
+            final Stop nearestStop = activeTour.findNearestStop(pos.getFirst(), pos.getSecond());
+            if (nearestStop == null) {
+                return false;
+            }
+
+            jumpTo(tours, activeTour, nearestStop);
+
+            return true;
+        } catch (final ExecutionException e) {
+            throw new ReviewtoolException(e);
+        }
+    }
+
     private Composite createNoReviewContent() {
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
@@ -177,7 +235,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
      * Provides the tree consisting of tours and stops.
      */
     private static class ViewContentProvider implements ITreeContentProvider, IToursInReviewChangeListener,
-            ITrackerCreationListener, IViewStatisticsListener {
+            ITrackerCreationListener, IViewStatisticsListener, StopSelectionListener {
 
         private final ToursInReview tours;
         private TreeViewer viewer;
@@ -186,6 +244,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
             this.tours = tours;
             this.tours.registerListener(this);
             TrackerManager.get().registerListener(this);
+            CurrentStop.registerListener(this);
         }
 
         @Override
@@ -261,6 +320,20 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener {
             for (final Stop stop : this.tours.getStopsFor(absolutePath)) {
                 this.viewer.update(stop, null);
             }
+        }
+
+        @Override
+        public void notifyStopChange(Stop newStopOrNull) {
+            if (newStopOrNull == null) {
+                return;
+            }
+            final ITreeSelection oldSelection = this.viewer.getStructuredSelection();
+            if (oldSelection != null && oldSelection.toList().contains(newStopOrNull)) {
+                //do nothing if the element is already selected
+                return;
+            }
+            final StructuredSelection selection = new StructuredSelection(newStopOrNull);
+            this.viewer.setSelection(selection, true);
         }
 
     }
