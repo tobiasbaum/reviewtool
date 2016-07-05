@@ -12,7 +12,11 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 
+/**
+ * Quickfix resolution that deletes a review remark.
+ */
 public class DeleteResolution extends WorkbenchMarkerResolution {
 
     public static final DeleteResolution INSTANCE = new DeleteResolution();
@@ -30,6 +34,9 @@ public class DeleteResolution extends WorkbenchMarkerResolution {
         final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
         try {
             review.delete();
+            Telemetry.get().resolutionDelete(
+                    marker.getResource().toString(),
+                    marker.getAttribute(IMarker.LINE_NUMBER, -1));
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }

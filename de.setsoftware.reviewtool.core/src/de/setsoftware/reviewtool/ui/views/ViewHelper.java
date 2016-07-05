@@ -87,7 +87,7 @@ public class ViewHelper {
             return class1.cast(o);
         }
         if (o instanceof IAdaptable) {
-            return ((IAdaptable) o).getAdapter(class1);
+            return class1.cast(((IAdaptable) o).getAdapter(class1));
         }
         return null;
     }

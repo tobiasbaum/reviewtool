@@ -86,7 +86,7 @@ public class AddRemarkAction extends AbstractHandler {
                         final IResource resourceFiltered = chosenRef != PositionReference.GLOBAL
                                 ? resource : ResourcesPlugin.getWorkspace().getRoot();
                         final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
-                        final String reviewer = p.getReviewerForRound(p.getCurrentRound());
+                        final String reviewer = p.getReviewerForCurrentRound();
                         ReviewRemark.create(
                                 p,
                                 resourceFiltered,
@@ -95,8 +95,6 @@ public class AddRemarkAction extends AbstractHandler {
                                 lineFiltered,
                                 type).save();
                         Telemetry.get().remarkCreated(
-                                p.getTicketKey(),
-                                reviewer,
                                 type.name(),
                                 resource.getFullPath().toString(),
                                 lineFiltered);

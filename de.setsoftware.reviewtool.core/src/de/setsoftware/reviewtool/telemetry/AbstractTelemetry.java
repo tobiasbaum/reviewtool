@@ -4,6 +4,7 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
@@ -13,21 +14,35 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
  */
 public abstract class AbstractTelemetry {
 
+    private String currentTicketKey;
+    private String currentUser;
+
     /**
      * Sends the event that a review has been started at the current moment in time.
      */
-    public final void reviewStarted(String ticketKey, String reviewer, int round) {
+    public final void reviewStarted(String ticketKey, String reviewer, int round,
+            int numberOfTours, int numberOfStops, int numberOfFragments,
+            int numberOfAddedLines, int numberOfRemovedLines) {
+        this.currentTicketKey = ticketKey;
+        this.currentUser = reviewer;
         this.putData(
                 "reviewStarted",
                 ticketKey,
                 reviewer,
-                map("round", Integer.toString(round)));
+                map("round", Integer.toString(round),
+                    "cntTours", Integer.toString(numberOfTours),
+                    "cntStops", Integer.toString(numberOfStops),
+                    "cntFragments", Integer.toString(numberOfFragments),
+                    "cntAddedLines", Integer.toString(numberOfAddedLines),
+                    "cntRemovedLines", Integer.toString(numberOfRemovedLines)));
     }
 
     /**
      * Sends the event that a remark fixing has been started at the current moment in time.
      */
     public final void fixingStarted(String ticketKey, String reviewer, int round) {
+        this.currentTicketKey = ticketKey;
+        this.currentUser = reviewer;
         this.putData(
                 "fixingStarted",
                 ticketKey,
@@ -62,16 +77,76 @@ public abstract class AbstractTelemetry {
     /**
      * Sends the event that a review remark has been created at the current moment in time.
      */
-    public final void remarkCreated(String ticketKey, String reviewer, String remarkType, String resource, int line) {
+    public final void remarkCreated(String remarkType, String resource, int line) {
         this.putData(
                 "remarkCreated",
-                ticketKey,
-                reviewer,
+                this.currentTicketKey,
+                this.currentUser,
                 map(
-                        "remarkType", remarkType,
-                        "resource", obfuscate(resource),
-                        "line", Integer.toString(line)));
+                    "remarkType", remarkType,
+                    "resource", resource,
+                    "line", Integer.toString(line)));
 
+    }
+
+    public final void resolutionComment(String resource, int line) {
+        this.logResolution("resolutionComment", resource, line);
+    }
+
+    public final void resolutionDelete(String resource, int line) {
+        this.logResolution("resolutionDelete", resource, line);
+    }
+
+    public final void resolutionFixed(String resource, int line) {
+        this.logResolution("resolutionFixed", resource, line);
+    }
+
+    public final void resolutionQuestion(String resource, int line) {
+        this.logResolution("resolutionQuestion", resource, line);
+    }
+
+    public final void resolutionWontFix(String resource, int line) {
+        this.logResolution("resolutionWontFix", resource, line);
+    }
+
+    private void logResolution(String resolutionType, String resource, int line) {
+        this.putData(
+                resolutionType,
+                this.currentTicketKey,
+                this.currentUser,
+                map(
+                    "resource", resource,
+                    "line", Integer.toString(line)));
+    }
+
+    public void toursMerged(List<Integer> mergedTourIndices, int numberOfTours, int numberOfStops) {
+        this.putData(
+                "toursMerged",
+                this.currentTicketKey,
+                this.currentUser,
+                map(
+                    "mergedTourIndices", mergedTourIndices.toString(),
+                    "newNumberOfTours", Integer.toString(numberOfTours),
+                    "newNumberOfStops", Integer.toString(numberOfStops)));
+    }
+
+    public void tourActivated(int index) {
+        this.putData(
+                "tourActivated",
+                this.currentTicketKey,
+                this.currentUser,
+                map(
+                    "tourIndex", Integer.toString(index)));
+    }
+
+    public void jumpedTo(String resource, int line) {
+        this.putData(
+                "jumpedTo",
+                this.currentTicketKey,
+                this.currentUser,
+                map(
+                    "resource", resource,
+                    "line", Integer.toString(line)));
     }
 
     /**

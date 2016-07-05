@@ -17,6 +17,7 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
  * Manages the current state regarding the changes/tours under review.
@@ -154,6 +155,7 @@ public class ToursInReview {
                     l.activeTourChanged(oldActive, this.getActiveTour());
                 }
             }
+            Telemetry.get().tourActivated(index);
         }
     }
 
@@ -184,6 +186,12 @@ public class ToursInReview {
             return;
         }
 
+        //determine the indices of the tours; they are needed for telemetry logging later
+        final List<Integer> tourIndices = new ArrayList<>();
+        for (final Tour t : toursToMerge) {
+            tourIndices.add(this.tours.indexOf(t));
+        }
+
         //determine the merged tour
         Tour mergeResult = toursToMerge.get(0);
         for (int i = 1; i < toursToMerge.size(); i++) {
@@ -207,6 +215,11 @@ public class ToursInReview {
         for (final IToursInReviewChangeListener l : this.listeners) {
             l.toursChanged();
         }
+
+        Telemetry.get().toursMerged(
+                tourIndices,
+                this.getNumberOfTours(),
+                this.getNumberOfStops());
     }
 
     private Tour determineLargestTour(List<Tour> toursToMerge) {
@@ -254,6 +267,56 @@ public class ToursInReview {
             }
         }
         return 0;
+    }
+
+    public int getNumberOfTours() {
+        return this.tours.size();
+    }
+
+    /**
+     * Returns the total number of stops in all tours.
+     */
+    public int getNumberOfStops() {
+        int ret = 0;
+        for (final Tour t : this.tours) {
+            ret += t.getNumberOfStops();
+        }
+        return ret;
+    }
+
+    /**
+     * Returns the total number of fragments in all stops of all tours.
+     */
+    public int getNumberOfFragments() {
+        int ret = 0;
+        for (final Tour t : this.tours) {
+            ret += t.getNumberOfFragments();
+        }
+        return ret;
+    }
+
+    /**
+     * Returns the total count of all added lines (right-hand side of a fragment).
+     * A change is counted as both remove and add.
+     */
+    public int getNumberOfAddedLines() {
+        int ret = 0;
+        for (final Tour t : this.tours) {
+            ret += t.getNumberOfAddedLines();
+        }
+        return ret;
+    }
+
+    /**
+     * Returns the total count of all removed lines (left-hand side of a fragment).
+     * A change is counted as both remove and add.
+     */
+    public int getNumberOfRemovedLines() {
+        int ret = 0;
+        for (final Tour t : this.tours) {
+            ret += t.getNumberOfRemovedLines();
+        }
+        return ret;
     }
 
 }

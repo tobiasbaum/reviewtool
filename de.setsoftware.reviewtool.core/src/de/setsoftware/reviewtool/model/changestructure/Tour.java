@@ -160,4 +160,43 @@ public class Tour {
         }
     }
 
+    public int getNumberOfStops() {
+        return this.stops.size();
+    }
+
+    /**
+     * Returns the count of all fragments in the contained stops.
+     */
+    public int getNumberOfFragments() {
+        int ret = 0;
+        for (final Stop s : this.stops) {
+            ret += s.getNumberOfFragments();
+        }
+        return ret;
+    }
+
+    /**
+     * Returns the total count of all added lines (left-hand side of a fragment).
+     * A change is counted as both remove and add.
+     */
+    public int getNumberOfAddedLines() {
+        int ret = 0;
+        for (final Stop s : this.stops) {
+            ret += s.getNumberOfAddedLines();
+        }
+        return ret;
+    }
+
+    /**
+     * Returns the total count of all removed lines (left-hand side of a fragment).
+     * A change is counted as both remove and add.
+     */
+    public int getNumberOfRemovedLines() {
+        int ret = 0;
+        for (final Stop s : this.stops) {
+            ret += s.getNumberOfRemovedLines();
+        }
+        return ret;
+    }
+
 }

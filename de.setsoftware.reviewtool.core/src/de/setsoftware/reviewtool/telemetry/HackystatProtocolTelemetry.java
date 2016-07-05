@@ -5,6 +5,8 @@ import java.io.FileNotFoundException;
 import java.util.Date;
 import java.util.Map;
 
+import org.osgi.framework.Version;
+
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.unihannover.se.hackybuffer.Hackybuffer;
 import de.unihannover.se.hackybuffer.HackybufferException;
@@ -18,10 +20,12 @@ import de.unihannover.se.hackybuffer.HackybufferException;
 public class HackystatProtocolTelemetry extends AbstractTelemetry {
 
     private final Hackybuffer hacky;
+    private final Version version;
 
-    public HackystatProtocolTelemetry(String dir) {
+    public HackystatProtocolTelemetry(String dir, Version pluginVersion) {
         try {
             this.hacky = new Hackybuffer(new File(dir));
+            this.version = pluginVersion;
         } catch (final FileNotFoundException e) {
             throw new ReviewtoolException(e);
         }
@@ -38,7 +42,7 @@ public class HackystatProtocolTelemetry extends AbstractTelemetry {
             //TODO use a more specific tool name
             this.hacky.writeData(
                     new Date(),
-                    "Code Review Tool",
+                    "Code Review Tool " + this.version,
                     eventType,
                     ticketKey,
                     obfuscate(user),

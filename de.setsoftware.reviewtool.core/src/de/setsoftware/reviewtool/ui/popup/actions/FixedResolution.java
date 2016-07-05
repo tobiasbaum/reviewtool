@@ -13,7 +13,11 @@ import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.ResolutionType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 
+/**
+ * Quick fix resolution that marks a review remark as fixed.
+ */
 public class FixedResolution extends WorkbenchMarkerResolution {
 
     public static final FixedResolution INSTANCE = new FixedResolution();
@@ -32,6 +36,9 @@ public class FixedResolution extends WorkbenchMarkerResolution {
             final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
             review.setResolution(ResolutionType.FIXED);
             review.save();
+            Telemetry.get().resolutionFixed(
+                    marker.getResource().toString(),
+                    marker.getAttribute(IMarker.LINE_NUMBER, -1));
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }

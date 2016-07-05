@@ -8,9 +8,13 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.ResolutionType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.AddReplyDialog;
 import de.setsoftware.reviewtool.ui.dialogs.InputDialogCallback;
 
+/**
+ * Quick fix resolution that marks a review remark as "wont fix" (false positive).
+ */
 public class WontFixResolution implements IMarkerResolution {
 
     public static final WontFixResolution INSTANCE = new WontFixResolution();
@@ -24,7 +28,7 @@ public class WontFixResolution implements IMarkerResolution {
     }
 
     @Override
-    public void run(IMarker marker) {
+    public void run(final IMarker marker) {
         final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
         AddReplyDialog.get(review, new InputDialogCallback() {
             @Override
@@ -33,6 +37,9 @@ public class WontFixResolution implements IMarkerResolution {
                     review.addComment(text);
                     review.setResolution(ResolutionType.WONT_FIX);
                     review.save();
+                    Telemetry.get().resolutionWontFix(
+                            marker.getResource().toString(),
+                            marker.getAttribute(IMarker.LINE_NUMBER, -1));
                 } catch (final CoreException e) {
                     throw new ReviewtoolException(e);
                 }
