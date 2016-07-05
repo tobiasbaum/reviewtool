@@ -11,3 +11,5 @@
 /build-tools/target
 /hackystat-8.4.127-services-bin
 /.mvn
+/de.setsoftware.reviewtool.core/target
+/de.setsoftware.reviewtool.core/bin
