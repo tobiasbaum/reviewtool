@@ -43,7 +43,7 @@ public class CodeViewTracker {
             if (activeEditor == null) {
                 continue;
             }
-            final ITextOperationTarget target =
+            final ITextOperationTarget target = (ITextOperationTarget)
                     activeEditor.getAdapter(ITextOperationTarget.class);
 
             if (target instanceof ITextViewer) {
@@ -58,7 +58,7 @@ public class CodeViewTracker {
     }
 
     private File determineFilePath(IEditorPart activeEditor) {
-        final IFile file = activeEditor.getEditorInput().getAdapter(IFile.class);
+        final IFile file = (IFile) activeEditor.getEditorInput().getAdapter(IFile.class);
         if (file != null) {
             final IPath path = file.getLocation();
             if (path == null) {
@@ -66,8 +66,8 @@ public class CodeViewTracker {
             }
             return path.toFile();
         }
-        final FileStoreEditorInput externalFile = activeEditor
-                .getEditorInput().getAdapter(FileStoreEditorInput.class);
+        final FileStoreEditorInput externalFile = (FileStoreEditorInput) 
+                activeEditor.getEditorInput().getAdapter(FileStoreEditorInput.class);
         if (externalFile != null) {
             return new File(externalFile.getURI());
         }

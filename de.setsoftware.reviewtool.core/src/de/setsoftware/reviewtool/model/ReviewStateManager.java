@@ -61,6 +61,10 @@ public class ReviewStateManager {
         return ticket.getReviewerForRound(number);
     }
 
+    public String getReviewerForCurrentRound() {
+        return this.getReviewerForRound(this.getCurrentRound());
+    }
+
     public ITicketData getCurrentTicketData() {
         return this.loadTicketDataAndCheckExistence(true);
     }

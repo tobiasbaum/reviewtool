@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Util;
@@ -149,6 +150,38 @@ public class Stop {
 
     public File getAbsoluteFile() {
         return this.getMostRecentFile().toLocalPath().toFile().getAbsoluteFile();
+    }
+
+    /**
+     * Returns the total number of fragments belonging to this stop.
+     */
+    public int getNumberOfFragments() {
+        int ret = 0;
+        for (final Entry<FileInRevision, List<Fragment>> e : this.history.entrySet()) {
+            ret += e.getValue().size();
+        }
+        return ret;
+    }
+
+    /**
+     * Returns the total count of all added lines (right-hand side of a stop).
+     * A change is counted as both remove and add.
+     */
+    public int getNumberOfAddedLines() {
+        return this.mostRecentFragment == null ? 0 : this.mostRecentFragment.getNumberOfLines();
+    }
+
+    /**
+     * Returns the total count of all removed lines (left-hand side of a stop).
+     * A change is counted as both remove and add.
+     */
+    public int getNumberOfRemovedLines() {
+        final FileInRevision oldestFile = this.historyOrder.get(0);
+        int ret = 0;
+        for (final Fragment f : this.getContentFor(oldestFile)) {
+            ret += f.getNumberOfLines();
+        }
+        return ret;
     }
 
 }

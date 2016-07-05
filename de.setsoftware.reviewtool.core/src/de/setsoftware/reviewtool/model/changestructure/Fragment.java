@@ -115,4 +115,16 @@ public class Fragment {
             && this.content.equals(other.content);
     }
 
+    /**
+     * Returns the number of lines in this fragment. For deletion fragments, zero is returned.
+     */
+    public int getNumberOfLines() {
+        final int rawLineDiff = this.to.getLine() - this.from.getLine();
+        if (this.to.getColumn() > this.from.getColumn()) {
+            return rawLineDiff + 1;
+        } else {
+            return rawLineDiff;
+        }
+    }
+
 }

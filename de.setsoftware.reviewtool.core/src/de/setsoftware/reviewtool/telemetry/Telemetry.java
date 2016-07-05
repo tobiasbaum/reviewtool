@@ -12,7 +12,7 @@ public class Telemetry {
         return instance;
     }
 
-    static void set(AbstractTelemetry t) {
+    public static void set(AbstractTelemetry t) {
         instance = t;
     }
 

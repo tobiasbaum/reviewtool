@@ -102,7 +102,7 @@ class ReviewDataParser {
             this.currentRemark = ReviewRemark.create(
                     this.persistence,
                     this.markerFactory.createMarker(pos, Constants.REVIEWMARKER_ID),
-                    this.persistence.getReviewerForRound(this.currentRound.getNumber()),
+                    this.persistence.getReviewerForCurrentRound(),
                     pos,
                     this.currentText.toString(),
                     this.currentType);

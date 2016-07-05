@@ -17,6 +17,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
+import org.osgi.framework.Version;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
@@ -44,7 +45,6 @@ import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.slicingalgorithms.OneTourPerCommit;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
-import de.setsoftware.reviewtool.telemetry.TelemetryConfigurator;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
@@ -106,11 +106,12 @@ public class ReviewPlugin implements IReviewConfigurable {
     private ReviewPlugin() {
         this.persistence = new ReviewStateManager(new FilePersistence(new File("."), "please configure"), new RealUi());
 
+        final Version bundleVersion = Activator.getDefault().getBundle().getVersion();
         this.configInterpreter.addConfigurator(new FileTicketConnectorConfigurator());
         this.configInterpreter.addConfigurator(new JiraConnectorConfigurator());
         this.configInterpreter.addConfigurator(new SvnChangesourceConfigurator());
-        this.configInterpreter.addConfigurator(new TelemetryConfigurator());
-        this.configInterpreter.addConfigurator(new VersionChecker(Activator.getDefault().getBundle().getVersion()));
+        this.configInterpreter.addConfigurator(new TelemetryConfigurator(bundleVersion));
+        this.configInterpreter.addConfigurator(new VersionChecker(bundleVersion));
         this.reconfigure();
 
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
@@ -165,11 +166,15 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.loadReviewData(Mode.REVIEWING);
         if (this.mode == Mode.REVIEWING) {
             this.switchToReviewPerspective();
-            //TODO: mehr Daten zum Reviewumfang speichern
             Telemetry.get().reviewStarted(
                     this.persistence.getTicketKey(),
-                    this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),
-                    this.persistence.getCurrentRound());
+                    this.persistence.getReviewerForCurrentRound(),
+                    this.persistence.getCurrentRound(),
+                    this.toursInReview.getNumberOfTours(),
+                    this.toursInReview.getNumberOfStops(),
+                    this.toursInReview.getNumberOfFragments(),
+                    this.toursInReview.getNumberOfAddedLines(),
+                    this.toursInReview.getNumberOfRemovedLines());
             TrackerManager.get().startTracker();
         }
     }
@@ -287,7 +292,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         TrackerManager.get().stopTracker();
         Telemetry.get().reviewEnded(
                 this.persistence.getTicketKey(),
-                this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),
+                this.persistence.getReviewerForCurrentRound(),
                 this.persistence.getCurrentRound(),
                 typeOfEnd.getNameForUser());
         if (typeOfEnd.getType() != EndTransition.Type.PAUSE) {
@@ -311,7 +316,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     public void endFixing() throws CoreException {
         Telemetry.get().fixingEnded(
                 this.persistence.getTicketKey(),
-                this.persistence.getReviewerForRound(this.persistence.getCurrentRound()),
+                this.persistence.getReviewerForCurrentRound(),
                 this.persistence.getCurrentRound());
         this.persistence.changeStateToReadyForReview();
         this.leaveReviewMode();

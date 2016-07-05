@@ -8,6 +8,7 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.ResolutionType;
 import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.AddReplyDialog;
 import de.setsoftware.reviewtool.ui.dialogs.InputDialogCallback;
 
@@ -24,7 +25,7 @@ public class QuestionResolution implements IMarkerResolution {
     }
 
     @Override
-    public void run(IMarker marker) {
+    public void run(final IMarker marker) {
         final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
         AddReplyDialog.get(review, new InputDialogCallback() {
             @Override
@@ -33,6 +34,9 @@ public class QuestionResolution implements IMarkerResolution {
                     review.addComment(text);
                     review.setResolution(ResolutionType.QUESTION);
                     review.save();
+                    Telemetry.get().resolutionQuestion(
+                            marker.getResource().toString(),
+                            marker.getAttribute(IMarker.LINE_NUMBER, -1));
                 } catch (final CoreException e) {
                     throw new ReviewtoolException(e);
                 }

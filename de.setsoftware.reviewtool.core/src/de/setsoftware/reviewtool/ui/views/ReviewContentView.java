@@ -43,6 +43,7 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
+import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.viewtracking.CodeViewTracker;
 import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
 import de.setsoftware.reviewtool.viewtracking.IViewStatisticsListener;
@@ -109,11 +110,14 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     /**
      * Jumps to the given fragment. Ensures that the corresponding tour is active.
      */
-    public static void jumpTo(ToursInReview tours, Tour tour, Stop fragment) {
-        CurrentStop.setCurrentStop(fragment);
+    public static void jumpTo(ToursInReview tours, Tour tour, Stop stop) {
+        CurrentStop.setCurrentStop(stop);
         try {
             tours.ensureTourActive(tour, new RealMarkerFactory());
-            openEditorFor(fragment);
+            Telemetry.get().jumpedTo(
+                    stop.getMostRecentFile().determineResource().toString(),
+                    stop.getMostRecentFragment() == null ? -1 : stop.getMostRecentFragment().getFrom().getLine());
+            openEditorFor(stop);
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }
@@ -327,7 +331,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             if (newStopOrNull == null) {
                 return;
             }
-            final ITreeSelection oldSelection = this.viewer.getStructuredSelection();
+            final ITreeSelection oldSelection = (ITreeSelection) this.viewer.getSelection();
             if (oldSelection != null && oldSelection.toList().contains(newStopOrNull)) {
                 //do nothing if the element is already selected
                 return;
