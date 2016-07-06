@@ -16,14 +16,13 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorPart;
@@ -89,25 +88,38 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         tv.setInput(tours);
 
         final Tree tree = tv.getTree();
-        tree.addListener(SWT.MouseDoubleClick, new Listener() {
+        tree.addSelectionListener(new SelectionListener() {
             @Override
-            public void handleEvent(Event event) {
-                final Point point = new Point(event.x, event.y);
-                final TreeItem item = tree.getItem(point);
-                if (item != null) {
-                    if (item.getData() instanceof Stop) {
-                        final Stop stop = (Stop) item.getData();
-                        final Tour tour = (Tour) item.getParentItem().getData();
-                        jumpTo(tours, tour, stop);
-                    }
-                }
+            public void widgetSelected(SelectionEvent e) {
+            }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                ReviewContentView.this.jumpToStopForItem(tours, (TreeItem) e.item);
             }
         });
+//        tree.addListener(SWT.DefaultSelection, new Listener() {
+//            @Override
+//            public void handleEvent(Event event) {
+//                final TreeItem[] selection = tree.getSelection();
+//                if (selection.length > 0) {
+//                    ReviewContentView.this.jumpToStopForItem(tours, selection[0]);
+//                }
+//            }
+//        });
 
         ViewHelper.createContextMenu(this, tv.getControl(), tv);
         ensureActiveTourExpanded(tv, tours);
 
         return panel;
+    }
+
+    private void jumpToStopForItem(final ToursInReview tours, final TreeItem item) {
+        if (item.getData() instanceof Stop) {
+            final Stop stop = (Stop) item.getData();
+            final Tour tour = (Tour) item.getParentItem().getData();
+            jumpTo(tours, tour, stop);
+        }
     }
 
     /**
@@ -118,7 +130,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         try {
             tours.ensureTourActive(tour, new RealMarkerFactory());
             Telemetry.get().jumpedTo(
-                    stop.getMostRecentFile().determineResource().toString(),
+                    stop.getMostRecentFile().getPath(),
                     stop.getMostRecentFragment() == null ? -1 : stop.getMostRecentFragment().getFrom().getLine());
             openEditorFor(stop);
         } catch (final CoreException e) {

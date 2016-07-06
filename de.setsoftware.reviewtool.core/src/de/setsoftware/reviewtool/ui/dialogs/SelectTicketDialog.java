@@ -21,6 +21,10 @@ import org.eclipse.ui.PlatformUI;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.TicketInfo;
 
+/**
+ * Dialog to select a ticket to review. The normal usage is to select the ticket
+ * from a list, but it's also possible to directly enter a custom ID.
+ */
 public class SelectTicketDialog extends Dialog {
 
     private Table selectionTable;
@@ -98,7 +102,10 @@ public class SelectTicketDialog extends Dialog {
             }
 
             @Override
-            public void widgetSelected(SelectionEvent arg0) { }
+            public void widgetSelected(SelectionEvent event) {
+                final TableItem item = (TableItem) event.item;
+                SelectTicketDialog.this.keyField.setText(item.getText(0));
+            }
         });
 
         return comp;
