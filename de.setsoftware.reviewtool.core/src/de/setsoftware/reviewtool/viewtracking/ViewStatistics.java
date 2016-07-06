@@ -118,7 +118,7 @@ public class ViewStatistics {
             }
 
             for (final Stop possibleNextStop : remainingStops) {
-                if (this.determineViewRatio(possibleNextStop, 1).isNotViewedAtAll()) {
+                if (this.determineViewRatio(possibleNextStop, 1).isPartlyUnvisited()) {
                     if (i > 0 || !tour.getStops().contains(currentStop)) {
                         if (startTourIndex + i >= tourCount) {
                             nextStopCallback.wrappedAround();

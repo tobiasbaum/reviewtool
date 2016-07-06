@@ -1,6 +1,8 @@
 package de.setsoftware.reviewtool.viewtracking;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
@@ -109,6 +111,9 @@ public class ViewStatisticsForFileTest {
         assertEquals(0.375, s.determineViewRatio(32, 39, 8).getAverageRatio(), DELTA);
         assertEquals(0.5, s.determineViewRatio(31, 40, 8).getMaxRatio(), DELTA);
         assertEquals(0.5, s.determineViewRatio(32, 39, 8).getMaxRatio(), DELTA);
+        assertFalse(s.determineViewRatio(31, 40, 8).isPartlyUnvisited());
+        assertFalse(s.determineViewRatio(31, 32, 8).isPartlyUnvisited());
+        assertTrue(s.determineViewRatio(30, 40, 8).isPartlyUnvisited());
     }
 
 }

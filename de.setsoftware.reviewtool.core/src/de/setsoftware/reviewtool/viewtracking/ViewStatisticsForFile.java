@@ -45,7 +45,7 @@ public class ViewStatisticsForFile {
 
     public ViewStatDataForStop determineViewRatioWithoutPosition(int longEnoughCount) {
         final double ratio = this.determineRatio(this.unspecificCount, longEnoughCount);
-        return new ViewStatDataForStop(ratio, ratio);
+        return new ViewStatDataForStop(ratio, ratio, ratio);
     }
 
     private double determineRatio(int actualCount, int longEnoughCount) {
@@ -69,14 +69,16 @@ public class ViewStatisticsForFile {
         double sum = 0.0;
         int count = 0;
         double max = 0.0;
+        double min = Double.MAX_VALUE;
         for (int line = lineFrom; line <= lineTo; line++) {
             final Integer countForLine = this.countsPerLine.get(line);
             final double lineRatio = this.determineRatio(countForLine == null ? 0 : countForLine, longEnoughCount);
             sum += lineRatio;
             count++;
             max = Math.max(max, lineRatio);
+            min = Math.min(min, lineRatio);
         }
-        return new ViewStatDataForStop(sum / count, max);
+        return new ViewStatDataForStop(sum / count, max, min);
     }
 
 }
