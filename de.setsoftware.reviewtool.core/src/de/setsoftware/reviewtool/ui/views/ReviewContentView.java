@@ -98,15 +98,6 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 ReviewContentView.this.jumpToStopForItem(tours, (TreeItem) e.item);
             }
         });
-//        tree.addListener(SWT.DefaultSelection, new Listener() {
-//            @Override
-//            public void handleEvent(Event event) {
-//                final TreeItem[] selection = tree.getSelection();
-//                if (selection.length > 0) {
-//                    ReviewContentView.this.jumpToStopForItem(tours, selection[0]);
-//                }
-//            }
-//        });
 
         ViewHelper.createContextMenu(this, tv.getControl(), tv);
         ensureActiveTourExpanded(tv, tours);

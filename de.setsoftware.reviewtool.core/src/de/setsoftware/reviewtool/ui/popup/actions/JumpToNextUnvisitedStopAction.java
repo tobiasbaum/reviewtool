@@ -11,6 +11,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.ui.views.CurrentStop;
 import de.setsoftware.reviewtool.ui.views.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ReviewContentView;
@@ -27,13 +28,14 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
         final Shell shell = HandlerUtil.getActiveShell(event);
-        final ToursInReview tours = ViewDataSource.get().getToursInReview();
+        final ToursInReview tours = this.getToursAndStartReviewIfNecessary();
         final ViewStatistics stats = TrackerManager.get().getStatistics();
         if (tours == null || stats == null) {
             MessageDialog.openInformation(shell, "Kein aktives Review",
                     "Kein aktives Review");
             return null;
         }
+
 
         final Stop nextStop = stats.getNextUnvisitedStop(
                 tours,
@@ -66,6 +68,19 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
 
         ReviewContentView.jumpTo(tours, tours.getActiveTour(), nextStop);
         return null;
+    }
+
+    private ToursInReview getToursAndStartReviewIfNecessary() throws ExecutionException {
+        final ToursInReview tours = ViewDataSource.get().getToursInReview();
+        if (tours != null) {
+            return tours;
+        }
+        try {
+            ReviewPlugin.getInstance().startReview();
+        } catch (final CoreException e) {
+            throw new ExecutionException("error while selecting ticket", e);
+        }
+        return ViewDataSource.get().getToursInReview();
     }
 
 }
