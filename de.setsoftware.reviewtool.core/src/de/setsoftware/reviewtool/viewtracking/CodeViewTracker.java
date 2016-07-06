@@ -43,8 +43,7 @@ public class CodeViewTracker {
             if (activeEditor == null) {
                 continue;
             }
-            final ITextOperationTarget target = (ITextOperationTarget)
-                    activeEditor.getAdapter(ITextOperationTarget.class);
+            final ITextOperationTarget target = activeEditor.getAdapter(ITextOperationTarget.class);
 
             if (target instanceof ITextViewer) {
                 final ITextViewer textViewer = (ITextViewer) target;
@@ -58,7 +57,7 @@ public class CodeViewTracker {
     }
 
     private File determineFilePath(IEditorPart activeEditor) {
-        final IFile file = (IFile) activeEditor.getEditorInput().getAdapter(IFile.class);
+        final IFile file = activeEditor.getEditorInput().getAdapter(IFile.class);
         if (file != null) {
             final IPath path = file.getLocation();
             if (path == null) {
@@ -66,8 +65,7 @@ public class CodeViewTracker {
             }
             return path.toFile();
         }
-        final FileStoreEditorInput externalFile = (FileStoreEditorInput) 
-                activeEditor.getEditorInput().getAdapter(FileStoreEditorInput.class);
+        final FileStoreEditorInput externalFile = activeEditor.getEditorInput().getAdapter(FileStoreEditorInput.class);
         if (externalFile != null) {
             return new File(externalFile.getURI());
         }
@@ -86,8 +84,11 @@ public class CodeViewTracker {
                 if (!CodeViewTracker.this.running) {
                     return;
                 }
-                CodeViewTracker.this.performSnapshot();
-                CodeViewTracker.this.workbench.getDisplay().timerExec(CHECK_INTERVAL, this);
+                try {
+                    CodeViewTracker.this.performSnapshot();
+                } finally {
+                    CodeViewTracker.this.workbench.getDisplay().timerExec(CHECK_INTERVAL, this);
+                }
             }
         };
     }

@@ -321,8 +321,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         @Override
         public void statisticsChanged(File absolutePath) {
-            for (final Stop stop : this.tours.getStopsFor(absolutePath)) {
-                this.viewer.update(stop, null);
+            if (this.viewer != null) {
+                for (final Stop stop : this.tours.getStopsFor(absolutePath)) {
+                    this.viewer.update(stop, null);
+                }
             }
         }
 
