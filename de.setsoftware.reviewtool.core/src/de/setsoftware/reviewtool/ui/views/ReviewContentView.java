@@ -67,6 +67,9 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
     @Override
     public void setFocus() {
+        if (this.currentContent != null) {
+            this.currentContent.setFocus();
+        }
     }
 
     @Override
