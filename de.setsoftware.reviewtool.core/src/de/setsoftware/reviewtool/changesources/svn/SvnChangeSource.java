@@ -299,8 +299,10 @@ public class SvnChangeSource implements IChangeSource {
 
         final FileInRevision oldFileInfo =
                 new FileInRevision(oldPath, this.previousRevision(revision), repoUrl);
+        //in case of deletions, the path is null, but FileInRevision does not allow null paths
+        final String newPath = entryInfo.getPath() != null ? entryInfo.getPath() : oldPath;
         final FileInRevision newFileInfo =
-                new FileInRevision(entryInfo.getPath(), this.revision(revision), repoUrl);
+                new FileInRevision(newPath, this.revision(revision), repoUrl);
         final List<Change> ret = new ArrayList<>();
         final List<Pair<Fragment, Fragment>> changes = this.diffAlgorithm.determineDiff(
                 oldFileInfo,

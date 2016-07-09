@@ -307,14 +307,18 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         @Override
         public void toursChanged() {
-            if (this.viewer != null) {
-                this.viewer.refresh();
-                ensureActiveTourExpanded(this.viewer, this.tours);
+            if (this.viewer == null) {
+                return;
             }
+            this.viewer.refresh();
+            ensureActiveTourExpanded(this.viewer, this.tours);
         }
 
         @Override
         public void activeTourChanged(Tour oldActive, Tour newActive) {
+            if (this.viewer == null) {
+                return;
+            }
             this.viewer.update(oldActive, null);
             this.viewer.update(newActive, null);
             ensureActiveTourExpanded(this.viewer, this.tours);
@@ -327,16 +331,20 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         @Override
         public void statisticsChanged(File absolutePath) {
-            if (this.viewer != null) {
-                for (final Stop stop : this.tours.getStopsFor(absolutePath)) {
-                    this.viewer.update(stop, null);
-                }
+            if (this.viewer == null) {
+                return;
+            }
+            for (final Stop stop : this.tours.getStopsFor(absolutePath)) {
+                this.viewer.update(stop, null);
             }
         }
 
         @Override
         public void notifyStopChange(Stop newStopOrNull) {
             if (newStopOrNull == null) {
+                return;
+            }
+            if (this.viewer == null) {
                 return;
             }
             final ITreeSelection oldSelection = (ITreeSelection) this.viewer.getSelection();
