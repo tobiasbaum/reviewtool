@@ -21,6 +21,7 @@ public class ViewStatistics {
 
     /**
      * Marks that the given portion of the file has been viewed for one time slot.
+     * Line numbers are one-based and both inclusive.
      */
     public void mark(File filePath, int fromLine, int toLine) {
         final File absFile = filePath.getAbsoluteFile();

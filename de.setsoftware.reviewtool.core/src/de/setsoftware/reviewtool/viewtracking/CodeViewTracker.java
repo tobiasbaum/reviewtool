@@ -116,7 +116,7 @@ public class CodeViewTracker {
             if (target instanceof ITextViewer) {
                 final ITextViewer textViewer = (ITextViewer) target;
                 this.statistics.mark(activeFilePath,
-                        textViewer.getTopIndex(), textViewer.getBottomIndex());
+                        textViewer.getTopIndex() + 1, textViewer.getBottomIndex() + 1);
             } else {
                 this.statistics.markUnknownPosition(activeFilePath);
             }
