@@ -18,6 +18,14 @@ public abstract class AbstractTelemetry {
     private String currentUser;
 
     /**
+     * Sets the ticket key and user that is used for the following events.
+     */
+    public void registerTicketAndUser(String ticketKey, String user) {
+        this.currentTicketKey = ticketKey;
+        this.currentUser = user;
+    }
+
+    /**
      * Sends the event that a review has been started at the current moment in time.
      */
     public final void reviewStarted(String ticketKey, String reviewer, int round,

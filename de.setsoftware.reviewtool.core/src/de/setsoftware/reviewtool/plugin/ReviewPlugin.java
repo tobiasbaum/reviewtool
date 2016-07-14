@@ -210,6 +210,11 @@ public class ReviewPlugin implements IReviewConfigurable {
             this.toursInReview = null;
             return;
         }
+        //The startReview event is sent only after all data is loaded. but some user interaction is possible
+        //  before. Therefore the ticket key and reviewer is already set here.
+        Telemetry.get().registerTicketAndUser(
+                this.persistence.getTicketKey(),
+                this.persistence.getReviewerForCurrentRound());
         this.clearMarkers();
 
         this.loadToursAndCreateMarkers();
