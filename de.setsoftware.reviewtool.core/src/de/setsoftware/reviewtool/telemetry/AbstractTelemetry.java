@@ -158,6 +158,19 @@ public abstract class AbstractTelemetry {
     }
 
     /**
+     * Sends the event that a launch (for example of JUnit tests) has occurred at the current moment in time.
+     */
+    public void launchOccured(String launchMode, String launchConfigName) {
+        this.putData(
+                "launch",
+                this.currentTicketKey,
+                this.currentUser,
+                map(
+                    "mode", launchMode,
+                    "config", launchConfigName));
+    }
+
+    /**
      * Hashes the given string so that the real value is not directly visible.
      */
     protected static String obfuscate(String data) {

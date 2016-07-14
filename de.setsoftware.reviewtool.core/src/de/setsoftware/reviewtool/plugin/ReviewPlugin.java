@@ -9,6 +9,9 @@ import javax.xml.parsers.ParserConfigurationException;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.debug.core.DebugPlugin;
+import org.eclipse.debug.core.ILaunch;
+import org.eclipse.debug.core.ILaunchesListener;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -118,6 +121,26 @@ public class ReviewPlugin implements IReviewConfigurable {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
                 ReviewPlugin.this.reconfigure();
+            }
+        });
+
+        DebugPlugin.getDefault().getLaunchManager().addLaunchListener(new ILaunchesListener() {
+            @Override
+            public void launchesRemoved(ILaunch[] launches) {
+            }
+
+            @Override
+            public void launchesChanged(ILaunch[] launches) {
+            }
+
+            @Override
+            public void launchesAdded(ILaunch[] launches) {
+                if (ReviewPlugin.getInstance().getMode() != Mode.IDLE) {
+                    for (final ILaunch launch : launches) {
+                        Telemetry.get().launchOccured(
+                                launch.getLaunchMode(), launch.getLaunchConfiguration().getName());
+                    }
+                }
             }
         });
     }
