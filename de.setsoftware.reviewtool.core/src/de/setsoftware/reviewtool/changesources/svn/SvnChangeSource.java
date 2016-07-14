@@ -331,7 +331,7 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private boolean isStrangeChar(byte b) {
-        return b != '\n' && b != '\r' && b != '\t' && (b < 0x20 || b > 0x80);
+        return b != '\n' && b != '\r' && b != '\t' && b < 0x20;
     }
 
     private String determineOldPath(SVNLogEntryPath entryInfo) {
