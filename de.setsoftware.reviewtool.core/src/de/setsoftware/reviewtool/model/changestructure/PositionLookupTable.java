@@ -7,6 +7,8 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.filesystem.EFS;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.CoreException;
 
@@ -36,6 +38,20 @@ public class PositionLookupTable {
     }
 
     /**
+     * Creates a lookup table for the contents from the given file.
+     */
+    public static PositionLookupTable create(IFileStore fileStore)
+            throws IOException, CoreException {
+        final InputStream stream = fileStore.openInputStream(EFS.NONE, null);
+        try {
+            final Reader r = new InputStreamReader(stream, "UTF-8");
+            return create(r);
+        } finally {
+            stream.close();
+        }
+    }
+
+    /**
      * Creates a lookup table for the contents from the given reader.
      */
     static PositionLookupTable create(Reader reader) throws IOException {
@@ -54,7 +70,7 @@ public class PositionLookupTable {
     }
 
     /**
-     * Returns the number of characters from the start of the file up to the given position.
+     * Returns the number of characters from the start of the file up to (and including) the given position.
      */
     public int getCharsSinceFileStart(PositionInText pos) {
         //when tracing of changes does not work properly, there can be positions that are out of the file and

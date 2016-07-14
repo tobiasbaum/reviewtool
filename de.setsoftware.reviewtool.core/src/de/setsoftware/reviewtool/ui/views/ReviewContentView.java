@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.ui.views;
 
 import java.io.File;
+import java.io.IOException;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.filesystem.EFS;
@@ -8,6 +9,7 @@ import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
@@ -38,6 +40,7 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -124,7 +127,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     stop.getMostRecentFile().getPath(),
                     stop.getMostRecentFragment() == null ? -1 : stop.getMostRecentFragment().getFrom().getLine());
             openEditorFor(stop);
-        } catch (final CoreException e) {
+        } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
     }
@@ -134,7 +137,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         tv.expandToLevel(activeTour, TreeViewer.ALL_LEVELS);
     }
 
-    private static void openEditorFor(Stop stop) throws CoreException {
+    private static void openEditorFor(Stop stop) throws CoreException, IOException {
         final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 
         //when jumping to a marker, Eclipse selects all the contained text. We don't want that, so
@@ -158,7 +161,15 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         } else {
             final IFileStore fileStore =
                     EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath());
-            IDE.openEditorOnFileStore(page, fileStore);
+            final IEditorPart part = IDE.openEditorOnFileStore(page, fileStore);
+            //for files not in the workspace, we cannot create markers, but let's at least select the text
+            if (stop.isDetailedFragmentKnown()) {
+                final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
+                final int posStart = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getFrom()) - 1;
+                final int posEnd = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getTo());
+                part.getEditorSite().getSelectionProvider().setSelection(
+                        new TextSelection(posStart, posEnd - posStart));
+            }
         }
     }
 
