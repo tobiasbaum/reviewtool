@@ -171,6 +171,19 @@ public abstract class AbstractTelemetry {
     }
 
     /**
+     * Sends the event that a file has been changed (and saved).
+     */
+    public void fileChanged(String path, int changeKind) {
+        this.putData(
+                "fileChanged",
+                this.currentTicketKey,
+                this.currentUser,
+                map(
+                    "path", path,
+                    "kind", Integer.toString(changeKind)));
+    }
+
+    /**
      * Hashes the given string so that the real value is not directly visible.
      */
     protected static String obfuscate(String data) {

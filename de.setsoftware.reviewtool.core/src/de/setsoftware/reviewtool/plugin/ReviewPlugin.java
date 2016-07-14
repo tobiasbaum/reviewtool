@@ -6,7 +6,11 @@ import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IResourceChangeEvent;
+import org.eclipse.core.resources.IResourceChangeListener;
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
@@ -104,6 +108,8 @@ public class ReviewPlugin implements IReviewConfigurable {
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
+    private ILaunchesListener launchesListener;
+    private IResourceChangeListener changeListener;
 
 
     private ReviewPlugin() {
@@ -121,26 +127,6 @@ public class ReviewPlugin implements IReviewConfigurable {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
                 ReviewPlugin.this.reconfigure();
-            }
-        });
-
-        DebugPlugin.getDefault().getLaunchManager().addLaunchListener(new ILaunchesListener() {
-            @Override
-            public void launchesRemoved(ILaunch[] launches) {
-            }
-
-            @Override
-            public void launchesChanged(ILaunch[] launches) {
-            }
-
-            @Override
-            public void launchesAdded(ILaunch[] launches) {
-                if (ReviewPlugin.getInstance().getMode() != Mode.IDLE) {
-                    for (final ILaunch launch : launches) {
-                        Telemetry.get().launchOccured(
-                                launch.getLaunchMode(), launch.getLaunchConfiguration().getName());
-                    }
-                }
             }
         });
     }
@@ -198,6 +184,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                     this.toursInReview.getNumberOfFragments(),
                     this.toursInReview.getNumberOfAddedLines(),
                     this.toursInReview.getNumberOfRemovedLines());
+            this.registerGlobalTelemetryListeners();
             TrackerManager.get().startTracker();
         }
     }
@@ -222,6 +209,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                     this.persistence.getTicketKey(),
                     getUserPref(),
                     this.persistence.getCurrentRound());
+            this.registerGlobalTelemetryListeners();
         }
     }
 
@@ -336,6 +324,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.clearMarkers();
         this.setMode(Mode.IDLE);
         this.toursInReview = null;
+        this.unregisterGlobalTelemetryListeners();
     }
 
     /**
@@ -401,6 +390,65 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     public ToursInReview getTours() {
         return this.toursInReview;
+    }
+
+    private void registerGlobalTelemetryListeners() {
+        this.launchesListener = new ILaunchesListener() {
+            @Override
+            public void launchesRemoved(ILaunch[] launches) {
+            }
+
+            @Override
+            public void launchesChanged(ILaunch[] launches) {
+            }
+
+            @Override
+            public void launchesAdded(ILaunch[] launches) {
+                try {
+                    for (final ILaunch launch : launches) {
+                        Telemetry.get().launchOccured(
+                                launch.getLaunchMode(), launch.getLaunchConfiguration().getName());
+                    }
+                } catch (final Exception e) {
+                    Logger.error("error while sending telemetry events", e);
+                }
+            }
+        };
+        DebugPlugin.getDefault().getLaunchManager().addLaunchListener(this.launchesListener);
+
+        this.changeListener = new IResourceChangeListener() {
+            @Override
+            public void resourceChanged(IResourceChangeEvent event) {
+                try {
+                    this.logAffectedFiles(event.getDelta());
+                } catch (final Exception e) {
+                    Logger.error("error while sending telemetry events", e);
+                }
+            }
+
+            private void logAffectedFiles(IResourceDelta delta) {
+                if (delta.getResource().isDerived()) {
+                    return;
+                }
+                if (delta.getResource() instanceof IFile) {
+                    if ((delta.getFlags() & IResourceDelta.CONTENT) == 0) {
+                        return;
+                    }
+                    Telemetry.get().fileChanged(delta.getFullPath().toString(), delta.getKind());
+                } else {
+                    final int kindMask = IResourceDelta.ADDED | IResourceDelta.CHANGED | IResourceDelta.REMOVED;
+                    for (final IResourceDelta d : delta.getAffectedChildren(kindMask, IResource.FILE)) {
+                        this.logAffectedFiles(d);
+                    }
+                }
+            }
+        };
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(this.changeListener, IResourceChangeEvent.POST_CHANGE);
+    }
+
+    private void unregisterGlobalTelemetryListeners() {
+        DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(this.launchesListener);
+        ResourcesPlugin.getWorkspace().removeResourceChangeListener(this.changeListener);
     }
 
 }
