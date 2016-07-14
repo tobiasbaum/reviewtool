@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.telemetry;
 
+import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -147,14 +148,40 @@ public abstract class AbstractTelemetry {
                     "tourIndex", Integer.toString(index)));
     }
 
-    public void jumpedTo(String resource, int line) {
+    /**
+     * Sends the event that the user used the reviewtool's "jump to stop" function.
+     */
+    public void jumpedTo(String resource, int line, String typeOfJump) {
         this.putData(
                 "jumpedTo",
                 this.currentTicketKey,
                 this.currentUser,
                 map(
                     "resource", resource,
-                    "line", Integer.toString(line)));
+                    "line", Integer.toString(line),
+                    "type", typeOfJump));
+    }
+
+    /**
+     * Sends the event that the active file(s) have changed. Is also called when inactivity ends.
+     */
+    public void activeFilesChanged(List<File> activeFiles) {
+        this.putData(
+                "activeFilesChanged",
+                this.currentTicketKey,
+                this.currentUser,
+                map("files", activeFiles.toString()));
+    }
+
+    /**
+     * Sends the event that the user is possibly inactive because there was no change for some time.
+     */
+    public void possibleInactivity(long timeWithoutChange) {
+        this.putData(
+                "possibleInactivity",
+                this.currentTicketKey,
+                this.currentUser,
+                map("sinceMs", Long.toString(timeWithoutChange)));
     }
 
     /**

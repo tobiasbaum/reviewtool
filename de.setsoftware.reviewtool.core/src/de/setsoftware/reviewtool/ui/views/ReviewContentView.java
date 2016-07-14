@@ -112,20 +112,21 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         if (item.getData() instanceof Stop) {
             final Stop stop = (Stop) item.getData();
             final Tour tour = (Tour) item.getParentItem().getData();
-            jumpTo(tours, tour, stop);
+            jumpTo(tours, tour, stop, "tree");
         }
     }
 
     /**
      * Jumps to the given fragment. Ensures that the corresponding tour is active.
      */
-    public static void jumpTo(ToursInReview tours, Tour tour, Stop stop) {
+    public static void jumpTo(ToursInReview tours, Tour tour, Stop stop, String typeForTelemetry) {
         CurrentStop.setCurrentStop(stop);
         try {
             tours.ensureTourActive(tour, new RealMarkerFactory());
             Telemetry.get().jumpedTo(
                     stop.getMostRecentFile().getPath(),
-                    stop.getMostRecentFragment() == null ? -1 : stop.getMostRecentFragment().getFrom().getLine());
+                    stop.getMostRecentFragment() == null ? -1 : stop.getMostRecentFragment().getFrom().getLine(),
+                    typeForTelemetry);
             openEditorFor(stop);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
@@ -229,7 +230,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 return false;
             }
 
-            jumpTo(tours, activeTour, nearestStop);
+            jumpTo(tours, activeTour, nearestStop, "showIn");
 
             return true;
         } catch (final ExecutionException e) {

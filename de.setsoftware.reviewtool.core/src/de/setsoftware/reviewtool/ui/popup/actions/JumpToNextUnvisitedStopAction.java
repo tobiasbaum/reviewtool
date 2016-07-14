@@ -66,7 +66,7 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
             return null;
         }
 
-        ReviewContentView.jumpTo(tours, tours.getActiveTour(), nextStop);
+        ReviewContentView.jumpTo(tours, tours.getActiveTour(), nextStop, "next");
         return null;
     }
 
