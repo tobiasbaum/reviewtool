@@ -13,7 +13,7 @@ CoRT is built at the "Fachgebiet Software Engineering" of Leibniz University Han
 ## The name
 
 Quite obviously, CoRT stands for "Code Review Tool". But as it is fashionable to name review tools after people's names (like Mondrian, Rietveld and Gerrit), we also have a corresponding explanation. In fact, we even have two:
-* CoRT sounds similar to Cord. Cord Broyhan was a famous beer brewer in Hannover in the middle age: https://de.wikipedia.org/wiki/Cord_Broyhan
+* CoRT sounds similar to Cord. Cord Broyhan was a famous beer brewer in Hannover in the middle ages: https://de.wikipedia.org/wiki/Cord_Broyhan
 * CoRT sounds similar to Kurt. Kurt Schwitters was an influential artist from Hannover: https://de.wikipedia.org/wiki/Kurt_Schwitters
 
 [![Build Status](https://travis-ci.org/tobiasbaum/reviewtool.svg?branch=master)](https://travis-ci.org/tobiasbaum/reviewtool)
