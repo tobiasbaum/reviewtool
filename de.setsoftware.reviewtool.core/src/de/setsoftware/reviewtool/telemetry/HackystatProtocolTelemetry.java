@@ -39,10 +39,9 @@ public class HackystatProtocolTelemetry extends AbstractTelemetry {
             Map<String, String> furtherProperties) {
 
         try {
-            //TODO use a more specific tool name
             this.hacky.writeData(
                     new Date(),
-                    "Code Review Tool " + this.version,
+                    "CoRT " + this.version,
                     eventType,
                     ticketKey,
                     obfuscate(user),
