@@ -41,7 +41,7 @@ public class CodeViewTracker {
     private final IWorkbench workbench;
     private final ViewStatistics statistics;
 
-    private boolean running;
+    private volatile boolean running;
 
     private long timeOfLastNoticedActivity;
     private boolean sentInactivity;

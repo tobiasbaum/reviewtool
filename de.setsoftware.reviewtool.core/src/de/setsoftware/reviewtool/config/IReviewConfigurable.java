@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.config;
 
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
+import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 
 /**
  * Interface to decouple the dynamically configurable review plugin from the
@@ -18,5 +19,10 @@ public interface IReviewConfigurable {
      * Adds a source for changes.
      */
     public abstract void setChangeSource(IChangeSource changeSource);
+
+    /**
+     * Adds an extension for the end review dialog.
+     */
+    public abstract void addEndReviewExtension(EndReviewExtension extension);
 
 }

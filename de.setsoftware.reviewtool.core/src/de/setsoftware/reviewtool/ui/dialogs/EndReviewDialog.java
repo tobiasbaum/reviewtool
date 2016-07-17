@@ -32,24 +32,28 @@ public class EndReviewDialog extends Dialog {
     private List<Button> radioButtons;
     private EndTransition typeOfEnd;
     private Text textField;
+    private final List<EndReviewExtension> endReviewExtensions;
+    private final List<EndReviewExtensionData> endReviewExtensionData = new ArrayList<>();
 
     protected EndReviewDialog(
             Shell parentShell,
             ReviewStateManager persistence,
             ReviewData reviewData,
-            List<EndTransition> endTransitions) {
+            List<EndTransition> endTransitions,
+            List<EndReviewExtension> endReviewExtensions) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.persistence = persistence;
         this.reviewData = reviewData;
         this.possibleChoices = endTransitions;
+        this.endReviewExtensions = endReviewExtensions;
     }
 
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
         newShell.setText("Review beenden - " + this.persistence.getCurrentTicketData().getTicketInfo().getId());
-        DialogHelper.restoreSavedSize(newShell, this, 500, 500);
+        DialogHelper.restoreSavedSize(newShell, this, 500, 700);
     }
 
     @Override
@@ -91,6 +95,10 @@ public class EndReviewDialog extends Dialog {
         this.textField.setText(this.reviewData.serialize());
         this.textField.setLayoutData(new GridData(GridData.FILL_BOTH));
 
+        for (final EndReviewExtension ext : this.endReviewExtensions) {
+            this.endReviewExtensionData.add(ext.createControls(comp));
+        }
+
         return comp;
     }
 
@@ -111,6 +119,12 @@ public class EndReviewDialog extends Dialog {
                 break;
             }
         }
+        for (final EndReviewExtensionData extData : this.endReviewExtensionData) {
+            final boolean cancel = extData.okPressed(this.typeOfEnd);
+            if (cancel) {
+                return;
+            }
+        }
         this.persistence.saveCurrentReviewData(this.textField.getText());
         DialogHelper.saveDialogSize(this);
         super.okPressed();
@@ -127,14 +141,14 @@ public class EndReviewDialog extends Dialog {
      * If the user decides to continue reviewing, null is returned.
      */
     public static EndTransition selectTypeOfEnd(
-            ReviewStateManager persistence, ReviewData reviewData) {
+            ReviewStateManager persistence, ReviewData reviewData, List<EndReviewExtension> extensions) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
         final List<EndTransition> endTransitions = new ArrayList<>();
         endTransitions.add(new EndTransition("Pause", null, EndTransition.Type.PAUSE));
         endTransitions.addAll(persistence.getPossibleTransitionsForReviewEnd());
         final EndReviewDialog dialog =
-                new EndReviewDialog(s, persistence, reviewData, endTransitions);
+                new EndReviewDialog(s, persistence, reviewData, endTransitions, extensions);
         final int ret = dialog.open();
         if (ret != OK) {
             return null;

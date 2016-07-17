@@ -8,6 +8,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 
 /**
@@ -18,10 +20,18 @@ public abstract class AbstractTelemetry {
     private String currentTicketKey;
     private String currentUser;
 
+    public AbstractTelemetry() {
+        Logger.debug("create telemetry " + this.toString());
+    }
+
     /**
      * Sets the ticket key and user that is used for the following events.
      */
     public void registerTicketAndUser(String ticketKey, String user) {
+        Logger.debug("registerTicketAndUser " + user + " at " + this);
+        if (user == null) {
+            throw new AssertionError("user is null for ticket key " + ticketKey);
+        }
         this.currentTicketKey = ticketKey;
         this.currentUser = user;
     }
@@ -29,15 +39,13 @@ public abstract class AbstractTelemetry {
     /**
      * Sends the event that a review has been started at the current moment in time.
      */
-    public final void reviewStarted(String ticketKey, String reviewer, int round,
+    public final void reviewStarted(int round,
             int numberOfTours, int numberOfStops, int numberOfFragments,
             int numberOfAddedLines, int numberOfRemovedLines) {
-        this.currentTicketKey = ticketKey;
-        this.currentUser = reviewer;
         this.putData(
                 "reviewStarted",
-                ticketKey,
-                reviewer,
+                this.currentTicketKey,
+                this.currentUser,
                 map("round", Integer.toString(round),
                     "cntTours", Integer.toString(numberOfTours),
                     "cntStops", Integer.toString(numberOfStops),
@@ -49,13 +57,11 @@ public abstract class AbstractTelemetry {
     /**
      * Sends the event that a remark fixing has been started at the current moment in time.
      */
-    public final void fixingStarted(String ticketKey, String reviewer, int round) {
-        this.currentTicketKey = ticketKey;
-        this.currentUser = reviewer;
+    public final void fixingStarted(int round) {
         this.putData(
                 "fixingStarted",
-                ticketKey,
-                reviewer,
+                this.currentTicketKey,
+                this.currentUser,
                 map("round", Integer.toString(round)));
     }
 
@@ -208,6 +214,22 @@ public abstract class AbstractTelemetry {
                 map(
                     "path", path,
                     "kind", Integer.toString(changeKind)));
+    }
+
+    /**
+     * Sends the event that some survey questions have been answered.
+     * The List contains the IDs of the questions and of the chosen answers.
+     */
+    public void surveyResult(List<Pair<String, String>> answers) {
+        final Map<String, String> answerMap = new LinkedHashMap<>();
+        for (final Pair<String, String> p : answers) {
+            answerMap.put("q_" + p.getFirst(), p.getSecond());
+        }
+        this.putData(
+                "surveyResult",
+                this.currentTicketKey,
+                this.currentUser,
+                answerMap);
     }
 
     /**

@@ -3,4 +3,34 @@
   <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" />
   <fileTicketStore defaultReviewer="${User-ID}" directory="C:\Temp\reviewData"/>
   <hackystatTelemetry dir="C:\Temp\hackybuffer" optOut="${Telemetrie OptOut}"/>
+  <surveyAtReviewEnd>
+    <question id="helpOfOthers" text="Hast du während des Reviews Hilfe von anderen Personen (z.B. dem Autor) in Anspruch genommen?">
+      <choice id="1" text="ja"/>
+      <choice id="2" text="nein"/>
+    </question>
+    <question id="hardness" text="Wie schwierig empfandst du dieses Review?">
+      <choice id="4" text="sehr schwierig (das Verstehen und Prüfen der Änderungen hat mich an meine Grenzen geführt)"/>
+      <choice id="3" text="eher schwierig (das Verstehen und Prüfen der Änderungen war mit umfangreichem Nachdenken oder Merken verbunden)"/>
+      <choice id="2" text="eher leicht (das Verstehen und Prüfen erforderte kein besonders umfangreiches Nachdenken oder Merken)"/>
+      <choice id="1" text="sehr leicht (das Verstehen und Prüfen der Änderungen war trivial)"/>
+    </question>
+    <question id="understanding" text="Wie gut hast du die Änderungen verstanden?">
+      <choice id="1" text="sehr schlecht (ich bin mir immer noch nicht sicher, was der Code machen soll)"/>
+      <choice id="2" text="eher schlecht (ich habe die wesentlichen Bestandteile verstanden, aber an einigen Stellen bin ich mir unsicher)"/>
+      <choice id="3" text="eher gut (ich weiß, was die Änderungen bewirken und weshalb sie nötig waren, aber ich könnte Randfälle übersehen haben)"/>
+      <choice id="4" text="sehr gut (ich bin mir sehr sicher, was die Änderungen bewirken und weshalb diese nötig waren)"/>
+    </question>
+    <question id="codeKnowledgeBefore" text="Wie gut warst du vor dem Review mit dem Code vertraut?">
+      <choice id="1" text="sehr schlecht (noch nicht damit beschäftigt)"/>
+      <choice id="2" text="eher schlecht (z.B. schon mal gereviewt oder vor einiger Zeit eine Kleinigkeit entwickelt)"/>
+      <choice id="3" text="eher gut (z.B. schon mal darin entwickelt, aber die Erinnerung ist etwas verblasst)"/>
+      <choice id="4" text="sehr gut (z.B. in größeren Umfang darin entwickelt, Details sind noch gut in Erinnerung)"/>
+    </question>
+    <question id="taskKnowledgeBefore" text="Wie gut warst du vor dem Review mit den Anforderungen vertraut?">
+      <choice id="1" text="sehr schlecht (noch nicht damit beschäftigt)"/>
+      <choice id="2" text="eher schlecht (am Rande damit beschäftigt)"/>
+      <choice id="3" text="eher gut (zum Teil an der Planung beteiligt)"/>
+      <choice id="4" text="sehr gut (umfassend an der Planung von Task und Story beteiligt)"/>
+    </question>
+  </surveyAtReviewEnd>
 </reviewToolConfig>

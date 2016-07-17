@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -54,7 +56,9 @@ import de.setsoftware.reviewtool.slicingalgorithms.OneTourPerCommit;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
+import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
+import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
 import de.setsoftware.reviewtool.ui.views.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
@@ -110,6 +114,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
     private ILaunchesListener launchesListener;
     private IResourceChangeListener changeListener;
+    List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
 
 
     private ReviewPlugin() {
@@ -121,18 +126,24 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.configInterpreter.addConfigurator(new SvnChangesourceConfigurator());
         this.configInterpreter.addConfigurator(new TelemetryConfigurator(bundleVersion));
         this.configInterpreter.addConfigurator(new VersionChecker(bundleVersion));
+        this.configInterpreter.addConfigurator(new SurveyAtEndConfigurator());
         this.reconfigure();
 
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
+                if (event.getProperty().startsWith("dialogSizes_")) {
+                    return;
+                }
                 ReviewPlugin.this.reconfigure();
             }
         });
     }
 
     private void reconfigure() {
+        Logger.info("reconfigure");
         this.changeSource = null;
+        this.endReviewExtensions.clear();
 
         try {
             final IPreferenceStore pref = getPrefs();
@@ -143,6 +154,12 @@ public class ReviewPlugin implements IReviewConfigurable {
         } catch (IOException | SAXException | ParserConfigurationException | ReviewtoolException e) {
             Logger.error("error while loading config", e);
             MessageDialog.openError(null, "Fehler beim Laden der Konfiguration", e.toString());
+        }
+
+        if (this.mode != Mode.IDLE) {
+            Telemetry.get().registerTicketAndUser(
+                    this.persistence.getTicketKey(),
+                    getUserPref());
         }
     }
 
@@ -176,8 +193,6 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (this.mode == Mode.REVIEWING) {
             this.switchToReviewPerspective();
             Telemetry.get().reviewStarted(
-                    this.persistence.getTicketKey(),
-                    this.persistence.getReviewerForCurrentRound(),
                     this.persistence.getCurrentRound(),
                     this.toursInReview.getNumberOfTours(),
                     this.toursInReview.getNumberOfStops(),
@@ -205,10 +220,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     public void startFixing() throws CoreException {
         this.loadReviewData(Mode.FIXING);
         if (this.mode == Mode.FIXING) {
-            Telemetry.get().fixingStarted(
-                    this.persistence.getTicketKey(),
-                    getUserPref(),
-                    this.persistence.getCurrentRound());
+            Telemetry.get().fixingStarted(this.persistence.getCurrentRound());
             this.registerGlobalTelemetryListeners();
         }
     }
@@ -225,7 +237,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         //  before. Therefore the ticket key and reviewer is already set here.
         Telemetry.get().registerTicketAndUser(
                 this.persistence.getTicketKey(),
-                this.persistence.getReviewerForCurrentRound());
+                getUserPref());
         this.clearMarkers();
 
         this.loadToursAndCreateMarkers();
@@ -291,8 +303,8 @@ public class ReviewPlugin implements IReviewConfigurable {
      * transition to use.
      */
     public void endReview() throws CoreException {
-        final EndTransition typeOfEnd =
-                EndReviewDialog.selectTypeOfEnd(this.persistence, this.getCurrentReviewDataParsed());
+        final EndTransition typeOfEnd = EndReviewDialog.selectTypeOfEnd(
+                this.persistence, this.getCurrentReviewDataParsed(), this.endReviewExtensions);
         if (typeOfEnd == null) {
             return;
         }
@@ -449,6 +461,11 @@ public class ReviewPlugin implements IReviewConfigurable {
     private void unregisterGlobalTelemetryListeners() {
         DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(this.launchesListener);
         ResourcesPlugin.getWorkspace().removeResourceChangeListener(this.changeListener);
+    }
+
+    @Override
+    public void addEndReviewExtension(EndReviewExtension extension) {
+        this.endReviewExtensions.add(extension);
     }
 
 }
