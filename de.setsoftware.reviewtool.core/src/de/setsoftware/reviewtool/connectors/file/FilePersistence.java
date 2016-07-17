@@ -59,7 +59,7 @@ public class FilePersistence implements IReviewPersistence {
         @Override
         public String getReviewerForRound(int number) {
             final List<String> lines = this.readReviewHistory();
-            if (number > lines.size()) {
+            if (number > lines.size() || number <= 0) {
                 return FilePersistence.this.defaultReviewer;
             } else {
                 return lines.get(number - 1);
