@@ -113,6 +113,9 @@ public class CodeViewTracker {
         for (final IEditorPart activeEditor : this.getActiveEditorParts()) {
             final Object target = activeEditor.getAdapter(ITextOperationTarget.class);
             final File activeFilePath = determineFilePath(activeEditor);
+            if (activeFilePath == null) {
+                continue;
+            }
             if (target instanceof ITextViewer) {
                 final ITextViewer textViewer = (ITextViewer) target;
                 this.statistics.mark(activeFilePath,
