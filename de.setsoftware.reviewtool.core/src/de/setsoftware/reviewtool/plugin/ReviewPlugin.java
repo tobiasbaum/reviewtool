@@ -432,26 +432,31 @@ public class ReviewPlugin implements IReviewConfigurable {
             @Override
             public void resourceChanged(IResourceChangeEvent event) {
                 try {
-                    this.logAffectedFiles(event.getDelta());
+                    this.logFirstAffectedFile(event.getDelta());
                 } catch (final Exception e) {
                     Logger.error("error while sending telemetry events", e);
                 }
             }
 
-            private void logAffectedFiles(IResourceDelta delta) {
+            private boolean logFirstAffectedFile(IResourceDelta delta) {
                 if (delta.getResource().isDerived()) {
-                    return;
+                    return false;
                 }
                 if (delta.getResource() instanceof IFile) {
                     if ((delta.getFlags() & IResourceDelta.CONTENT) == 0) {
-                        return;
+                        return false;
                     }
                     Telemetry.get().fileChanged(delta.getFullPath().toString(), delta.getKind());
+                    return true;
                 } else {
                     final int kindMask = IResourceDelta.ADDED | IResourceDelta.CHANGED | IResourceDelta.REMOVED;
                     for (final IResourceDelta d : delta.getAffectedChildren(kindMask, IResource.FILE)) {
-                        this.logAffectedFiles(d);
+                        final boolean alreadyLogged = this.logFirstAffectedFile(d);
+                        if (alreadyLogged) {
+                            return true;
+                        }
                     }
+                    return false;
                 }
             }
         };
