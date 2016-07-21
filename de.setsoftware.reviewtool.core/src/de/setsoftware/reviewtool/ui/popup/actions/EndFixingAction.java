@@ -17,8 +17,9 @@ public class EndFixingAction extends AbstractHandler {
         try {
             if (ReviewPlugin.getInstance().hasUnresolvedRemarks()) {
                 final Shell shell = HandlerUtil.getActiveShell(event);
-                final boolean yes = MessageDialog.openQuestion(shell, "Offene Anmerkungen",
-                        "Einige Anmerkungen wurden noch nicht als als bearbeitet markiert. Trotzdem abschließen?");
+                final boolean yes = MessageDialog.openQuestion(shell, "Open remarks",
+                        "Some remarks have not been marked as processed. You can mark"
+                        + " them with a quick fix on the marker. Finish anyway?");
                 if (!yes) {
                     return null;
                 }

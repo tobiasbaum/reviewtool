@@ -64,7 +64,7 @@ public class ReviewToolPreferencePage extends PreferencePage
         parentComposite.setFont(parent.getFont());
 
         this.fileField = new FileFieldEditor(
-                TEAM_CONFIG_FILE, "Datei mit Team-Einstellungen", parentComposite);
+                TEAM_CONFIG_FILE, "File with team config", parentComposite);
         this.initField(this.fileField);
 
         this.userParamTable = new Table(parentComposite, SWT.BORDER);
@@ -150,8 +150,8 @@ public class ReviewToolPreferencePage extends PreferencePage
                         this.getPreferenceStore().getString(USER_PARAM_PREFIX + userFieldName) });
             }
         } catch (final IOException | SAXException | ParserConfigurationException | ReviewtoolException e) {
-            MessageDialog.openError(this.getShell(), "Fehler beim Laden",
-                    "Die Team-Konfiguration konnte nicht geladen werden: " + e.getMessage());
+            MessageDialog.openError(this.getShell(), "Error while loading CoRT config",
+                    "The team configuration could not be loaded: " + e.getMessage());
             Logger.error("error while loading team config", e);
         }
     }
@@ -176,7 +176,7 @@ public class ReviewToolPreferencePage extends PreferencePage
     @Override
     public void init(IWorkbench workbench) {
         this.setPreferenceStore(Activator.getDefault().getPreferenceStore());
-        this.setDescription("Einstellungen für das Review-Tool");
+        this.setDescription("Settings for the CoRT code review tool");
     }
 
 

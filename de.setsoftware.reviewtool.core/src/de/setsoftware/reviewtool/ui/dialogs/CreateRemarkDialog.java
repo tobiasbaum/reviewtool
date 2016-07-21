@@ -26,9 +26,9 @@ import de.setsoftware.reviewtool.model.ReviewRound;
  */
 public class CreateRemarkDialog extends Dialog {
 
-    private static final String LINE_TEXT = "Bezug: Zeile";
-    private static final String FILE_TEXT = "Bezug: Datei";
-    private static final String GLOBAL_TEXT = "Bezug: global";
+    private static final String LINE_TEXT = "Reference: Line";
+    private static final String FILE_TEXT = "Reference: File";
+    private static final String GLOBAL_TEXT = "Reference: global";
 
     /**
      * Types of reference points for positions.
@@ -68,7 +68,7 @@ public class CreateRemarkDialog extends Dialog {
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Anmerkung eingeben");
+        newShell.setText("Enter remark");
         newShell.setSize(300, 270);
     }
 
@@ -138,13 +138,13 @@ public class CreateRemarkDialog extends Dialog {
     @Override
     protected void okPressed() {
         if (this.textField.getText().isEmpty()) {
-            MessageDialog.openError(this.getShell(), "Anmerkung fehlt",
-                    "Bitte eine Anmerkung eingeben");
+            MessageDialog.openError(this.getShell(), "Remark empty",
+                    "Please enter a text for the remark");
             return;
         }
         if (this.typeCombo.getText().isEmpty()) {
-            MessageDialog.openError(this.getShell(), "Art fehlt",
-                    "Bitte die Art der Anmerkung auswählen");
+            MessageDialog.openError(this.getShell(), "Kind missing",
+                    "Please choose the kind of remark");
             return;
         }
         this.callback.execute(

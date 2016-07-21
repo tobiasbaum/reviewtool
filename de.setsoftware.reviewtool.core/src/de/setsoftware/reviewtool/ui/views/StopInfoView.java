@@ -39,7 +39,7 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
     public void notifyStopChange(Stop fragment) {
         this.disposeOldContent();
         if (fragment == null) {
-            this.currentContent = this.createIdleContent("Kein Stop gewählt");
+            this.currentContent = this.createIdleContent("No review tour stop selected");
         } else {
             this.currentContent = this.createFragmentContent(fragment);
         }
@@ -77,7 +77,7 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
         final Label label;
         if (content == null) {
             label = new Label(scrollContent, SWT.NULL);
-            label.setText("binär");
+            label.setText("binary");
             label.setFont(
                     JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT));
         } else {

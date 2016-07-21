@@ -44,8 +44,8 @@ public class SurveyAtEndControls implements EndReviewExtensionData {
         for (final Pair<Question, Combo> combo : this.combos) {
             final String answerId = combo.getFirst().getIdForChoiceText(combo.getSecond().getText());
             if (answerId == null) {
-                MessageDialog.openError(null, "Bitte Umfrage ausfüllen",
-                        "Bitte beantworte die im Dialog angezeigten Fragen.");
+                MessageDialog.openError(null, "Please fill in survey",
+                        "Please answer the survey questions shown in the dialog.");
                 return true;
             }
             answers.add(Pair.create(combo.getFirst().getId(), answerId));

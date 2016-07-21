@@ -42,7 +42,7 @@ public class AddReplyDialog extends Dialog {
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Anmerkung eingeben");
+        newShell.setText("Enter reply");
         DialogHelper.restoreSavedSize(newShell, this, 300, 200);
     }
 

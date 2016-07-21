@@ -24,7 +24,7 @@ public class CommentResolution implements IMarkerResolution {
 
     @Override
     public String getLabel() {
-        return "Kommentar zu Reviewanmerkung ergänzen";
+        return "Add comment to review remark";
     }
 
     @Override

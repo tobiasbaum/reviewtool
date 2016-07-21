@@ -141,7 +141,6 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void reconfigure() {
-        Logger.info("reconfigure");
         this.changeSource = null;
         this.endReviewExtensions.clear();
 
@@ -153,7 +152,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             this.configInterpreter.configure(config, userParams, this);
         } catch (IOException | SAXException | ParserConfigurationException | ReviewtoolException e) {
             Logger.error("error while loading config", e);
-            MessageDialog.openError(null, "Fehler beim Laden der Konfiguration", e.toString());
+            MessageDialog.openError(null, "Error while loading the CoRT configuration.", e.toString());
         }
 
         if (this.mode != Mode.IDLE) {
@@ -311,8 +310,8 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (typeOfEnd.getType() != EndTransition.Type.PAUSE
                 && this.getCurrentReviewDataParsed().hasTemporaryMarkers()) {
             final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-            final boolean yes = MessageDialog.openQuestion(shell, "Offene Marker",
-                    "Es gibt noch temporäre Marker. Trotzdem abschließen?");
+            final boolean yes = MessageDialog.openQuestion(shell, "Open markers",
+                    "There are still temporary markers. Finish anyway?");
             if (!yes) {
                 return;
             }
@@ -377,9 +376,9 @@ public class ReviewPlugin implements IReviewConfigurable {
             @Override
             public boolean handleLocalWorkingCopyOutOfDate(String detailInfo) {
                 return MessageDialog.openQuestion(
-                        null, "Arbeitskopie veraltet",
-                        "Die Arbeitskopie (" + detailInfo
-                        + ") enthält nicht alle relevanten Änderungen. Soll ein Update durchgeführt werden?");
+                        null, "Working copy out of date",
+                        "The working copy (" + detailInfo
+                        + ") does not contain all relevant changes. Perform an update?");
             }
         };
         this.toursInReview = ToursInReview.create(

@@ -242,7 +242,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
-        label.setText("Nicht im Review-Modus");
+        label.setText("Not in review mode");
         ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
         return panel;
     }

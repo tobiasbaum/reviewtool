@@ -59,7 +59,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     }
 
     private ScrolledComposite createReviewContent(ReviewStateManager mgr) {
-        return this.createCommonContentForReviewAndFixing(mgr, "Review aktiv für:");
+        return this.createCommonContentForReviewAndFixing(mgr, "Review active for:");
     }
 
     private ScrolledComposite createCommonContentForReviewAndFixing(ReviewStateManager mgr, String title) {
@@ -76,11 +76,11 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
 
         final ITicketData ticketData = mgr.getCurrentTicketData();
         final TicketInfo ticketInfo = ticketData.getTicketInfo();
-        this.createLabelAndText(scrollContent, title, ticketInfo.getId() + ", Runde " + mgr.getCurrentRound(),
+        this.createLabelAndText(scrollContent, title, ticketInfo.getId() + ", round " + mgr.getCurrentRound(),
                 SWT.SINGLE, GridData.FILL_HORIZONTAL);
-        this.createLabelAndText(scrollContent, "Titel:", ticketInfo.getSummary(),
+        this.createLabelAndText(scrollContent, "Title:", ticketInfo.getSummary(),
                 SWT.SINGLE | SWT.WRAP, GridData.FILL_HORIZONTAL);
-        this.reviewDataText = this.createLabelAndText(scrollContent, "Reviewanmerkungen:", ticketData.getReviewData(),
+        this.reviewDataText = this.createLabelAndText(scrollContent, "Review remarks:", ticketData.getReviewData(),
                 SWT.MULTI, GridData.FILL_BOTH);
 
         scroll.setContent(scrollContent);
@@ -96,7 +96,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     }
 
     private Composite createFixingContent(ReviewStateManager mgr) {
-        return this.createCommonContentForReviewAndFixing(mgr, "Einpflegen aktiv für:");
+        return this.createCommonContentForReviewAndFixing(mgr, "Fixing active for:");
     }
 
     @Override
@@ -112,7 +112,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
-        label.setText("Kein Review oder Einpflegen aktiv");
+        label.setText("No review or fixing active");
 
         ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
 

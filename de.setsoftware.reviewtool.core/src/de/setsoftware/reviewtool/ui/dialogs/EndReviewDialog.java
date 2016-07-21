@@ -52,7 +52,7 @@ public class EndReviewDialog extends Dialog {
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Review beenden - " + this.persistence.getCurrentTicketData().getTicketInfo().getId());
+        newShell.setText("End review - " + this.persistence.getCurrentTicketData().getTicketInfo().getId());
         DialogHelper.restoreSavedSize(newShell, this, 500, 700);
     }
 
@@ -64,7 +64,7 @@ public class EndReviewDialog extends Dialog {
         layout.numColumns = 1;
 
         final Group buttonGroup = new Group(comp, SWT.NONE);
-        buttonGroup.setText("Art des Abschlusses");
+        buttonGroup.setText("Kind of end");
         final GridLayout gridLayout = new GridLayout();
         gridLayout.numColumns = 1;
         buttonGroup.setLayout(gridLayout);

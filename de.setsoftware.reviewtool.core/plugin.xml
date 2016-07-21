@@ -23,7 +23,7 @@
 	 </menuContribution>-->
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.startreview"
-	   		 label="Review beginnen ..." 
+	   		 label="Start review ..." 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -35,7 +35,7 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.endreview"
-	   		 label="Review beenden" 
+	   		 label="End review ..." 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -47,7 +47,7 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.startfixing"
-	   		 label="Reviewkorrektur beginnen ..." 
+	   		 label="Start fixing ..." 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -59,7 +59,7 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.endfixing"
-	   		 label="Reviewkorrektur beenden ..." 
+	   		 label="End fixing ..." 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -71,7 +71,7 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.addremark"
-	   		 label="Reviewanmerkung hinzufügen ..." 
+	   		 label="Add review remark ..." 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -83,7 +83,7 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.nextunvisitedstop"
-	   		 label="Zum nächsten unbesuchten Review-Stop" 
+	   		 label="Jump to next unvisited review stop" 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -95,7 +95,7 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.refreshmarkers"
-	   		 label="Reviewanmerkungen erneut laden" 
+	   		 label="Reload review remarks" 
 	   		 style="push">
 	   		 <visibleWhen
                   checkEnabled="false">
@@ -110,7 +110,7 @@
 	 </menuContribution>
 	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.reviewcontentview?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.mergetours"
-	   		 label="Touren zusammenführen" 
+	   		 label="Merge review tours" 
 	   		 style="push">
 	   		 <visibleWhen>
 	   		   <with variable="activeMenuSelection">
@@ -144,14 +144,14 @@
         id="de.setsoftware.reviewtool.commands.endfixing" name="End fixing">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.RefreshReviewMarkersAction"
-        id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh markers">
+        id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh review markers">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MergeToursAction"
-        id="de.setsoftware.reviewtool.commands.mergetours" name="Merge tours">
+        id="de.setsoftware.reviewtool.commands.mergetours" name="Merge review tours">
      </command>
    </extension>
 
-	<extension id="de.setsoftware.reviewtool.reviewmarker" point="org.eclipse.core.resources.markers" name="Review-Anmerkung">
+	<extension id="de.setsoftware.reviewtool.reviewmarker" point="org.eclipse.core.resources.markers" name="Review remark">
 		<super type="org.eclipse.core.resources.problemmarker"/>
 		<super type="org.eclipse.core.resources.textmarker"/>
 		<persistent value="false"/>
@@ -160,7 +160,7 @@
 		<attribute name="de.setsoftware.reviewtool.markerattributes.position"/>
 	</extension>
 	
-    <extension id="de.setsoftware.reviewtool.tourStopMarker" point="org.eclipse.core.resources.markers" name="Review-Tour-Stop">
+    <extension id="de.setsoftware.reviewtool.tourStopMarker" point="org.eclipse.core.resources.markers" name="Review tour stop">
         <super type="org.eclipse.core.resources.textmarker"/>
     </extension>
 
@@ -201,7 +201,7 @@
     <page
           class="de.setsoftware.reviewtool.plugin.ReviewToolPreferencePage"
           id="de.setsoftware.reviewtool.preferences"
-          name="Review-Einstellungen">
+          name="CoRT review settings">
     </page>
  </extension>
  
@@ -227,7 +227,7 @@
             isGoToNextNavigationTargetKey="tourStop_isGoToNextNavigationTargetKey"
             isGoToPreviousNavigationTarget="true"
             isGoToPreviousNavigationTargetKey="tourStop_isGoToPreviousNavigationTargetKey"
-            label="Zu reviewen"
+            label="To review"
             overviewRulerPreferenceKey="tourStop_overviewRuler"
             overviewRulerPreferenceValue="true"
             presentationLayer="0"
@@ -244,14 +244,14 @@
 
  <extension point="org.eclipse.ui.views">
         <view id="de.setsoftware.reviewtool.ui.views.reviewinfoview"
-             name="Review-Info"
+             name="Review info"
              class="de.setsoftware.reviewtool.ui.views.ReviewInfoView"/>
              <!-- icon="icons\view.gif"/> -->
         <view id="de.setsoftware.reviewtool.ui.views.reviewcontentview"
-             name="Review-Inhalt"
+             name="Review content"
              class="de.setsoftware.reviewtool.ui.views.ReviewContentView"/>
         <view id="de.setsoftware.reviewtool.ui.views.fragmentinfoview"
-             name="Tour-Stop-Info"
+             name="Review stop info"
              class="de.setsoftware.reviewtool.ui.views.StopInfoView"/>
  </extension>
 

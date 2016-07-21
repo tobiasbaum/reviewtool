@@ -55,7 +55,7 @@ public class SelectTicketDialog extends Dialog {
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Ticket auswählen");
+        newShell.setText("Choose ticket");
         DialogHelper.restoreSavedSize(newShell, this, 700, 500);
     }
 
@@ -70,7 +70,7 @@ public class SelectTicketDialog extends Dialog {
                 SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
         this.selectionTable.setHeaderVisible(true);
         this.selectionTable.setLayoutData(new GridData(GridData.FILL_BOTH));
-        final String[] titles = {"ID", "Beschreibung", "Status", "Komponente"};
+        final String[] titles = {"ID", "Description", "State", "Component"};
 
         for (int i = 0; i < titles.length; i++) {
             final TableColumn column = new TableColumn(this.selectionTable, SWT.NULL);
@@ -114,8 +114,8 @@ public class SelectTicketDialog extends Dialog {
     @Override
     protected void okPressed() {
         if (this.keyField.getText().isEmpty()) {
-            MessageDialog.openError(this.getShell(), "Schlüssel fehlt",
-                    "Bitte einen Ticket-Schlüssel eingeben");
+            MessageDialog.openError(this.getShell(), "ID missing",
+                    "Please enter a ticket ID or select a ticket.");
             return;
         }
         this.selectedKey = this.keyField.getText();

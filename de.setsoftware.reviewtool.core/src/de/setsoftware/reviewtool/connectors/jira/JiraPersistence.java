@@ -137,8 +137,8 @@ public class JiraPersistence implements IReviewPersistence {
             }
             possibleNames.add(name);
         }
-        throw new ReviewtoolException("Status " + stateName + " nicht in JIRA gefunden."
-                + " Mögliche Werte: " + possibleNames);
+        throw new ReviewtoolException("Status " + stateName + " not found in JIRA."
+                + " Possible values: " + possibleNames);
     }
 
     @Override

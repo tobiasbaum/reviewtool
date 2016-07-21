@@ -24,7 +24,7 @@ public class WontFixResolution implements IMarkerResolution {
 
     @Override
     public String getLabel() {
-        return "Ablehnen";
+        return "Refuse fixing";
     }
 
     @Override

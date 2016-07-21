@@ -27,7 +27,7 @@ public class FixedResolution extends WorkbenchMarkerResolution {
 
     @Override
     public String getLabel() {
-        return "Eingepflegt";
+        return "Fixed";
     }
 
     @Override

@@ -46,7 +46,7 @@ public class CorrectSyntaxDialog extends Dialog {
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Syntaxfehler-Korrektur");
+        newShell.setText("Syntax error correction");
         DialogHelper.restoreSavedSize(newShell, this, 500, 700);
     }
 
@@ -58,7 +58,7 @@ public class CorrectSyntaxDialog extends Dialog {
         layout.numColumns = 1;
 
         final Label label = new Label(comp, SWT.NULL);
-        label.setText("Die Review-Daten sind syntaktisch fehlerhaft. Bitte manuell korrigieren:\n\n"
+        label.setText("The review data has syntax errors. Please correct manually:\n\n"
                 + this.errorMessage);
 
         this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE);
@@ -66,7 +66,7 @@ public class CorrectSyntaxDialog extends Dialog {
         this.textField.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         final Label example = new Label(comp, SWT.NULL);
-        example.setText("Beispiel:\n\n" + this.createExampleData());
+        example.setText("Example:\n\n" + this.createExampleData());
 
         return comp;
     }
@@ -77,33 +77,33 @@ public class CorrectSyntaxDialog extends Dialog {
             final ReviewStateManager p = new ReviewStateManager(s, new StubUi("TEST-1234"));
             final ReviewRemark r1 = ReviewRemark.create(
                     p, newMarker(), "TB", new GlobalPosition(),
-                    "globale Review-Anmerkung, die der Reviewer als wichtig ansieht", RemarkType.MUST_FIX);
+                    "global review remark important to the reviewer", RemarkType.MUST_FIX);
             r1.addComment("AUTHOR-ID", "Nachfrage");
             r1.setResolution(ResolutionType.QUESTION);
             r1.save();
             final ReviewRemark r2 = ReviewRemark.create(
                     p, newMarker(), "TB", new FilePosition("FileName"),
-                    "optionale Anmerkung mit Bezug zu einer Datei", RemarkType.CAN_FIX);
-            r2.addComment("AUTHOR-ID", "Kommentar mit Ablehnung");
+                    "optional remark, with reference to a file", RemarkType.CAN_FIX);
+            r2.addComment("AUTHOR-ID", "comment to refuse fixing");
             r2.setResolution(ResolutionType.WONT_FIX);
             r2.save();
             final ReviewRemark r3 = ReviewRemark.create(
                     p, newMarker(), "TB", new FileLinePosition("FileName", 42),
-                    "Anmerkung für direktes Einpflegen mit Bezug zu einer Zeile", RemarkType.ALREADY_FIXED);
+                    "remark for direct fixing in a certain line", RemarkType.ALREADY_FIXED);
             r3.save();
 
             s.setReviewRound(2);
             final ReviewRemark r4 = ReviewRemark.create(
                     p, newMarker(), "TB", new GlobalPosition(),
-                    "gut gemacht", RemarkType.POSITIVE);
+                    "well done", RemarkType.POSITIVE);
             r4.save();
             final ReviewRemark r5 = ReviewRemark.create(
                     p, newMarker(), "TB", new GlobalPosition(),
-                    "kurzzeitiger Merker für den Reviewer", RemarkType.TEMPORARY);
+                    "temporary marker for the reviewer", RemarkType.TEMPORARY);
             r5.save();
             final ReviewRemark r6 = ReviewRemark.create(
                     p, newMarker(), "TB", new GlobalPosition(),
-                    "allgemeiner Hinweis, z.B. 'Teil der Anmerkungen mündlich übermittelt'", RemarkType.OTHER);
+                    "some other remark, e.g. 'part of the remarks have been communicated orally'", RemarkType.OTHER);
             r6.save();
 
             return p.getCurrentReviewData();

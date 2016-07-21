@@ -31,8 +31,8 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
         final ToursInReview tours = this.getToursAndStartReviewIfNecessary();
         final ViewStatistics stats = TrackerManager.get().getStatistics();
         if (tours == null || stats == null) {
-            MessageDialog.openInformation(shell, "Kein aktives Review",
-                    "Kein aktives Review");
+            MessageDialog.openInformation(shell, "No active review",
+                    "No active review");
             return null;
         }
 
@@ -49,20 +49,20 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
                         } catch (final CoreException e) {
                             throw new RuntimeException(e);
                         }
-                        MessageDialog.openInformation(shell, "Wechsel der Tour",
-                                "Beginn einer neuen Tour:\n" + tour.getDescription());
+                        MessageDialog.openInformation(shell, "Change of review tour",
+                                "Start of a new tour:\n" + tour.getDescription());
                     }
 
                     @Override
                     public void wrappedAround() {
-                        MessageDialog.openInformation(shell, "Ende der letzten Tour",
-                                "Es wurde das Ende der letzten Tour erreicht und neu von vorne begonnen.");
+                        MessageDialog.openInformation(shell, "End of last tour",
+                                "The end of the last tour has been reached and CoRT wrapped around to the beginning.");
                     }
 
                 });
         if (nextStop == null) {
-            MessageDialog.openInformation(shell, "Keine weiteren Stops",
-                    "Es gibt keine weiteren Stops, die noch nicht betrachtet wurden.");
+            MessageDialog.openInformation(shell, "No further stops",
+                    "There are no stops left that have not been visited.");
             return null;
         }
 
