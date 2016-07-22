@@ -22,91 +22,81 @@
 	   </command>
 	 </menuContribution>-->
 	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.startreview"
-	   		 label="Start review ..." 
-	   		 style="push">
-	   		 <visibleWhen
-                  checkEnabled="false">
-               <with variable="de.setsoftware.reviewtool.mode">
-                  <equals value="IDLE"/>
-               </with>
-            </visibleWhen>
-	   </command>
-	 </menuContribution>
-	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.endreview"
-	   		 label="End review ..." 
-	   		 style="push">
-	   		 <visibleWhen
-                  checkEnabled="false">
-               <with variable="de.setsoftware.reviewtool.mode">
-                  <equals value="REVIEWING"/>
-               </with>
-            </visibleWhen>
-	   </command>
-	 </menuContribution>
-	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.startfixing"
-	   		 label="Start fixing ..." 
-	   		 style="push">
-	   		 <visibleWhen
-                  checkEnabled="false">
-               <with variable="de.setsoftware.reviewtool.mode">
-                  <equals value="IDLE"/>
-               </with>
-            </visibleWhen>
-	   </command>
-	 </menuContribution>
-	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.endfixing"
-	   		 label="End fixing ..." 
-	   		 style="push">
-	   		 <visibleWhen
-                  checkEnabled="false">
-               <with variable="de.setsoftware.reviewtool.mode">
-                  <equals value="FIXING"/>
-               </with>
-            </visibleWhen>
-	   </command>
-	 </menuContribution>
-	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.addremark"
-	   		 label="Add review remark ..." 
-	   		 style="push">
-	   		 <visibleWhen
-                  checkEnabled="false">
-               <with variable="de.setsoftware.reviewtool.mode">
-                  <equals value="REVIEWING"/>
-               </with>
-            </visibleWhen>
-	   </command>
-	 </menuContribution>
-	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.nextunvisitedstop"
-	   		 label="Jump to next unvisited review stop" 
-	   		 style="push">
-	   		 <visibleWhen
-                  checkEnabled="false">
-               <with variable="de.setsoftware.reviewtool.mode">
-                  <equals value="REVIEWING"/>
-               </with>
-            </visibleWhen>
-	   </command>
-	 </menuContribution>
-	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.refreshmarkers"
-	   		 label="Reload review remarks" 
-	   		 style="push">
-	   		 <visibleWhen
-                  checkEnabled="false">
-               <with variable="de.setsoftware.reviewtool.mode">
-               	  <or>
-                    <equals value="REVIEWING"/>
-                    <equals value="FIXING"/>
-                  </or>
-               </with>
-            </visibleWhen>
-	   </command>
+	   <menu label="CoRT code review">
+		   <command commandId="de.setsoftware.reviewtool.commands.startreview"
+		   		 label="Start review ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="IDLE"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.endreview"
+		   		 label="End review ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="REVIEWING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.startfixing"
+		   		 label="Start fixing ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="IDLE"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.endfixing"
+		   		 label="End fixing ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="FIXING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.addremark"
+		   		 label="Add review remark ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="REVIEWING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.nextunvisitedstop"
+		   		 label="Jump to next unvisited review stop" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="REVIEWING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.refreshmarkers"
+		   		 label="Reload review remarks" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	               	  <or>
+	                    <equals value="REVIEWING"/>
+	                    <equals value="FIXING"/>
+	                  </or>
+	               </with>
+	            </visibleWhen>
+		   </command>
+	   </menu>
 	 </menuContribution>
 	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.reviewcontentview?after=additions">
 	   <command commandId="de.setsoftware.reviewtool.commands.mergetours"
