@@ -190,6 +190,9 @@ public class ReviewPlugin implements IReviewConfigurable {
      * Lets the user select a ticket and starts reviewing for it.
      */
     public void startReview() throws CoreException {
+        if (this.invalidMode(Mode.IDLE)) {
+            return;
+        }
         this.loadReviewData(Mode.REVIEWING);
         if (this.mode == Mode.REVIEWING) {
             this.switchToReviewPerspective();
@@ -219,6 +222,9 @@ public class ReviewPlugin implements IReviewConfigurable {
      * Lets the user select a ticket and starts fixing for it.
      */
     public void startFixing() throws CoreException {
+        if (this.invalidMode(Mode.IDLE)) {
+            return;
+        }
         this.loadReviewData(Mode.FIXING);
         if (this.mode == Mode.FIXING) {
             Telemetry.get().fixingStarted(this.persistence.getCurrentRound());
@@ -304,6 +310,9 @@ public class ReviewPlugin implements IReviewConfigurable {
      * transition to use.
      */
     public void endReview() throws CoreException {
+        if (this.invalidMode(Mode.REVIEWING)) {
+            return;
+        }
         final EndTransition typeOfEnd = EndReviewDialog.selectTypeOfEnd(
                 this.persistence, this.getCurrentReviewDataParsed(), this.endReviewExtensions);
         if (typeOfEnd == null) {
@@ -344,12 +353,34 @@ public class ReviewPlugin implements IReviewConfigurable {
      * Ends fixing and changes the ticket's state accordingly.
      */
     public void endFixing() throws CoreException {
+        if (this.invalidMode(Mode.FIXING)) {
+            return;
+        }
+        if (this.hasUnresolvedRemarks()) {
+            final boolean yes = MessageDialog.openQuestion(null, "Open remarks",
+                    "Some remarks have not been marked as processed. You can mark"
+                    + " them with a quick fix on the marker. Finish anyway?");
+            if (!yes) {
+                return;
+            }
+        }
         Telemetry.get().fixingEnded(
                 this.persistence.getTicketKey(),
                 this.persistence.getReviewerForCurrentRound(),
                 this.persistence.getCurrentRound());
         this.persistence.changeStateToReadyForReview();
         this.leaveReviewMode();
+    }
+
+    private boolean invalidMode(Mode expectedMode) {
+        if (this.mode == expectedMode) {
+            return false;
+        } else {
+            MessageDialog.openError(null, "Action not possible in current mode",
+                    "The chosen action is not possible in CoRT's current mode. The current mode is "
+                    + this.mode + ", the needed mode is " + expectedMode + ".");
+            return true;
+        }
     }
 
     public boolean hasUnresolvedRemarks() {
