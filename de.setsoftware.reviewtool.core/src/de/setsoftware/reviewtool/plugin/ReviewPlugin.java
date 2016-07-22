@@ -234,7 +234,8 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     private void loadReviewData(Mode targetMode) throws CoreException {
         this.persistence.resetKey();
-        final boolean ok = this.persistence.selectTicket(targetMode == Mode.REVIEWING);
+        final boolean forReview = targetMode == Mode.REVIEWING;
+        final boolean ok = this.persistence.selectTicket(forReview);
         if (!ok) {
             this.setMode(Mode.IDLE);
             this.toursInReview = null;
@@ -255,6 +256,11 @@ public class ReviewPlugin implements IReviewConfigurable {
             this.setMode(Mode.IDLE);
             this.toursInReview = null;
             return;
+        }
+        if (forReview) {
+            this.persistence.startReviewing();
+        } else {
+            this.persistence.startFixing();
         }
         this.setMode(targetMode);
     }

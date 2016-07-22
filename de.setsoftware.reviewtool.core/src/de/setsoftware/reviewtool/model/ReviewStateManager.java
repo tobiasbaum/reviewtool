@@ -95,20 +95,11 @@ public class ReviewStateManager {
     }
 
     /**
-     * Asks the user for a ticket and changes the review mode accordingly.
+     * Asks the user for a ticket. Does not change the review mode.
      * @param forReview True iff selection should be for review, false iff it should be for fixing.
      */
     public boolean selectTicket(boolean forReview) {
-        final boolean success = this.loadTicketDataAndCheckExistence(forReview) != null;
-        if (!success) {
-            return false;
-        }
-        if (forReview) {
-            this.persistence.startReviewing(this.ticketKey);
-        } else {
-            this.persistence.startFixing(this.ticketKey);
-        }
-        return true;
+        return this.loadTicketDataAndCheckExistence(forReview) != null;
     }
 
     public void resetKey() {
@@ -140,6 +131,14 @@ public class ReviewStateManager {
 
     public IUserInteraction getUi() {
         return this.userInteraction;
+    }
+
+    public void startReviewing() {
+        this.persistence.startReviewing(this.ticketKey);
+    }
+
+    public void startFixing() {
+        this.persistence.startFixing(this.ticketKey);
     }
 
 }
