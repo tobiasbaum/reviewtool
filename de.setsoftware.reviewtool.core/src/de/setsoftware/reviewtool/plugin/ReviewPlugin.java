@@ -18,8 +18,9 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchesListener;
+import org.eclipse.equinox.security.storage.ISecurePreferences;
+import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Shell;
@@ -145,12 +146,11 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.endReviewExtensions.clear();
 
         try {
-            final IPreferenceStore pref = getPrefs();
             final Document config = ConfigurationInterpreter.load(
-                    pref.getString(ReviewToolPreferencePage.TEAM_CONFIG_FILE));
-            final Map<String, String> userParams = ReviewToolPreferencePage.getUserParams(config, pref);
+                    Activator.getDefault().getPreferenceStore().getString(ReviewToolPreferencePage.TEAM_CONFIG_FILE));
+            final Map<String, String> userParams = ReviewToolPreferencePage.getUserParams(config, getSecurePrefs());
             this.configInterpreter.configure(config, userParams, this);
-        } catch (IOException | SAXException | ParserConfigurationException | ReviewtoolException e) {
+        } catch (IOException | SAXException | ParserConfigurationException | ReviewtoolException | StorageException e) {
             Logger.error("error while loading config", e);
             MessageDialog.openError(null, "Error while loading the CoRT configuration.", e.toString());
         }
@@ -162,14 +162,16 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    private static IPreferenceStore getPrefs() {
-        final IPreferenceStore pref = Activator.getDefault().getPreferenceStore();
-        pref.setDefault(ConfigurationInterpreter.USER_PARAM_NAME, System.getProperty("user.name"));
-        return pref;
+    private static ISecurePreferences getSecurePrefs() throws StorageException {
+        return ReviewToolPreferencePage.getSecurePreferences();
     }
 
     private static String getUserPref() {
-        return getPrefs().getString(ConfigurationInterpreter.USER_PARAM_NAME);
+        try {
+            return getSecurePrefs().get(ConfigurationInterpreter.USER_PARAM_NAME, "");
+        } catch (final StorageException e) {
+            throw new ReviewtoolException(e);
+        }
     }
 
     public static ReviewStateManager getPersistence() {

@@ -1,12 +1,10 @@
 package de.setsoftware.reviewtool.plugin;
 
 import org.eclipse.core.runtime.Status;
-import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
-import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
@@ -47,15 +45,6 @@ public class Activator extends AbstractUIPlugin {
                 return ReviewPlugin.getInstance().getTours();
             }
         });
-        this.initializeDefaultPreferences();
-    }
-
-    /**
-     * Sets the default values for the preference store.
-     */
-    public void initializeDefaultPreferences() {
-        final IPreferenceStore store = this.getPreferenceStore();
-        store.setDefault(ConfigurationInterpreter.USER_PARAM_NAME, System.getProperty("user.name"));
     }
 
     @Override
