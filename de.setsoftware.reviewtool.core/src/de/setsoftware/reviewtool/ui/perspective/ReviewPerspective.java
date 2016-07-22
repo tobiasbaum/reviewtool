@@ -31,6 +31,9 @@ public class ReviewPerspective implements IPerspectiveFactory {
         layout.addView("de.setsoftware.reviewtool.ui.views.reviewcontentview", IPageLayout.RIGHT, 0.75f, editorArea);
 
         layout.addShowInPart("de.setsoftware.reviewtool.ui.views.reviewcontentview");
+
+        //the standard Java actions shall be available
+        layout.addActionSet("org.eclipse.jdt.ui.JavaActionSet");
     }
 
 }
