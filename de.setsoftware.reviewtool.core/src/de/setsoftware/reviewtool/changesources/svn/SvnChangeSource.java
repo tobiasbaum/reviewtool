@@ -36,7 +36,7 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
-import de.setsoftware.reviewtool.diffalgorithms.SimpleTextDiffAlgorithm;
+import de.setsoftware.reviewtool.diffalgorithms.SimpleSourceDiffAlgorithm;
 import de.setsoftware.reviewtool.model.changestructure.BinaryChange;
 import de.setsoftware.reviewtool.model.changestructure.Change;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
@@ -59,7 +59,7 @@ public class SvnChangeSource implements IChangeSource {
     private final Set<File> workingCopyRoots;
     private final String logMessagePattern;
     private final SVNClientManager mgr = SVNClientManager.newInstance();
-    private final IDiffAlgorithm diffAlgorithm = new SimpleTextDiffAlgorithm();
+    private final IDiffAlgorithm diffAlgorithm = new SimpleSourceDiffAlgorithm();
 
     public SvnChangeSource(
             List<File> projectRoots, String logMessagePattern, String user, String pwd) {
