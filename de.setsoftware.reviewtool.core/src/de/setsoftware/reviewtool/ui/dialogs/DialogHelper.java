@@ -64,4 +64,12 @@ public class DialogHelper {
         }
     }
 
+    public static void saveSetting(String id, String value) {
+        preferenceStore.setValue("dialogSetting_" + id, value);
+    }
+
+    public static String getSetting(String id) {
+        return preferenceStore.getString("dialogSetting_" + id);
+    }
+
 }

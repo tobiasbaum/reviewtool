@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * An implementation of {@link IReviewPersistence} that does not persist anything.
@@ -21,14 +22,20 @@ public class PersistenceStub implements IReviewPersistence {
     }
 
     @Override
-    public List<TicketInfo> getReviewableTickets() {
-        return Collections.emptyList();
+    public Set<String> getFilterNamesForReview() {
+        return Collections.emptySet();
     }
 
     @Override
-    public List<TicketInfo> getFixableTickets() {
+    public Set<String> getFilterNamesForFixing() {
+        return Collections.emptySet();
+    }
+
+    @Override
+    public List<TicketInfo> getTicketsForFilter(String filterName) {
         return Collections.emptyList();
     }
+
 
     @Override
     public ITicketData loadTicket(String ticketKey) {

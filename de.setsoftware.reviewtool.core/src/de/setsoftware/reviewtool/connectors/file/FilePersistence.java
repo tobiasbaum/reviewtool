@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.EndTransition;
@@ -104,13 +105,23 @@ public class FilePersistence implements IReviewPersistence {
     }
 
     @Override
-    public List<TicketInfo> getReviewableTickets() {
-        return this.getTicketsWithState(READY_FOR_REVIEW, IN_REVIEW);
+    public Set<String> getFilterNamesForReview() {
+        return Collections.singleton("Reviewable");
     }
 
     @Override
-    public List<TicketInfo> getFixableTickets() {
-        return this.getTicketsWithState(REJECTED, IN_IMPLEMENTATION);
+    public Set<String> getFilterNamesForFixing() {
+        return Collections.singleton("Fixable");
+    }
+
+    @Override
+    public List<TicketInfo> getTicketsForFilter(String filterName) {
+        if (filterName.equals("Reviewable")) {
+            return this.getTicketsWithState(READY_FOR_REVIEW, IN_REVIEW);
+        } else if (filterName.equals("Fixable")) {
+            return this.getTicketsWithState(REJECTED, IN_IMPLEMENTATION);
+        }
+        return Collections.emptyList();
     }
 
     private List<TicketInfo> getTicketsWithState(String... states) {

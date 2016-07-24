@@ -133,7 +133,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(PropertyChangeEvent event) {
-                if (event.getProperty().startsWith("dialogSizes_")) {
+                if (event.getProperty().startsWith("dialog")) {
                     return;
                 }
                 ReviewPlugin.this.reconfigure();

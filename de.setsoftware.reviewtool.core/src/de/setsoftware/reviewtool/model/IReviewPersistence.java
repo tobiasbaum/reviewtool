@@ -1,15 +1,29 @@
 package de.setsoftware.reviewtool.model;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  * Abstraction of the different ways to get possible work and to save review information.
  */
 public interface IReviewPersistence {
 
-    public abstract List<TicketInfo> getReviewableTickets();
+    /**
+     * Returns the names of filters from which the user can choose when starting a review.
+     * There must be at least one such filter.
+     */
+    public abstract Set<String> getFilterNamesForReview();
 
-    public abstract List<TicketInfo> getFixableTickets();
+    /**
+     * Returns the names of filters from which the user can choose when starting a fixing.
+     * There must be at least one such filter.
+     */
+    public abstract Set<String> getFilterNamesForFixing();
+
+    /**
+     * Returns all tickets that match the given filter.
+     */
+    public abstract List<TicketInfo> getTicketsForFilter(String filterName);
 
     public abstract void saveReviewData(String ticketKey, String newData);
 

@@ -9,8 +9,10 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -97,6 +99,8 @@ public class JiraPersistence implements IReviewPersistence {
     private final String doneStateId;
     private final String user;
     private final String password;
+    private final Map<String, String> filtersForReview;
+    private final Map<String, String> filtersForFixing;
 
     private String reviewFieldId;
 
@@ -119,6 +123,8 @@ public class JiraPersistence implements IReviewPersistence {
         this.readyForReviewStateId = this.getStateId(states, readyForReviewState);
         this.rejectedStateId = this.getStateId(states, rejectedState);
         this.doneStateId = this.getStateId(states, doneState);
+        this.filtersForReview = new LinkedHashMap<>();
+        this.filtersForFixing = new LinkedHashMap<>();
     }
 
     private JsonArray loadStates() {
@@ -186,20 +192,36 @@ public class JiraPersistence implements IReviewPersistence {
     }
 
     @Override
-    public List<TicketInfo> getReviewableTickets() {
-        return this.queryTickets(String.format(
-                "(status = %s and assignee != currentUser()) or (status = %s and assignee = currentUser())",
-                this.readyForReviewStateId,
-                this.reviewStateId));
+    public Set<String> getFilterNamesForReview() {
+        return this.filtersForReview.keySet();
     }
 
     @Override
-    public List<TicketInfo> getFixableTickets() {
-        return this.queryTickets(String.format(
-                "assignee = currentUser() and (status = %s or (status = %s and %s is not EMPTY))",
-                this.rejectedStateId,
-                this.implementationStateId,
-                this.reviewFieldName));
+    public Set<String> getFilterNamesForFixing() {
+        return this.filtersForFixing.keySet();
+    }
+
+    @Override
+    public List<TicketInfo> getTicketsForFilter(String filterName) {
+        if (this.filtersForReview.containsKey(filterName)) {
+            return this.queryTickets(this.filtersForReview.get(filterName));
+        } else {
+            return this.queryTickets(this.filtersForFixing.get(filterName));
+        }
+    }
+
+    /**
+     * Adds a filter to the set of known filters.
+     * @param name The filters name.
+     * @param jql The JQL select for the filter.
+     * @param forReview true iff it is a filter for tickets to review, false iff it is for fixing.
+     */
+    public void addFilter(String name, String jql, boolean forReview) {
+        if (forReview) {
+            this.filtersForReview.put(name, jql);
+        } else {
+            this.filtersForFixing.put(name, jql);
+        }
     }
 
     private List<TicketInfo> queryTickets(final String jql) {
