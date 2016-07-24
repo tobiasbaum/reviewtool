@@ -115,6 +115,7 @@ public class SelectTicketDialog extends Dialog {
         for (int i = 0; i < titles.length; i++) {
             this.selectionTable.getColumn(i).pack();
         }
+        this.selectionTable.setFocus();
 
         this.keyField = new Text(comp, SWT.BORDER);
         this.keyField.setText(this.oldValue);

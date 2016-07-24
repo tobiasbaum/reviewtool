@@ -402,7 +402,7 @@ public class SvnChangeSource implements IChangeSource {
 
     @Override
     public IFragmentTracer createTracer() {
-        return new SvnFragmentTracer();
+        return new SvnFragmentTracer(this.mgr);
     }
 
 }

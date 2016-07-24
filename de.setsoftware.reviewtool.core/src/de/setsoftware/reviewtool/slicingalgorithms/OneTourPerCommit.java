@@ -10,7 +10,6 @@ import de.setsoftware.reviewtool.model.changestructure.ChangeVisitor;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.ISlicingStrategy;
-import de.setsoftware.reviewtool.model.changestructure.LocalRevision;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
@@ -55,7 +54,7 @@ public class OneTourPerCommit implements ISlicingStrategy {
                 ret.setValue(new Stop(
                         visitee.getFrom(),
                         visitee.getTo(),
-                        OneTourPerCommit.this.tracer.traceFragment(visitee.getTo(), new LocalRevision())));
+                        OneTourPerCommit.this.tracer.traceFragment(visitee.getTo())));
             }
 
             @Override
@@ -63,7 +62,7 @@ public class OneTourPerCommit implements ISlicingStrategy {
                 ret.setValue(new Stop(
                         visitee.getFrom(),
                         visitee.getTo(),
-                        OneTourPerCommit.this.tracer.traceFile(visitee.getTo(), new LocalRevision())));
+                        OneTourPerCommit.this.tracer.traceFile(visitee.getTo())));
             }
 
         });
