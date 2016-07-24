@@ -5,7 +5,9 @@ import java.util.List;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 
 /**
  * A single review remark.
@@ -24,11 +26,27 @@ public class ReviewRemark {
         this.marker = marker;
     }
 
+    /**
+     * Creates a review remark for the given line in the given resource and binds it to a marker.
+     */
     public static ReviewRemark create(
             ReviewStateManager p, IResource resource, String user, String text, int line, RemarkType type)
                     throws CoreException {
         final IMarker marker = resource.createMarker(Constants.REVIEWMARKER_ID);
-        return create(p, marker, user, PositionTransformer.toPosition(resource, line), text, type);
+        final Position pos = PositionTransformer.toPosition(resource.getFullPath(), line, resource.getWorkspace());
+        return create(p, marker, user, pos, text, type);
+    }
+
+    /**
+     * Creates a review remark for the given line in the given file, but does not bind it to a marker (e.g.
+     * because the file is not imported in the workspace).
+     */
+    public static ReviewRemark createWithoutMarker(
+            ReviewStateManager p, IPath path, String user, String text, int line, RemarkType type, IWorkspace workspace)
+                    throws CoreException {
+        final IMarker marker = new DummyMarker(Constants.REVIEWMARKER_ID);
+        final Position pos = PositionTransformer.toPosition(path, line, workspace);
+        return create(p, marker, user, pos, text, type);
     }
 
     /**
@@ -116,7 +134,11 @@ public class ReviewRemark {
         final List<ReviewRemarkComment> ret = new ArrayList<>();
         for (final String part : parts) {
             final String[] userAndText = part.split(": ", 2);
-            ret.add(new ReviewRemarkComment(userAndText[0], userAndText[1]));
+            if (userAndText.length != 2) {
+                ret.add(new ReviewRemarkComment("", part));
+            } else {
+                ret.add(new ReviewRemarkComment(userAndText[0], userAndText[1]));
+            }
         }
         return ret;
     }

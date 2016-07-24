@@ -75,22 +75,22 @@ public class PositionTransformer {
     /**
      * Creates a position identifying the given line in the given resource.
      */
-    public static Position toPosition(IResource resource, int line) {
-        if (resource.getType() != IResource.FILE) {
+    public static Position toPosition(IPath path, int line, IWorkspace workspace) {
+        if (path.toFile().isDirectory()) {
             return new GlobalPosition();
         }
-        final String filename = stripExtension(resource.getName());
+        final String filename = stripExtension(path.lastSegment());
         if (filename.isEmpty()) {
             return new GlobalPosition();
         }
-        final List<IPath> possiblePaths = getCachedPathsForName(resource, filename);
+        final List<IPath> possiblePaths = getCachedPathsForName(workspace, filename);
         if (possiblePaths == null) {
             return new GlobalPosition();
         }
         if (possiblePaths.size() == 1) {
             return createPos(filename, line);
         }
-        return createPos(getShortestUniqueName(resource.getFullPath(), possiblePaths), line);
+        return createPos(getShortestUniqueName(path, possiblePaths), line);
     }
 
     private static String getShortestUniqueName(IPath resourcePath, List<IPath> possiblePaths) {
@@ -141,12 +141,12 @@ public class PositionTransformer {
         return ret.toString();
     }
 
-    private static synchronized List<IPath> getCachedPathsForName(IResource resource, String filename) {
+    private static synchronized List<IPath> getCachedPathsForName(IWorkspace workspace, String filename) {
         if (cache == null) {
             //should normally have already been initialized, but it wasn't, so take
             //  the last chance to do so and do it synchronously
             try {
-                fillCache(resource.getWorkspace(), NO_CANCEL_MONITOR);
+                fillCache(workspace, NO_CANCEL_MONITOR);
             } catch (final InterruptedException e) {
                 throw new AssertionError(e);
             }
@@ -154,7 +154,7 @@ public class PositionTransformer {
         final List<IPath> cachedPaths = toList(cache.get(filename));
         if ((cachedPaths == null && cacheMightBeStale()) || cacheIsReallyOld()) {
             //Perhaps the resource exists but the cache was stale => trigger refresh
-            refreshCacheInBackground(resource.getWorkspace());
+            refreshCacheInBackground(workspace);
         }
         return cachedPaths;
     }
@@ -209,16 +209,11 @@ public class PositionTransformer {
     private static Set<IPath> determineRootPaths(IProject[] projects) {
         final Set<IPath> ret = new LinkedHashSet<>();
         //paths that are not included as a project but part of the scm repo should be included, too
-        //  as a simple hack all siblings of the project directories are added, which works when all projects
+        //  as a simple hack all parents of the project directories are added, which works when all projects
         //  are checked out together and which scans too much (but hopefully is ok too) when the projects are
         //  checked out one by one
         for (final IProject project : projects) {
-            final IPath projectParent = project.getLocation().removeLastSegments(1);
-            for (final File dir : projectParent.toFile().listFiles()) {
-                if (!dir.getName().startsWith(".")) {
-                    ret.add(projectParent.append(dir.getName()));
-                }
-            }
+            ret.add(project.getLocation().removeLastSegments(1));
         }
         return ret;
     }
@@ -375,7 +370,7 @@ public class PositionTransformer {
         }
         final String[] segments = filename.split("/");
         final String filenameWithoutExtension = stripExtension(segments[segments.length - 1]);
-        final List<IPath> paths = getCachedPathsForName(workspaceRoot, filenameWithoutExtension);
+        final List<IPath> paths = getCachedPathsForName(workspaceRoot.getWorkspace(), filenameWithoutExtension);
         if (paths == null) {
             return workspaceRoot;
         }

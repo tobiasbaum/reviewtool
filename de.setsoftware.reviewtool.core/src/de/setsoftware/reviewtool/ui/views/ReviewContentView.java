@@ -8,7 +8,9 @@ import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -37,6 +39,8 @@ import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.GlobalPosition;
+import de.setsoftware.reviewtool.model.Position;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
@@ -191,7 +195,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     @Override
     public boolean show(ShowInContext context) {
         try {
-            Pair<? extends IResource, Integer> pos = ViewHelper.extractFileAndLineFromSelection(
+            Pair<? extends Object, Integer> pos = ViewHelper.extractFileAndLineFromSelection(
                     context.getSelection(), context.getInput());
 
             //unfortunately it seems to be very hard to get the line for a structured selection
@@ -202,7 +206,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     final IEditorPart activeEditor = page.getActiveEditor();
                     if (activeEditor != null) {
                         final ISelection sel2 = activeEditor.getEditorSite().getSelectionProvider().getSelection();
-                        final Pair<? extends IResource, Integer> pos2 =
+                        final Pair<? extends Object, Integer> pos2 =
                                 ViewHelper.extractFileAndLineFromSelection(sel2, context.getInput());
                         if (pos2 != null) {
                             pos = pos2;
@@ -225,7 +229,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 return false;
             }
 
-            final Stop nearestStop = activeTour.findNearestStop(pos.getFirst(), pos.getSecond());
+            final Object pathOrResource = pos.getFirst();
+            final IPath path = pathOrResource instanceof IPath
+                    ? (IPath) pathOrResource : ((IResource) pathOrResource).getFullPath();
+            final Stop nearestStop = activeTour.findNearestStop(path, pos.getSecond());
             if (nearestStop == null) {
                 return false;
             }
@@ -437,11 +444,14 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         }
 
         private String determineFilename(final Stop f) {
-            final IResource resource = f.getMostRecentFile().determineResource();
-            if (resource != null) {
-                return PositionTransformer.toPosition(resource, -1).getShortFileName();
-            } else {
+            final Position pos = PositionTransformer.toPosition(
+                    f.getMostRecentFile().toLocalPath(),
+                    -1,
+                    ResourcesPlugin.getWorkspace());
+            if (pos instanceof GlobalPosition) {
                 return new File(f.getMostRecentFile().getPath()).getName();
+            } else {
+                return pos.getShortFileName();
             }
         }
     }

@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.IPath;
 
 import de.setsoftware.reviewtool.base.Multimap;
 
@@ -123,7 +123,7 @@ public class Tour {
      * The closeness measure is tweaked to (hopefully) capture the users intention as good as possible
      * for cases where he did not click directly on a stop.
      */
-    public Stop findNearestStop(IResource resource, int line) {
+    public Stop findNearestStop(IPath resource, int line) {
         if (this.stops.isEmpty()) {
             return null;
         }
@@ -139,8 +139,8 @@ public class Tour {
         return best;
     }
 
-    private int calculateDistance(Stop stop, IResource resource, int line) {
-        if (!stop.getMostRecentFile().determineResource().equals(resource)) {
+    private int calculateDistance(Stop stop, IPath resource, int line) {
+        if (!stop.getMostRecentFile().toLocalPath().equals(resource)) {
             return Integer.MAX_VALUE;
         }
 

@@ -4,6 +4,7 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.action.MenuManager;
@@ -18,6 +19,7 @@ import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.changestructure.Stop;
 
 /**
  * Helper methods for views.
@@ -66,9 +68,10 @@ public class ViewHelper {
     /**
      * Extracts the selected resource and line in that resource from the given selection and input.
      * If the position cannot be determined, the number zero is used. If the selection cannot be
-     * interpreted at all, null is returned.
+     * interpreted at all, null is returned. The first part of the pair is either an {@link IResource} (preferred)
+     * or an {@link IPath}.
      */
-    public static Pair<? extends IResource, Integer> extractFileAndLineFromSelection(ISelection sel, Object input)
+    public static Pair<? extends Object, Integer> extractFileAndLineFromSelection(ISelection sel, Object input)
         throws ExecutionException {
 
         final ITextSelection textSel = getAs(sel, ITextSelection.class);
@@ -103,7 +106,7 @@ public class ViewHelper {
         }
     }
 
-    private static Pair<IResource, Integer> handleStructuredSelection(IStructuredSelection selection)
+    private static Pair<? extends Object, Integer> handleStructuredSelection(IStructuredSelection selection)
             throws ExecutionException {
 
         for (final Object element : selection.toArray()) {
@@ -114,6 +117,12 @@ public class ViewHelper {
             final IResource res = getAs(element, IResource.class);
             if (res != null) {
                 return Pair.create(res, 0);
+            }
+            final Stop stop = getAs(element, Stop.class);
+            if (stop != null) {
+                return Pair.create(
+                        stop.getMostRecentFile().toLocalPath(),
+                        stop.isDetailedFragmentKnown() ? stop.getMostRecentFragment().getFrom().getLine() : 0);
             }
         }
         return null;
