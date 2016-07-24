@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
 
@@ -150,8 +151,10 @@ public class FilePersistence implements IReviewPersistence {
                 child.getName(),
                 ticketProperties.getProperty("description", ""),
                 this.getState(child),
+                "?",
                 ticketProperties.getProperty("component", ""),
-                ticketProperties.getProperty("parentSummary"));
+                ticketProperties.getProperty("parentSummary"),
+                new LinkedHashSet<>(new TicketDir(child).readReviewHistory()));
     }
 
     private boolean hasState(File child, String state) {

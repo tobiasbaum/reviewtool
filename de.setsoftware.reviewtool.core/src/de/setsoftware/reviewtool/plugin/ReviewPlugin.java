@@ -158,7 +158,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (this.mode != Mode.IDLE) {
             Telemetry.get().registerTicketAndUser(
                     this.persistence.getTicketKey(),
-                    getUserPref());
+                    getUserPref().toUpperCase());
         }
     }
 
@@ -245,7 +245,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         //  before. Therefore the ticket key and reviewer is already set here.
         Telemetry.get().registerTicketAndUser(
                 this.persistence.getTicketKey(),
-                getUserPref());
+                getUserPref().toUpperCase());
         this.clearMarkers();
 
         this.loadToursAndCreateMarkers();

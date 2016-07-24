@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+import de.setsoftware.reviewtool.base.Util;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.TicketInfo;
 
@@ -41,6 +42,10 @@ public class SelectTicketDialog extends Dialog {
         this.tickets = tickets;
     }
 
+    /**
+     * Shows the dialog and lets the user select a ticket.
+     * @return The ticket id, or null if none was selected.
+     */
     public static String get(IReviewPersistence p, String oldValue, boolean forReview) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
         final SelectTicketDialog dialog = new SelectTicketDialog(
@@ -70,7 +75,7 @@ public class SelectTicketDialog extends Dialog {
                 SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
         this.selectionTable.setHeaderVisible(true);
         this.selectionTable.setLayoutData(new GridData(GridData.FILL_BOTH));
-        final String[] titles = {"ID", "Description", "State", "Component"};
+        final String[] titles = {"ID", "Description", "State", "Prev. reviewers", "Prev. state", "Component"};
 
         for (int i = 0; i < titles.length; i++) {
             final TableColumn column = new TableColumn(this.selectionTable, SWT.NULL);
@@ -82,7 +87,9 @@ public class SelectTicketDialog extends Dialog {
             item.setText(0, ticket.getId());
             item.setText(1, ticket.getSummaryIncludingParent());
             item.setText(2, ticket.getState());
-            item.setText(3, ticket.getComponent());
+            item.setText(3, Util.implode(ticket.getReviewers()));
+            item.setText(4, ticket.getPreviousState());
+            item.setText(5, ticket.getComponent());
         }
 
         for (int i = 0; i < titles.length; i++) {

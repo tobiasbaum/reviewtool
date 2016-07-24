@@ -9,6 +9,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -207,6 +208,7 @@ public class JiraPersistence implements IReviewPersistence {
                     "%s/rest/api/latest/search"
                             + "?maxResults=200"
                             + "&fields=summary,components,status,parent"
+                            + "&expand=changelog"
                             + "&jql=%s"
                             + "%s",
                             this.url,
@@ -230,8 +232,44 @@ public class JiraPersistence implements IReviewPersistence {
                 ticket.get("key").asString(),
                 ticket.get("fields").asObject().get("summary").asString(),
                 ticket.get("fields").asObject().get("status").asObject().get("name").asString(),
+                this.getPreviousStatus(ticket),
                 this.formatComponents(ticket.get("fields").asObject().get("components").asArray()),
-                parent == null ? null : parent.asObject().get("fields").asObject().get("summary").asString());
+                parent == null ? null : parent.asObject().get("fields").asObject().get("summary").asString(),
+                this.getReviewers(ticket));
+    }
+
+    private Set<String> getReviewers(JsonObject ticket) {
+        final LinkedHashSet<String> reviewers = new LinkedHashSet<>();
+        final JsonArray histories = JiraPersistence.this.getHistories(ticket);
+        for (final JsonValue v : histories) {
+            if (this.isToReview(v)) {
+                reviewers.add(this.getToUser(v).toUpperCase());
+            }
+        }
+        return reviewers;
+    }
+
+    private String getPreviousStatus(JsonObject ticket) {
+        String prevStatus = "";
+        final JsonArray histories = JiraPersistence.this.getHistories(ticket);
+        for (final JsonValue v : histories) {
+            final String fromStatus = this.getFromStatus(v);
+            if (fromStatus != null) {
+                prevStatus = fromStatus;
+            }
+        }
+        return prevStatus;
+    }
+
+    private String getFromStatus(JsonValue v) {
+        final JsonArray items = v.asObject().get("items").asArray();
+        for (final JsonValue item : items) {
+            final JsonObject io = item.asObject();
+            if (io.get("field").asString().equals("status")) {
+                return io.get("fromString").asString();
+            }
+        }
+        return null;
     }
 
     private String formatComponents(JsonArray components) {
