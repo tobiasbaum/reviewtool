@@ -54,6 +54,9 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     public void notifyReview(ReviewStateManager mgr, ToursInReview tours) {
         mgr.addSaveListener(this);
         this.disposeOldContent();
+        if (this.comp.isDisposed()) {
+            return;
+        }
         this.currentContent = this.createReviewContent(mgr);
         this.comp.layout();
     }
@@ -91,6 +94,9 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     public void notifyFixing(ReviewStateManager mgr) {
         mgr.addSaveListener(this);
         this.disposeOldContent();
+        if (this.comp.isDisposed()) {
+            return;
+        }
         this.currentContent = this.createFixingContent(mgr);
         this.comp.layout();
     }
@@ -102,6 +108,9 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     @Override
     public void notifyIdle() {
         this.disposeOldContent();
+        if (this.comp.isDisposed()) {
+            return;
+        }
         this.currentContent = this.createIdleContent();
         this.comp.layout();
     }
@@ -127,7 +136,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
 
     @Override
     public void onSave(String newData) {
-        if (this.reviewDataText != null) {
+        if (this.reviewDataText != null && !this.reviewDataText.isDisposed()) {
             this.reviewDataText.setText(newData);
         }
     }
