@@ -33,6 +33,7 @@ public class SelectTicketDialog extends Dialog {
 
     private static final String KEY_LAST_USED_FILTER_REVIEW = "filterReview";
     private static final String KEY_LAST_USED_FILTER_FIXING = "filterFixing";
+    private static final int MAX_COLUMN_WIDTH = 600;
 
     private Combo filterCombo;
     private Table selectionTable;
@@ -113,7 +114,11 @@ public class SelectTicketDialog extends Dialog {
         this.fillTable();
 
         for (int i = 0; i < titles.length; i++) {
-            this.selectionTable.getColumn(i).pack();
+            final TableColumn column = this.selectionTable.getColumn(i);
+            column.pack();
+            if (column.getWidth() > MAX_COLUMN_WIDTH) {
+                column.setWidth(MAX_COLUMN_WIDTH);
+            }
         }
         this.selectionTable.setFocus();
 

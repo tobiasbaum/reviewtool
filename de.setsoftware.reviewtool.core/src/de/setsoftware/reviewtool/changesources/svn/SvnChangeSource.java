@@ -68,7 +68,7 @@ public class SvnChangeSource implements IChangeSource {
         this.workingCopyRoots = this.determineWorkingCopyRoots(projectRoots);
 
         this.logMessagePattern = logMessagePattern;
-        //test that the pattern can be parsed
+        //check that the pattern can be parsed
         this.createPatternForKey("TEST-123");
     }
 
