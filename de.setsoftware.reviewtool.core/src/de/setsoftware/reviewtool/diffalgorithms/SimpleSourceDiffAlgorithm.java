@@ -26,7 +26,7 @@ public class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
      */
     private static final class LogicalChunk {
 
-        private final OneFileView<String> lines;
+        private final FullFileView<String> lines;
         private final int startIndex;
         private final int endIndex;
 
@@ -38,9 +38,19 @@ public class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
 
         public static OneFileView<String> resolveChunking(
                 FullFileView<LogicalChunk> allChunks, OneFileView<LogicalChunk> chunks) {
-            final LogicalChunk first = allChunks.getLine(chunks.toIndexInWholeFile(0));
-            final LogicalChunk last = allChunks.getLine(chunks.toIndexInWholeFile(chunks.getLineCount() - 1));
-            return first.lines.subrange(first.startIndex, last.endIndex);
+            //all chunks need to have the same base file, therefore it does not matter which file we take
+            final FullFileView<String> allLines = allChunks.getItem(0).lines;
+
+            final int firstIndex = chunks.toIndexInWholeFile(0);
+            if (firstIndex >= allChunks.getItemCount()) {
+                return allLines.subrange(allLines.getItemCount(), allLines.getItemCount());
+            }
+            final LogicalChunk first = allChunks.getItem(firstIndex);
+            if (chunks.getItemCount() == 0) {
+                return allLines.subrange(first.startIndex, first.startIndex);
+            }
+            final LogicalChunk last = allChunks.getItem(chunks.toIndexInWholeFile(chunks.getItemCount() - 1));
+            return allLines.subrange(first.startIndex, last.endIndex);
         }
 
         @Override
@@ -60,7 +70,7 @@ public class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
                 return false;
             }
             for (int i = 0; i < thisLength; i++) {
-                if (!this.lines.getLine(this.startIndex + i).equals(c.lines.getLine(c.startIndex + i))) {
+                if (!this.lines.getItem(this.startIndex + i).equals(c.lines.getItem(c.startIndex + i))) {
                     return false;
                 }
             }
@@ -106,18 +116,18 @@ public class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
         final List<LogicalChunk> logicalChunks = new ArrayList<>();
         int curChunkStart = 0;
         boolean endAtFirstNonEmptyLine = false;
-        for (int i = 0; i < lines.getLineCount(); i++) {
-            if (endAtFirstNonEmptyLine && !lines.getLine(i).trim().isEmpty()) {
+        for (int i = 0; i < lines.getItemCount(); i++) {
+            if (endAtFirstNonEmptyLine && !lines.getItem(i).trim().isEmpty()) {
                 logicalChunks.add(new LogicalChunk(lines, curChunkStart, i));
                 endAtFirstNonEmptyLine = false;
                 curChunkStart = i;
             }
-            if (this.looksLikeChunkEnd(lines.getLine(i))) {
+            if (this.looksLikeChunkEnd(lines.getItem(i))) {
                 endAtFirstNonEmptyLine = true;
             }
         }
-        if (curChunkStart < lines.getLineCount() || logicalChunks.isEmpty()) {
-            logicalChunks.add(new LogicalChunk(lines, curChunkStart, lines.getLineCount()));
+        if (curChunkStart < lines.getItemCount() || logicalChunks.isEmpty()) {
+            logicalChunks.add(new LogicalChunk(lines, curChunkStart, lines.getItemCount()));
         }
         return new FullFileView<>(logicalChunks.toArray(new LogicalChunk[logicalChunks.size()]));
     }
@@ -140,7 +150,7 @@ public class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
     private Fragment toFileFragment(FileInRevision fileInfo, OneFileView<String> fragmentData) {
         return new Fragment(fileInfo,
                 new PositionInText(fragmentData.toIndexInWholeFile(0) + 1, 1),
-                new PositionInText(fragmentData.toIndexInWholeFile(fragmentData.getLineCount() - 1) + 2, 0),
+                new PositionInText(fragmentData.toIndexInWholeFile(fragmentData.getItemCount() - 1) + 2, 0),
                 fragmentData.getContent());
     }
 

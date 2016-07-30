@@ -12,12 +12,12 @@ final class FullFileView<T> extends OneFileView<T> {
     }
 
     @Override
-    public int getLineCount() {
+    public int getItemCount() {
         return this.fullFile.length;
     }
 
     @Override
-    public T getLine(int i) {
+    public T getItem(int i) {
         return this.fullFile[i];
     }
 

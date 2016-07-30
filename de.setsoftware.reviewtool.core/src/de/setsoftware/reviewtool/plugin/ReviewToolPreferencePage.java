@@ -144,8 +144,8 @@ public class ReviewToolPreferencePage extends PreferencePage
 
     static ISecurePreferences getSecurePreferences() throws StorageException {
         final ISecurePreferences pref = SecurePreferencesFactory.getDefault().node("de.setsoftware.reviewtool");
-        if (pref.get(ConfigurationInterpreter.USER_PARAM_NAME, "").equals("")) {
-            pref.put(ConfigurationInterpreter.USER_PARAM_NAME, System.getProperty("user.name"), true);
+        if (getPref(pref, ConfigurationInterpreter.USER_PARAM_NAME).equals("")) {
+            putPref(pref, ConfigurationInterpreter.USER_PARAM_NAME, System.getProperty("user.name"));
         }
         return pref;
     }
@@ -216,19 +216,24 @@ public class ReviewToolPreferencePage extends PreferencePage
     @Override
     public boolean performOk() {
         this.fileField.store();
-        for (final TableItem item : this.userParamTable.getItems()) {
-            try {
-                getSecurePreferences().put(USER_PARAM_PREFIX + item.getText(0), item.getText(1), true);
-            } catch (final StorageException e) {
-                MessageDialog.openError(this.getShell(), "Error while storing user config",
-                        "The user config could not be stored: " + e.getMessage());
-                Logger.error("error while storing user config", e);
+        try {
+            final ISecurePreferences prefs = getSecurePreferences();
+            for (final TableItem item : this.userParamTable.getItems()) {
+                    putPref(prefs, item.getText(0), item.getText(1));
             }
+        } catch (final StorageException e) {
+            MessageDialog.openError(this.getShell(), "Error while storing user config",
+                    "The user config could not be stored: " + e.getMessage());
+            Logger.error("error while storing user config", e);
         }
         //there seems to be no way to listen for changes in secure preferences.
         //  As a (little hacky but simple) workaround we store a dummy setting that will trigger the reconfigure
         this.getPreferenceStore().setValue("triggerDummy", Math.random());
         return true;
+    }
+
+    private static void putPref(ISecurePreferences pref, String key, String value) throws StorageException {
+        pref.put(USER_PARAM_PREFIX + key, value, true);
     }
 
     @Override
@@ -245,9 +250,17 @@ public class ReviewToolPreferencePage extends PreferencePage
         final Set<String> names = new ConfigurationInterpreter().getUserSpecificParamNames(config);
         final Map<String, String> params = new HashMap<>();
         for (final String name : names) {
-            params.put(name, pref.get(USER_PARAM_PREFIX + name, ""));
+            params.put(name, getPref(pref, name));
         }
         return params;
+    }
+
+    private static String getPref(ISecurePreferences pref, final String name) throws StorageException {
+        return pref.get(USER_PARAM_PREFIX + name, "");
+    }
+
+    public static String getUserIdPref() throws StorageException {
+        return getPref(getSecurePreferences(), ConfigurationInterpreter.USER_PARAM_NAME);
     }
 
 }

@@ -168,7 +168,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     private static String getUserPref() {
         try {
-            return getSecurePrefs().get(ConfigurationInterpreter.USER_PARAM_NAME, "");
+            return ReviewToolPreferencePage.getUserIdPref();
         } catch (final StorageException e) {
             throw new ReviewtoolException(e);
         }

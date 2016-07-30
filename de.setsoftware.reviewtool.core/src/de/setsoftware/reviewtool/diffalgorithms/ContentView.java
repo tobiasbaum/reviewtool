@@ -19,10 +19,10 @@ final class ContentView<T> {
     }
 
     public ContentView<T> stripCommonPrefix(ItemMatching<T> matchingBuffer) {
-        final int minSize = Math.min(this.file1.getLineCount(), this.file2.getLineCount());
+        final int minSize = Math.min(this.file1.getItemCount(), this.file2.getItemCount());
         int commonPrefixLength = 0;
         for (int i = 0; i < minSize; i++) {
-            if (!this.file1.getLine(i).equals(this.file2.getLine(i))) {
+            if (!this.file1.getItem(i).equals(this.file2.getItem(i))) {
                 break;
             }
             matchingBuffer.match(this.file1, i, this.file2, i);
@@ -34,15 +34,15 @@ final class ContentView<T> {
     }
 
     public ContentView<T> stripCommonSuffix(ItemMatching<T> matchingBuffer) {
-        final int minSize = Math.min(this.file1.getLineCount(), this.file2.getLineCount());
+        final int minSize = Math.min(this.file1.getItemCount(), this.file2.getItemCount());
         int commonPrefixLength = 0;
         for (int i = 0; i < minSize; i++) {
-            if (!this.file1.getLineFromEnd(i).equals(this.file2.getLineFromEnd(i))) {
+            if (!this.file1.getItemFromEnd(i).equals(this.file2.getItemFromEnd(i))) {
                 break;
             }
             matchingBuffer.match(
-                    this.file1, this.file1.getLineCount() - i - 1,
-                    this.file2, this.file2.getLineCount() - i - 1);
+                    this.file1, this.file1.getItemCount() - i - 1,
+                    this.file2, this.file2.getItemCount() - i - 1);
             commonPrefixLength++;
         }
         return new ContentView<T>(
@@ -55,12 +55,12 @@ final class ContentView<T> {
     }
 
     public boolean isEmpty() {
-        return this.file1.getLineCount() == 0 && this.file2.getLineCount() == 0;
+        return this.file1.getItemCount() == 0 && this.file2.getItemCount() == 0;
     }
 
     public void identifyUniqueLines(ItemMatching<T> matching) {
-        final Map<T, Integer> uniqueLinePositions1 = this.file1.determineUniqueLinePositions();
-        final Map<T, Integer> uniqueLinePositions2 = this.file2.determineUniqueLinePositions();
+        final Map<T, Integer> uniqueLinePositions1 = this.file1.determineUniqueItemPositions();
+        final Map<T, Integer> uniqueLinePositions2 = this.file2.determineUniqueItemPositions();
         for (final Entry<T, Integer> line1 : uniqueLinePositions1.entrySet()) {
             final Integer lineIdx2 = uniqueLinePositions2.get(line1.getKey());
             if (lineIdx2 != null) {

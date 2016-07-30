@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -67,6 +68,17 @@ public class SimpleTextDiffAlgorithmTest {
                         + "\r\n"
                         + "class X {\r\n"
                         + "}\r\n");
+        assertEquals(Arrays.asList(insertedLines(1, 4)), diff);
+    }
+
+    @Test
+    public void testFullInsertionMissingEolAtEof() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "",
+                "package a;\r\n"
+                        + "\r\n"
+                        + "class X {\r\n"
+                        + "}");
         assertEquals(Arrays.asList(insertedLines(1, 4)), diff);
     }
 
@@ -489,6 +501,109 @@ public class SimpleTextDiffAlgorithmTest {
                         "}\r\n" +
                         "");
         assertEquals(Arrays.asList(insertedLines(14, 19), insertedLines(27, 32)), diff);
+    }
+
+    @Test
+    public void testNoExceptions() throws Exception {
+        for (int i = 0; i < 1000; i++) {
+            this.doTestNoExceptions(i);
+        }
+    }
+
+    public void doTestNoExceptions(int seed) throws Exception {
+        try {
+            final Random r = new Random(seed);
+            final List<String> randomLines = createRandomLines(r);
+            final List<String> changedLines = createRandomChangedLines(randomLines, r);
+
+            final String doc1 = concatLines(randomLines);
+            final String doc2 = concatLines(changedLines);
+            assertEquals(Collections.emptyList(), determineDiff(doc1, doc1));
+            assertEquals(Collections.emptyList(), determineDiff(doc2, doc2));
+            //pure smoke test: just check that no exception occurs
+            determineDiff(doc1, doc2);
+        } catch (final Exception e) {
+            throw new Exception("problem with seed " + seed, e);
+        } catch (final AssertionError e) {
+            throw new AssertionError("problem with seed " + seed, e);
+        }
+    }
+
+    private static final String createRandomLine(int value) {
+        switch (Math.abs(value % 10)) {
+        case 0:
+            return "";
+        case 1:
+            return "}";
+        case 2:
+            return "public static method() {";
+        case 3:
+            return "return 'a';";
+        case 4:
+            return String.format("this.callA%d();", value % 23);
+        case 5:
+            return String.format("this.callB%d();", value % 67);
+        case 6:
+            return String.format("this.callC%d();", value % 19);
+        case 7:
+            return String.format("x = this.callD%d();", value % 41);
+        case 8:
+            return String.format("return %d;", value);
+        case 9:
+            return String.format("return \"%d\";", value);
+        default:
+            throw new AssertionError();
+        }
+    }
+
+    private static List<String> createRandomLines(Random r) {
+        final int len = r.nextInt(300);
+
+        final List<String> ret = new ArrayList<>();
+        for (int i = 0; i < len; i++) {
+            ret.add(createRandomLine(r.nextInt()));
+        }
+        return ret;
+    }
+
+    private static List<String> createRandomChangedLines(List<String> randomLines, Random r) {
+        final List<String> ret = new ArrayList<>(randomLines);
+        final int changeCount = r.nextInt(5) + 1;
+        for (int i = 0; i < changeCount; i++) {
+            final int changeType = r.nextInt(3);
+            switch (changeType) {
+            case 0:
+                final int insertPos = r.nextInt(ret.size() + 1);
+                final int insertCount = r.nextInt(10);
+                for (int j = 0; j < insertCount; j++) {
+                    ret.add(insertPos, createRandomLine(r.nextInt()));
+                }
+                break;
+            case 1:
+                final int deleteCount = Math.min(r.nextInt(10), ret.size());
+                for (int j = 0; j < deleteCount; j++) {
+                    ret.remove(r.nextInt(ret.size()));
+                }
+                break;
+            case 2:
+                final int replaceCount = Math.min(r.nextInt(5), ret.size());
+                for (int j = 0; j < replaceCount; j++) {
+                    ret.set(r.nextInt(ret.size()), createRandomLine(r.nextInt()));
+                }
+                break;
+            default:
+                throw new AssertionError();
+            }
+        }
+        return ret;
+    }
+
+    private static String concatLines(List<String> lines) {
+        final StringBuilder ret = new StringBuilder();
+        for (final String line : lines) {
+            ret.append(line).append("\r\n");
+        }
+        return ret.toString();
     }
 
 }

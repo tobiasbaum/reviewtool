@@ -78,7 +78,9 @@ public class ViewStatisticsForFile {
             max = Math.max(max, lineRatio);
             min = Math.min(min, lineRatio);
         }
-        return new ViewStatDataForStop(sum / count, max, min);
+        final double avg = sum / count;
+        //due to floating point inaccuracies, avg can be outside the min..max interval, which we dont want
+        return new ViewStatDataForStop(Math.max(Math.min(avg, max), min), max, min);
     }
 
 }

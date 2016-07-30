@@ -11,22 +11,22 @@ import java.util.Set;
  */
 abstract class OneFileView<T> {
 
-    public abstract T getLine(int i);
+    public abstract T getItem(int i);
 
-    public final T getLineFromEnd(int i) {
-        return this.getLine(this.getLineCount() - 1 - i);
+    public final T getItemFromEnd(int i) {
+        return this.getItem(this.getItemCount() - 1 - i);
     }
 
-    public abstract int getLineCount();
+    public abstract int getItemCount();
 
     public abstract int toIndexInWholeFile(int index);
 
     public final OneFileView<T> stripPrefix(int prefixLength) {
-        return this.subrange(prefixLength, this.getLineCount());
+        return this.subrange(prefixLength, this.getItemCount());
     }
 
     public final OneFileView<T> stripSuffix(int suffixLength) {
-        return this.subrange(0, this.getLineCount() - suffixLength);
+        return this.subrange(0, this.getItemCount() - suffixLength);
     }
 
     /**
@@ -36,11 +36,11 @@ abstract class OneFileView<T> {
      */
     public abstract OneFileView<T> subrange(int start, int end);
 
-    public Map<T, Integer> determineUniqueLinePositions() {
+    public Map<T, Integer> determineUniqueItemPositions() {
         final Map<T, Integer> uniqueLinePositions = new HashMap<>();
         final Set<T> nonUniqueLines = new HashSet<>();
-        for (int i = 0; i < this.getLineCount(); i++) {
-            final T line = this.getLine(i);
+        for (int i = 0; i < this.getItemCount(); i++) {
+            final T line = this.getItem(i);
             if (nonUniqueLines.contains(line)) {
                 continue;
             }
@@ -61,8 +61,8 @@ abstract class OneFileView<T> {
 
     public String getContent() {
         final StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < this.getLineCount(); i++) {
-            ret.append(this.getLine(i)).append('\n');
+        for (int i = 0; i < this.getItemCount(); i++) {
+            ret.append(this.getItem(i)).append('\n');
         }
         return ret.toString();
     }

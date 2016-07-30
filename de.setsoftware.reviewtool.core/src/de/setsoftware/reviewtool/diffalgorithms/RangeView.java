@@ -10,19 +10,23 @@ final class RangeView<T> extends OneFileView<T> {
     private final int end;
 
     RangeView(OneFileView<T> decorated, int start, int end) {
+        assert start >= 0 : "start=" + start + ", end=" + end + ", cnt=" + decorated.getItemCount();
+        assert start <= decorated.getItemCount() : "start=" + start + ", cnt=" + decorated.getItemCount();
+        assert end >= start : "start=" + start + ", end=" + end + ", cnt=" + decorated.getItemCount();
+        assert end <= decorated.getItemCount() : "end=" + end + ", cnt=" + decorated.getItemCount();
         this.decorated = decorated;
         this.start = start;
         this.end = end;
     }
 
     @Override
-    public int getLineCount() {
+    public int getItemCount() {
         return this.end - this.start;
     }
 
     @Override
-    public T getLine(int i) {
-        return this.decorated.getLine(this.start + i);
+    public T getItem(int i) {
+        return this.decorated.getItem(this.start + i);
     }
 
     @Override

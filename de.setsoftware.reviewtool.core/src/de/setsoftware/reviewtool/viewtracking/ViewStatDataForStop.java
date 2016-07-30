@@ -12,8 +12,8 @@ public class ViewStatDataForStop {
     private final double min;
 
     ViewStatDataForStop(double avg, double max, double min) {
-        assert avg <= max;
-        assert min <= avg;
+        assert avg <= max : "avg=" + avg + ", max=" + max;
+        assert min <= avg : "avg=" + avg + ", min=" + min;
         this.avg = avg;
         this.max = max;
         this.min = min;
