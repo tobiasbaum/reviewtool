@@ -63,7 +63,7 @@ public class CorrectSyntaxDialog extends Dialog {
         label.setText("The review data has syntax errors. Please correct manually:\n\n"
                 + this.errorMessage);
 
-        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE);
+        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE | SWT.H_SCROLL | SWT.V_SCROLL);
         this.textField.setText(this.oldReviewData);
         this.textField.setLayoutData(new GridData(GridData.FILL_BOTH));
 

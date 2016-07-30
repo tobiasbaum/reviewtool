@@ -91,7 +91,7 @@ public class EndReviewDialog extends Dialog {
             this.selectFirstButtonWithType(EndTransition.Type.OK);
         }
 
-        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE);
+        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL);
         this.textField.setText(this.reviewData.serialize());
         this.textField.setLayoutData(new GridData(GridData.FILL_BOTH));
 

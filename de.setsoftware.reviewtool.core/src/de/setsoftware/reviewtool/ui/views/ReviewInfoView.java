@@ -37,7 +37,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
         label.setText(labelText);
         ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
 
-        final Text field = new Text(comp, style | SWT.BORDER | SWT.RESIZE);
+        final Text field = new Text(comp, style | SWT.BORDER | SWT.RESIZE | SWT.H_SCROLL | SWT.V_SCROLL);
         field.setText(text);
         field.setLayoutData(new GridData(fill));
         field.setEditable(false);
