@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
@@ -56,6 +57,23 @@ public final class Multimap<K, V> {
         return Collections.unmodifiableSet(this.map.entrySet());
     }
 
+    /**
+     * Removes the entry for the given key (including all values).
+     */
+    public void removeKey(K key) {
+        this.map.remove(key);
+    }
+
+    /**
+     * Removes the value from the entries for the given key.
+     */
+    public void removeValue(K key, V value) {
+        final List<V> list = this.map.get(key);
+        if (list != null) {
+            list.remove(value);
+        }
+    }
+
     @Override
     public String toString() {
         return this.map.toString();
@@ -73,6 +91,21 @@ public final class Multimap<K, V> {
         }
         final Multimap<?, ?> m = (Multimap<?, ?>) o;
         return this.map.equals(m.map);
+    }
+
+    /**
+     * Returns one of the keys which have a maximal number of assigned values.
+     */
+    public K keyWithMaxNumberOfValues() {
+        int maxSize = 0;
+        K maxKey = null;
+        for (final Entry<K, List<V>> e : this.map.entrySet()) {
+            if (e.getValue().size() > maxSize) {
+                maxSize = e.getValue().size();
+                maxKey = e.getKey();
+            }
+        }
+        return maxKey;
     }
 
 }

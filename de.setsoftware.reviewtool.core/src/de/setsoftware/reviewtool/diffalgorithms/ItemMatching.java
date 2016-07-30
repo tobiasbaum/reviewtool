@@ -1,10 +1,11 @@
 package de.setsoftware.reviewtool.diffalgorithms;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
+
+import de.setsoftware.reviewtool.base.Multimap;
 
 /**
  * A matching of equal items in one sequence to the other sequence.
@@ -13,7 +14,7 @@ import java.util.Map;
 final class ItemMatching<T> {
     private final OneFileView<T> lines1;
     private final OneFileView<T> lines2;
-    private final Map<Integer, Integer> matchedLines = new HashMap<>();
+    private final Map<Integer, Integer> matchedLines = new TreeMap<>();
 
     public ItemMatching(OneFileView<T> lines1, OneFileView<T> lines2) {
         this.lines1 = lines1;
@@ -67,18 +68,45 @@ final class ItemMatching<T> {
      * As moves are currently not supported, matchings are not allowed to cross each other (e.g.
      * line A.1 -> B.7 and A.3 -> B.5). This method removes these "incompatible matches".
      */
-    private void removeIncompatibleMatchings() {
+    void removeIncompatibleMatchings() {
+        //the best removal is the one that keeps the maximum number of assignments
+        //this is the co-clique problem in the conflict graph and therefore NP-complete
+        //we use a simple greedy heuristic instead
+
+        //determine conflicts
         final List<Integer> indices1 = new ArrayList<>(this.matchedLines.keySet());
-        Collections.sort(indices1);
-        int lastIdx2 = -1;
-        for (final int idx1 : indices1) {
-            final int idx2 = this.matchedLines.get(idx1);
-            if (idx2 <= lastIdx2) {
-                this.matchedLines.remove(idx1);
-            } else {
-                lastIdx2 = idx2;
+        final Multimap<Integer, Integer> conflictsForNodes = new Multimap<>();
+        for (int i = 0; i < indices1.size(); i++) {
+            for (int j = i + 1; j < indices1.size(); j++) {
+                final int indexI = indices1.get(i);
+                final int indexJ = indices1.get(j);
+                if (this.isMatchingConflict(indexI, indexJ)) {
+                    conflictsForNodes.put(indexI, indexJ);
+                    conflictsForNodes.put(indexJ, indexI);
+                }
             }
         }
+
+        //remove matchings with the maximum number of conflicts until no conflicts are left
+        while (true) {
+            final Integer maxConflictSizeIndex = conflictsForNodes.keyWithMaxNumberOfValues();
+            final List<Integer> conflictPartners = conflictsForNodes.get(maxConflictSizeIndex);
+            if (conflictPartners.isEmpty()) {
+                return;
+            }
+            this.matchedLines.remove(maxConflictSizeIndex);
+            for (final Integer conflictPartner : conflictPartners) {
+                conflictsForNodes.removeValue(conflictPartner, maxConflictSizeIndex);
+            }
+            conflictsForNodes.removeKey(maxConflictSizeIndex);
+        }
+    }
+
+    private boolean isMatchingConflict(int indexI, int indexJ) {
+        assert indexI != indexJ;
+        final int matchI = this.matchedLines.get(indexI);
+        final int matchJ = this.matchedLines.get(indexJ);
+        return (indexI < indexJ) != (matchI < matchJ);
     }
 
     private void createChangeFragment(
@@ -89,6 +117,11 @@ final class ItemMatching<T> {
                     this.lines1.subrange(idx1 - changeSize1, idx1),
                     this.lines2.subrange(idx2 - changeSize2, idx2)));
         }
+    }
+
+    @Override
+    public String toString() {
+        return this.matchedLines.toString();
     }
 
 }

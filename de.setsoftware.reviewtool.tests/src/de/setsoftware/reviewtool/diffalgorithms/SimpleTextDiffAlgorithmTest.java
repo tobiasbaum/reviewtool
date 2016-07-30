@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.diffalgorithms;
+package de.setsoftware.reviewtool.diffalgorithms;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,6 @@ import java.util.Random;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.diffalgorithms.SimpleSourceDiffAlgorithm;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
@@ -604,6 +603,30 @@ public class SimpleTextDiffAlgorithmTest {
             ret.append(line).append("\r\n");
         }
         return ret.toString();
+    }
+
+    @Test
+    public void testXMove() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "line 01\r\n"
+                        + "line 02\r\n"
+                        + "line 03\r\n"
+                        + "line 04\r\n"
+                        + "line 05\r\n"
+                        + "line 06\r\n"
+                        + "line 07\r\n"
+                        + "line 08\r\n"
+                        + "line 09\r\n",
+                        "line 01\r\n"
+                                + "line 02\r\n"
+                                + "line 07\r\n"
+                                + "line 04\r\n"
+                                + "line 05\r\n"
+                                + "line 06\r\n"
+                                + "line 03\r\n"
+                                + "line 08\r\n"
+                                + "line 09\r\n");
+        assertEquals(Arrays.asList(changeIn(3, 3), changeIn(7, 7)), diff);
     }
 
 }
