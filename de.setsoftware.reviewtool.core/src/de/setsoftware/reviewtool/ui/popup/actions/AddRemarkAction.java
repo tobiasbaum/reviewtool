@@ -47,16 +47,13 @@ public class AddRemarkAction extends AbstractHandler {
             }
         }
 
-        ISelection sel = HandlerUtil.getActiveMenuSelection(event);
-        if (sel == null) {
-            sel = HandlerUtil.getActiveEditor(event).getEditorSite().getSelectionProvider().getSelection();
-        }
-        if (sel == null) {
-            return null;
-        }
-
         final IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);
         final IEditorInput input = activeEditor != null ? activeEditor.getEditorInput() : null;
+
+        ISelection sel = HandlerUtil.getActiveMenuSelection(event);
+        if (sel == null && activeEditor != null && activeEditor.getEditorSite().getSelectionProvider() != null) {
+            sel = activeEditor.getEditorSite().getSelectionProvider().getSelection();
+        }
 
         final Pair<? extends Object, Integer> selectionPos = ViewHelper.extractFileAndLineFromSelection(sel, input);
         if (selectionPos != null) {
@@ -66,7 +63,9 @@ public class AddRemarkAction extends AbstractHandler {
                 this.createMarker((IPath) selectionPos.getFirst(), selectionPos.getSecond());
             }
         } else {
-            Logger.debug("Unsupported selection, type=" + sel.getClass());
+            if (sel != null) {
+                Logger.debug("Unsupported selection, type=" + sel.getClass());
+            }
             this.createMarker(ResourcesPlugin.getWorkspace().getRoot(), 0);
         }
         return null;
