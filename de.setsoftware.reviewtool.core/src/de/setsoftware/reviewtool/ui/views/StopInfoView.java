@@ -35,6 +35,9 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
 
     @Override
     public void setFocus() {
+        if (this.currentContent != null && !this.currentContent.isDisposed()) {
+            this.currentContent.setFocus();
+        }
     }
 
     @Override
@@ -98,7 +101,7 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
             final FileInRevision oldRevision, final FileInRevision newRevision) {
         final List<Fragment> oldContent = fragment.getContentFor(oldRevision);
         final List<Fragment> newContent = fragment.getContentFor(newRevision);
-        if (oldContent == null || newContent == null) {
+        if (oldContent.isEmpty() || newContent.isEmpty()) {
             final Label label = new Label(scrollContent, SWT.NULL);
             label.setText("binary");
             label.setFont(
