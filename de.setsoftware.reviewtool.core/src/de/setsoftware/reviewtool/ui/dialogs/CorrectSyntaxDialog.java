@@ -35,18 +35,20 @@ public class CorrectSyntaxDialog extends Dialog {
     private final String oldReviewData;
     private Text textField;
     private String correctedText;
+    private final String ticketKey;
 
-    protected CorrectSyntaxDialog(Shell parentShell, String errorMessage, String reviewData) {
+    protected CorrectSyntaxDialog(Shell parentShell, String errorMessage, String reviewData, String ticketKey) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.errorMessage = errorMessage;
         this.oldReviewData = reviewData;
+        this.ticketKey = ticketKey;
     }
 
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Syntax error correction");
+        newShell.setText("Syntax error correction, " + this.ticketKey);
         DialogHelper.restoreSavedSize(newShell, this, 500, 700);
     }
 
@@ -129,9 +131,9 @@ public class CorrectSyntaxDialog extends Dialog {
         super.cancelPressed();
     }
 
-    private static String allowCorrection(String errorMessage, String reviewData) {
+    private static String allowCorrection(String errorMessage, String reviewData, String ticketKey) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-        final CorrectSyntaxDialog dialog = new CorrectSyntaxDialog(s, errorMessage, reviewData);
+        final CorrectSyntaxDialog dialog = new CorrectSyntaxDialog(s, errorMessage, reviewData, ticketKey);
         final int ret = dialog.open();
         if (ret != OK) {
             return null;
@@ -152,7 +154,7 @@ public class CorrectSyntaxDialog extends Dialog {
         boolean hadError = false;
         while ((parseError = canBeParsed(persistence, reviewData)) != null) {
             hadError = true;
-            reviewData = allowCorrection(parseError, reviewData);
+            reviewData = allowCorrection(parseError, reviewData, persistence.getTicketKey());
             if (reviewData == null) {
                 return null;
             }
