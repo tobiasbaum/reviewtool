@@ -248,20 +248,23 @@ public class SvnChangeSource implements IChangeSource {
             throws SVNException, IOException {
         final List<Change> ret = new ArrayList<>();
         final SVNRevision revision = SVNRevision.create(e.getSecond().getRevision());
-        final Set<String> moveSources = this.determineMoveSources(e.getSecond().getChangedPaths().values());
-        for (final Entry<String, SVNLogEntryPath> entry : e.getSecond().getChangedPaths().entrySet()) {
-            if (entry.getValue().getKind() != SVNNodeKind.FILE) {
+        final Map<String, SVNLogEntryPath> changedPaths = e.getSecond().getChangedPaths();
+        final Set<String> moveSources = this.determineMoveSources(changedPaths.values());
+        final List<String> sortedPaths = new ArrayList<>(changedPaths.keySet());
+        Collections.sort(sortedPaths);
+        for (final String path : sortedPaths) {
+            final SVNLogEntryPath value = changedPaths.get(path);
+            if (value.getKind() != SVNNodeKind.FILE) {
                 continue;
             }
-            if (moveSources.contains(entry.getValue().getPath())) {
+            if (moveSources.contains(value.getPath())) {
                 //Moves are contained twice, as a copy and a deletion. The deletion shall not result in a fragment.
                 continue;
             }
-            if (this.isBinaryFile(e.getFirst(), entry.getValue(), e.getSecond().getRevision())) {
-                ret.add(this.createBinaryChange(revision, entry.getValue(), e.getFirst()));
+            if (this.isBinaryFile(e.getFirst(), value, e.getSecond().getRevision())) {
+                ret.add(this.createBinaryChange(revision, value, e.getFirst()));
             } else {
-                ret.addAll(this.determineChangesInFile(
-                        revision, e.getFirst(), entry.getValue()));
+                ret.addAll(this.determineChangesInFile(revision, e.getFirst(), value));
             }
         }
         return ret;
