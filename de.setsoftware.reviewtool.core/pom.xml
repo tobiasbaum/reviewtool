@@ -5,12 +5,10 @@
   <parent>
     <groupId>de.setsoftware.reviewtool</groupId>
     <artifactId>workspaceReviewtool</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-  <!--<groupId>de.setsoftware.reviewtool</groupId>-->
   <artifactId>de.setsoftware.reviewtool.core</artifactId>
-  <!--version>1.0.0-SNAPSHOT</version>-->
   <packaging>eclipse-plugin</packaging>
   <build>
     <plugins>
