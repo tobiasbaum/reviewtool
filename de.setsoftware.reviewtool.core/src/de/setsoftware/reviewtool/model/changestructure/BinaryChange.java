@@ -8,7 +8,7 @@ public class BinaryChange extends Change {
     private final FileInRevision from;
     private final FileInRevision to;
 
-    public BinaryChange(FileInRevision from, FileInRevision to) {
+    BinaryChange(FileInRevision from, FileInRevision to) {
         this.from = from;
         this.to = to;
     }

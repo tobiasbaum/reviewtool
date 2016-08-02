@@ -13,6 +13,7 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
@@ -36,7 +37,7 @@ public class SvnFragmentTracer implements IFragmentTracer {
     @Override
     public Fragment traceFragment(Fragment fragment) {
         //TODO implementieren
-        return new Fragment(
+        return ChangestructureFactory.createFragment(
                 this.traceFile(fragment.getFile()),
                 fragment.getFrom(),
                 fragment.getTo(),
@@ -119,8 +120,10 @@ public class SvnFragmentTracer implements IFragmentTracer {
             }
         }
 
-        final FileInRevision ret = new FileInRevision(
-                this.detector.trace(file.getPath()), new LocalRevision(), file.getRepository());
+        final FileInRevision ret = ChangestructureFactory.createFileInRevision(
+                this.detector.trace(file.getPath()),
+                ChangestructureFactory.createLocalRevision(),
+                file.getRepository());
         this.fileCache.put(file, ret);
         return ret;
     }

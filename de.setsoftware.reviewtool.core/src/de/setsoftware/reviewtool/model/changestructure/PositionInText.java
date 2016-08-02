@@ -10,7 +10,7 @@ public class PositionInText {
     private final int line;
     private final int column;
 
-    public PositionInText(int line, int column) {
+    PositionInText(int line, int column) {
         this.line = line;
         this.column = column;
     }

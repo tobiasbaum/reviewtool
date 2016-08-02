@@ -7,7 +7,7 @@ public class RepoRevision extends Revision {
 
     private final Object id;
 
-    public RepoRevision(Object id) {
+    RepoRevision(Object id) {
         this.id = id;
     }
 

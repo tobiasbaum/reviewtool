@@ -13,3 +13,5 @@
 /.mvn
 /de.setsoftware.reviewtool.core/target
 /de.setsoftware.reviewtool.core/bin
+/de.setsoftware.reviewtool.changesources.svn/target
+/de.setsoftware.reviewtool.changesources.svn/bin

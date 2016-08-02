@@ -8,7 +8,7 @@ public class TextualChangeHunk extends Change {
     private final Fragment from;
     private final Fragment to;
 
-    public TextualChangeHunk(Fragment from, Fragment to) {
+    TextualChangeHunk(Fragment from, Fragment to) {
         this.from = from;
         this.to = to;
     }

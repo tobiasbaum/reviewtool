@@ -5,6 +5,9 @@ package de.setsoftware.reviewtool.model.changestructure;
  */
 public class LocalRevision extends Revision {
 
+    LocalRevision() {
+    }
+
     @Override
     public int hashCode() {
         return 1234987;

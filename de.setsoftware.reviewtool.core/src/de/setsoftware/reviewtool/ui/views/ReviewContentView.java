@@ -43,6 +43,7 @@ import de.setsoftware.reviewtool.model.GlobalPosition;
 import de.setsoftware.reviewtool.model.Position;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -149,7 +150,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         //  we create a copy of the fragment without size
         Stop jumpTarget;
         if (stop.isDetailedFragmentKnown()) {
-            final Fragment fragment = new Fragment(
+            final Fragment fragment = ChangestructureFactory.createFragment(
                     stop.getMostRecentFile(),
                     stop.getMostRecentFragment().getFrom(),
                     stop.getMostRecentFragment().getFrom(),

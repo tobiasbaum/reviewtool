@@ -24,7 +24,7 @@ public class FileInRevision {
     private final Repository repo;
     private Path localPath;
 
-    public FileInRevision(String path, Revision revision, Repository repository) {
+    FileInRevision(String path, Revision revision, Repository repository) {
         this.path = path;
         this.revision = revision;
         this.repo = repository;

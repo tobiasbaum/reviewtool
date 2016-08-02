@@ -15,7 +15,7 @@ public class Fragment {
     private final PositionInText to;
     private final String content;
 
-    public Fragment(FileInRevision file, PositionInText from, PositionInText to, String content) {
+    Fragment(FileInRevision file, PositionInText from, PositionInText to, String content) {
         this.file = file;
         this.from = from;
         this.to = to;

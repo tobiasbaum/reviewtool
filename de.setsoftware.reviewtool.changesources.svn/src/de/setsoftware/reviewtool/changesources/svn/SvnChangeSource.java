@@ -35,10 +35,10 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
-import de.setsoftware.reviewtool.diffalgorithms.SimpleSourceDiffAlgorithm;
-import de.setsoftware.reviewtool.model.changestructure.BinaryChange;
 import de.setsoftware.reviewtool.model.changestructure.Change;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
@@ -46,7 +46,6 @@ import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 
 /**
  * A simple change source that loads the changes from subversion.
@@ -59,7 +58,6 @@ public class SvnChangeSource implements IChangeSource {
     private final Set<File> workingCopyRoots;
     private final String logMessagePattern;
     private final SVNClientManager mgr = SVNClientManager.newInstance();
-    private final IDiffAlgorithm diffAlgorithm = new SimpleSourceDiffAlgorithm();
 
     public SvnChangeSource(
             List<File> projectRoots, String logMessagePattern, String user, String pwd) {
@@ -239,7 +237,7 @@ public class SvnChangeSource implements IChangeSource {
 
     private Commit convertToCommit(Pair<SvnRepo, SVNLogEntry> e) throws SVNException, IOException {
         final SVNLogEntry log = e.getSecond();
-        return new Commit(
+        return ChangestructureFactory.createCommit(
                 String.format("%s (Rev. %s, %s)", log.getMessage(), log.getRevision(), log.getAuthor()),
                 this.determineChangesInCommit(e));
     }
@@ -273,18 +271,18 @@ public class SvnChangeSource implements IChangeSource {
     private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo) {
         final String oldPath = this.determineOldPath(entryInfo);
         final FileInRevision oldFileInfo =
-                new FileInRevision(oldPath, this.previousRevision(revision), repo);
+                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo);
         final FileInRevision newFileInfo =
-                new FileInRevision(entryInfo.getPath(), this.revision(revision), repo);
-        return new BinaryChange(oldFileInfo, newFileInfo);
+                ChangestructureFactory.createFileInRevision(entryInfo.getPath(), this.revision(revision), repo);
+        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo);
     }
 
     private RepoRevision revision(SVNRevision revision) {
-        return new RepoRevision(revision.getNumber());
+        return ChangestructureFactory.createRepoRevision(revision.getNumber());
     }
 
     private RepoRevision previousRevision(SVNRevision revision) {
-        return new RepoRevision(revision.getNumber() - 1);
+        return ChangestructureFactory.createRepoRevision(revision.getNumber() - 1);
     }
 
     private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo)
@@ -301,20 +299,21 @@ public class SvnChangeSource implements IChangeSource {
 
 
         final FileInRevision oldFileInfo =
-                new FileInRevision(oldPath, this.previousRevision(revision), repoUrl);
+                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repoUrl);
         //in case of deletions, the path is null, but FileInRevision does not allow null paths
         final String newPath = entryInfo.getPath() != null ? entryInfo.getPath() : oldPath;
         final FileInRevision newFileInfo =
-                new FileInRevision(newPath, this.revision(revision), repoUrl);
+                ChangestructureFactory.createFileInRevision(newPath, this.revision(revision), repoUrl);
         final List<Change> ret = new ArrayList<>();
-        final List<Pair<Fragment, Fragment>> changes = this.diffAlgorithm.determineDiff(
+        final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
+        final List<Pair<Fragment, Fragment>> changes = diffAlgorithm.determineDiff(
                 oldFileInfo,
                 oldFileContent,
                 newFileInfo,
                 newFileContent,
                 this.guessEncoding(oldFileContent, newFileContent));
         for (final Pair<Fragment, Fragment> pos : changes) {
-            ret.add(new TextualChangeHunk(pos.getFirst(), pos.getSecond()));
+            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond()));
         }
         return ret;
     }

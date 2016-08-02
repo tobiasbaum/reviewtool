@@ -15,6 +15,10 @@ import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchesListener;
@@ -34,8 +38,8 @@ import org.xml.sax.SAXException;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
-import de.setsoftware.reviewtool.changesources.svn.SvnChangesourceConfigurator;
 import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
+import de.setsoftware.reviewtool.config.IConfigurator;
 import de.setsoftware.reviewtool.config.IReviewConfigurable;
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
@@ -124,10 +128,21 @@ public class ReviewPlugin implements IReviewConfigurable {
         final Version bundleVersion = Activator.getDefault().getBundle().getVersion();
         this.configInterpreter.addConfigurator(new FileTicketConnectorConfigurator());
         this.configInterpreter.addConfigurator(new JiraConnectorConfigurator());
-        this.configInterpreter.addConfigurator(new SvnChangesourceConfigurator());
         this.configInterpreter.addConfigurator(new TelemetryConfigurator(bundleVersion));
         this.configInterpreter.addConfigurator(new VersionChecker(bundleVersion));
         this.configInterpreter.addConfigurator(new SurveyAtEndConfigurator());
+        final IExtensionPoint configuratorExtensions =
+                Platform.getExtensionRegistry().getExtensionPoint("de.setsoftware.reviewtool.configurator");
+        for (final IExtension extension : configuratorExtensions.getExtensions()) {
+            for (final IConfigurationElement conf : extension.getConfigurationElements()) {
+                Logger.debug("adding configurator " + conf.getAttribute("class"));
+                try {
+                    this.configInterpreter.addConfigurator((IConfigurator) conf.createExecutableExtension("class"));
+                } catch (final CoreException e) {
+                    Logger.error("could not load configurator extension " + extension.getUniqueIdentifier(), e);
+                }
+            }
+        }
         this.reconfigure();
 
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {

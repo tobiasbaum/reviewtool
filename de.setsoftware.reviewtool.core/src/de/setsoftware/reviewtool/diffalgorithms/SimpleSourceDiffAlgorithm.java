@@ -8,16 +8,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
-import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
 /**
  * A simple line-based diff algorithm that uses some knowledge about programming languages to provide
  * better results.
  * Loosely based on the description of patience diff by Bram Cohen (http://bramcohen.livejournal.com/73318.html).
  */
-public class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
+class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
 
     /**
      * A part of the file that is logically related, e.g. a method.
@@ -148,9 +148,11 @@ public class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
     }
 
     private Fragment toFileFragment(FileInRevision fileInfo, OneFileView<String> fragmentData) {
-        return new Fragment(fileInfo,
-                new PositionInText(fragmentData.toIndexInWholeFile(0) + 1, 1),
-                new PositionInText(fragmentData.toIndexInWholeFile(fragmentData.getItemCount() - 1) + 2, 0),
+        return ChangestructureFactory.createFragment(fileInfo,
+                ChangestructureFactory.createPositionInText(
+                        fragmentData.toIndexInWholeFile(0) + 1, 1),
+                ChangestructureFactory.createPositionInText(
+                        fragmentData.toIndexInWholeFile(fragmentData.getItemCount() - 1) + 2, 0),
                 fragmentData.getContent());
     }
 

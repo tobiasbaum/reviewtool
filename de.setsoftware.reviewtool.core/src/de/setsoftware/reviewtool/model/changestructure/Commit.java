@@ -12,7 +12,7 @@ public class Commit {
     private final String message;
     private final List<Change> changes;
 
-    public Commit(String message, List<Change> changes) {
+    Commit(String message, List<Change> changes) {
         this.message = message;
         this.changes = new ArrayList<Change>(changes);
     }

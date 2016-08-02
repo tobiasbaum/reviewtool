@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: de.setsoftware.reviewtool.changesources.svn;singleton:=true
+Bundle-Version: 1.0.1.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Bundle-ClassPath:  antlr-runtime-3.4.jar,
+ sequence-library-1.0.3.jar,
+ sqljet-1.1.10.jar,
+ svnkit-1.8.12.jar,
+ svnkit-cli-1.8.12.jar,
+ svnkit-javahl16-1.8.12.jar,
+ trilead-ssh2-1.0.0-build220.jar,
+ .
+Bundle-Name: Changesource-SVN
+Bundle-Vendor: Tobias Baum
+Require-Bundle: de.setsoftware.reviewtool.core,
+ org.eclipse.core.resources;bundle-version="[3.9.0,4.0.0)",
+ org.eclipse.core.runtime;bundle-version="[3.10.0,4.0.0)"

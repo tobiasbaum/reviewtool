@@ -11,6 +11,7 @@ import java.util.Random;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
@@ -36,7 +37,9 @@ public class SimpleTextDiffAlgorithmTest {
     }
 
     private static Pair<PositionInText, PositionInText> changeIn(int startIncl, int endIncl) {
-        return Pair.create(new PositionInText(startIncl, 1), new PositionInText(endIncl + 1, 0));
+        return Pair.create(
+                ChangestructureFactory.createPositionInText(startIncl, 1),
+                ChangestructureFactory.createPositionInText(endIncl + 1, 0));
     }
 
     private static Pair<PositionInText, PositionInText> deletionAt(int line) {

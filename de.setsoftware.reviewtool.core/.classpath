@@ -4,13 +4,6 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="minimal-json.jar"/>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="antlr-runtime-3.4.jar"/>
-	<classpathentry kind="lib" path="sequence-library-1.0.3.jar"/>
-	<classpathentry kind="lib" path="sqljet-1.1.10.jar"/>
-	<classpathentry kind="lib" path="svnkit-1.8.12.jar" sourcepath="svnkit-1.8.11-sources.jar"/>
-	<classpathentry kind="lib" path="svnkit-cli-1.8.12.jar"/>
-	<classpathentry kind="lib" path="svnkit-javahl16-1.8.12.jar"/>
-	<classpathentry kind="lib" path="trilead-ssh2-1.0.0-build220.jar"/>
 	<classpathentry kind="lib" path="hackybuffer-1.0.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

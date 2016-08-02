@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
+   <extension-point id="de.setsoftware.reviewtool.configurator" name="reviewtoolConfigurator" schema="schema/de.setsoftware.reviewtool.configurator.exsd"/>
    <extension point="org.eclipse.ui.menus">
 	 <!--<menuContribution locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
 	   <command commandId="de.setsoftware.reviewtool.commands.addremark"
