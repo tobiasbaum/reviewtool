@@ -41,17 +41,17 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
     }
 
     @Override
-    public void notifyStopChange(Stop fragment) {
+    public void notifyStopChange(Stop stop) {
         this.disposeOldContent();
-        if (fragment == null) {
+        if (stop == null) {
             this.currentContent = this.createIdleContent("No review tour stop selected");
         } else {
-            this.currentContent = this.createFragmentContent(fragment);
+            this.currentContent = this.createStopContent(stop);
         }
         this.comp.layout();
     }
 
-    private ScrolledComposite createFragmentContent(Stop fragment) {
+    private ScrolledComposite createStopContent(Stop stop) {
         final ScrolledComposite scroll = new ScrolledComposite(this.comp, SWT.VERTICAL | SWT.HORIZONTAL);
         scroll.setExpandHorizontal(true);
         scroll.setExpandVertical(true);
@@ -62,12 +62,12 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
         final FillLayout layout = new FillLayout();
         scrollContent.setLayout(layout);
 
-        final Iterator<FileInRevision> it = fragment.getHistory().iterator();
+        final Iterator<FileInRevision> it = stop.getHistory().iterator();
         FileInRevision oldRevision = null;
         while (it.hasNext()) {
             final FileInRevision newRevision = it.next();
             if (oldRevision != null) {
-                this.createContentLabel(scrollContent, fragment, oldRevision, newRevision);
+                this.createContentLabel(scrollContent, stop, oldRevision, newRevision);
                 oldRevision = null;
             } else {
                 oldRevision = newRevision;
@@ -97,10 +97,10 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
         return text.toString();
     }
 
-    private void createContentLabel(final Composite scrollContent, final Stop fragment,
+    private void createContentLabel(final Composite scrollContent, final Stop stop,
             final FileInRevision oldRevision, final FileInRevision newRevision) {
-        final List<Fragment> oldContent = fragment.getContentFor(oldRevision);
-        final List<Fragment> newContent = fragment.getContentFor(newRevision);
+        final List<Fragment> oldContent = stop.getContentFor(oldRevision);
+        final List<Fragment> newContent = stop.getContentFor(newRevision);
         if (oldContent.isEmpty() || newContent.isEmpty()) {
             final Label label = new Label(scrollContent, SWT.NULL);
             label.setText("binary");
