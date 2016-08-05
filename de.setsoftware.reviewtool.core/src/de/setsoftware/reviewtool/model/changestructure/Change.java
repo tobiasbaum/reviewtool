@@ -18,6 +18,16 @@ public abstract class Change {
     public abstract void accept(ChangeVisitor visitor);
 
     /**
+     * Returns the {@link FileInRevision} the change is based upon.
+     */
+    public abstract FileInRevision getFrom();
+
+    /**
+     * Returns the {@link FileInRevision} the change was integrated into.
+     */
+    public abstract FileInRevision getTo();
+
+    /**
      * Returns true if this change is regarded as irrelevant for code review.
      * When false is returned, this can be because the change is definitely relevant
      * or because nothing is known about the relevance.

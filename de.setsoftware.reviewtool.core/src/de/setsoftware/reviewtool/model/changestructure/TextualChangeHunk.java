@@ -19,11 +19,11 @@ public class TextualChangeHunk extends Change {
         visitor.handle(this);
     }
 
-    public Fragment getFrom() {
+    public Fragment getFromFragment() {
         return this.from;
     }
 
-    public Fragment getTo() {
+    public Fragment getToFragment() {
         return this.to;
     }
 
@@ -33,6 +33,15 @@ public class TextualChangeHunk extends Change {
             return this;
         }
         return new TextualChangeHunk(this.from, this.to, true);
+    }
+
+    public FileInRevision getFrom() {
+        return this.getFromFragment().getFile();
+    }
+
+    @Override
+    public FileInRevision getTo() {
+        return this.getToFragment().getFile();
     }
 
 }

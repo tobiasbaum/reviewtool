@@ -19,10 +19,12 @@ public class BinaryChange extends Change {
         visitor.handle(this);
     }
 
+    @Override
     public FileInRevision getFrom() {
         return this.from;
     }
 
+    @Override
     public FileInRevision getTo() {
         return this.to;
     }
