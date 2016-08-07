@@ -60,6 +60,10 @@ public class EndReviewDialog extends Dialog {
     protected Control createDialogArea(Composite parent) {
         final Composite comp = (Composite) super.createDialogArea(parent);
 
+        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL);
+        this.textField.setText(this.reviewData.serialize());
+        this.textField.setLayoutData(new GridData(GridData.FILL_BOTH));
+
         final GridLayout layout = (GridLayout) comp.getLayout();
         layout.numColumns = 1;
 
@@ -90,10 +94,6 @@ public class EndReviewDialog extends Dialog {
         } else {
             this.selectFirstButtonWithType(EndTransition.Type.OK);
         }
-
-        this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.RESIZE | SWT.WRAP | SWT.H_SCROLL | SWT.V_SCROLL);
-        this.textField.setText(this.reviewData.serialize());
-        this.textField.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         for (final EndReviewExtension ext : this.endReviewExtensions) {
             this.endReviewExtensionData.add(ext.createControls(comp));
