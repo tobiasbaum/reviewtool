@@ -57,6 +57,7 @@ import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
 import de.setsoftware.reviewtool.viewtracking.IViewStatisticsListener;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
 import de.setsoftware.reviewtool.viewtracking.ViewStatDataForStop;
+import de.setsoftware.reviewtool.viewtracking.ViewStatistics;
 
 /**
  * A review to show the content (tours and stops) belonging to a review.
@@ -417,6 +418,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         public Image getImage(Object element) {
             if (element instanceof Stop) {
                 final Stop f = (Stop) element;
+                final ViewStatistics statistics = TrackerManager.get().getStatistics();
+                if (statistics != null && statistics.isMarkedAsChecked(f)) {
+                    return ImageCache.getGreenCheckMark();
+                }
                 final ViewStatDataForStop viewRatio = this.determineViewRatio(f);
                 if (viewRatio.isNotViewedAtAll()) {
                     return null;

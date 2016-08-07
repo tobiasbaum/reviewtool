@@ -2,8 +2,10 @@ package de.setsoftware.reviewtool.viewtracking;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
@@ -18,6 +20,7 @@ public class ViewStatistics {
 
     private final Map<File, ViewStatisticsForFile> files = new HashMap<>();
     private final WeakListeners<IViewStatisticsListener> listeners = new WeakListeners<>();
+    private final Set<Stop> explicitMarks = new HashSet<>();
 
     /**
      * Marks that the given portion of the file has been viewed for one time slot.
@@ -37,6 +40,44 @@ public class ViewStatistics {
         final File absFile = filePath.getAbsoluteFile();
         this.getOrCreate(absFile).markUnknownPosition();
         this.notifyListeners(absFile);
+    }
+
+    /**
+     * Marks the given stop as checked. This kind of explicit manual marking is orthogonal to
+     * the automatic marking of viewed portions of the file.
+     */
+    public void markExplicitlyAsChecked(Stop stop) {
+        this.explicitMarks.add(stop);
+        this.notifyListeners(stop.getAbsoluteFile());
+    }
+
+    /**
+     * Removes the "checked" mark for the given stop.
+     */
+    public void removeExplicitMark(Stop stop) {
+        this.explicitMarks.remove(stop);
+        this.notifyListeners(stop.getAbsoluteFile());
+    }
+
+    /**
+     * Marks the given stop as checked when it is currently not, or removes the mark when it
+     * is currently present.
+     */
+    public void toggleExplicitlyCheckedMark(Stop stop) {
+        if (this.isMarkedAsChecked(stop)) {
+            this.removeExplicitMark(stop);
+        } else {
+            this.markExplicitlyAsChecked(stop);
+        }
+    }
+
+    /**
+     * Returns true iff this stop has been explicitly marked as checked.
+     * This kind of explicit manual marking is orthogonal to the automatic marking of
+     * viewed portions of the file.
+     */
+    public boolean isMarkedAsChecked(Stop stop) {
+        return this.explicitMarks.contains(stop);
     }
 
     private ViewStatisticsForFile getOrCreate(File absFile) {
@@ -119,7 +160,8 @@ public class ViewStatistics {
             }
 
             for (final Stop possibleNextStop : remainingStops) {
-                if (this.determineViewRatio(possibleNextStop, 1).isPartlyUnvisited()) {
+                if (this.determineViewRatio(possibleNextStop, 1).isPartlyUnvisited()
+                        && !this.explicitMarks.contains(possibleNextStop)) {
                     if (i > 0 || !tour.getStops().contains(currentStop)) {
                         if (startTourIndex + i >= tourCount) {
                             nextStopCallback.wrappedAround();
@@ -135,4 +177,5 @@ public class ViewStatistics {
 
         return null;
     }
+
 }

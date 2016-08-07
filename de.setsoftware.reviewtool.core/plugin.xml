@@ -113,6 +113,13 @@
                </with>
              </visibleWhen>
 	   </command>
+	   <command commandId="de.setsoftware.reviewtool.commands.markAsChecked"
+	   		 label="Mark/Unmark explicitly checked" 
+	   		 style="push">
+	   		 <!--<visibleWhen>
+               <adapt type="de.setsoftware.reviewtool.model.changestructure.Stop" />
+             </visibleWhen>-->
+	   </command>
 	 </menuContribution>
    </extension>
    <extension point="org.eclipse.ui.commands">
@@ -139,6 +146,9 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MergeToursAction"
         id="de.setsoftware.reviewtool.commands.mergetours" name="Merge review tours">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkAsCheckedAction"
+        id="de.setsoftware.reviewtool.commands.markAsChecked" name="Mark selected stop as checked/unchecked">
      </command>
    </extension>
 

@@ -71,6 +71,30 @@ public class ImageCache {
     }
 
     /**
+     * Returns a green check mark in tree image size.
+     */
+    public static Image getGreenCheckMark() {
+        final String key = "gcm";
+        if (images.containsKey(key)) {
+            return images.get(key);
+        }
+
+        final Device dev = Display.getDefault();
+        final Image img = new Image(dev, TREE_IMAGE_SIZE);
+        final GC gc = new GC(img);
+        final Color green = new Color(dev, 0, 255, 0);
+        gc.setForeground(green);
+        gc.setLineWidth(2);
+        gc.drawLine(4, 12, 8, 15);
+        gc.drawLine(8, 15, 15, 1);
+        green.dispose();
+        gc.dispose();
+
+        images.put(key, img);
+        return img;
+    }
+
+    /**
      * Disposes all cached images and clears the cache.
      */
     public static void dispose() {
