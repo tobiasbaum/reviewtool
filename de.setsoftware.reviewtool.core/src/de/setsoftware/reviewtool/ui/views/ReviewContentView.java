@@ -232,7 +232,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
             final Object pathOrResource = pos.getFirst();
             final IPath path = pathOrResource instanceof IPath
-                    ? (IPath) pathOrResource : ((IResource) pathOrResource).getFullPath();
+                    ? (IPath) pathOrResource : ((IResource) pathOrResource).getLocation();
             final Stop nearestStop = activeTour.findNearestStop(path, pos.getSecond());
             if (nearestStop == null) {
                 return false;

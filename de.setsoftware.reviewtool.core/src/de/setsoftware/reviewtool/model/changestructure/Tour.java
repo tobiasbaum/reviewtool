@@ -123,14 +123,14 @@ public class Tour {
      * The closeness measure is tweaked to (hopefully) capture the users intention as good as possible
      * for cases where he did not click directly on a stop.
      */
-    public Stop findNearestStop(IPath resource, int line) {
+    public Stop findNearestStop(IPath absoluteResourcePath, int line) {
         if (this.stops.isEmpty()) {
             return null;
         }
         Stop best = null;
         int bestDist = Integer.MAX_VALUE;
         for (final Stop stop : this.stops) {
-            final int candidateDist = this.calculateDistance(stop, resource, line);
+            final int candidateDist = this.calculateDistance(stop, absoluteResourcePath, line);
             if (candidateDist < bestDist) {
                 best = stop;
                 bestDist = candidateDist;
