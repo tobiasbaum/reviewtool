@@ -44,7 +44,6 @@ import de.setsoftware.reviewtool.config.IReviewConfigurable;
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
 import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
-import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.DummyMarker;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
@@ -62,10 +61,11 @@ import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
+import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
+import de.setsoftware.reviewtool.ui.dialogs.RemarkMarkers;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
-import de.setsoftware.reviewtool.ui.views.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
 
@@ -281,8 +281,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void clearMarkers() throws CoreException {
-        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
-                Constants.REVIEWMARKER_ID, true, IResource.DEPTH_INFINITE);
+        RemarkMarkers.clearMarkers();
         if (this.toursInReview != null) {
             this.toursInReview.clearMarkers();
         }
@@ -418,7 +417,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     public void refreshMarkers() throws CoreException {
         this.clearMarkers();
         this.loadToursAndCreateMarkers();
-        CorrectSyntaxDialog.getCurrentReviewDataParsed(this.persistence, new RealMarkerFactory());
+        RemarkMarkers.loadRemarks(this.persistence);
     }
 
     private void loadToursAndCreateMarkers() {

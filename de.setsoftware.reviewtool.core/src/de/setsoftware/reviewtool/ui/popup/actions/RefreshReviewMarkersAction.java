@@ -14,7 +14,7 @@ public class RefreshReviewMarkersAction extends AbstractHandler {
         try {
             ReviewPlugin.getInstance().refreshMarkers();
         } catch (final CoreException e) {
-            throw new ExecutionException("problem while ending fixing", e);
+            throw new ExecutionException("problem while refreshing markers", e);
         }
         return null;
     }

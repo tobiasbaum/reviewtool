@@ -51,6 +51,7 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
+import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.viewtracking.CodeViewTracker;
 import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
 import de.setsoftware.reviewtool.viewtracking.IViewStatisticsListener;

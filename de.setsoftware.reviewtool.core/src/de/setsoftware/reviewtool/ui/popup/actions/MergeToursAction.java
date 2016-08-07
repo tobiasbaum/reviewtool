@@ -12,7 +12,7 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import de.setsoftware.reviewtool.model.changestructure.Tour;
-import de.setsoftware.reviewtool.ui.views.RealMarkerFactory;
+import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ViewDataSource;
 
 /**
