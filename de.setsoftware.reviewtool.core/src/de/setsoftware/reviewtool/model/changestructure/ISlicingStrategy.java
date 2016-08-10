@@ -8,8 +8,8 @@ import java.util.List;
 public interface ISlicingStrategy {
 
     /**
-     * Determine a separation of the given changes into review tours.
+     * Determine a separation of the given commits into review tours.
      */
-    public abstract List<Tour> toTours(List<Commit> changes);
+    public abstract List<Tour> toTours(List<Commit> commits);
 
 }
