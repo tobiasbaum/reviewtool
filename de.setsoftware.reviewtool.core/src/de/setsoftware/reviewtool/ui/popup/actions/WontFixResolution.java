@@ -34,7 +34,7 @@ public class WontFixResolution implements IMarkerResolution {
             @Override
             public void execute(String text) {
                 try {
-                    review.addComment(text);
+                    review.addComment(ReviewPlugin.getUserPref(), text);
                     review.setResolution(ResolutionType.WONT_FIX);
                     review.save();
                     Telemetry.get().resolutionWontFix(

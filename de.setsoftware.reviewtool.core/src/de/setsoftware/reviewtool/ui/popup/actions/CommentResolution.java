@@ -34,7 +34,7 @@ public class CommentResolution implements IMarkerResolution {
             @Override
             public void execute(String text) {
                 try {
-                    review.addComment(text);
+                    review.addComment(ReviewPlugin.getUserPref(), text);
                     review.setResolution(ResolutionType.OPEN);
                     review.save();
                     Telemetry.get().resolutionComment(

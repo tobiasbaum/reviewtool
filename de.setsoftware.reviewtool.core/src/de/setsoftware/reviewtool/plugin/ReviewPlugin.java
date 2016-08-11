@@ -181,7 +181,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         return ReviewToolPreferencePage.getSecurePreferences();
     }
 
-    private static String getUserPref() {
+    /**
+     * Returns the user ID for the current user.
+     */
+    public static String getUserPref() {
         try {
             return ReviewToolPreferencePage.getUserIdPref();
         } catch (final StorageException e) {

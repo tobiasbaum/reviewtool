@@ -114,10 +114,6 @@ public class ReviewRemark {
         return IMarker.SEVERITY_WARNING;
     }
 
-    public void addComment(String reply) throws CoreException {
-        this.addComment("TB", reply);
-    }
-
     public void addComment(String user, String reply) throws CoreException {
         final String oldText = this.marker.getAttribute(IMarker.MESSAGE, "");
         final String newText = oldText + "\n\n" + formatComment(user, reply);

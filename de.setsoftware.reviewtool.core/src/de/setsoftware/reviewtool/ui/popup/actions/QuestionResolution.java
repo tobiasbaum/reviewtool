@@ -31,7 +31,7 @@ public class QuestionResolution implements IMarkerResolution {
             @Override
             public void execute(String text) {
                 try {
-                    review.addComment(text);
+                    review.addComment(ReviewPlugin.getUserPref(), text);
                     review.setResolution(ResolutionType.QUESTION);
                     review.save();
                     Telemetry.get().resolutionQuestion(
