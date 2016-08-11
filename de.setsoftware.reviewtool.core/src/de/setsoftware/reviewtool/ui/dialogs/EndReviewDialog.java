@@ -106,6 +106,7 @@ public class EndReviewDialog extends Dialog {
         for (final Button b : this.radioButtons) {
             if (((EndTransition) b.getData()).getType() == type) {
                 b.setSelection(true);
+                b.setFocus();
                 break;
             }
         }
