@@ -219,7 +219,7 @@ public class ReviewToolPreferencePage extends PreferencePage
         try {
             final ISecurePreferences prefs = getSecurePreferences();
             for (final TableItem item : this.userParamTable.getItems()) {
-                    putPref(prefs, item.getText(0), item.getText(1));
+                putPref(prefs, item.getText(0), item.getText(1));
             }
         } catch (final StorageException e) {
             MessageDialog.openError(this.getShell(), "Error while storing user config",

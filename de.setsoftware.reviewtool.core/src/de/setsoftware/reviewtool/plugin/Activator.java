@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.plugin;
 
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
@@ -33,7 +34,7 @@ public class Activator extends AbstractUIPlugin {
                         new Status(status, Activator.this.getBundle().getSymbolicName(), message, exception));
             }
         });
-        DialogHelper.setPreferenceStore(this.getPreferenceStore());
+        DialogHelper.setPreferenceStore((IPersistentPreferenceStore) this.getPreferenceStore());
         ViewDataSource.setInstance(new ViewDataSource() {
             @Override
             public void registerListener(ReviewModeListener l) {
