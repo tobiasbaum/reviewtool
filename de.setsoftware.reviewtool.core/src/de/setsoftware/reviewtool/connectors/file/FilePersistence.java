@@ -43,6 +43,20 @@ public class FilePersistence implements IReviewPersistence {
 
         public TicketDir(File file) {
             this.ticketDir = file;
+            if (!this.ticketDir.exists()) {
+                try {
+                    this.createDummyDir();
+                } catch (final IOException e) {
+                    throw new ReviewtoolException(e);
+                }
+            }
+        }
+
+        private void createDummyDir() throws IOException {
+            this.ticketDir.mkdir();
+            Files.write(this.ticketDir.toPath().resolve("ticket.properties"),
+                    ("description=Testticket " + (int) (Math.random() * 1000) + "\ncomponent=Main").getBytes());
+            Files.createFile(this.ticketDir.toPath().resolve("state.readyForReview"));
         }
 
         @Override
