@@ -13,6 +13,7 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
+import de.setsoftware.reviewtool.telemetry.TelemetryEventBuilder;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtensionData;
 
 /**
@@ -40,7 +41,7 @@ public class SurveyAtEndControls implements EndReviewExtensionData {
             return false;
         }
 
-        final List<Pair<String, String>> answers = new ArrayList<>();
+        final TelemetryEventBuilder event = Telemetry.event("surveyResult");
         for (final Pair<Question, Combo> combo : this.combos) {
             final String answerId = combo.getFirst().getIdForChoiceText(combo.getSecond().getText());
             if (answerId == null) {
@@ -48,9 +49,9 @@ public class SurveyAtEndControls implements EndReviewExtensionData {
                         "Please answer the survey questions shown in the dialog.");
                 return true;
             }
-            answers.add(Pair.create(combo.getFirst().getId(), answerId));
+            event.param("q_" + combo.getFirst().getId(), answerId);
         }
-        Telemetry.get().surveyResult(answers);
+        event.log();
         return false;
     }
 

@@ -13,6 +13,8 @@ import de.setsoftware.reviewtool.base.Util;
  * A part of a review tour, corresponding to some notion of "singular change".
  * It knows the file fragment it belongs to in the most current revision, but
  * also the changes that it is based on.
+ * <p/>
+ * A stop is immutable.
  */
 public class Stop {
 

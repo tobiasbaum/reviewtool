@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.plugin;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +37,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
@@ -55,15 +57,18 @@ import de.setsoftware.reviewtool.model.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
-import de.setsoftware.reviewtool.slicingalgorithms.OneTourPerCommit;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
+import de.setsoftware.reviewtool.tourrestructuring.onestop.OneStopPerPartOfFileRestructuring;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.dialogs.RemarkMarkers;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
+import de.setsoftware.reviewtool.ui.dialogs.SelectTourStructureDialog;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
@@ -214,13 +219,12 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.loadReviewData(Mode.REVIEWING);
         if (this.mode == Mode.REVIEWING) {
             this.switchToReviewPerspective();
-            Telemetry.get().reviewStarted(
-                    this.persistence.getCurrentRound(),
-                    this.toursInReview.getNumberOfTours(),
-                    this.toursInReview.getNumberOfStops(),
-                    this.toursInReview.getNumberOfFragments(),
-                    this.toursInReview.getNumberOfAddedLines(),
-                    this.toursInReview.getNumberOfRemovedLines());
+
+            Telemetry.event("reviewStarted")
+                    .param("round", this.persistence.getCurrentRound())
+                    .params(Tour.determineSize(this.toursInReview.getTours()))
+                    .log();
+
             this.registerGlobalTelemetryListeners();
             TrackerManager.get().startTracker();
         }
@@ -245,7 +249,9 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
         this.loadReviewData(Mode.FIXING);
         if (this.mode == Mode.FIXING) {
-            Telemetry.get().fixingStarted(this.persistence.getCurrentRound());
+            Telemetry.event("fixingStarted")
+                .param("round", this.persistence.getCurrentRound())
+                .log();
             this.registerGlobalTelemetryListeners();
         }
     }
@@ -266,7 +272,12 @@ public class ReviewPlugin implements IReviewConfigurable {
                 getUserPref().toUpperCase());
         this.clearMarkers();
 
-        this.loadToursAndCreateMarkers();
+        final boolean toursOk = this.loadToursAndCreateMarkers();
+        if (!toursOk) {
+            this.setMode(Mode.IDLE);
+            this.toursInReview = null;
+            return;
+        }
 
         final ReviewData currentReviewData = CorrectSyntaxDialog.getCurrentReviewDataParsed(
                 this.persistence, new RealMarkerFactory());
@@ -351,11 +362,10 @@ public class ReviewPlugin implements IReviewConfigurable {
             }
         }
         TrackerManager.get().stopTracker();
-        Telemetry.get().reviewEnded(
-                this.persistence.getTicketKey(),
-                this.persistence.getReviewerForCurrentRound(),
-                this.persistence.getCurrentRound(),
-                typeOfEnd.getNameForUser());
+        Telemetry.event("reviewEnded")
+                .param("round", this.persistence.getCurrentRound())
+                .param("endTransition", typeOfEnd.getNameForUser())
+                .log();
         if (typeOfEnd.getType() != EndTransition.Type.PAUSE) {
             this.persistence.changeStateAtReviewEnd(typeOfEnd);
         }
@@ -387,10 +397,9 @@ public class ReviewPlugin implements IReviewConfigurable {
                 return;
             }
         }
-        Telemetry.get().fixingEnded(
-                this.persistence.getTicketKey(),
-                this.persistence.getReviewerForCurrentRound(),
-                this.persistence.getCurrentRound());
+        Telemetry.event("fixingEnded")
+            .param("round", this.persistence.getCurrentRound())
+            .log();
         this.persistence.changeStateToReadyForReview();
         this.leaveReviewMode();
     }
@@ -423,10 +432,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         RemarkMarkers.loadRemarks(this.persistence);
     }
 
-    private void loadToursAndCreateMarkers() {
+    private boolean loadToursAndCreateMarkers() {
         final String ticketKey = this.persistence.getTicketKey();
         if (ticketKey == null) {
-            return;
+            return false;
         }
         final IChangeSourceUi sourceUi = new IChangeSourceUi() {
             @Override
@@ -437,12 +446,27 @@ public class ReviewPlugin implements IReviewConfigurable {
                         + ") does not contain all relevant changes. Perform an update?");
             }
         };
+        final ICreateToursUi createUi = new ICreateToursUi() {
+            @Override
+            public List<? extends Tour> selectInitialTours(
+                    List<? extends Pair<String, List<? extends Tour>>> choices) {
+                if (choices.size() == 1) {
+                    return choices.get(0).getSecond();
+                }
+                return SelectTourStructureDialog.selectStructure(choices);
+            }
+        };
         this.toursInReview = ToursInReview.create(
                 this.changeSource,
                 sourceUi,
-                new OneTourPerCommit(this.changeSource.createTracer()),
+                Arrays.asList(new OneStopPerPartOfFileRestructuring()),
+                createUi,
                 ticketKey);
+        if (this.toursInReview == null) {
+            return false;
+        }
         this.toursInReview.createMarkers(new RealMarkerFactory());
+        return true;
     }
 
     @Override

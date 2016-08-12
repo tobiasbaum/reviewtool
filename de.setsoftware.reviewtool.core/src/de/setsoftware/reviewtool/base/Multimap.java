@@ -36,7 +36,7 @@ public final class Multimap<K, V> {
      */
     public List<V> get(K key) {
         final List<V> list = this.map.get(key);
-        return list == null ? Collections.<V>emptyList() : list;
+        return list == null ? Collections.<V>emptyList() : Collections.unmodifiableList(list);
     }
 
     /**

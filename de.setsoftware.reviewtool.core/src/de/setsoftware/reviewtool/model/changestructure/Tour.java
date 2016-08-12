@@ -11,12 +11,16 @@ import java.util.Map.Entry;
 import org.eclipse.core.runtime.IPath;
 
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.telemetry.TelemetryEventBuilder;
+import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
 
 /**
  * A tour through a part of the changes. The consists of stops in a certain order, with
  * each stop belonging to some part of the change.
  * <p/>
  * The Tour+Stop metaphor is borrowed from the JTourBus tool.
+ * <p/>
+ * A tour is immutable.
  */
 public class Tour {
 
@@ -33,8 +37,23 @@ public class Tour {
         return "Tour: " + this.description + ", " + this.stops;
     }
 
+    @Override
+    public int hashCode() {
+        return this.description.hashCode() + this.stops.size();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Tour)) {
+            return false;
+        }
+        final Tour t = (Tour) o;
+        return this.description.equals(t.description)
+            && this.stops.equals(t.stops);
+    }
+
     public List<Stop> getStops() {
-        return this.stops;
+        return Collections.unmodifiableList(this.stops);
     }
 
     public String getDescription() {
@@ -197,6 +216,38 @@ public class Tour {
             ret += s.getNumberOfRemovedLines();
         }
         return ret;
+    }
+
+    /**
+     * Determines some statistics on the size of the given tours and stores them as params
+     * in the given @{link {@link TelemetryEventBuilder}.
+     */
+    public static TelemetryParamSource determineSize(final List<? extends Tour> tours) {
+        return new TelemetryParamSource() {
+            @Override
+            public void addParams(TelemetryEventBuilder event) {
+                if (tours == null) {
+                    event.param("cntTours", "-1");
+                    return;
+                }
+
+                int numberOfStops = 0;
+                int numberOfFragments = 0;
+                int numberOfAddedLines = 0;
+                int numberOfRemovedLines = 0;
+                for (final Tour t : tours) {
+                    numberOfStops += t.getNumberOfStops();
+                    numberOfFragments += t.getNumberOfFragments();
+                    numberOfAddedLines += t.getNumberOfAddedLines();
+                    numberOfRemovedLines += t.getNumberOfRemovedLines();
+                }
+                event.param("cntTours", tours.size());
+                event.param("cntStops", numberOfStops);
+                event.param("cntFragments", numberOfFragments);
+                event.param("cntAddedLines", numberOfAddedLines);
+                event.param("cntRemovedLines", numberOfRemovedLines);
+            }
+        };
     }
 
 }

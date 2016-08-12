@@ -12,6 +12,10 @@ public class Telemetry {
         return instance;
     }
 
+    public static TelemetryEventBuilder event(String type) {
+        return new TelemetryEventBuilder(instance, type);
+    }
+
     public static void set(AbstractTelemetry t) {
         instance = t;
     }

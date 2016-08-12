@@ -20,6 +20,14 @@ public class Util {
      * and returns the resulting string.
      */
     public static String implode(Iterable<?> collection) {
+        return implode(collection, ", ");
+    }
+
+    /**
+     * Joins the string representation of all items in the collection with the given glue
+     * and returns the resulting string.
+     */
+    public static String implode(Iterable<?> collection, String glue) {
         final Iterator<?> iter = collection.iterator();
         if (!iter.hasNext()) {
             return "";
@@ -27,7 +35,7 @@ public class Util {
         final StringBuilder ret = new StringBuilder();
         ret.append(iter.next());
         while (iter.hasNext()) {
-            ret.append(", ").append(iter.next());
+            ret.append(glue).append(iter.next());
         }
         return ret.toString();
     }

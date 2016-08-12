@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import de.setsoftware.reviewtool.base.Logger;
-import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 
 /**
@@ -34,59 +33,6 @@ public abstract class AbstractTelemetry {
         }
         this.currentTicketKey = ticketKey;
         this.currentUser = user;
-    }
-
-    /**
-     * Sends the event that a review has been started at the current moment in time.
-     */
-    public final void reviewStarted(int round,
-            int numberOfTours, int numberOfStops, int numberOfFragments,
-            int numberOfAddedLines, int numberOfRemovedLines) {
-        this.putData(
-                "reviewStarted",
-                this.currentTicketKey,
-                this.currentUser,
-                map("round", Integer.toString(round),
-                    "cntTours", Integer.toString(numberOfTours),
-                    "cntStops", Integer.toString(numberOfStops),
-                    "cntFragments", Integer.toString(numberOfFragments),
-                    "cntAddedLines", Integer.toString(numberOfAddedLines),
-                    "cntRemovedLines", Integer.toString(numberOfRemovedLines)));
-    }
-
-    /**
-     * Sends the event that a remark fixing has been started at the current moment in time.
-     */
-    public final void fixingStarted(int round) {
-        this.putData(
-                "fixingStarted",
-                this.currentTicketKey,
-                this.currentUser,
-                map("round", Integer.toString(round)));
-    }
-
-    /**
-     * Sends the event that a review has been finished at the current moment in time.
-     */
-    public final void reviewEnded(String ticketKey, String reviewer, int round, String endTransition) {
-        this.putData(
-                "reviewEnded",
-                ticketKey,
-                reviewer,
-                map(
-                        "round", Integer.toString(round),
-                        "endTransition", endTransition));
-    }
-
-    /**
-     * Sends the event that a remark fixing has been finished at the current moment in time.
-     */
-    public final void fixingEnded(String ticketKey, String reviewer, int round) {
-        this.putData(
-                "fixingEnded",
-                ticketKey,
-                reviewer,
-                map("round", Integer.toString(round)));
     }
 
     /**
@@ -132,17 +78,6 @@ public abstract class AbstractTelemetry {
                 map(
                     "resource", resource,
                     "line", Integer.toString(line)));
-    }
-
-    public void toursMerged(List<Integer> mergedTourIndices, int numberOfTours, int numberOfStops) {
-        this.putData(
-                "toursMerged",
-                this.currentTicketKey,
-                this.currentUser,
-                map(
-                    "mergedTourIndices", mergedTourIndices.toString(),
-                    "newNumberOfTours", Integer.toString(numberOfTours),
-                    "newNumberOfStops", Integer.toString(numberOfStops)));
     }
 
     public void tourActivated(int index) {
@@ -217,19 +152,16 @@ public abstract class AbstractTelemetry {
     }
 
     /**
-     * Sends the event that some survey questions have been answered.
-     * The List contains the IDs of the questions and of the chosen answers.
+     * Generic log method.
+     * Instead of using this method, its better to use a {@link TelemetryEventBuilder} (created by
+     * {@link de.setsoftware.reviewtool.telemetry.Telemetry.#event(type)}).
      */
-    public void surveyResult(List<Pair<String, String>> answers) {
-        final Map<String, String> answerMap = new LinkedHashMap<>();
-        for (final Pair<String, String> p : answers) {
-            answerMap.put("q_" + p.getFirst(), p.getSecond());
-        }
+    public void log(String eventType, Map<String, String> params) {
         this.putData(
-                "surveyResult",
+                eventType,
                 this.currentTicketKey,
                 this.currentUser,
-                answerMap);
+                params);
     }
 
     /**

@@ -13,7 +13,10 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
@@ -40,26 +43,28 @@ public class ToursInReview {
         public abstract void activeTourChanged(Tour oldActive, Tour newActive);
     }
 
+    /**
+     * Interface for user interaction during the creation of {@link ToursInReview}.
+     */
+    public static interface ICreateToursUi {
+
+        /**
+         * Lets the user choose one of the given tour structures.
+         * The given list contains pairs with a description of the merge algorithm and the resulting tours.
+         * There always is at least one choice.
+         */
+        public abstract List<? extends Tour> selectInitialTours(
+                List<? extends Pair<String, List<? extends Tour>>> choices);
+
+    }
+
     private final List<Tour> tours;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
-    private ToursInReview(List<Tour> tours) {
-        this.tours = tours;
+    private ToursInReview(List<? extends Tour> tours) {
+        this.tours = new ArrayList<>(tours);
         this.currentTourIndex = 0;
-    }
-
-    /**
-     * Loads the tours for the given ticket and creates a corresponding {@link ToursInReview}
-     * object with initial settings.
-     */
-    public static ToursInReview create(
-            IChangeSource src,
-            IChangeSourceUi changeSourceUi,
-            ISlicingStrategy slicer,
-            String ticketKey) {
-        final List<Tour> tours = slicer.toTours(src.getChanges(ticketKey, changeSourceUi));
-        return new ToursInReview(tours);
     }
 
     /**
@@ -67,6 +72,98 @@ public class ToursInReview {
      */
     public static ToursInReview create(List<Tour> tours) {
         return new ToursInReview(tours);
+    }
+
+    /**
+     * Loads the tours for the given ticket and creates a corresponding {@link ToursInReview}
+     * object with initial settings. When there is user interaction and the user cancels,
+     * null is returned.
+     */
+    public static ToursInReview create(
+            IChangeSource src,
+            IChangeSourceUi changeSourceUi,
+            List<? extends ITourRestructuring> tourRestructuringStrategies,
+            ICreateToursUi createUi,
+            String ticketKey) {
+        final List<Tour> tours = toTours(src.getChanges(ticketKey, changeSourceUi), src.createTracer());
+        final List<? extends Pair<String, List<? extends Tour>>> possibleRestructurings =
+                determinePossibleRestructurings(tourRestructuringStrategies, tours);
+        final List<? extends Tour> userSelection = createUi.selectInitialTours(possibleRestructurings);
+        return userSelection != null ? new ToursInReview(userSelection) : null;
+    }
+
+    private static List<? extends Pair<String, List<? extends Tour>>> determinePossibleRestructurings(
+            List<? extends ITourRestructuring> tourRestructuringStrategies, List<Tour> originalTours) {
+        final List<Pair<String, List<? extends Tour>>> ret = new ArrayList<>();
+
+        ret.add(Pair.<String, List<? extends Tour>>create("one tour per commit", originalTours));
+        Telemetry.event("originalTourStructure")
+                .params(Tour.determineSize(originalTours))
+                .log();
+
+
+        for (final ITourRestructuring restructuringStrategy : tourRestructuringStrategies) {
+            try {
+                final List<? extends Tour> restructuredTour =
+                        restructuringStrategy.restructure(new ArrayList<>(originalTours));
+
+                Telemetry.event("possibleTourStructure")
+                    .param("strategy", restructuringStrategy.getClass())
+                    .params(Tour.determineSize(restructuredTour))
+                    .log();
+
+                if (restructuredTour != null) {
+                    ret.add(Pair.<String, List<? extends Tour>>create(
+                            restructuringStrategy.getDescription(), restructuredTour));
+                }
+            } catch (final Exception e) {
+                //skip instable restructurings
+                Logger.error("exception in restructuring", e);
+            }
+        }
+        return ret;
+    }
+
+    private static List<Tour> toTours(List<Commit> changes, IFragmentTracer tracer) {
+        final List<Tour> ret = new ArrayList<>();
+        for (final Commit c : changes) {
+            ret.add(new Tour(
+                    c.getMessage(),
+                    toSliceFragments(c.getChanges(), tracer)));
+        }
+        return ret;
+    }
+
+    private static List<Stop> toSliceFragments(List<Change> changes, IFragmentTracer tracer) {
+        final List<Stop> ret = new ArrayList<>();
+        for (final Change c : changes) {
+            ret.add(toSliceFragment(c, tracer));
+        }
+        return ret;
+    }
+
+    private static Stop toSliceFragment(Change c, final IFragmentTracer tracer) {
+        final ValueWrapper<Stop> ret = new ValueWrapper<>();
+        c.accept(new ChangeVisitor() {
+
+            @Override
+            public void handle(TextualChangeHunk visitee) {
+                ret.setValue(new Stop(
+                        visitee.getFrom(),
+                        visitee.getTo(),
+                        tracer.traceFragment(visitee.getTo())));
+            }
+
+            @Override
+            public void handle(BinaryChange visitee) {
+                ret.setValue(new Stop(
+                        visitee.getFrom(),
+                        visitee.getTo(),
+                        tracer.traceFile(visitee.getTo())));
+            }
+
+        });
+        return ret.get();
     }
 
     /**
@@ -216,10 +313,10 @@ public class ToursInReview {
             l.toursChanged();
         }
 
-        Telemetry.get().toursMerged(
-                tourIndices,
-                this.getNumberOfTours(),
-                this.getNumberOfStops());
+        Telemetry.event("toursMerged")
+                .param("mergedTourIndices", tourIndices)
+                .params(Tour.determineSize(this.tours))
+                .log();
     }
 
     private Tour determineLargestTour(List<Tour> toursToMerge) {
@@ -267,56 +364,6 @@ public class ToursInReview {
             }
         }
         return 0;
-    }
-
-    public int getNumberOfTours() {
-        return this.tours.size();
-    }
-
-    /**
-     * Returns the total number of stops in all tours.
-     */
-    public int getNumberOfStops() {
-        int ret = 0;
-        for (final Tour t : this.tours) {
-            ret += t.getNumberOfStops();
-        }
-        return ret;
-    }
-
-    /**
-     * Returns the total number of fragments in all stops of all tours.
-     */
-    public int getNumberOfFragments() {
-        int ret = 0;
-        for (final Tour t : this.tours) {
-            ret += t.getNumberOfFragments();
-        }
-        return ret;
-    }
-
-    /**
-     * Returns the total count of all added lines (right-hand side of a fragment).
-     * A change is counted as both remove and add.
-     */
-    public int getNumberOfAddedLines() {
-        int ret = 0;
-        for (final Tour t : this.tours) {
-            ret += t.getNumberOfAddedLines();
-        }
-        return ret;
-    }
-
-    /**
-     * Returns the total count of all removed lines (left-hand side of a fragment).
-     * A change is counted as both remove and add.
-     */
-    public int getNumberOfRemovedLines() {
-        int ret = 0;
-        for (final Tour t : this.tours) {
-            ret += t.getNumberOfRemovedLines();
-        }
-        return ret;
     }
 
 }
