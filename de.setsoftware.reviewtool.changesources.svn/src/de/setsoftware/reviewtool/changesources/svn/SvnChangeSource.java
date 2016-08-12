@@ -323,17 +323,18 @@ public class SvnChangeSource implements IChangeSource {
             return false;
         }
         final int max = Math.min(128, fileContent.length);
-        int strangeCharCount = 0;
         for (int i = 0; i < max; i++) {
             if (this.isStrangeChar(fileContent[i])) {
-                strangeCharCount++;
+                //we only count ASCII control chars as "strange" (to be UTF-8 agnostic), so
+                //  a single strange char should suffice to declare a file non-text
+                return true;
             }
         }
-        return strangeCharCount > 3;
+        return false;
     }
 
     private boolean isStrangeChar(byte b) {
-        return b != '\n' && b != '\r' && b != '\t' && b < 0x20;
+        return b != '\n' && b != '\r' && b != '\t' && b < 0x20 && b >= 0;
     }
 
     private String determineOldPath(SVNLogEntryPath entryInfo) {
