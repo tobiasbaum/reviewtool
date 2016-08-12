@@ -399,7 +399,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         @Override
         public String getText(Object element) {
             if (element instanceof Tour) {
-                return ((Tour) element).getDescription();
+                return ((Tour) element).getDescription().replace("\r", "").replace("\n", "; ");
             } else if (element instanceof Stop) {
                 final Stop f = (Stop) element;
                 if (f.isDetailedFragmentKnown()) {
