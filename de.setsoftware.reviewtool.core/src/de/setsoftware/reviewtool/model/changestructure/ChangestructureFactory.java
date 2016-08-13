@@ -12,12 +12,12 @@ public class ChangestructureFactory {
         return new Commit(message, changes);
     }
 
-    public static BinaryChange createBinaryChange(FileInRevision from, FileInRevision to) {
-        return new BinaryChange(from, to);
+    public static BinaryChange createBinaryChange(FileInRevision from, FileInRevision to, boolean irrelevantForReview) {
+        return new BinaryChange(from, to, irrelevantForReview);
     }
 
-    public static TextualChangeHunk createTextualChangeHunk(Fragment from, Fragment to) {
-        return new TextualChangeHunk(from, to);
+    public static TextualChangeHunk createTextualChangeHunk(Fragment from, Fragment to, boolean irrelevantForReview) {
+        return new TextualChangeHunk(from, to, irrelevantForReview);
     }
 
     public static FileInRevision createFileInRevision(String path, Revision revision, Repository repository) {

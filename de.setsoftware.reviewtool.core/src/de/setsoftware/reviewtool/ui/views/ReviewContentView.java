@@ -157,7 +157,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     stop.getMostRecentFragment().getFrom(),
                     stop.getMostRecentFragment().getFrom(),
                     "");
-            jumpTarget = new Stop(fragment, fragment, fragment);
+            jumpTarget = new Stop(fragment, fragment, fragment, false);
         } else {
             jumpTarget = stop;
         }

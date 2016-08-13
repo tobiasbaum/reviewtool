@@ -5,10 +5,25 @@ package de.setsoftware.reviewtool.model.changestructure;
  */
 public abstract class Change {
 
+    private final boolean irrelevantForReview;
+
+    public Change(boolean irrelevantForReview) {
+        this.irrelevantForReview = irrelevantForReview;
+    }
+
     /**
      * Visitor-Pattern: Calls the method in the visitor that corresponds to this
      * change's type.
      */
     public abstract void accept(ChangeVisitor visitor);
+
+    /**
+     * Returns true if this change is regarded as irrelevant for code review.
+     * When false is returned, this can be because the change is definitely relevant
+     * or because nothing is known about the relevance.
+     */
+    public final boolean isIrrelevantForReview() {
+        return this.irrelevantForReview;
+    }
 
 }

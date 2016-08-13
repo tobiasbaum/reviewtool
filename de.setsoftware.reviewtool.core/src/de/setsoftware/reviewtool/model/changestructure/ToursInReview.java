@@ -151,7 +151,8 @@ public class ToursInReview {
                 ret.setValue(new Stop(
                         visitee.getFrom(),
                         visitee.getTo(),
-                        tracer.traceFragment(visitee.getTo())));
+                        tracer.traceFragment(visitee.getTo()),
+                        visitee.isIrrelevantForReview()));
             }
 
             @Override
@@ -159,7 +160,8 @@ public class ToursInReview {
                 ret.setValue(new Stop(
                         visitee.getFrom(),
                         visitee.getTo(),
-                        tracer.traceFile(visitee.getTo())));
+                        tracer.traceFile(visitee.getTo()),
+                        visitee.isIrrelevantForReview()));
             }
 
         });

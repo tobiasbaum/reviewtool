@@ -274,7 +274,7 @@ public class SvnChangeSource implements IChangeSource {
                 ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo);
         final FileInRevision newFileInfo =
                 ChangestructureFactory.createFileInRevision(entryInfo.getPath(), this.revision(revision), repo);
-        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo);
+        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo, false);
     }
 
     private RepoRevision revision(SVNRevision revision) {
@@ -313,7 +313,7 @@ public class SvnChangeSource implements IChangeSource {
                 newFileContent,
                 this.guessEncoding(oldFileContent, newFileContent));
         for (final Pair<Fragment, Fragment> pos : changes) {
-            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond()));
+            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond(), false));
         }
         return ret;
     }
