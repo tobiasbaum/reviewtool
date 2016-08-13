@@ -62,7 +62,7 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
                 });
         if (nextStop == null) {
             MessageDialog.openInformation(shell, "No further stops",
-                    "There are no stops left that have not been visited.");
+                    "There are no relevant stops left that have not been visited.");
             return null;
         }
 

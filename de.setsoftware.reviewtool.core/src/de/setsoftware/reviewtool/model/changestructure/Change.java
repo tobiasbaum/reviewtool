@@ -26,4 +26,9 @@ public abstract class Change {
         return this.irrelevantForReview;
     }
 
+    /**
+     * Returns a copy (if needed) of this change that is marked as "irrelevant for review".
+     */
+    protected abstract Change makeIrrelevant();
+
 }

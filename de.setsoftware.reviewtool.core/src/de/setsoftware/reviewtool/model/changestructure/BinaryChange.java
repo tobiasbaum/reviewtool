@@ -26,4 +26,12 @@ public class BinaryChange extends Change {
     public FileInRevision getTo() {
         return this.to;
     }
+
+    @Override
+    protected BinaryChange makeIrrelevant() {
+        if (this.isIrrelevantForReview()) {
+            return this;
+        }
+        return new BinaryChange(this.from, this.to, true);
+    }
 }

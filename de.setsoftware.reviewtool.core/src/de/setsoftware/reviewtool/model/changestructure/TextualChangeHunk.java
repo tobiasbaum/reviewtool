@@ -27,4 +27,12 @@ public class TextualChangeHunk extends Change {
         return this.to;
     }
 
+    @Override
+    protected TextualChangeHunk makeIrrelevant() {
+        if (this.isIrrelevantForReview()) {
+            return this;
+        }
+        return new TextualChangeHunk(this.from, this.to, true);
+    }
+
 }

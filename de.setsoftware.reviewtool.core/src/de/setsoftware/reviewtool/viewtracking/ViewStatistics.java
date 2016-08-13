@@ -133,10 +133,10 @@ public class ViewStatistics {
     }
 
     /**
-     * Determines the next stop that has not been viewed at all, starting from the given
+     * Determines the next relevant stop that has not been viewed at all, starting from the given
      * stop. When the tour changes during this search, the given callback will be notified.
-     * When no unvisited stop exists after the given stop, search continues from the start.
-     * If no unvisited stop exists at all, null is returned.
+     * When no unvisited relevant stop exists after the given stop, search continues from the start.
+     * If no unvisited relevant stop exists at all, null is returned.
      */
     public Stop getNextUnvisitedStop(
             ToursInReview tours, Stop currentStop, INextStopCallback nextStopCallback) {
@@ -160,8 +160,7 @@ public class ViewStatistics {
             }
 
             for (final Stop possibleNextStop : remainingStops) {
-                if (this.determineViewRatio(possibleNextStop, 1).isPartlyUnvisited()
-                        && !this.explicitMarks.contains(possibleNextStop)) {
+                if (this.shouldStillVisit(possibleNextStop)) {
                     if (i > 0 || !tour.getStops().contains(currentStop)) {
                         if (startTourIndex + i >= tourCount) {
                             nextStopCallback.wrappedAround();
@@ -176,6 +175,12 @@ public class ViewStatistics {
         }
 
         return null;
+    }
+
+    private boolean shouldStillVisit(final Stop possibleNextStop) {
+        return this.determineViewRatio(possibleNextStop, 1).isPartlyUnvisited()
+                && !this.explicitMarks.contains(possibleNextStop)
+                && !possibleNextStop.isIrrelevantForReview();
     }
 
 }

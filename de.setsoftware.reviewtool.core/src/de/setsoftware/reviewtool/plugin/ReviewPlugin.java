@@ -4,8 +4,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -46,6 +48,8 @@ import de.setsoftware.reviewtool.config.IReviewConfigurable;
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
 import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
+import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.ImportChangeFilter;
+import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.WhitespaceChangeFilter;
 import de.setsoftware.reviewtool.model.DummyMarker;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.IMarkerFactory;
@@ -55,6 +59,7 @@ import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.changestructure.Change;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
@@ -67,6 +72,7 @@ import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.dialogs.RemarkMarkers;
+import de.setsoftware.reviewtool.ui.dialogs.SelectIrrelevantDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTourStructureDialog;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
@@ -455,10 +461,20 @@ public class ReviewPlugin implements IReviewConfigurable {
                 }
                 return SelectTourStructureDialog.selectStructure(choices);
             }
+
+            @Override
+            public List<? extends Pair<String, Set<? extends Change>>> selectIrrelevant(
+                    List<? extends Pair<String, Set<? extends Change>>> choices) {
+                if (choices.isEmpty()) {
+                    return Collections.emptyList();
+                }
+                return SelectIrrelevantDialog.selectIrrelevant(choices);
+            }
         };
         this.toursInReview = ToursInReview.create(
                 this.changeSource,
                 sourceUi,
+                Arrays.asList(new WhitespaceChangeFilter(), new ImportChangeFilter()),
                 Arrays.asList(new OneStopPerPartOfFileRestructuring()),
                 createUi,
                 ticketKey);

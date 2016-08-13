@@ -95,6 +95,7 @@ public class DialogHelper {
 
     /**
      * Returns the value of a setting saved with {@link #saveSetting(String, String)}.
+     * If there is no such setting, the empty string is returned.
      */
     public static String getSetting(String id) {
         return preferenceStore.getString("dialogSetting_" + id);

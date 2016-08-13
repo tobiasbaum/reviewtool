@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -56,6 +59,14 @@ public class ToursInReview {
         public abstract List<? extends Tour> selectInitialTours(
                 List<? extends Pair<String, List<? extends Tour>>> choices);
 
+        /**
+         * Lets the user choose any subset (including the empty set) of the given sets of
+         * changes that shall be considered irrelevant for review. The given list contains
+         * pairs with a description of the filter strategy and the resulting filter candidates.
+         */
+        public abstract List<? extends Pair<String, Set<? extends Change>>> selectIrrelevant(
+                List<? extends Pair<String, Set<? extends Change>>> strategyResuls);
+
     }
 
     private final List<Tour> tours;
@@ -82,21 +93,120 @@ public class ToursInReview {
     public static ToursInReview create(
             IChangeSource src,
             IChangeSourceUi changeSourceUi,
+            List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
             List<? extends ITourRestructuring> tourRestructuringStrategies,
             ICreateToursUi createUi,
             String ticketKey) {
-        final List<Tour> tours = toTours(src.getChanges(ticketKey, changeSourceUi), src.createTracer());
-        final List<? extends Pair<String, List<? extends Tour>>> possibleRestructurings =
-                determinePossibleRestructurings(tourRestructuringStrategies, tours);
-        final List<? extends Tour> userSelection = createUi.selectInitialTours(possibleRestructurings);
-        return userSelection != null ? new ToursInReview(userSelection) : null;
+        final List<Commit> changes = src.getChanges(ticketKey, changeSourceUi);
+        final List<Commit> filteredChanges = filterChanges(irrelevanceDeterminationStrategies, changes, createUi);
+        if (filteredChanges == null) {
+            return null;
+        }
+
+        final List<Tour> tours = toTours(filteredChanges, src.createTracer());
+        final List<? extends Tour> userSelection =
+                determinePossibleRestructurings(tourRestructuringStrategies, tours, createUi);
+        if (userSelection == null) {
+            return null;
+        }
+
+        return new ToursInReview(userSelection);
     }
 
-    private static List<? extends Pair<String, List<? extends Tour>>> determinePossibleRestructurings(
-            List<? extends ITourRestructuring> tourRestructuringStrategies, List<Tour> originalTours) {
-        final List<Pair<String, List<? extends Tour>>> ret = new ArrayList<>();
+    private static List<Commit> filterChanges(
+            List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
+            List<? extends Commit> changes,
+            ICreateToursUi createUi) {
 
-        ret.add(Pair.<String, List<? extends Tour>>create("one tour per commit", originalTours));
+        Telemetry.event("originalChanges")
+            .param("count", countChanges(changes, false))
+            .param("relevant", countChanges(changes, true))
+            .log();
+
+        final List<Pair<String, Set<? extends Change>>> strategyResuls = new ArrayList<>();
+        for (final IIrrelevanceDetermination strategy : irrelevanceDeterminationStrategies) {
+            try {
+                final Set<? extends Change> irrelevantChanges = determineIrrelevantChanges(changes, strategy);
+                Telemetry.event("relevanceFilterResult")
+                    .param("description", strategy.getDescription())
+                    .param("size", irrelevantChanges.size())
+                    .log();
+
+                if (areAllIrrelevant(irrelevantChanges)) {
+                    //skip strategies that won't result in further changes to irrelevant
+                    continue;
+                }
+                strategyResuls.add(Pair.<String, Set<? extends Change>>create(
+                        strategy.getDescription(),
+                        irrelevantChanges));
+            } catch (final Exception e) {
+                //skip instable strategies
+                Logger.error("exception in filtering", e);
+            }
+        }
+
+        final List<? extends Pair<String, Set<? extends Change>>> selected = createUi.selectIrrelevant(strategyResuls);
+        final Set<Change> toMakeIrrelevant = new HashSet<>();
+        final Set<String> selectedDescriptions = new LinkedHashSet<>();
+        for (final Pair<String, Set<? extends Change>> set : selected) {
+            toMakeIrrelevant.addAll(set.getSecond());
+            selectedDescriptions.add(set.getFirst());
+        }
+        Telemetry.event("selectedRelevanceFilter")
+            .param("descriptions", selectedDescriptions)
+            .log();
+
+        final List<Commit> ret = new ArrayList<>();
+        for (final Commit c : changes) {
+            ret.add(c.makeChangesIrrelevant(toMakeIrrelevant));
+        }
+        return ret;
+    }
+
+    private static int countChanges(List<? extends Commit> changes, boolean onlyRelevant) {
+        int ret = 0;
+        for (final Commit commit : changes) {
+            for (final Change change : commit.getChanges()) {
+                if (!(onlyRelevant && change.isIrrelevantForReview())) {
+                    ret++;
+                }
+            }
+        }
+        return ret;
+    }
+
+    private static Set<? extends Change> determineIrrelevantChanges(
+            List<? extends Commit> changes,
+            IIrrelevanceDetermination strategy) {
+
+        final Set<Change> ret = new HashSet<>();
+        for (final Commit commit : changes) {
+            for (final Change change : commit.getChanges()) {
+                if (strategy.isIrrelevant(change)) {
+                    ret.add(change);
+                }
+            }
+        }
+        return ret;
+    }
+
+    private static boolean areAllIrrelevant(Set<? extends Change> changes) {
+        for (final Change change : changes) {
+            if (!change.isIrrelevantForReview()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static List<? extends Tour> determinePossibleRestructurings(
+            List<? extends ITourRestructuring> tourRestructuringStrategies,
+            List<Tour> originalTours,
+            ICreateToursUi createUi) {
+
+        final List<Pair<String, List<? extends Tour>>> possibleRestructurings = new ArrayList<>();
+
+        possibleRestructurings.add(Pair.<String, List<? extends Tour>>create("one tour per commit", originalTours));
         Telemetry.event("originalTourStructure")
                 .params(Tour.determineSize(originalTours))
                 .log();
@@ -113,7 +223,7 @@ public class ToursInReview {
                     .log();
 
                 if (restructuredTour != null) {
-                    ret.add(Pair.<String, List<? extends Tour>>create(
+                    possibleRestructurings.add(Pair.<String, List<? extends Tour>>create(
                             restructuringStrategy.getDescription(), restructuredTour));
                 }
             } catch (final Exception e) {
@@ -121,7 +231,8 @@ public class ToursInReview {
                 Logger.error("exception in restructuring", e);
             }
         }
-        return ret;
+
+        return createUi.selectInitialTours(possibleRestructurings);
     }
 
     private static List<Tour> toTours(List<Commit> changes, IFragmentTracer tracer) {

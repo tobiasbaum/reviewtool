@@ -99,7 +99,7 @@ public class SelectTourStructureDialog extends Dialog {
     private int countStops(List<? extends Tour> toursInStructure) {
         int count = 0;
         for (final Tour t : toursInStructure) {
-            count += t.getNumberOfStops();
+            count += t.getNumberOfStops(false);
         }
         return count;
     }

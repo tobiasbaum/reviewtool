@@ -179,16 +179,16 @@ public class Tour {
         }
     }
 
-    public int getNumberOfStops() {
-        return this.stops.size();
+    public int getNumberOfStops(boolean onlyRelevant) {
+        return this.filterRelevance(onlyRelevant).size();
     }
 
     /**
      * Returns the count of all fragments in the contained stops.
      */
-    public int getNumberOfFragments() {
+    public int getNumberOfFragments(boolean onlyRelevant) {
         int ret = 0;
-        for (final Stop s : this.stops) {
+        for (final Stop s : this.filterRelevance(onlyRelevant)) {
             ret += s.getNumberOfFragments();
         }
         return ret;
@@ -198,9 +198,9 @@ public class Tour {
      * Returns the total count of all added lines (left-hand side of a fragment).
      * A change is counted as both remove and add.
      */
-    public int getNumberOfAddedLines() {
+    public int getNumberOfAddedLines(boolean onlyRelevant) {
         int ret = 0;
-        for (final Stop s : this.stops) {
+        for (final Stop s : this.filterRelevance(onlyRelevant)) {
             ret += s.getNumberOfAddedLines();
         }
         return ret;
@@ -210,12 +210,26 @@ public class Tour {
      * Returns the total count of all removed lines (left-hand side of a fragment).
      * A change is counted as both remove and add.
      */
-    public int getNumberOfRemovedLines() {
+    public int getNumberOfRemovedLines(boolean onlyRelevant) {
         int ret = 0;
-        for (final Stop s : this.stops) {
+        for (final Stop s : this.filterRelevance(onlyRelevant)) {
             ret += s.getNumberOfRemovedLines();
         }
         return ret;
+    }
+
+    private List<Stop> filterRelevance(boolean onlyRelevant) {
+        if (onlyRelevant) {
+            final List<Stop> ret = new ArrayList<>();
+            for (final Stop s : this.stops) {
+                if (!s.isIrrelevantForReview()) {
+                    ret.add(s);
+                }
+            }
+            return ret;
+        } else {
+            return this.stops;
+        }
     }
 
     /**
@@ -235,17 +249,29 @@ public class Tour {
                 int numberOfFragments = 0;
                 int numberOfAddedLines = 0;
                 int numberOfRemovedLines = 0;
+                int numberOfStopsRel = 0;
+                int numberOfFragmentsRel = 0;
+                int numberOfAddedLinesRel = 0;
+                int numberOfRemovedLinesRel = 0;
                 for (final Tour t : tours) {
-                    numberOfStops += t.getNumberOfStops();
-                    numberOfFragments += t.getNumberOfFragments();
-                    numberOfAddedLines += t.getNumberOfAddedLines();
-                    numberOfRemovedLines += t.getNumberOfRemovedLines();
+                    numberOfStops += t.getNumberOfStops(false);
+                    numberOfFragments += t.getNumberOfFragments(false);
+                    numberOfAddedLines += t.getNumberOfAddedLines(false);
+                    numberOfRemovedLines += t.getNumberOfRemovedLines(false);
+                    numberOfStopsRel += t.getNumberOfStops(true);
+                    numberOfFragmentsRel += t.getNumberOfFragments(true);
+                    numberOfAddedLinesRel += t.getNumberOfAddedLines(true);
+                    numberOfRemovedLinesRel += t.getNumberOfRemovedLines(true);
                 }
                 event.param("cntTours", tours.size());
                 event.param("cntStops", numberOfStops);
                 event.param("cntFragments", numberOfFragments);
                 event.param("cntAddedLines", numberOfAddedLines);
                 event.param("cntRemovedLines", numberOfRemovedLines);
+                event.param("cntStopsRel", numberOfStopsRel);
+                event.param("cntFragmentsRel", numberOfFragmentsRel);
+                event.param("cntAddedLinesRel", numberOfAddedLinesRel);
+                event.param("cntRemovedLinesRel", numberOfRemovedLinesRel);
             }
         };
     }

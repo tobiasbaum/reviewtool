@@ -2,6 +2,9 @@ package de.setsoftware.reviewtool.ui.views;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.filesystem.EFS;
@@ -11,6 +14,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ITreeContentProvider;
@@ -19,6 +23,7 @@ import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -51,6 +56,7 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
+import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.viewtracking.CodeViewTracker;
 import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
@@ -64,12 +70,97 @@ import de.setsoftware.reviewtool.viewtracking.ViewStatistics;
  */
 public class ReviewContentView extends ViewPart implements ReviewModeListener, IShowInTarget {
 
+    /**
+     * Action that toggles a filter flag.
+     */
+    private abstract static class FilterStateAction extends Action {
+
+        private final String id;
+        private final ViewerFilter filter;
+        private TreeViewer treeViewer;
+
+        public FilterStateAction(String id, String text) {
+            super(text, SWT.TOGGLE);
+            this.id = id;
+            this.filter = new ViewerFilter() {
+                @Override
+                public boolean select(Viewer viewer, Object parentElement, Object element) {
+                    if (element instanceof Stop) {
+                        return FilterStateAction.this.shallShow((Stop) element);
+                    } else {
+                        return true;
+                    }
+                }
+            };
+            this.setChecked(Boolean.parseBoolean(DialogHelper.getSetting(id)));
+        }
+
+        @Override
+        public void run() {
+            this.applyFilter();
+            DialogHelper.saveSetting(this.id, Boolean.toString(this.isChecked()));
+        }
+
+        public void attach(TreeViewer tv) {
+            this.treeViewer = tv;
+            this.applyFilter();
+        }
+
+        private void applyFilter() {
+            if (this.treeViewer == null) {
+                return;
+            }
+            if (this.isChecked()) {
+                if (!Arrays.asList(this.treeViewer.getFilters()).contains(this.filter)) {
+                    this.treeViewer.addFilter(this.filter);
+                }
+            } else {
+                this.treeViewer.removeFilter(this.filter);
+            }
+            Telemetry.event("applyContentTreeFilter")
+                    .param("id", this.id)
+                    .param("checked", this.isChecked())
+                    .log();
+        }
+
+        protected abstract boolean shallShow(Stop s);
+    }
+
     private Composite comp;
     private Composite currentContent;
+    private FilterStateAction hideChecked;
+    private FilterStateAction hideVisited;
+    private FilterStateAction hideIrrelevant;
 
     @Override
     public void createPartControl(Composite comp) {
         this.comp = comp;
+
+        this.hideChecked = new FilterStateAction("hideChecked", "Hide stops that are marked as checked") {
+            @Override
+            protected boolean shallShow(Stop s) {
+                final ViewStatistics statistics = TrackerManager.get().getStatistics();
+                return statistics == null || !statistics.isMarkedAsChecked(s);
+            }
+        };
+        this.hideVisited = new FilterStateAction("hideVisited", "Hide visited stops") {
+            @Override
+            protected boolean shallShow(Stop s) {
+                final ViewStatDataForStop viewRatio = TrackerManager.get().determineViewRatio(s);
+                return viewRatio.isPartlyUnvisited();
+            }
+
+        };
+        this.hideIrrelevant = new FilterStateAction("hideIrrelevant", "Hide irrelevant stops") {
+            @Override
+            protected boolean shallShow(Stop s) {
+                return !s.isIrrelevantForReview();
+            }
+        };
+
+        this.getViewSite().getActionBars().getMenuManager().add(this.hideChecked);
+        this.getViewSite().getActionBars().getMenuManager().add(this.hideVisited);
+        this.getViewSite().getActionBars().getMenuManager().add(this.hideIrrelevant);
 
         ViewDataSource.get().registerListener(this);
     }
@@ -93,6 +184,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         panel.setLayout(new FillLayout());
 
         final TreeViewer tv = new TreeViewer(panel);
+        tv.setUseHashlookup(true);
         tv.setContentProvider(new ViewContentProvider(tours));
         tv.setLabelProvider(new TourAndStopLabelProvider());
         tv.setInput(tours);
@@ -108,6 +200,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 ReviewContentView.this.jumpToStopForItem(tours, (TreeItem) e.item);
             }
         });
+
+        this.hideChecked.attach(tv);
+        this.hideVisited.attach(tv);
+        this.hideIrrelevant.attach(tv);
 
         ViewHelper.createContextMenu(this, tv.getControl(), tv);
         ensureActiveTourExpanded(tv, tours);
@@ -266,7 +362,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     /**
      * Provides the tree consisting of tours and stops.
      */
-    private static class ViewContentProvider implements ITreeContentProvider, IToursInReviewChangeListener,
+    private class ViewContentProvider implements ITreeContentProvider, IToursInReviewChangeListener,
             ITrackerCreationListener, IViewStatisticsListener, StopSelectionListener {
 
         private final ToursInReview tours;
@@ -356,9 +452,26 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             if (this.viewer == null) {
                 return;
             }
+            final Set<Tour> toursToRefresh = new HashSet<>();
             for (final Stop stop : this.tours.getStopsFor(absolutePath)) {
                 this.viewer.update(stop, null);
+                //making an item in a tree disappear when it is filtered is not as easy as it sounds
+                //  (at least I haven't found nice methods in the API for it), we have to refresh the
+                //  whole tour
+                toursToRefresh.add(this.getTourFor(stop));
             }
+            for (final Tour t : toursToRefresh) {
+                this.viewer.refresh(t, false);
+            }
+        }
+
+        private Tour getTourFor(Stop stop) {
+            for (final Tour t : this.tours.getTours()) {
+                if (t.getStops().contains(stop)) {
+                    return t;
+                }
+            }
+            return null;
         }
 
         @Override
@@ -396,6 +509,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             new RGB(0, 235, 0)
         };
 
+        private static final RGB IRRELEVANT_COLOR = new RGB(170, 170, 170);
+
         @Override
         public String getText(Object element) {
             if (element instanceof Tour) {
@@ -424,11 +539,23 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 }
                 final ViewStatDataForStop viewRatio = this.determineViewRatio(f);
                 if (viewRatio.isNotViewedAtAll()) {
-                    return null;
+                    if (f.isIrrelevantForReview()) {
+                        return ImageCache.getColoredHalfCircle(
+                                IRRELEVANT_COLOR,
+                                IRRELEVANT_COLOR);
+                    } else {
+                        return null;
+                    }
                 } else {
-                    return ImageCache.getColoredRectangle(
-                            VIEW_COLORS[toColorIndex(viewRatio.getMaxRatio())],
-                            VIEW_COLORS[toColorIndex(viewRatio.getAverageRatio())]);
+                    if (f.isIrrelevantForReview()) {
+                        return ImageCache.getColoredHalfCircle(
+                                VIEW_COLORS[toColorIndex(viewRatio.getMaxRatio())],
+                                VIEW_COLORS[toColorIndex(viewRatio.getAverageRatio())]);
+                    } else {
+                        return ImageCache.getColoredRectangle(
+                                VIEW_COLORS[toColorIndex(viewRatio.getMaxRatio())],
+                                VIEW_COLORS[toColorIndex(viewRatio.getAverageRatio())]);
+                    }
                 }
             } else if (element instanceof Tour) {
                 final ToursInReview tours = ViewDataSource.get().getToursInReview();
