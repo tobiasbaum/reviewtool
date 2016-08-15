@@ -93,6 +93,8 @@ public class Stop {
      * Return true iff this stop can be merged with the given other stop.
      * Two stops can be merged if they denote the same file and and directly
      * neighboring or overlapping segments of that file (or the whole binary file).
+     * Neighboring segments are only considered mergeable if both are either
+     * irrelevant or relevant.
      */
     public boolean canBeMergedWith(Stop other) {
         if (!this.mostRecentFile.equals(other.mostRecentFile)) {
@@ -108,7 +110,13 @@ public class Stop {
             if (other.mostRecentFragment == null) {
                 return false;
             } else {
-                return this.mostRecentFragment.canBeMergedWith(other.mostRecentFragment);
+                final boolean fragmentsMergeable =
+                        this.mostRecentFragment.canBeMergedWith(other.mostRecentFragment);
+                if (this.irrelevantForReview == other.irrelevantForReview) {
+                    return fragmentsMergeable;
+                } else {
+                    return fragmentsMergeable && !this.mostRecentFragment.isNeighboring(other.mostRecentFragment);
+                }
             }
         }
     }
@@ -129,12 +137,15 @@ public class Stop {
         mergedHistory.putAll(this.history);
         mergedHistory.putAll(other.history);
 
-        //TODO: better handling of merges with different values for irrelevantForReview
         return new Stop(
                 mergedHistoryOrder,
                 mergedHistory,
                 this.mostRecentFile,
                 this.mostRecentFragment == null ? null : this.mostRecentFragment.merge(other.mostRecentFragment),
+                //the result is only irrelevant if both parts are irrelevant. It would probably be more accurate
+                //  to track which part is relevant and which is not (so that a merge could result in multiple
+                //  stops), but this complicates some algorithms and is only useful for large irrelevant stops,
+                //  which should be quite rare
                 this.irrelevantForReview && other.irrelevantForReview);
     }
 

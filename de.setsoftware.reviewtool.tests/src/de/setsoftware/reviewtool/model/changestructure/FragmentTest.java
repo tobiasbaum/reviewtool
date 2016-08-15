@@ -190,4 +190,82 @@ public class FragmentTest {
         final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 0), "");
         testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 0), "A\nB\nC\nD\n"));
     }
+
+    @Test
+    public void testIsNeighboring1() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0), "z1\nz2\n");
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(3, 0), "z1\nz2\n");
+        assertFalse(f1.isNeighboring(f2));
+    }
+
+    @Test
+    public void testIsNeighboring2() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0), "z1\nz2\n");
+        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(6, 0), "z3\nz4\n");
+        assertTrue(f1.isNeighboring(f2));
+    }
+
+    @Test
+    public void testIsNeighboring3() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0), "z1\nz2\n");
+        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(6, 0), "z3\nz4\n");
+        assertTrue(f2.isNeighboring(f1));
+    }
+
+    @Test
+    public void testIsNeighboring4() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0), "z1\nz2\n");
+        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 0), "z3\nz4\n");
+        assertFalse(f1.isNeighboring(f2));
+    }
+
+    @Test
+    public void testIsNeighboring5() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0), "z1\nz2\n");
+        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 0), "z3\nz4\n");
+        assertFalse(f2.isNeighboring(f1));
+    }
+
+    @Test
+    public void testIsNeighboring6() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3), "abc");
+        final Fragment f2 = new Fragment(file(), pos(1, 4), pos(1, 6), "def");
+        assertTrue(f2.isNeighboring(f1));
+    }
+
+    @Test
+    public void testIsNeighboring7() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3), "abc");
+        final Fragment f2 = new Fragment(file(), pos(1, 4), pos(1, 6), "def");
+        assertTrue(f1.isNeighboring(f2));
+    }
+
+    @Test
+    public void testIsNeighboring8() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3), "abc");
+        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 5), "cde");
+        assertFalse(f2.isNeighboring(f1));
+    }
+
+    @Test
+    public void testIsNeighboring9() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3), "abc");
+        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 5), "cde");
+        assertFalse(f1.isNeighboring(f2));
+    }
+
+    @Test
+    public void testIsNeighboring10() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3), "abc");
+        final Fragment f2 = new Fragment(file(), pos(1, 5), pos(1, 7), "efg");
+        assertFalse(f2.isNeighboring(f1));
+    }
+
+    @Test
+    public void testIsNeighboring11() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3), "abc");
+        final Fragment f2 = new Fragment(file(), pos(1, 5), pos(1, 7), "efg");
+        assertFalse(f1.isNeighboring(f2));
+    }
+
 }
