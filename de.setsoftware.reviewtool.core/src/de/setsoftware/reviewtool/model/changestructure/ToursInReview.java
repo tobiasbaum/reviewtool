@@ -365,7 +365,9 @@ public class ToursInReview {
                     l.activeTourChanged(oldActive, this.getActiveTour());
                 }
             }
-            Telemetry.get().tourActivated(index);
+            Telemetry.event("tourActivated")
+                .param("tourIndex", index)
+                .log();
         }
     }
 

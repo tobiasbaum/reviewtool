@@ -91,10 +91,7 @@ public class AddRemarkAction extends AbstractHandler {
                                 text,
                                 lineFiltered,
                                 type).save();
-                        Telemetry.get().remarkCreated(
-                                type.name(),
-                                resource.getFullPath().toString(),
-                                lineFiltered);
+                        AddRemarkAction.this.logRemarkCreated(resource.getFullPath(), type, lineFiltered);
                     } catch (final CoreException e) {
                         throw new ReviewtoolException(e);
                     }
@@ -126,10 +123,7 @@ public class AddRemarkAction extends AbstractHandler {
                                 lineFiltered,
                                 type,
                                 workspace).save();
-                        Telemetry.get().remarkCreated(
-                                type.name(),
-                                path.toString(),
-                                lineFiltered);
+                        AddRemarkAction.this.logRemarkCreated(path, type, lineFiltered);
                     } catch (final CoreException e) {
                         throw new ReviewtoolException(e);
                     }
@@ -150,4 +144,11 @@ public class AddRemarkAction extends AbstractHandler {
         }
     }
 
+    private void logRemarkCreated(final IPath path, RemarkType type, final int lineFiltered) {
+        Telemetry.event("remarkCreated")
+                .param("remarkType", type.name())
+                .param("resource", path)
+                .param("line", lineFiltered)
+                .log();
+    }
 }

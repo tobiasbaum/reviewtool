@@ -34,9 +34,10 @@ public class DeleteResolution extends WorkbenchMarkerResolution {
         final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
         try {
             review.delete();
-            Telemetry.get().resolutionDelete(
-                    marker.getResource().toString(),
-                    marker.getAttribute(IMarker.LINE_NUMBER, -1));
+            Telemetry.event("resolutionDelete")
+                .param("resource", marker.getResource())
+                .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
+                .log();
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }

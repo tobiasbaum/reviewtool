@@ -520,8 +520,10 @@ public class ReviewPlugin implements IReviewConfigurable {
             public void launchesAdded(ILaunch[] launches) {
                 try {
                     for (final ILaunch launch : launches) {
-                        Telemetry.get().launchOccured(
-                                launch.getLaunchMode(), launch.getLaunchConfiguration().getName());
+                        Telemetry.event("launch")
+                            .param("mode", launch.getLaunchMode())
+                            .param("config", launch.getLaunchConfiguration().getName())
+                            .log();
                     }
                 } catch (final Exception e) {
                     Logger.error("error while sending telemetry events", e);
@@ -548,7 +550,10 @@ public class ReviewPlugin implements IReviewConfigurable {
                     if ((delta.getFlags() & IResourceDelta.CONTENT) == 0) {
                         return false;
                     }
-                    Telemetry.get().fileChanged(delta.getFullPath().toString(), delta.getKind());
+                    Telemetry.event("fileChanged")
+                        .param("path", delta.getFullPath())
+                        .param("kind", delta.getKind())
+                        .log();
                     return true;
                 } else {
                     final int kindMask = IResourceDelta.ADDED | IResourceDelta.CHANGED | IResourceDelta.REMOVED;

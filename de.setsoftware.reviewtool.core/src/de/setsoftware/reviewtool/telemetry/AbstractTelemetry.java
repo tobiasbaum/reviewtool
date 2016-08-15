@@ -1,11 +1,8 @@
 package de.setsoftware.reviewtool.telemetry;
 
-import java.io.File;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import de.setsoftware.reviewtool.base.Logger;
@@ -46,122 +43,6 @@ public abstract class AbstractTelemetry {
     }
 
     /**
-     * Sends the event that a review remark has been created at the current moment in time.
-     */
-    public final void remarkCreated(String remarkType, String resource, int line) {
-        this.putData(
-                "remarkCreated",
-                this.currentSessionId,
-                this.currentUser,
-                map(
-                    "remarkType", remarkType,
-                    "resource", resource,
-                    "line", Integer.toString(line)));
-
-    }
-
-    public final void resolutionComment(String resource, int line) {
-        this.logResolution("resolutionComment", resource, line);
-    }
-
-    public final void resolutionDelete(String resource, int line) {
-        this.logResolution("resolutionDelete", resource, line);
-    }
-
-    public final void resolutionFixed(String resource, int line) {
-        this.logResolution("resolutionFixed", resource, line);
-    }
-
-    public final void resolutionQuestion(String resource, int line) {
-        this.logResolution("resolutionQuestion", resource, line);
-    }
-
-    public final void resolutionWontFix(String resource, int line) {
-        this.logResolution("resolutionWontFix", resource, line);
-    }
-
-    private void logResolution(String resolutionType, String resource, int line) {
-        this.putData(
-                resolutionType,
-                this.currentSessionId,
-                this.currentUser,
-                map(
-                    "resource", resource,
-                    "line", Integer.toString(line)));
-    }
-
-    public void tourActivated(int index) {
-        this.putData(
-                "tourActivated",
-                this.currentSessionId,
-                this.currentUser,
-                map(
-                    "tourIndex", Integer.toString(index)));
-    }
-
-    /**
-     * Sends the event that the user used the reviewtool's "jump to stop" function.
-     */
-    public void jumpedTo(String resource, int line, String typeOfJump) {
-        this.putData(
-                "jumpedTo",
-                this.currentSessionId,
-                this.currentUser,
-                map(
-                    "resource", resource,
-                    "line", Integer.toString(line),
-                    "type", typeOfJump));
-    }
-
-    /**
-     * Sends the event that the active file(s) have changed. Is also called when inactivity ends.
-     */
-    public void activeFilesChanged(List<File> activeFiles) {
-        this.putData(
-                "activeFilesChanged",
-                this.currentSessionId,
-                this.currentUser,
-                map("files", activeFiles.toString()));
-    }
-
-    /**
-     * Sends the event that the user is possibly inactive because there was no change for some time.
-     */
-    public void possibleInactivity(long timeWithoutChange) {
-        this.putData(
-                "possibleInactivity",
-                this.currentSessionId,
-                this.currentUser,
-                map("sinceMs", Long.toString(timeWithoutChange)));
-    }
-
-    /**
-     * Sends the event that a launch (for example of JUnit tests) has occurred at the current moment in time.
-     */
-    public void launchOccured(String launchMode, String launchConfigName) {
-        this.putData(
-                "launch",
-                this.currentSessionId,
-                this.currentUser,
-                map(
-                    "mode", launchMode,
-                    "config", launchConfigName));
-    }
-
-    /**
-     * Sends the event that a file has been changed (and saved).
-     */
-    public void fileChanged(String path, int changeKind) {
-        this.putData(
-                "fileChanged",
-                this.currentSessionId,
-                this.currentUser,
-                map(
-                    "path", path,
-                    "kind", Integer.toString(changeKind)));
-    }
-
-    /**
      * Generic log method.
      * Instead of using this method, its better to use a {@link TelemetryEventBuilder} (created by
      * {@link de.setsoftware.reviewtool.telemetry.Telemetry.#event(type)}).
@@ -195,15 +76,6 @@ public abstract class AbstractTelemetry {
         } catch (final NoSuchAlgorithmException | UnsupportedEncodingException e) {
             throw new ReviewtoolException(e);
         }
-    }
-
-    private static Map<String, String> map(String... keysAndValues) {
-        assert keysAndValues.length % 2 == 0;
-        final LinkedHashMap<String, String> ret = new LinkedHashMap<>();
-        for (int i = 0; i < keysAndValues.length; i += 2) {
-            ret.put(keysAndValues[i], keysAndValues[i + 1]);
-        }
-        return ret;
     }
 
     /**

@@ -149,21 +149,28 @@ public class CodeViewTracker {
             final long timeWithoutChange = curTime - this.timeOfLastNoticedActivity;
             if (timeWithoutChange > INACTIVITY_THRESHOLD && !this.sentInactivity) {
                 //no change long enough => send an event and move to inactivity
-                Telemetry.get().possibleInactivity(timeWithoutChange);
+                Telemetry.event("possibleInactivity")
+                    .param("sinceMs", timeWithoutChange)
+                    .log();
                 this.sentInactivity = true;
             }
         } else {
             if (this.sentInactivity) {
                 //coming back from inactivity => send an event
-                Telemetry.get().activeFilesChanged(newActivityState.getActiveFiles());
+                this.logActiveFilesChanged(newActivityState);
                 this.sentInactivity = false;
             } else if (!newActivityState.getActiveFiles().equals(this.lastActivityState.getActiveFiles())) {
-                //change in active files => send an event
-                Telemetry.get().activeFilesChanged(newActivityState.getActiveFiles());
+                this.logActiveFilesChanged(newActivityState);
             }
             this.lastActivityState = newActivityState;
             this.timeOfLastNoticedActivity = curTime;
         }
+    }
+
+    private void logActiveFilesChanged(final ActivityState newActivityState) {
+        Telemetry.event("activeFilesChanged")
+                .param("files", newActivityState.getActiveFiles())
+                .log();
     }
 
     private static File determineFilePath(IEditorPart activeEditor) {

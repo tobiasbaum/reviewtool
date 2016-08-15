@@ -226,10 +226,12 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         CurrentStop.setCurrentStop(stop);
         try {
             tours.ensureTourActive(tour, new RealMarkerFactory());
-            Telemetry.get().jumpedTo(
-                    stop.getMostRecentFile().getPath(),
-                    stop.getMostRecentFragment() == null ? -1 : stop.getMostRecentFragment().getFrom().getLine(),
-                    typeForTelemetry);
+            Telemetry.event("jumpedTo")
+                .param("resource", stop.getMostRecentFile().getPath())
+                .param("line", stop.getMostRecentFragment() == null
+                    ? -1 : stop.getMostRecentFragment().getFrom().getLine())
+                .param("type", typeForTelemetry)
+                .log();
             openEditorFor(stop);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
