@@ -182,9 +182,14 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         if (this.mode != Mode.IDLE) {
-            Telemetry.get().registerTicketAndUser(
+            //during reconfiguration, a new telemetry provider was probably created, so we have to re-register
+            //  the session. This will create a new session uid, which is not fully correct, but should
+            //  hopefully not be problematic during data analysis.
+            Telemetry.get().registerSession(
                     this.persistence.getTicketKey(),
-                    getUserPref().toUpperCase());
+                    getUserPref().toUpperCase(),
+                    this.mode == Mode.FIXING ? "F" : "R",
+                    this.persistence.getCurrentRound());
         }
     }
 
@@ -273,9 +278,11 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
         //The startReview event is sent only after all data is loaded. but some user interaction is possible
         //  before. Therefore the ticket key and reviewer is already set here.
-        Telemetry.get().registerTicketAndUser(
+        Telemetry.get().registerSession(
                 this.persistence.getTicketKey(),
-                getUserPref().toUpperCase());
+                getUserPref().toUpperCase(),
+                forReview ? "R" : "F",
+                this.persistence.getCurrentRound());
         this.clearMarkers();
 
         final boolean toursOk = this.loadToursAndCreateMarkers();

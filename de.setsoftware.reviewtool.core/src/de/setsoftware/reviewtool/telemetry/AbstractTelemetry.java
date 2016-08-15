@@ -16,23 +16,33 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
  */
 public abstract class AbstractTelemetry {
 
-    private String currentTicketKey;
+    private String currentSessionId;
     private String currentUser;
+    private long lastId;
 
     public AbstractTelemetry() {
         Logger.debug("create telemetry " + this.toString());
     }
 
     /**
-     * Sets the ticket key and user that is used for the following events.
+     * Sets the session key for the following events.For each call, a new session ID is generated.
      */
-    public void registerTicketAndUser(String ticketKey, String user) {
-        Logger.debug("registerTicketAndUser " + user + " at " + this);
+    public void registerSession(String ticketKey, String user, String type, int round) {
+        Logger.debug("registerSession " + user + ", " + ticketKey + ", " + type + round + " at " + this);
         if (user == null) {
             throw new AssertionError("user is null for ticket key " + ticketKey);
         }
-        this.currentTicketKey = ticketKey;
+        this.currentSessionId = ticketKey + "," + type + "," + round + "," + Long.toHexString(this.getSessionUid());
         this.currentUser = user;
+    }
+
+    private long getSessionUid() {
+        long uid = System.currentTimeMillis();
+        if (uid == this.lastId) {
+            uid++;
+        }
+        this.lastId = uid;
+        return uid;
     }
 
     /**
@@ -41,7 +51,7 @@ public abstract class AbstractTelemetry {
     public final void remarkCreated(String remarkType, String resource, int line) {
         this.putData(
                 "remarkCreated",
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map(
                     "remarkType", remarkType,
@@ -73,7 +83,7 @@ public abstract class AbstractTelemetry {
     private void logResolution(String resolutionType, String resource, int line) {
         this.putData(
                 resolutionType,
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map(
                     "resource", resource,
@@ -83,7 +93,7 @@ public abstract class AbstractTelemetry {
     public void tourActivated(int index) {
         this.putData(
                 "tourActivated",
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map(
                     "tourIndex", Integer.toString(index)));
@@ -95,7 +105,7 @@ public abstract class AbstractTelemetry {
     public void jumpedTo(String resource, int line, String typeOfJump) {
         this.putData(
                 "jumpedTo",
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map(
                     "resource", resource,
@@ -109,7 +119,7 @@ public abstract class AbstractTelemetry {
     public void activeFilesChanged(List<File> activeFiles) {
         this.putData(
                 "activeFilesChanged",
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map("files", activeFiles.toString()));
     }
@@ -120,7 +130,7 @@ public abstract class AbstractTelemetry {
     public void possibleInactivity(long timeWithoutChange) {
         this.putData(
                 "possibleInactivity",
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map("sinceMs", Long.toString(timeWithoutChange)));
     }
@@ -131,7 +141,7 @@ public abstract class AbstractTelemetry {
     public void launchOccured(String launchMode, String launchConfigName) {
         this.putData(
                 "launch",
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map(
                     "mode", launchMode,
@@ -144,7 +154,7 @@ public abstract class AbstractTelemetry {
     public void fileChanged(String path, int changeKind) {
         this.putData(
                 "fileChanged",
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 map(
                     "path", path,
@@ -159,7 +169,7 @@ public abstract class AbstractTelemetry {
     public void log(String eventType, Map<String, String> params) {
         this.putData(
                 eventType,
-                this.currentTicketKey,
+                this.currentSessionId,
                 this.currentUser,
                 params);
     }
