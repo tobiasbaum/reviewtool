@@ -84,7 +84,8 @@ public class SelectTicketDialog extends Dialog {
         final Set<String> possibleFilters =
                 this.review ? this.persistence.getFilterNamesForReview() : this.persistence.getFilterNamesForFixing();
         this.filterCombo.setItems(possibleFilters.toArray(new String[possibleFilters.size()]));
-        this.filterCombo.select(Arrays.asList().indexOf(DialogHelper.getSetting(this.filterKey())));
+        this.filterCombo.select(
+                Arrays.asList(this.filterCombo.getItems()).indexOf(DialogHelper.getSetting(this.filterKey())));
         if (this.filterCombo.getSelectionIndex() < 0) {
             this.filterCombo.select(0);
         }
