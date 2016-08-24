@@ -71,7 +71,7 @@ public class SvnFragmentTracer implements IFragmentTracer {
             return false;
         }
 
-        public String trace(String path) {
+        public Pair<Long, String> trace(String path) {
             long minRevision = Integer.MAX_VALUE;
             long maxRevision = 0;
             for (final Pair<Long, String> p : this.renames.keySet()) {
@@ -79,15 +79,15 @@ public class SvnFragmentTracer implements IFragmentTracer {
                 maxRevision = Math.max(maxRevision, p.getFirst());
             }
 
-            String curPath = path;
+            Pair<Long, String> curRev = Pair.create(minRevision, path);
             for (long revision = minRevision; revision <= maxRevision; revision++) {
-                final Pair<Long, String> key = Pair.create(revision, curPath);
+                final Pair<Long, String> key = Pair.create(revision, curRev.getSecond());
                 final String newPath = this.renames.get(key);
                 if (newPath != null) {
-                    curPath = newPath;
+                    curRev = Pair.create(revision, newPath);
                 }
             }
-            return curPath;
+            return curRev;
         }
 
     }
@@ -120,9 +120,10 @@ public class SvnFragmentTracer implements IFragmentTracer {
             }
         }
 
+        final Pair<Long, String> rev = this.detector.trace(file.getPath());
         final FileInRevision ret = ChangestructureFactory.createFileInRevision(
-                this.detector.trace(file.getPath()),
-                ChangestructureFactory.createLocalRevision(),
+                rev.getSecond(),
+                ChangestructureFactory.createRepoRevision(rev.getFirst()),
                 file.getRepository());
         this.fileCache.put(file, ret);
         return ret;
