@@ -69,11 +69,13 @@ public class ToursInReview {
 
     }
 
+    private final RepositoryChangeHistory changeHistory;
     private final List<Tour> tours;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
-    private ToursInReview(List<? extends Tour> tours) {
+    private ToursInReview(final RepositoryChangeHistory changeHistory, List<? extends Tour> tours) {
+        this.changeHistory = changeHistory;
         this.tours = new ArrayList<>(tours);
         this.currentTourIndex = 0;
     }
@@ -82,7 +84,7 @@ public class ToursInReview {
      * Creates a new object with the given tours (mainly for tests).
      */
     public static ToursInReview create(List<Tour> tours) {
-        return new ToursInReview(tours);
+        return new ToursInReview(new RepositoryChangeHistory(), tours);
     }
 
     /**
@@ -110,7 +112,7 @@ public class ToursInReview {
             return null;
         }
 
-        return new ToursInReview(userSelection);
+        return new ToursInReview(new RepositoryChangeHistory(changes), userSelection);
     }
 
     private static List<Commit> filterChanges(
@@ -333,6 +335,15 @@ public class ToursInReview {
             IMarkerFactory markerFactory,
             final Stop f) {
         return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f);
+    }
+
+    /**
+     * Returns a {@link FileChangeHistory} for passed file.
+     * @param file The file whose change history to retrieve.
+     * @return The {@link FileChangeHistory} describing changes for passed {@link FileInRevision} or null if not found.
+     */
+    public FileChangeHistory getChangeHistory(final FileInRevision file) {
+        return this.changeHistory.getHistory(file);
     }
 
     public List<Tour> getTours() {
