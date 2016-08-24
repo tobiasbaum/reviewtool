@@ -29,4 +29,8 @@ public abstract class ViewDataSource {
      */
     public abstract ToursInReview getToursInReview();
 
+    /**
+     * Returns the stop viewer to use for the current review.
+     */
+    public abstract IStopViewer getStopViewer();
 }

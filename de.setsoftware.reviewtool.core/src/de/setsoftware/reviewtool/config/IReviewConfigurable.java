@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.config;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
+import de.setsoftware.reviewtool.ui.views.IStopViewer;
 
 /**
  * Interface to decouple the dynamically configurable review plugin from the
@@ -25,4 +26,8 @@ public interface IReviewConfigurable {
      */
     public abstract void addEndReviewExtension(EndReviewExtension extension);
 
+    /**
+     * Sets a stop viewer.
+     */
+    public abstract void setStopViewer(IStopViewer stopViewer);
 }
