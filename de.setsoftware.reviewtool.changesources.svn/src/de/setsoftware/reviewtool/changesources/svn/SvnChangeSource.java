@@ -139,7 +139,8 @@ public class SvnChangeSource implements IChangeSource {
     @Override
     public List<Commit> getChanges(String key, IChangeSourceUi ui) {
         try {
-            final List<SvnRevision> revisions = this.determineRelevantRevisions(key);
+            final List<SvnRevision> revisions = SvnRevisionCompleter.complete(this.mgr,
+                    this.determineRelevantRevisions(key));
             this.sortByDate(revisions);
             this.checkWorkingCopiesUpToDate(revisions, ui);
             return this.convertToChanges(revisions);
