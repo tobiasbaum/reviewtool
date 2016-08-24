@@ -8,16 +8,16 @@ import java.util.List;
  */
 public class ChangestructureFactory {
 
-    public static Commit createCommit(String message, List<Change> changes) {
-        return new Commit(message, changes);
+    public static Commit createCommit(String message, List<Change> changes, final boolean isVisible) {
+        return new Commit(message, changes, isVisible);
     }
 
-    public static BinaryChange createBinaryChange(FileInRevision from, FileInRevision to, boolean irrelevantForReview) {
-        return new BinaryChange(from, to, irrelevantForReview);
+    public static BinaryChange createBinaryChange(FileInRevision from, FileInRevision to, boolean irrelevantForReview, final boolean isVisible) {
+        return new BinaryChange(from, to, irrelevantForReview, isVisible);
     }
 
-    public static TextualChangeHunk createTextualChangeHunk(Fragment from, Fragment to, boolean irrelevantForReview) {
-        return new TextualChangeHunk(from, to, irrelevantForReview);
+    public static TextualChangeHunk createTextualChangeHunk(Fragment from, Fragment to, boolean irrelevantForReview, final boolean isVisible) {
+        return new TextualChangeHunk(from, to, irrelevantForReview, isVisible);
     }
 
     public static FileInRevision createFileInRevision(String path, Revision revision, Repository repository) {

@@ -8,20 +8,25 @@ import org.tmatesoft.svn.core.SVNLogEntryPath;
 
 /**
  * Encapsulates a Subversion revision with associated information about the repository, the log message, the commit
- * date, the commit author, and the paths changed.
+ * date, the commit author, and the paths changed. In addition, a SvnRevision can be marked as "invisible". Invisible
+ * revisions are revisions which would have been filtered out as they do not belong to the ticket in question but which
+ * are necessary for the change history.
  */
 class SvnRevision {
     private final SvnRepo repository;
     private final SVNLogEntry logEntry;
+    private final boolean isVisible;
 
     /**
      * Constructor.
      * @param repository The associated repository.
      * @param logEntry The log entry.
+     * @param isVisible True if the revision is visible, else false.
      */
-    public SvnRevision(final SvnRepo repository, final SVNLogEntry logEntry) {
+    public SvnRevision(final SvnRepo repository, final SVNLogEntry logEntry, final boolean isVisible) {
         this.repository = repository;
         this.logEntry = logEntry;
+        this.isVisible = isVisible;
     }
 
     /**
@@ -59,5 +64,11 @@ class SvnRevision {
      */
     public Map<String, SVNLogEntryPath> getChangedPaths() {
         return this.logEntry.getChangedPaths();
+    }
+    /**
+     * @return True if the revision is visible, else false.
+     */
+    public boolean isVisible() {
+        return this.isVisible;
     }
 }

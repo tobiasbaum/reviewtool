@@ -8,8 +8,8 @@ public class BinaryChange extends Change {
     private final FileInRevision from;
     private final FileInRevision to;
 
-    BinaryChange(FileInRevision from, FileInRevision to, boolean irrelevantForReview) {
-        super(irrelevantForReview);
+    BinaryChange(FileInRevision from, FileInRevision to, boolean irrelevantForReview, final boolean isVisible) {
+        super(irrelevantForReview, isVisible);
         this.from = from;
         this.to = to;
     }

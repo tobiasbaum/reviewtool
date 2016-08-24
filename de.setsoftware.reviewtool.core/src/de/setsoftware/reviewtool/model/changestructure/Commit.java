@@ -12,10 +12,12 @@ public class Commit {
 
     private final String message;
     private final List<Change> changes;
+    private final boolean isVisible;
 
-    Commit(String message, List<Change> changes) {
+    Commit(String message, List<Change> changes, final boolean isVisible) {
         this.message = message;
         this.changes = new ArrayList<Change>(changes);
+        this.isVisible = isVisible;
     }
 
     public String getMessage() {
@@ -32,14 +34,20 @@ public class Commit {
      */
     public Commit makeChangesIrrelevant(Set<? extends Change> toMakeIrrelevant) {
         final List<Change> adjustedChanges = new ArrayList<>();
+		boolean isVisible = false;
         for (final Change change : this.changes) {
             if (toMakeIrrelevant.contains(change)) {
                 adjustedChanges.add(change.makeIrrelevant());
             } else {
                 adjustedChanges.add(change);
             }
+			isVisible = isVisible || change.isVisible();
         }
-        return new Commit(this.message, adjustedChanges);
+        return new Commit(this.message, adjustedChanges, isVisible);
+    }
+
+    public boolean isVisible() {
+        return this.isVisible;
     }
 
 }

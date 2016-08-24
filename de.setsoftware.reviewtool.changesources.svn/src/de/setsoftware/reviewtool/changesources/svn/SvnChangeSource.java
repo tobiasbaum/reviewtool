@@ -130,7 +130,7 @@ public class SvnChangeSource implements IChangeSource {
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
             if (logEntry.getMessage() != null && this.pattern.matcher(logEntry.getMessage()).matches()) {
                 assert this.currentRoot != null;
-                this.matchingEntries.add(new SvnRevision(this.currentRoot, logEntry));
+                this.matchingEntries.add(new SvnRevision(this.currentRoot, logEntry, true));
             }
         }
 
@@ -237,8 +237,8 @@ public class SvnChangeSource implements IChangeSource {
 
     private Commit convertToCommit(SvnRevision e) throws SVNException, IOException {
         return ChangestructureFactory.createCommit(
-                String.format("%s (Rev. %s, %s)", e.getMessage(), e.getRevision(), e.getAuthor()),
-                this.determineChangesInCommit(e));
+                String.format("%s (Rev. %s, %s)" + (e.isVisible() ? "" : " [invisible]"), e.getMessage(), e.getRevision(), e.getAuthor()),
+                this.determineChangesInCommit(e), e.isVisible());
     }
 
     private List<Change> determineChangesInCommit(SvnRevision e)
@@ -259,21 +259,22 @@ public class SvnChangeSource implements IChangeSource {
                 continue;
             }
             if (this.isBinaryFile(e.getRepository(), value, e.getRevision())) {
-                ret.add(this.createBinaryChange(revision, value, e.getRepository()));
+                ret.add(this.createBinaryChange(revision, value, e.getRepository(), e.isVisible()));
             } else {
-                ret.addAll(this.determineChangesInFile(revision, e.getRepository(), value));
+                ret.addAll(this.determineChangesInFile(revision, e.getRepository(), value, e.isVisible()));
             }
         }
         return ret;
     }
 
-    private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo) {
+    private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo,
+            final boolean isVisible) {
         final String oldPath = this.determineOldPath(entryInfo);
         final FileInRevision oldFileInfo =
                 ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo);
         final FileInRevision newFileInfo =
                 ChangestructureFactory.createFileInRevision(entryInfo.getPath(), this.revision(revision), repo);
-        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo, false);
+        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo, false, isVisible);
     }
 
     private RepoRevision revision(SVNRevision revision) {
@@ -284,16 +285,17 @@ public class SvnChangeSource implements IChangeSource {
         return ChangestructureFactory.createRepoRevision(revision.getNumber() - 1);
     }
 
-    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo)
+    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo,
+            final boolean isVisible)
             throws SVNException, IOException {
         final String oldPath = this.determineOldPath(entryInfo);
         final byte[] oldFileContent = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
         if (this.contentLooksBinary(oldFileContent)) {
-            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl));
+            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
         final byte[] newFileContent = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
         if (this.contentLooksBinary(newFileContent)) {
-            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl));
+            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
 
 
@@ -312,7 +314,7 @@ public class SvnChangeSource implements IChangeSource {
                 newFileContent,
                 this.guessEncoding(oldFileContent, newFileContent));
         for (final Pair<Fragment, Fragment> pos : changes) {
-            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond(), false));
+            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond(), false, isVisible));
         }
         return ret;
     }

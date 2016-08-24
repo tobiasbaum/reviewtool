@@ -22,14 +22,20 @@ import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
  * <p/>
  * A tour is immutable.
  */
-public class Tour {
+public class Tour implements IReviewElement {
 
     private final String description;
     private final List<Stop> stops = new ArrayList<>();
+    private final boolean isVisible;
 
     public Tour(String description, List<? extends Stop> list) {
+        this(description, list, true);
+    }
+
+    public Tour(String description, List<? extends Stop> list, final boolean isVisible) {
         this.description = description;
         this.stops.addAll(list);
+        this.isVisible = isVisible;
     }
 
     @Override
@@ -50,6 +56,10 @@ public class Tour {
         final Tour t = (Tour) o;
         return this.description.equals(t.description)
             && this.stops.equals(t.stops);
+    }
+
+    public boolean isVisible() {
+        return this.isVisible;
     }
 
     public List<Stop> getStops() {
@@ -80,7 +90,8 @@ public class Tour {
         for (final Entry<FileInRevision, List<Stop>> e : stopsInFile.entrySet()) {
             mergedStops.addAll(this.sortByLine(this.mergeInSameFile(e.getValue())));
         }
-        return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops);
+        return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops,
+                this.isVisible() || t2.isVisible());
     }
 
     private List<Stop> mergeInSameFile(List<Stop> stopsInSameFile) {

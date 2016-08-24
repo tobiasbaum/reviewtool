@@ -36,7 +36,7 @@ public class ViewStatisticsTest {
     private static Stop stop(String string) {
         final FileInRevision file = ChangestructureFactory.createFileInRevision(
                 string, ChangestructureFactory.createLocalRevision(), new StubRepo());
-        return new Stop(file, file, file, false);
+        return new Stop(file, file, file, false, true);
     }
 
     private static void doTest(
