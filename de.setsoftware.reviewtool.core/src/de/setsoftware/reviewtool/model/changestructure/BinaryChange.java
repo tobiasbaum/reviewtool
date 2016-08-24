@@ -34,6 +34,6 @@ public class BinaryChange extends Change {
         if (this.isIrrelevantForReview()) {
             return this;
         }
-        return new BinaryChange(this.from, this.to, true);
+        return new BinaryChange(this.from, this.to, true, this.isVisible());
     }
 }

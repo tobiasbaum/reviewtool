@@ -32,9 +32,10 @@ public class TextualChangeHunk extends Change {
         if (this.isIrrelevantForReview()) {
             return this;
         }
-        return new TextualChangeHunk(this.from, this.to, true);
+        return new TextualChangeHunk(this.from, this.to, true, this.isVisible());
     }
 
+    @Override
     public FileInRevision getFrom() {
         return this.getFromFragment().getFile();
     }

@@ -141,12 +141,12 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0),  "abc");
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0),  "ABC");
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0),  "ABC");
-        final Stop s1 = new Stop(from1, to1, current1, false);
+        final Stop s1 = new Stop(from1, to1, current1, false, true);
 
         final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 0),  "xyz");
         final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0),  "XYZ");
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0),  "XYZ");
-        final Stop s2 = new Stop(from2, to2, current2, true);
+        final Stop s2 = new Stop(from2, to2, current2, true, true);
 
         assertFalse(s1.canBeMergedWith(s2));
         assertFalse(s2.canBeMergedWith(s1));
@@ -157,12 +157,12 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 0),  "abc\nrrr");
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(3, 0),  "ABC\nrrr");
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(3, 0),  "ABC\nrrr");
-        final Stop s1 = new Stop(from1, to1, current1, false);
+        final Stop s1 = new Stop(from1, to1, current1, false, true);
 
         final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(4, 0),  "rrr\nxyz");
         final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0),  "rrr\nXYZ");
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0),  "rrr\nXYZ");
-        final Stop s2 = new Stop(from2, to2, current2, true);
+        final Stop s2 = new Stop(from2, to2, current2, true, true);
 
         assertTrue(s1.canBeMergedWith(s2));
         assertTrue(s2.canBeMergedWith(s1));

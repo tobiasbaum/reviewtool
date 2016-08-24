@@ -262,10 +262,11 @@ public class ToursInReview {
             @Override
             public void handle(TextualChangeHunk visitee) {
                 ret.setValue(new Stop(
-                        visitee.getFrom(),
-                        visitee.getTo(),
-                        tracer.traceFragment(visitee.getTo()),
-                        visitee.isIrrelevantForReview()));
+                        visitee.getFromFragment(),
+                        visitee.getToFragment(),
+                        tracer.traceFragment(visitee.getToFragment()),
+                        visitee.isIrrelevantForReview(),
+                        visitee.isVisible()));
             }
 
             @Override
@@ -274,7 +275,8 @@ public class ToursInReview {
                         visitee.getFrom(),
                         visitee.getTo(),
                         tracer.traceFile(visitee.getTo()),
-                        visitee.isIrrelevantForReview()));
+                        visitee.isIrrelevantForReview(),
+                        visitee.isVisible()));
             }
 
         });

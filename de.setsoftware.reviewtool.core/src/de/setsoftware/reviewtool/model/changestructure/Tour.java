@@ -58,6 +58,7 @@ public class Tour implements IReviewElement {
             && this.stops.equals(t.stops);
     }
 
+    @Override
     public boolean isVisible() {
         return this.isVisible;
     }
