@@ -105,14 +105,15 @@ public class ToursInReview {
             return null;
         }
 
-        final List<Tour> tours = toTours(filteredChanges, src.createTracer());
+        final RepositoryChangeHistory repoChangeHistory = new RepositoryChangeHistory(changes);
+        final List<Tour> tours = toTours(filteredChanges, src.createTracer(repoChangeHistory));
         final List<? extends Tour> userSelection =
                 determinePossibleRestructurings(tourRestructuringStrategies, tours, createUi);
         if (userSelection == null) {
             return null;
         }
 
-        return new ToursInReview(new RepositoryChangeHistory(changes), userSelection);
+        return new ToursInReview(repoChangeHistory, userSelection);
     }
 
     private static List<Commit> filterChanges(
@@ -265,7 +266,7 @@ public class ToursInReview {
                 ret.setValue(new Stop(
                         visitee.getFromFragment(),
                         visitee.getToFragment(),
-                        tracer.traceFragment(visitee.getToFragment()),
+                        tracer.traceFragment(visitee.getFromFragment()),
                         visitee.isIrrelevantForReview(),
                         visitee.isVisible()));
             }
@@ -275,7 +276,7 @@ public class ToursInReview {
                 ret.setValue(new Stop(
                         visitee.getFrom(),
                         visitee.getTo(),
-                        tracer.traceFile(visitee.getTo()),
+                        tracer.traceFile(visitee.getFrom()),
                         visitee.isIrrelevantForReview(),
                         visitee.isVisible()));
             }

@@ -46,6 +46,7 @@ import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
+import de.setsoftware.reviewtool.model.changestructure.RepositoryChangeHistory;
 
 /**
  * A simple change source that loads the changes from subversion.
@@ -406,8 +407,8 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public IFragmentTracer createTracer() {
-        return new SvnFragmentTracer(this.mgr);
+    public IFragmentTracer createTracer(RepositoryChangeHistory repoChangeHistory) {
+        return new SvnFragmentTracer(repoChangeHistory);
     }
 
 }

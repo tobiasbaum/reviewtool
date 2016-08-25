@@ -192,7 +192,7 @@ public class Fragment implements Comparable<Fragment> {
         return this.content.substring(0, lastOffset + pos.getColumn());
     }
 
-    private boolean isDeletion() {
+    public boolean isDeletion() {
         return this.to.lessThan(this.from);
     }
 

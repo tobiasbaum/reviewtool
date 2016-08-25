@@ -14,7 +14,8 @@ public interface IChangeSource {
 
     /**
      * Creates a fragment tracer that is compatible with this change source.
+     * @param repoChangeHistory The {@link RepositoryChangeHistory} to use.
      */
-    public abstract IFragmentTracer createTracer();
+    public abstract IFragmentTracer createTracer(RepositoryChangeHistory repoChangeHistory);
 
 }

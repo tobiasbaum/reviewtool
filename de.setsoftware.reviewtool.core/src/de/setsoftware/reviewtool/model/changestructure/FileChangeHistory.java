@@ -36,6 +36,20 @@ public class FileChangeHistory {
     }
 
     /**
+     * @return The first revision of the file.
+     */
+    public FileInRevision getFirstRevision() {
+        return this.revisions.isEmpty() ? null : this.revisions.get(0);
+    }
+
+    /**
+     * @return The last revision of the file.
+     */
+    public FileInRevision getLastRevision() {
+        return this.revisions.isEmpty() ? null : this.revisions.get(this.revisions.size() - 1);
+    }
+
+    /**
      * Adds a hunk to this change history.
      * @param hunk The hunk to add.
      */

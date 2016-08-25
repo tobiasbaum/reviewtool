@@ -33,6 +33,36 @@ public class FileDiff {
     }
 
     /**
+     * Returns the hunk matching a given source fragment. First, equal or overlapping fragments are considered. If not
+     * found and the fragment passed is a deletion, adjacent fragments are considered.
+     *
+     * @param fragment The source fragment.
+     * @return The hunk whose source fragment matches passed source fragment or null if no such hunk has been found.
+     */
+    public Hunk getHunkForSource(final Fragment fragment) {
+        // first try: search for equal or overlapping fragment
+        for (final Hunk hunk : this.hunks) {
+            final Fragment source = hunk.getSource();
+            if (source.equals(fragment) || source.overlaps(fragment)) {
+                return hunk;
+            }
+        }
+
+        // second try: if fragment is a deletion, search for neighbour fragment
+        if (fragment.isDeletion()) {
+            for (final Hunk hunk : this.hunks) {
+                final Fragment source = hunk.getSource();
+                if (source.isAdjacentTo(fragment)) {
+                    return hunk;
+                }
+            }
+        }
+
+        // not found
+        return null;
+    }
+
+    /**
      * Returns a list of hunks related to a collection of target fragments. "Related to" means that their target
      * fragments either overlap a given target fragment or that their target fragments are adjacent to a given target
      * fragment.
