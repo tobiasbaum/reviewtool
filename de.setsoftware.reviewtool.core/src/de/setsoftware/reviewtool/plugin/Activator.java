@@ -7,8 +7,8 @@ import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
-import de.setsoftware.reviewtool.ui.views.IStopViewer;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.ui.views.ViewDataSource;
 

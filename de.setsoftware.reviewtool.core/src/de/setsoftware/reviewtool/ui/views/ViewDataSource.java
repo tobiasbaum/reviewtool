@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.ui.views;
 
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+import de.setsoftware.reviewtool.ui.IStopViewer;
 
 /**
  * Interface to allow decoupling the views from the plug-in.

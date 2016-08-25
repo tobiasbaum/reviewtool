@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ui.views;
+package de.setsoftware.reviewtool.ui;
 
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;

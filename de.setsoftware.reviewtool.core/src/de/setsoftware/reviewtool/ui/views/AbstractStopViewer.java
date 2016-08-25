@@ -13,6 +13,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.ui.IStopViewer;
 
 /**
  * Represents the foundation for concrete stop viewers.
