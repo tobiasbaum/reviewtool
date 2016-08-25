@@ -242,7 +242,8 @@ public class ToursInReview {
         for (final Commit c : changes) {
             ret.add(new Tour(
                     c.getMessage(),
-                    toSliceFragments(c.getChanges(), tracer)));
+                    toSliceFragments(c.getChanges(), tracer),
+                    c.isVisible()));
         }
         return ret;
     }
