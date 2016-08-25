@@ -69,7 +69,7 @@ public class SvnRevisionCompleter {
                         SVNRevision.create(revision.getRevision()),
                         SVNRevision.HEAD,
                         false,
-                        true,
+                        false,
                         0,
                         new ISVNLogEntryHandler() {
                             @Override
@@ -90,9 +90,12 @@ public class SvnRevisionCompleter {
             for (final SVNLogEntry logEntry : logEntries) {
                 final SvnRevision existingRevision = revisionMap.get(logEntry.getRevision());
                 if (existingRevision == null) {
-                    logEntry.getChangedPaths().clear();
-                    logEntry.getChangedPaths().put(entryPath.getPath(), entryPath);
-                    revisionMap.put(logEntry.getRevision(), new SvnRevision(revision.getRepository(), logEntry, false));
+                    final Map<String, SVNLogEntryPath> map = new LinkedHashMap<>();
+                    map.put(entryPath.getPath(), entryPath);
+                    final SVNLogEntry modifiedLogEntry = new SVNLogEntry(map, logEntry.getRevision(),
+                            logEntry.getRevisionProperties(), logEntry.hasChildren());
+                    revisionMap.put(logEntry.getRevision(), new SvnRevision(revision.getRepository(), modifiedLogEntry,
+                            false));
                 } else if (existingRevision.getRevision() != revision.getRevision()) {
                     existingRevision.getChangedPaths().put(entryPath.getPath(), entryPath);
                 }
