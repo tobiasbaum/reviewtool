@@ -3,6 +3,7 @@
   <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" />
   <fileTicketStore defaultReviewer="${User-ID}" directory="C:\Temp\reviewData"/>
   <hackystatTelemetry dir="C:\Temp\hackybuffer" optOut="${Telemetrie OptOut}"/>
+  <stopViewer type="combined"/>
   <surveyAtReviewEnd>
     <question id="helpOfOthers" text="Hast du während des Reviews Hilfe von anderen Personen (z.B. dem Autor) in Anspruch genommen?">
       <choice id="1" text="ja"/>
