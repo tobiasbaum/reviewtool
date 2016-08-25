@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Util;
+import de.setsoftware.reviewtool.model.changestructure.IReviewElement;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 
@@ -14,7 +15,7 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
  * A helper class for restructuring the tours, containing the information like a tour,
  * but being mutable instead.
  */
-class MutableTour {
+class MutableTour implements IReviewElement {
 
     /**
      * Helper class containing data about a stop and its position in a (mutable) tour.
@@ -37,11 +38,13 @@ class MutableTour {
 
     private final Set<String> descriptionParts;
     private final List<Stop> stops;
+    private final boolean isVisible;
 
     public MutableTour(Tour t) {
         this.descriptionParts = new LinkedHashSet<>();
         this.descriptionParts.add(t.getDescription());
         this.stops = new ArrayList<>(t.getStops());
+        this.isVisible = t.isVisible();
     }
 
     public static List<Tour> toTours(List<MutableTour> mutableTours) {
@@ -49,7 +52,8 @@ class MutableTour {
         for (final MutableTour t : mutableTours) {
             ret.add(new Tour(
                     Util.implode(t.descriptionParts, " + "),
-                    t.stops));
+                    t.stops,
+                    t.isVisible()));
         }
         return ret;
     }
@@ -114,5 +118,10 @@ class MutableTour {
 
     public boolean isEmpty() {
         return this.stops.isEmpty();
+    }
+
+    @Override
+    public boolean isVisible() {
+        return this.isVisible;
     }
 }
