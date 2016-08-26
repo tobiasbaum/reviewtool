@@ -50,15 +50,22 @@ public class FileChangeHistory {
     }
 
     /**
+     * Adds a binary file to this change history.
+     */
+    public void add(final FileInRevision sourceRev) {
+        if (!this.revisions.contains(sourceRev)) {
+            this.revisions.add(sourceRev);
+            this.isSorted = false;
+        }
+    }
+
+    /**
      * Adds a hunk to this change history.
      * @param hunk The hunk to add.
      */
     public void add(final Hunk hunk) {
         final FileInRevision sourceRev = hunk.getSource().getFile();
-        if (!this.revisions.contains(sourceRev)) {
-            this.revisions.add(sourceRev);
-            this.isSorted = false;
-        }
+        this.add(sourceRev);
         this.history.put(sourceRev, hunk);
     }
 
@@ -90,8 +97,8 @@ public class FileChangeHistory {
      * @param fromFile The start revision (inclusive).
      * @param toFile The end revision (inclusive).
      * @return A {@link FileDiff} object containing the merged hunks. If the start revision is not found,
-     * <code>null</code> is returned. If the end revision is not found, the last revision of this change history is
-     * used as end revision.
+     *      <code>null</code> is returned. If the end revision is not found, the last revision of this change history is
+     *      used as end revision.
      * @throws IncompatibleFragmentException if an error building the {@link FileDiff} object occurred.
      */
     public FileDiff build(final FileInRevision fromFile, final FileInRevision toFile)

@@ -60,7 +60,8 @@ public class RepositoryChangeHistory {
 
             @Override
             public void handle(BinaryChange visitee) {
-                RepositoryChangeHistory.this.getChangeHistory(visitee.getFrom(), visitee.getTo());
+                RepositoryChangeHistory.this.getChangeHistory(visitee.getFrom(), visitee.getTo())
+                    .add(visitee.getFrom());
             }
 
             @Override

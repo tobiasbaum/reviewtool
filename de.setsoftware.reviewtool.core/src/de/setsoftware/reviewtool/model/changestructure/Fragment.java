@@ -16,6 +16,10 @@ public class Fragment implements Comparable<Fragment> {
     private final String content;
 
     Fragment(FileInRevision file, PositionInText from, PositionInText to, String content) {
+        assert file != null;
+        assert from != null;
+        assert to != null;
+        assert content != null;
         this.file = file;
         this.from = from;
         this.to = to;

@@ -23,14 +23,19 @@ public class Stop implements IReviewElement {
 
     private final FileInRevision mostRecentFile;
     private final Fragment mostRecentFragment;
-    private boolean isVisible;
+    private final boolean isVisible;
 
     private final boolean irrelevantForReview;
 
     /**
      * Constructor for textual changes.
      */
-    public Stop(Fragment from, Fragment to, Fragment traceFragment, boolean irrelevantForReview, final boolean isVisible) {
+    public Stop(
+            Fragment from,
+            Fragment to,
+            Fragment traceFragment,
+            boolean irrelevantForReview,
+            final boolean isVisible) {
         this.historyOrder.add(from.getFile());
         this.historyOrder.add(to.getFile());
         this.history.put(from.getFile(), from);
@@ -46,7 +51,12 @@ public class Stop implements IReviewElement {
     /**
      * Constructor for binary changes.
      */
-    public Stop(FileInRevision from, FileInRevision to, FileInRevision traceFile, boolean irrelevantForReview, final boolean isVisible) {
+    public Stop(
+            FileInRevision from,
+            FileInRevision to,
+            FileInRevision traceFile,
+            boolean irrelevantForReview,
+            final boolean isVisible) {
         this.historyOrder.add(from);
         this.historyOrder.add(to);
 
