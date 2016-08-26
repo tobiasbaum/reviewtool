@@ -30,6 +30,11 @@ public class RepoRevision extends Revision {
         return this.id.equals(r.id);
     }
 
+    @Override
+    public <R> R accept(RevisionVisitor<R> visitor) {
+        return visitor.handleRepoRevision(this);
+    }
+
     public Object getId() {
         return this.id;
     }

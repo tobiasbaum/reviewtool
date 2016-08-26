@@ -18,4 +18,9 @@ public class LocalRevision extends Revision {
         return o instanceof LocalRevision;
     }
 
+    @Override
+    public <R> R accept(RevisionVisitor<R> visitor) {
+        return visitor.handleLocalRevision(this);
+    }
+
 }
