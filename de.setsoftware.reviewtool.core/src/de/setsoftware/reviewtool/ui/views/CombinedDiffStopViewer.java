@@ -25,6 +25,9 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
     @Override
     public void createStopView(final ViewPart view, final Composite scrollContent, final Stop stop) {
         final ToursInReview tours = ViewDataSource.get().getToursInReview();
+        if (tours == null) {
+            return;
+        }
         final FileChangeHistory changeHistory = tours.getChangeHistory(stop.getHistory().get(0));
         if (changeHistory != null) {
             final List<FileInRevision> history = stop.getHistory();
