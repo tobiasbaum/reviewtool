@@ -52,6 +52,8 @@ public class SvnFragmentTracer implements IFragmentTracer {
 
     @Override
     public FileInRevision traceFile(FileInRevision file) {
-        return this.repoChangeHistory.getHistory(file).getLastRevision();
+        final FileChangeHistory history = this.repoChangeHistory.getHistory(file);
+        assert history != null : "no history for file " + file;
+        return history.getLastRevision();
     }
 }

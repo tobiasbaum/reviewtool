@@ -37,18 +37,7 @@ public class RepositoryChangeHistory {
         this();
         for (final Commit commit : commits) {
             for (final Change change : commit.getChanges()) {
-                change.accept(new ChangeVisitor() {
-
-                    @Override
-                    public void handle(final TextualChangeHunk visitee) {
-                        RepositoryChangeHistory.this.addChange(visitee);
-                    }
-
-                    @Override
-                    public void handle(final BinaryChange visitee) {
-                    }
-
-                });
+                RepositoryChangeHistory.this.addChange(change);
             }
         }
     }
@@ -63,12 +52,23 @@ public class RepositoryChangeHistory {
     }
 
     /**
-     * Adds a {@link TextualChangeHunk} to this change history.
+     * Adds a {@link Change} to this change history.
      * @param change The {@link Change} to add.
      */
-    public void addChange(final TextualChangeHunk change) {
-        this.getChangeHistory(change.getFromFragment().getFile(),
-                change.getToFragment().getFile()).add(new Hunk(change));
+    public void addChange(final Change change) {
+        change.accept(new ChangeVisitor() {
+
+            @Override
+            public void handle(BinaryChange visitee) {
+                RepositoryChangeHistory.this.getChangeHistory(visitee.getFrom(), visitee.getTo());
+            }
+
+            @Override
+            public void handle(TextualChangeHunk visitee) {
+                RepositoryChangeHistory.this.getChangeHistory(visitee.getFromFragment().getFile(),
+                        visitee.getToFragment().getFile()).add(new Hunk(visitee));
+            }
+        });
     }
 
     /**
@@ -77,7 +77,7 @@ public class RepositoryChangeHistory {
      * @param fromFile The source file.
      * @param toFile The target file.
      * @return The corresponding {@link FileHistoryChange} object. If no such object exists yet, it is created and
-     * added.
+     *          added.
      */
     private FileChangeHistory getChangeHistory(final FileInRevision fromFile, final FileInRevision toFile) {
         List<FileInRevision> files = this.fileRevisions.get(fromFile.getPath());
