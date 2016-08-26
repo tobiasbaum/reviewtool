@@ -9,15 +9,21 @@ public class PositionInText implements Comparable<PositionInText> {
 
     private final int line;
     private final int column;
+    private final int absoluteOffset;
 
     PositionInText(int line, int column) {
+        this(line, column, -1);
+    }
+
+    PositionInText(final int line, final int column, final int absoluteOffset) {
         this.line = line;
         this.column = column;
+        this.absoluteOffset = absoluteOffset;
     }
 
     @Override
     public int hashCode() {
-        return 100 * this.line + this.column;
+        return (100 * this.line + this.column) * 37 + this.absoluteOffset;
     }
 
     @Override
@@ -26,7 +32,7 @@ public class PositionInText implements Comparable<PositionInText> {
             return false;
         }
         final PositionInText p = (PositionInText) o;
-        return this.line == p.line && this.column == p.column;
+        return this.line == p.line && this.column == p.column && this.absoluteOffset == p.absoluteOffset;
     }
 
     @Override
@@ -42,15 +48,21 @@ public class PositionInText implements Comparable<PositionInText> {
         return this.column;
     }
 
+    public int getAbsoluteOffset() {
+        return this.absoluteOffset;
+    }
+
     public PositionInText nextInLine() {
-        return new PositionInText(this.line, this.column + 1);
+        return new PositionInText(this.line, this.column + 1,
+                this.absoluteOffset == -1 ? -1 : this.absoluteOffset + 1);
     }
 
     /**
      * @return A new PositionInText object with the same line but decremented column.
      */
     public PositionInText prevInLine() {
-        return new PositionInText(this.line, this.column - 1);
+        return new PositionInText(this.line, this.column - 1,
+                this.absoluteOffset == -1 ? -1 : this.absoluteOffset - 1);
     }
 
     public PositionInText toPrevLine() {
