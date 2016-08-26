@@ -46,6 +46,7 @@ import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
+import de.setsoftware.reviewtool.model.changestructure.RepositoryChangeHistory;
 
 /**
  * A simple change source that loads the changes from subversion.
@@ -115,7 +116,7 @@ public class SvnChangeSource implements IChangeSource {
     private class LookupHandler implements ISVNLogEntryHandler {
 
         private final Pattern pattern;
-        private final List<Pair<SvnRepo, SVNLogEntry>> matchingEntries = new ArrayList<>();
+        private final List<SvnRevision> matchingEntries = new ArrayList<>();
         private SvnRepo currentRoot;
 
         public LookupHandler(Pattern patternForKey) {
@@ -130,7 +131,7 @@ public class SvnChangeSource implements IChangeSource {
         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
             if (logEntry.getMessage() != null && this.pattern.matcher(logEntry.getMessage()).matches()) {
                 assert this.currentRoot != null;
-                this.matchingEntries.add(Pair.create(this.currentRoot, logEntry));
+                this.matchingEntries.add(new SvnRevision(this.currentRoot, logEntry, true));
             }
         }
 
@@ -139,7 +140,8 @@ public class SvnChangeSource implements IChangeSource {
     @Override
     public List<Commit> getChanges(String key, IChangeSourceUi ui) {
         try {
-            final List<Pair<SvnRepo, SVNLogEntry>> revisions = this.determineRelevantRevisions(key);
+            final List<SvnRevision> revisions = SvnRevisionCompleter.complete(this.mgr,
+                    this.determineRelevantRevisions(key));
             this.sortByDate(revisions);
             this.checkWorkingCopiesUpToDate(revisions, ui);
             return this.convertToChanges(revisions);
@@ -149,7 +151,7 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private void checkWorkingCopiesUpToDate(
-            List<Pair<SvnRepo, SVNLogEntry>> revisions,
+            List<SvnRevision> revisions,
             IChangeSourceUi ui) throws SVNException {
 
         final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
@@ -166,11 +168,11 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private Map<SvnRepo, Long> determineMaxRevisionPerRepo(
-            List<Pair<SvnRepo, SVNLogEntry>> revisions) {
+            List<SvnRevision> revisions) {
         final Map<SvnRepo, Long> ret = new LinkedHashMap<>();
-        for (final Pair<SvnRepo, SVNLogEntry> p : revisions) {
-            final SvnRepo repo = p.getFirst();
-            final long curRev = p.getSecond().getRevision();
+        for (final SvnRevision p : revisions) {
+            final SvnRepo repo = p.getRepository();
+            final long curRev = p.getRevision();
             if (ret.containsKey(repo)) {
                 if (curRev > ret.get(repo)) {
                     ret.put(repo, curRev);
@@ -183,7 +185,7 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private List<Pair<SvnRepo, SVNLogEntry>> determineRelevantRevisions(String key) throws SVNException {
+    private List<SvnRevision> determineRelevantRevisions(String key) throws SVNException {
         final LookupHandler handler = new LookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
             final SVNURL rootUrl = this.mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
@@ -220,36 +222,35 @@ public class SvnChangeSource implements IChangeSource {
         return i;
     }
 
-    private void sortByDate(List<Pair<SvnRepo, SVNLogEntry>> revisions) {
-        Collections.sort(revisions, new Comparator<Pair<SvnRepo, SVNLogEntry>>() {
+    private void sortByDate(List<SvnRevision> revisions) {
+        Collections.sort(revisions, new Comparator<SvnRevision>() {
             @Override
-            public int compare(Pair<SvnRepo, SVNLogEntry> o1, Pair<SvnRepo, SVNLogEntry> o2) {
-                return o1.getSecond().getDate().compareTo(o2.getSecond().getDate());
+            public int compare(SvnRevision o1, SvnRevision o2) {
+                return o1.getDate().compareTo(o2.getDate());
             }
         });
     }
 
-    private List<Commit> convertToChanges(List<Pair<SvnRepo, SVNLogEntry>> revisions)
+    private List<Commit> convertToChanges(List<SvnRevision> revisions)
             throws SVNException, IOException {
         final List<Commit> ret = new ArrayList<>();
-        for (final Pair<SvnRepo, SVNLogEntry> e : revisions) {
+        for (final SvnRevision e : revisions) {
             ret.add(this.convertToCommit(e));
         }
         return ret;
     }
 
-    private Commit convertToCommit(Pair<SvnRepo, SVNLogEntry> e) throws SVNException, IOException {
-        final SVNLogEntry log = e.getSecond();
+    private Commit convertToCommit(SvnRevision e) throws SVNException, IOException {
         return ChangestructureFactory.createCommit(
-                String.format("%s (Rev. %s, %s)", log.getMessage(), log.getRevision(), log.getAuthor()),
-                this.determineChangesInCommit(e));
+                String.format("%s (Rev. %s, %s)" + (e.isVisible() ? "" : " [invisible]"), e.getMessage(), e.getRevision(), e.getAuthor()),
+                this.determineChangesInCommit(e), e.isVisible());
     }
 
-    private List<Change> determineChangesInCommit(Pair<SvnRepo, SVNLogEntry> e)
+    private List<Change> determineChangesInCommit(SvnRevision e)
             throws SVNException, IOException {
         final List<Change> ret = new ArrayList<>();
-        final SVNRevision revision = SVNRevision.create(e.getSecond().getRevision());
-        final Map<String, SVNLogEntryPath> changedPaths = e.getSecond().getChangedPaths();
+        final SVNRevision revision = SVNRevision.create(e.getRevision());
+        final Map<String, SVNLogEntryPath> changedPaths = e.getChangedPaths();
         final Set<String> moveSources = this.determineMoveSources(changedPaths.values());
         final List<String> sortedPaths = new ArrayList<>(changedPaths.keySet());
         Collections.sort(sortedPaths);
@@ -262,22 +263,23 @@ public class SvnChangeSource implements IChangeSource {
                 //Moves are contained twice, as a copy and a deletion. The deletion shall not result in a fragment.
                 continue;
             }
-            if (this.isBinaryFile(e.getFirst(), value, e.getSecond().getRevision())) {
-                ret.add(this.createBinaryChange(revision, value, e.getFirst()));
+            if (this.isBinaryFile(e.getRepository(), value, e.getRevision())) {
+                ret.add(this.createBinaryChange(revision, value, e.getRepository(), e.isVisible()));
             } else {
-                ret.addAll(this.determineChangesInFile(revision, e.getFirst(), value));
+                ret.addAll(this.determineChangesInFile(revision, e.getRepository(), value, e.isVisible()));
             }
         }
         return ret;
     }
 
-    private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo) {
+    private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo,
+            final boolean isVisible) {
         final String oldPath = this.determineOldPath(entryInfo);
         final FileInRevision oldFileInfo =
                 ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo);
         final FileInRevision newFileInfo =
                 ChangestructureFactory.createFileInRevision(entryInfo.getPath(), this.revision(revision), repo);
-        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo, false);
+        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo, false, isVisible);
     }
 
     private RepoRevision revision(SVNRevision revision) {
@@ -288,16 +290,17 @@ public class SvnChangeSource implements IChangeSource {
         return ChangestructureFactory.createRepoRevision(revision.getNumber() - 1);
     }
 
-    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo)
+    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo,
+            final boolean isVisible)
             throws SVNException, IOException {
         final String oldPath = this.determineOldPath(entryInfo);
         final byte[] oldFileContent = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
         if (this.contentLooksBinary(oldFileContent)) {
-            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl));
+            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
         final byte[] newFileContent = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
         if (this.contentLooksBinary(newFileContent)) {
-            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl));
+            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
 
 
@@ -316,7 +319,7 @@ public class SvnChangeSource implements IChangeSource {
                 newFileContent,
                 this.guessEncoding(oldFileContent, newFileContent));
         for (final Pair<Fragment, Fragment> pos : changes) {
-            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond(), false));
+            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond(), false, isVisible));
         }
         return ret;
     }
@@ -407,8 +410,8 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public IFragmentTracer createTracer() {
-        return new SvnFragmentTracer(this.mgr);
+    public IFragmentTracer createTracer(RepositoryChangeHistory repoChangeHistory) {
+        return new SvnFragmentTracer(repoChangeHistory);
     }
 
 }

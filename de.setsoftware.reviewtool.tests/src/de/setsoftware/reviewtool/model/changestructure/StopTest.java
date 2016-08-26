@@ -14,8 +14,8 @@ public class StopTest {
 
     @Test
     public void testRevisionsInHistoryAreSortedAfterMerge() {
-        final Stop s1 = new Stop(file("a.java", 1), file("a.java", 3), file("a.java", 4), false);
-        final Stop s2 = new Stop(file("a.java", 2), file("a.java", 4), file("a.java", 4), false);
+        final Stop s1 = new Stop(file("a.java", 1), file("a.java", 3), file("a.java", 4), false, true);
+        final Stop s2 = new Stop(file("a.java", 2), file("a.java", 4), file("a.java", 4), false, true);
         final Stop merged = s1.merge(s2);
         final Stop merged2 = s2.merge(s1);
 

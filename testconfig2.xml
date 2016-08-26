@@ -4,4 +4,5 @@
   <jiraTicketStore user="${User-ID}" password="${Passwort}" url="jira.intranet.set.de" reviewRemarkField="Review-Anmerkungen" 
 	reviewState="Im Review" implementationState="In Arbeit" readyForReviewState="Bereit für Review" rejectedState="Review-Rückläufer" doneState="Abgeschlossen" />
   <hackystatTelemetry dir="C:\Temp\hackybuffer" optOut="${Telemetrie OptOut}"/>
+  <stopViewer type="combined"/>
 </reviewToolConfig>

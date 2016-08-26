@@ -16,20 +16,21 @@ import de.setsoftware.reviewtool.base.Util;
  * <p/>
  * A stop is immutable.
  */
-public class Stop {
+public class Stop implements IReviewElement {
 
     private final List<FileInRevision> historyOrder = new ArrayList<>();
     private final Multimap<FileInRevision, Fragment> history = new Multimap<>();
 
     private final FileInRevision mostRecentFile;
     private final Fragment mostRecentFragment;
+    private boolean isVisible;
 
     private final boolean irrelevantForReview;
 
     /**
      * Constructor for textual changes.
      */
-    public Stop(Fragment from, Fragment to, Fragment traceFragment, boolean irrelevantForReview) {
+    public Stop(Fragment from, Fragment to, Fragment traceFragment, boolean irrelevantForReview, final boolean isVisible) {
         this.historyOrder.add(from.getFile());
         this.historyOrder.add(to.getFile());
         this.history.put(from.getFile(), from);
@@ -39,12 +40,13 @@ public class Stop {
         this.mostRecentFragment = traceFragment;
 
         this.irrelevantForReview = irrelevantForReview;
+        this.isVisible = isVisible;
     }
 
     /**
      * Constructor for binary changes.
      */
-    public Stop(FileInRevision from, FileInRevision to, FileInRevision traceFile, boolean irrelevantForReview) {
+    public Stop(FileInRevision from, FileInRevision to, FileInRevision traceFile, boolean irrelevantForReview, final boolean isVisible) {
         this.historyOrder.add(from);
         this.historyOrder.add(to);
 
@@ -52,6 +54,7 @@ public class Stop {
         this.mostRecentFragment = null;
 
         this.irrelevantForReview = irrelevantForReview;
+        this.isVisible = isVisible;
     }
 
     /**
@@ -61,12 +64,19 @@ public class Stop {
             Multimap<FileInRevision, Fragment> history,
             FileInRevision mostRecentFile,
             Fragment mostRecentFragment,
-            boolean irrelevantForReview) {
+            boolean irrelevantForReview,
+            final boolean isVisible) {
         this.historyOrder.addAll(historyOrder);
         this.history.putAll(history);
         this.mostRecentFile = mostRecentFile;
         this.mostRecentFragment = mostRecentFragment;
         this.irrelevantForReview = irrelevantForReview;
+        this.isVisible = isVisible;
+    }
+
+    @Override
+    public boolean isVisible() {
+        return this.isVisible;
     }
 
     public boolean isDetailedFragmentKnown() {
@@ -146,7 +156,8 @@ public class Stop {
                 //  to track which part is relevant and which is not (so that a merge could result in multiple
                 //  stops), but this complicates some algorithms and is only useful for large irrelevant stops,
                 //  which should be quite rare
-                this.irrelevantForReview && other.irrelevantForReview);
+                this.irrelevantForReview && other.irrelevantForReview,
+                this.isVisible || other.isVisible);
     }
 
     @Override

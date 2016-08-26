@@ -12,7 +12,7 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 public class ImportChangeFilterTest {
 
     private static Change change(String from, String to) {
-        return ChangestructureFactory.createTextualChangeHunk(fragment(from), fragment(to), false);
+        return ChangestructureFactory.createTextualChangeHunk(fragment(from), fragment(to), false, true);
     }
 
     private static Fragment fragment(String content) {

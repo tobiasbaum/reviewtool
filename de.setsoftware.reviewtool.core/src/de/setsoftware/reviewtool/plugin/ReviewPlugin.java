@@ -67,6 +67,7 @@ import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.tourrestructuring.onestop.OneStopPerPartOfFileRestructuring;
+import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
@@ -78,6 +79,8 @@ import de.setsoftware.reviewtool.ui.dialogs.SelectTourStructureDialog;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
+import de.setsoftware.reviewtool.ui.views.SeparateDiffsStopViewer;
+import de.setsoftware.reviewtool.ui.views.StopViewConfigurator;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
 
 /**
@@ -131,6 +134,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private ILaunchesListener launchesListener;
     private IResourceChangeListener changeListener;
     List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
+    private IStopViewer stopViewer = new SeparateDiffsStopViewer();
 
 
     private ReviewPlugin() {
@@ -142,6 +146,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.configInterpreter.addConfigurator(new TelemetryConfigurator(bundleVersion));
         this.configInterpreter.addConfigurator(new VersionChecker(bundleVersion));
         this.configInterpreter.addConfigurator(new SurveyAtEndConfigurator());
+        this.configInterpreter.addConfigurator(new StopViewConfigurator());
         final IExtensionPoint configuratorExtensions =
                 Platform.getExtensionRegistry().getExtensionPoint("de.setsoftware.reviewtool.configurator");
         for (final IExtension extension : configuratorExtensions.getExtensions()) {
@@ -580,4 +585,12 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.endReviewExtensions.add(extension);
     }
 
+    @Override
+    public void setStopViewer(IStopViewer stopViewer) {
+        this.stopViewer = stopViewer;
+    }
+
+    public IStopViewer getStopViewer() {
+        return this.stopViewer;
+    }
 }

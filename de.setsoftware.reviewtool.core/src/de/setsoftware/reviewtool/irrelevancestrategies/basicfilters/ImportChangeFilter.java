@@ -23,8 +23,8 @@ public class ImportChangeFilter implements IIrrelevanceDetermination {
     public boolean isIrrelevant(Change change) {
         if (change instanceof TextualChangeHunk) {
             final TextualChangeHunk hunk = (TextualChangeHunk) change;
-            return this.isOnlyImports(hunk.getFrom()) && this.isOnlyImports(hunk.getTo())
-                && !(this.isOnlyWhitespace(hunk.getFrom()) && this.isOnlyWhitespace(hunk.getTo()));
+            return this.isOnlyImports(hunk.getFromFragment()) && this.isOnlyImports(hunk.getToFragment())
+                && !(this.isOnlyWhitespace(hunk.getFromFragment()) && this.isOnlyWhitespace(hunk.getToFragment()));
         }
         return false;
     }

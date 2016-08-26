@@ -44,7 +44,8 @@ public class OneStopPerPartOfFileRestructuringTest {
                 fileInRevision(file, revision - 1),
                 fileInRevision(file, revision),
                 fileInRevision(file, 100),
-                false);
+                false,
+                true);
     }
 
     private static Stop stop(final String file, int... revisions) {

@@ -8,7 +8,7 @@ package de.setsoftware.reviewtool.model.changestructure;
  * a pure deletion, so that there is no code to point to left in that revision of the file, this is denoted
  * specially.
  */
-public class Fragment {
+public class Fragment implements Comparable<Fragment> {
 
     private final FileInRevision file;
     private final PositionInText from;
@@ -53,6 +53,75 @@ public class Fragment {
         }
         return this.to.nextInLine().equals(other.from)
             || other.to.nextInLine().equals(this.from);
+    }
+
+    /**
+     * Returns true if this fragment overlaps the passed one. Adjacent fragments do not overlap. Because of this,
+     * deletion fragments starting at the same line do not overlap either as they are taken to be adjacent.
+     * @param other The other fragment.
+     * @return True if overlapping has been detected, else false.
+     */
+    public boolean overlaps(final Fragment other) {
+        return this.to.compareTo(other.from) >= 0 && this.from.compareTo(other.to) <= 0;
+    }
+
+    /**
+     * Returns true if this fragment is adjacent to the passed one. Adjacent fragments do not overlap.
+     * @param other The other fragment.
+     * @return True if fragments are adjacent, else false.
+     */
+    public boolean isAdjacentTo(final Fragment other) {
+        return this.to.nextInLine().equals(other.from) || this.from.equals(other.to.nextInLine());
+    }
+
+    /**
+     * Adjoins two adjacent fragments. The associated FileInRevision of the resulting fragment is taken from this
+     * fragment.
+     * @param other The other fragment-
+     * @return The adjoint fragment encompassing both original fragments.
+     */
+    public Fragment adjoin(final Fragment other) {
+        assert this.isAdjacentTo(other);
+        if (this.to.nextInLine().equals(other.from)) {
+            return new Fragment(this.file, this.from, other.to, this.content + other.content);
+        } else {
+            return new Fragment(this.file, other.from, this.to, other.content + this.content);
+        }
+    }
+
+    /**
+     * Subtracts some fragment from this fragment.
+     * @param other The other fragment.
+     * @return A list of remaining fragments. It may be empty or contain one or two fragments.
+     */
+    public FragmentList subtract(final Fragment other) {
+        if (!this.overlaps(other)) {
+            return new FragmentList(this);
+        } else {
+            final FragmentList fragmentList = new FragmentList();
+            try {
+                if (this.from.lessThan(other.from)) {
+                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from.prevInLine(),
+                            this.subContentTo(other.from.prevInLine())));
+                }
+                if (other.to.lessThan(this.to)) {
+                    fragmentList.addFragment(new Fragment(this.file, other.to.nextInLine(), this.to,
+                            this.subContentFrom(other.to.nextInLine())));
+                }
+            } catch (final IncompatibleFragmentException e) {
+                throw new Error(e);
+            }
+            return fragmentList;
+        }
+    }
+
+    /**
+     * Subtracts some fragment from this fragment.
+     * @param other The other fragment.
+     * @return A list of remaining fragments. It may be empty or contain one or two fragments.
+     */
+    public FragmentList subtract(final FragmentList other) {
+        return new FragmentList(this).subtract(other);
     }
 
     /**
@@ -106,7 +175,24 @@ public class Fragment {
         return remainingContent.substring(diff);
     }
 
-    private boolean isDeletion() {
+    /**
+     * Returns the fragment contents from the beginning of the fragment up to the passed {@link PositionInText}
+     * (inclusive).
+     * @param pos The end of the desired range.
+     * @return The contents.
+     */
+    private String subContentTo(final PositionInText pos) {
+        int lastOffset = 0;
+        int line = this.from.getLine();
+
+        while (line < pos.getLine()) {
+            lastOffset = this.content.indexOf('\n', lastOffset) + 1;
+            ++line;
+        }
+        return this.content.substring(0, lastOffset + pos.getColumn());
+    }
+
+    public boolean isDeletion() {
         return this.to.lessThan(this.from);
     }
 
@@ -137,6 +223,21 @@ public class Fragment {
         } else {
             return rawLineDiff;
         }
+    }
+
+    /**
+     * Creates a new fragment whose start and end positions are shifted by the given line offset.
+     * @param offset The line offset to add.
+     * @return The resulting fragment.
+     */
+    public Fragment adjust(final int offset) {
+        return new Fragment(this.file, this.from.adjust(offset), this.to.adjust(offset), this.content);
+    }
+
+    @Override
+    public int compareTo(final Fragment o) {
+        final int from = this.getFrom().compareTo(o.getFrom());
+        return from != 0 ? from : this.getTo().compareTo(o.getTo());
     }
 
 }

@@ -1,12 +1,5 @@
 package de.setsoftware.reviewtool.ui.views;
 
-import java.util.Iterator;
-import java.util.List;
-
-import org.eclipse.compare.CompareConfiguration;
-import org.eclipse.compare.contentmergeviewer.TextMergeViewer;
-import org.eclipse.compare.structuremergeviewer.DiffNode;
-import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.layout.FillLayout;
@@ -14,8 +7,6 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 
 /**
@@ -41,17 +32,17 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
     }
 
     @Override
-    public void notifyStopChange(Stop fragment) {
+    public void notifyStopChange(Stop stop) {
         this.disposeOldContent();
-        if (fragment == null) {
+        if (stop == null) {
             this.currentContent = this.createIdleContent("No review tour stop selected");
         } else {
-            this.currentContent = this.createFragmentContent(fragment);
+            this.currentContent = this.createStopContent(stop);
         }
         this.comp.layout();
     }
 
-    private ScrolledComposite createFragmentContent(Stop fragment) {
+    private ScrolledComposite createStopContent(Stop stop) {
         final ScrolledComposite scroll = new ScrolledComposite(this.comp, SWT.VERTICAL | SWT.HORIZONTAL);
         scroll.setExpandHorizontal(true);
         scroll.setExpandVertical(true);
@@ -62,61 +53,10 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
         final FillLayout layout = new FillLayout();
         scrollContent.setLayout(layout);
 
-        final Iterator<FileInRevision> it = fragment.getHistory().iterator();
-        FileInRevision oldRevision = null;
-        while (it.hasNext()) {
-            final FileInRevision newRevision = it.next();
-            if (oldRevision != null) {
-                this.createContentLabel(scrollContent, fragment, oldRevision, newRevision);
-                oldRevision = null;
-            } else {
-                oldRevision = newRevision;
-            }
-        }
+        ViewDataSource.get().getStopViewer().createStopView(this, scrollContent, stop);
 
         scroll.setContent(scrollContent);
         return scroll;
-    }
-
-    /**
-     * Builds a string containing the concatenated contents of the fragments passed.
-     * @param fragments The list of fragments.
-     * @return The concatenated contents of the fragments passed.
-     */
-    private String mapFragmentsToString(final List<Fragment> fragments) {
-        final StringBuilder text = new StringBuilder();
-        boolean first = true;
-        for (final Fragment f : fragments) {
-            if (first) {
-                first = false;
-            } else {
-                text.append("\n...\n\n");
-            }
-            text.append(f.getContent());
-        }
-        return text.toString();
-    }
-
-    private void createContentLabel(final Composite scrollContent, final Stop fragment,
-            final FileInRevision oldRevision, final FileInRevision newRevision) {
-        final List<Fragment> oldContent = fragment.getContentFor(oldRevision);
-        final List<Fragment> newContent = fragment.getContentFor(newRevision);
-        if (oldContent.isEmpty() || newContent.isEmpty()) {
-            final Label label = new Label(scrollContent, SWT.NULL);
-            label.setText("binary");
-            label.setFont(
-                    JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT));
-            ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
-        } else {
-            final CompareConfiguration compareConfiguration = new CompareConfiguration();
-            compareConfiguration.setLeftLabel(oldRevision.toString());
-            compareConfiguration.setRightLabel(newRevision.toString());
-            final TextMergeViewer viewer = new TextMergeViewer(scrollContent, SWT.BORDER, compareConfiguration);
-            viewer.setInput(new DiffNode(new TextItem(oldRevision.toString(), this.mapFragmentsToString(oldContent),
-                    System.currentTimeMillis()),
-                    new TextItem(newRevision.toString(), this.mapFragmentsToString(newContent),
-                            System.currentTimeMillis())));
-        }
     }
 
     private Composite createIdleContent(String text) {
