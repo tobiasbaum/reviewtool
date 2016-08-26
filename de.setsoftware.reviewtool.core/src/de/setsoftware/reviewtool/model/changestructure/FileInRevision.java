@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,11 +26,18 @@ public class FileInRevision {
     private final Revision revision;
     private final Repository repo;
     private Path localPath;
+    private final IContentSource contentSource;
 
     FileInRevision(String path, Revision revision, Repository repository) {
+        this(path, revision, repository, null);
+    }
+
+    FileInRevision(final String path, final Revision revision, final Repository repository,
+            final IContentSource contentSource) {
         this.path = path;
         this.revision = revision;
         this.repo = repository;
+        this.contentSource = contentSource;
     }
 
     /**
@@ -43,6 +53,37 @@ public class FileInRevision {
 
     public Repository getRepository() {
         return this.repo;
+    }
+
+    /**
+     * Returns this revisioned file's contents.
+     * @return The file contents or null if an error occurs.
+     */
+    public byte[] getContents() {
+        return this.revision.accept(new RevisionVisitor<byte[]>() {
+
+            @Override
+            public byte[] handleLocalRevision(LocalRevision revision) {
+                final IPath localPath = FileInRevision.this.toLocalPath();
+                final File file = localPath.toFile();
+                try {
+                    return Files.readAllBytes(file.toPath());
+                } catch (final IOException e) {
+                    return null;
+                }
+            }
+
+            @Override
+            public byte[] handleRepoRevision(RepoRevision revision) {
+                if (FileInRevision.this.contentSource != null && FileInRevision.this.revision instanceof RepoRevision) {
+                    return FileInRevision.this.contentSource.getContents(FileInRevision.this.path,
+                            (RepoRevision) FileInRevision.this.revision, FileInRevision.this.repo);
+                } else {
+                    return null;
+                }
+            }
+
+        });
     }
 
     @Override
