@@ -191,9 +191,12 @@ public class SvnChangeSource implements IChangeSource {
                     workingCopyRoot,
                     rootUrl,
                     this.determineCheckoutPrefix(workingCopyRoot, rootUrl)));
+
+            final SVNURL wcUrl = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.WORKING).getURL();
+            final String relPath = wcUrl.toString().substring(rootUrl.toString().length());
             this.mgr.getLogClient().doLog(
                     rootUrl,
-                    new String[] {"/"},
+                    new String[] { relPath },
                     SVNRevision.HEAD,
                     SVNRevision.HEAD,
                     SVNRevision.create(0),
