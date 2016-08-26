@@ -34,14 +34,14 @@ public class Commit {
      */
     public Commit makeChangesIrrelevant(Set<? extends Change> toMakeIrrelevant) {
         final List<Change> adjustedChanges = new ArrayList<>();
-		boolean isVisible = false;
+        boolean isVisible = false;
         for (final Change change : this.changes) {
             if (toMakeIrrelevant.contains(change)) {
                 adjustedChanges.add(change.makeIrrelevant());
             } else {
                 adjustedChanges.add(change);
             }
-			isVisible = isVisible || change.isVisible();
+            isVisible = isVisible || change.isVisible();
         }
         return new Commit(this.message, adjustedChanges, isVisible);
     }

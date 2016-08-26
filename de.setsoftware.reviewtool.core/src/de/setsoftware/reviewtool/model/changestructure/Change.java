@@ -10,12 +10,12 @@ public abstract class Change {
 
     /**
      * Constructs a change.
-     * @param isVisible True if the change is visible, else false. See {@link isVisible()} for a description of
-     * visible/invisible changes.
+     * @param isVisible True if the change is visible, else false. See {@link #isVisible()} for a description of
+     *                      visible/invisible changes.
      */
     public Change(boolean irrelevantForReview, final boolean isVisible) {
         this.irrelevantForReview = irrelevantForReview;
-		this.isVisible = isVisible;
+        this.isVisible = isVisible;
     }
 
     /**

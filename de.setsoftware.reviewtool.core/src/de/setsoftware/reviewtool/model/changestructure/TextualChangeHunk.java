@@ -8,7 +8,8 @@ public class TextualChangeHunk extends Change {
     private final Fragment from;
     private final Fragment to;
 
-    TextualChangeHunk(final Fragment from, final Fragment to, final boolean irrelevantForReview, final boolean isVisible) {
+    TextualChangeHunk(
+            final Fragment from, final Fragment to, final boolean irrelevantForReview, final boolean isVisible) {
         super(irrelevantForReview, isVisible);
         this.from = from;
         this.to = to;
