@@ -76,7 +76,7 @@ public class FileDiff {
         for (final Hunk hunk : this.hunks) {
             final Fragment target = hunk.getTarget();
             for (final Fragment selector : fragments) {
-                if (target.overlaps(selector) || target.isAdjacentTo(selector)) {
+                if (target.equals(selector) || target.overlaps(selector) || target.isAdjacentTo(selector)) {
                     result.add(hunk);
                     break;
                 }
