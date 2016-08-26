@@ -51,7 +51,8 @@ public abstract class AbstractStopViewer implements IStopViewer {
     protected void createDiffViewer(final ViewPart view, final Composite parent,
             final FileInRevision sourceRevision, final FileInRevision targetRevision,
             final List<Fragment> sourceFragments, final List<Fragment> targetFragments) {
-        if (sourceFragments.isEmpty() || targetFragments.isEmpty()) {
+        if (sourceFragments == null || targetFragments == null ||
+                sourceFragments.isEmpty() || targetFragments.isEmpty()) {
             this.createBinaryHunkViewer(view, parent);
         } else {
             this.createTextHunkViewer(parent, sourceRevision, targetRevision, sourceFragments, targetFragments);
