@@ -7,6 +7,9 @@ import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
+/**
+ * Action to leave review mode.
+ */
 public class EndReviewAction extends AbstractHandler {
 
     @Override

@@ -10,6 +10,10 @@ import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 
+/**
+ * Parser for serialized review data.
+ * The review data is stored in a human readable format based an Markdown syntax.
+ */
 class ReviewDataParser {
 
     private static final String TYPE_PREFIX = "* ";
@@ -19,6 +23,9 @@ class ReviewDataParser {
     private static final Pattern REVIEW_HEADER_PATTERN = Pattern.compile("Review (\\d+):");
     private static final Pattern COMMENT_PATTERN = Pattern.compile("([^ ]+): (.+)", Pattern.DOTALL);
 
+    /**
+     * States for the parser's state machine.
+     */
     private enum ParseState {
         BEFORE_ROUND,
         IN_ROUND,
@@ -123,6 +130,11 @@ class ReviewDataParser {
                 throw new ReviewtoolException("parse exception: " + this.currentText);
             }
             break;
+        case BEFORE_ROUND:
+        case IN_ROUND:
+            break;
+        default:
+            throw new AssertionError("unknown state " + this.state);
         }
         this.currentText.setLength(0);
     }

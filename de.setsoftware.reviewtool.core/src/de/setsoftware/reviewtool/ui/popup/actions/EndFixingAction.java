@@ -7,6 +7,9 @@ import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
+/**
+ * Action to leave fixing mode.
+ */
 public class EndFixingAction extends AbstractHandler {
 
     @Override

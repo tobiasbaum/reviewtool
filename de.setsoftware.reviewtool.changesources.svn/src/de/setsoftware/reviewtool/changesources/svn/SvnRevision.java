@@ -35,36 +35,42 @@ class SvnRevision {
     public SvnRepo getRepository() {
         return this.repository;
     }
+
     /**
      * @return The associated revision number.
      */
     public long getRevision() {
         return this.logEntry.getRevision();
     }
+
     /**
      * @return The associated commit date.
      */
     public Date getDate() {
         return this.logEntry.getDate();
     }
+
     /**
      * @return The associated commit author.
      */
     public String getAuthor() {
         return this.logEntry.getAuthor();
     }
+
     /**
      * @return The associated commit message.
      */
     public String getMessage() {
         return this.logEntry.getMessage();
     }
+
     /**
      * @return The associated commit paths.
      */
     public Map<String, SVNLogEntryPath> getChangedPaths() {
         return this.logEntry.getChangedPaths();
     }
+
     /**
      * @return True if the revision is visible, else false.
      */

@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model;
 
+/**
+ * Position for a review remarks that denotes a specific line in a file.
+ */
 public class FileLinePosition extends Position {
 
     private final String shortName;

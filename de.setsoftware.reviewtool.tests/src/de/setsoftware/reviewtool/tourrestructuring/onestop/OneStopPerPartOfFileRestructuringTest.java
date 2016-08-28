@@ -18,6 +18,9 @@ import de.setsoftware.reviewtool.model.changestructure.Revision;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 
+/**
+ * Tests for {@link OneStopPerPartOfFileRestructuring}.
+ */
 public class OneStopPerPartOfFileRestructuringTest {
 
     private static final Repository REPO = new Repository() {

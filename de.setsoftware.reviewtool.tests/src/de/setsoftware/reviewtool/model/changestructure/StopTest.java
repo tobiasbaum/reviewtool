@@ -6,6 +6,9 @@ import java.util.Arrays;
 
 import org.junit.Test;
 
+/**
+ * Tests for {@link Stop}.
+ */
 public class StopTest {
 
     private static FileInRevision file(String name, int revision) {

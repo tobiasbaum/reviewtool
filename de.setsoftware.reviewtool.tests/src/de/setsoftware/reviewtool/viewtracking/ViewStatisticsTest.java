@@ -15,8 +15,15 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.viewtracking.ViewStatistics.INextStopCallback;
 
+/**
+ * Tests for {@link ViewStatistics}.
+ */
 public class ViewStatisticsTest {
 
+    /**
+     * A stub implementation of {@link INextStopCallback} that saves occured events
+     * for checking.
+     */
     private static final class CallbackStub implements INextStopCallback {
         private Tour tour;
         private boolean wrapped;

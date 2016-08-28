@@ -6,6 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+/**
+ * Tests for {@link Fragment}.
+ */
 public class FragmentTest {
 
     private static FileInRevision file() {

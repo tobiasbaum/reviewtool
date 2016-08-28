@@ -9,6 +9,9 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+/**
+ * Tests for {@link Tour}.
+ */
 public class TourTest {
 
     private static PositionInText pos(int line, int column) {

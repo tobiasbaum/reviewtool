@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model;
 
+/**
+ * Position for a review remarks that denotes a file as a whole.
+ */
 public class FilePosition extends Position {
 
     private final String shortName;

@@ -30,11 +30,11 @@ public class SeparateDiffsStopViewer extends AbstractStopViewer {
         }
     }
 
-   private void createContentLabel(final ViewPart view, final Composite scrollContent, final Stop stop,
-           final FileInRevision oldRevision, final FileInRevision newRevision) {
-       final List<Fragment> oldContent = stop.getContentFor(oldRevision);
-       final List<Fragment> newContent = stop.getContentFor(newRevision);
-       this.createDiffViewer(view, scrollContent, oldRevision, newRevision, oldContent, newContent);
-   }
+    private void createContentLabel(final ViewPart view, final Composite scrollContent, final Stop stop,
+            final FileInRevision oldRevision, final FileInRevision newRevision) {
+        final List<Fragment> oldContent = stop.getContentFor(oldRevision);
+        final List<Fragment> newContent = stop.getContentFor(newRevision);
+        this.createDiffViewer(view, scrollContent, oldRevision, newRevision, oldContent, newContent);
+    }
 
 }

@@ -7,6 +7,9 @@ import org.eclipse.core.runtime.CoreException;
 
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
+/**
+ * Action to reload the markers for the review.
+ */
 public class RefreshReviewMarkersAction extends AbstractHandler {
 
     @Override

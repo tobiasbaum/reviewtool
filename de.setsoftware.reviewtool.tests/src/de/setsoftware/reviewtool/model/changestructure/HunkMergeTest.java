@@ -172,8 +172,9 @@ public class HunkMergeTest {
                 new Fragment(file(), pos(4, 1), pos(6, 0), "C\nD\n")));
         list = list.merge(new Hunk(new Fragment(file(), pos(7, 1), pos(7, 0), ""),
                 new Fragment(file(), pos(7, 1), pos(9, 0), "E\nF\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(8, 0), "B\nX\nC\nD\nY\nE\n"),
-                new Fragment(file(), pos(2, 1), pos(5, 0), "X\nY\nZ\n")));
+        final FileDiff mergedList =
+                list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(8, 0), "B\nX\nC\nD\nY\nE\n"),
+                        new Fragment(file(), pos(2, 1), pos(5, 0), "X\nY\nZ\n")));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0), "X\nY\n"),

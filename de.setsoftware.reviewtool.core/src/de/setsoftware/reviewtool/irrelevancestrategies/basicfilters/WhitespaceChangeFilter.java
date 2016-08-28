@@ -19,7 +19,8 @@ public class WhitespaceChangeFilter implements IIrrelevanceDetermination {
     public boolean isIrrelevant(Change change) {
         if (change instanceof TextualChangeHunk) {
             final TextualChangeHunk hunk = (TextualChangeHunk) change;
-            return this.normalizeWhitespace(hunk.getFromFragment()).equals(this.normalizeWhitespace(hunk.getToFragment()));
+            return this.normalizeWhitespace(hunk.getFromFragment()).equals(
+                    this.normalizeWhitespace(hunk.getToFragment()));
         }
         return false;
     }

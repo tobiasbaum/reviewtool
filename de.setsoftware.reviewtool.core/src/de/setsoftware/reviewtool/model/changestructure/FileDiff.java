@@ -26,7 +26,7 @@ public class FileDiff {
 
     /**
      * @return The hunks this FileDiff object is made of. Later hunks depend on earlier hunks, so they need to be
-     * merged separately to achieve the same result.
+     *          merged separately to achieve the same result.
      */
     List<Hunk> getHunks() {
         return Collections.unmodifiableList(this.hunks);
@@ -69,7 +69,7 @@ public class FileDiff {
      *
      * @param fragments The target fragments to "reach".
      * @return A list of hunks whose target fragments overlap or are adjacent to a collection of given target
-     * fragments.
+     *          fragments.
      */
     public List<Hunk> getHunksForTargets(final Collection<? extends Fragment> fragments) {
         final List<Hunk> result = new ArrayList<>();
@@ -95,8 +95,8 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object.
      */
     FileDiff merge(final Hunk hunkToMerge) throws IncompatibleFragmentException {
-        FileDiff result = new FileDiff();
-        List<Hunk> hunks = new ArrayList<Hunk>();
+        final FileDiff result = new FileDiff();
+        final List<Hunk> hunks = new ArrayList<Hunk>();
         boolean hunkCreated = false;
         for (final Hunk hunk : this.hunks) {
             if (hunk.getTarget().overlaps(hunkToMerge.getSource())) {
@@ -166,8 +166,8 @@ public class FileDiff {
         }
 
         return new Hunk(
-                combineSources(hunkToMerge, sources, targets),
-                combineTargets(hunkToMerge, targets));
+                this.combineSources(hunkToMerge, sources, targets),
+                this.combineTargets(hunkToMerge, targets));
     }
 
     /**
@@ -179,11 +179,11 @@ public class FileDiff {
      * @param targets The target fragments of neighbour hunks.
      * @return A new fragment containing the combined sources.
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object
-     * or if the resulting source parts cannot be combined into one fragment.
+     *              or if the resulting source parts cannot be combined into one fragment.
      */
     private Fragment combineSources(final Hunk hunkToMerge, final FragmentList sources, final FragmentList targets)
             throws IncompatibleFragmentException {
-        FragmentList combinedSources = new FragmentList();
+        final FragmentList combinedSources = new FragmentList();
         for (final Fragment fragment : hunkToMerge.getSource().subtract(targets).getFragments()) {
             combinedSources.addFragment(fragment.adjust(-this.computeDeltaUpTo(fragment.getFrom())));
         }
@@ -204,7 +204,7 @@ public class FileDiff {
      * @param targets The target fragments of neighbour hunks.
      * @return A new fragment containing the combined targets.
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object
-     * or if the resulting target parts cannot be combined into one fragment.
+     *              or if the resulting target parts cannot be combined into one fragment.
      */
     private Fragment combineTargets(final Hunk hunkToMerge, final FragmentList targets)
             throws Error, IncompatibleFragmentException {

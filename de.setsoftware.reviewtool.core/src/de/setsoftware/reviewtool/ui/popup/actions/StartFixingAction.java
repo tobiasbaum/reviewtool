@@ -8,6 +8,9 @@ import org.eclipse.core.runtime.CoreException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
+/**
+ * Action to enter fixing mode.
+ */
 public class StartFixingAction extends AbstractHandler {
 
     @Override

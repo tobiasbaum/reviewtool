@@ -31,8 +31,15 @@ import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 
+/**
+ * Tests for {@link ConfigurationInterpreter}.
+ */
 public class ConfigurationInterpreterTest {
 
+    /**
+     * A stub implementation of {@link IConfigurator} that accumulates
+     * the configuration data for a set of configured element names.
+     */
     private static final class TestConfigurator implements IConfigurator {
         private final Set<String> elementNames;
         private final List<String> result = new ArrayList<>();
@@ -73,6 +80,9 @@ public class ConfigurationInterpreterTest {
 
     }
 
+    /**
+     * A stub implementation of {@link IReviewConfigurable}.
+     */
     private static final class TestConfigurable implements IReviewConfigurable {
 
         @Override

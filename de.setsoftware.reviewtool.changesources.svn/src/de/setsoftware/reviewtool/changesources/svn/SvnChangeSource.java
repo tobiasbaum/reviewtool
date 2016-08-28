@@ -242,8 +242,9 @@ public class SvnChangeSource implements IChangeSource {
 
     private Commit convertToCommit(SvnRevision e) throws SVNException, IOException {
         return ChangestructureFactory.createCommit(
-                String.format("%s (Rev. %s, %s)" + (e.isVisible() ? "" : " [invisible]"), e.getMessage(), e.getRevision(), e.getAuthor()),
-                this.determineChangesInCommit(e), e.isVisible());
+                String.format("%s (Rev. %s, %s)" + (e.isVisible() ? "" : " [invisible]"),
+                        e.getMessage(), e.getRevision(), e.getAuthor()),
+                        this.determineChangesInCommit(e), e.isVisible());
     }
 
     private List<Change> determineChangesInCommit(SvnRevision e)

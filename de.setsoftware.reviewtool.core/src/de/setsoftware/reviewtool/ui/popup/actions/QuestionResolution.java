@@ -12,6 +12,9 @@ import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.AddReplyDialog;
 import de.setsoftware.reviewtool.ui.dialogs.InputDialogCallback;
 
+/**
+ * Action to add a question to a review remark.
+ */
 public class QuestionResolution implements IMarkerResolution {
 
     public static final QuestionResolution INSTANCE = new QuestionResolution();

@@ -27,17 +27,6 @@ public class ReviewRemark {
     }
 
     /**
-     * Creates a review remark for the given line in the given resource and binds it to a marker.
-     */
-    public static ReviewRemark create(
-            ReviewStateManager p, IResource resource, String user, String text, int line, RemarkType type)
-                    throws CoreException {
-        final IMarker marker = resource.createMarker(Constants.REVIEWMARKER_ID);
-        final Position pos = PositionTransformer.toPosition(resource.getFullPath(), line, resource.getWorkspace());
-        return create(p, marker, user, pos, text, type);
-    }
-
-    /**
      * Creates a review remark for the given line in the given file, but does not bind it to a marker (e.g.
      * because the file is not imported in the workspace).
      */
@@ -46,6 +35,17 @@ public class ReviewRemark {
                     throws CoreException {
         final IMarker marker = new DummyMarker(Constants.REVIEWMARKER_ID);
         final Position pos = PositionTransformer.toPosition(path, line, workspace);
+        return create(p, marker, user, pos, text, type);
+    }
+
+    /**
+     * Creates a review remark for the given line in the given resource and binds it to a marker.
+     */
+    public static ReviewRemark create(
+            ReviewStateManager p, IResource resource, String user, String text, int line, RemarkType type)
+                    throws CoreException {
+        final IMarker marker = resource.createMarker(Constants.REVIEWMARKER_ID);
+        final Position pos = PositionTransformer.toPosition(resource.getFullPath(), line, resource.getWorkspace());
         return create(p, marker, user, pos, text, type);
     }
 
@@ -114,6 +114,9 @@ public class ReviewRemark {
         return IMarker.SEVERITY_WARNING;
     }
 
+    /**
+     * Adds a comment/reply to this review remark.
+     */
     public void addComment(String user, String reply) throws CoreException {
         final String oldText = this.marker.getAttribute(IMarker.MESSAGE, "");
         final String newText = oldText + "\n\n" + formatComment(user, reply);
@@ -124,6 +127,9 @@ public class ReviewRemark {
         return (user + ": " + comment).replaceAll("\n+", "\n").trim();
     }
 
+    /**
+     * Returns the comments on this review remark, including the initial remark.
+     */
     public List<ReviewRemarkComment> getComments() {
         final String text = this.marker.getAttribute(IMarker.MESSAGE, "");
         final String[] parts = text.split("\n\n");
@@ -139,6 +145,9 @@ public class ReviewRemark {
         return ret;
     }
 
+    /**
+     * Merges this remark into the existing remarks and saves it to the persistence.
+     */
     public void save() {
         final ReviewData r = this.persistence.getUi().getSyntaxFixer().getCurrentReviewDataParsed(
                 this.persistence, DummyMarker.FACTORY);
@@ -146,6 +155,9 @@ public class ReviewRemark {
         this.persistence.saveCurrentReviewData(r.serialize());
     }
 
+    /**
+     * Returns a String representation of this review remark.
+     */
     public String serialize() {
         final StringBuilder ret = new StringBuilder();
         final List<ReviewRemarkComment> comments = this.getComments();

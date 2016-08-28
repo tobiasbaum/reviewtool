@@ -5,6 +5,9 @@ import static org.junit.Assert.assertEquals;
 import org.eclipse.core.resources.IMarker;
 import org.junit.Test;
 
+/**
+ * Tests for saving/serialising review remarks.
+ */
 public class RemarkSaveTest {
 
     //  Review 1 (Std.rev 12345):
@@ -140,7 +143,8 @@ public class RemarkSaveTest {
     @Test
     public void testWithComments() throws Exception {
         final ReviewStateManager p = createPersistence();
-        final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "stimmt nicht", RemarkType.MUST_FIX);
+        final ReviewRemark r1 =
+                ReviewRemark.create(p, newMarker(), "TB", global(), "stimmt nicht", RemarkType.MUST_FIX);
         r1.addComment("XY", "stimmt doch");
         r1.addComment("VW", "gar nicht");
         r1.save();
@@ -156,7 +160,8 @@ public class RemarkSaveTest {
     @Test
     public void testWithCommentsAndMultipleSaves() throws Exception {
         final ReviewStateManager p = createPersistence();
-        final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", global(), "stimmt nicht", RemarkType.MUST_FIX);
+        final ReviewRemark r1 =
+                ReviewRemark.create(p, newMarker(), "TB", global(), "stimmt nicht", RemarkType.MUST_FIX);
         r1.save();
         r1.addComment("XY", "stimmt doch");
         r1.save();
@@ -223,7 +228,8 @@ public class RemarkSaveTest {
     @Test
     public void testWithFilePosition() throws Exception {
         final ReviewStateManager p = createPersistence();
-        final ReviewRemark r1 = ReviewRemark.create(p, newMarker(), "TB", new FilePosition("xyz.java"), "asdf", RemarkType.MUST_FIX);
+        final ReviewRemark r1 =
+                ReviewRemark.create(p, newMarker(), "TB", new FilePosition("xyz.java"), "asdf", RemarkType.MUST_FIX);
         r1.addComment("NN", "blabla");
         r1.save();
         r1.addComment("MM", "blablub");

@@ -6,6 +6,9 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
+/**
+ * Tests for {@link PositionLookupTable}.
+ */
 public class PositionLookupTableTest {
 
     private static PositionInText pos(int line, int column) {

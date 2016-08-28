@@ -100,7 +100,9 @@ public class ToursInReview {
             ICreateToursUi createUi,
             String ticketKey) {
         final List<Commit> changes = src.getChanges(ticketKey, changeSourceUi);
-        final List<Commit> filteredChanges = filterChanges(irrelevanceDeterminationStrategies, changes, createUi);
+        final List<Commit> visibleChanges = getVisibleChanges(changes);
+        final List<Commit> filteredChanges =
+                filterChanges(irrelevanceDeterminationStrategies, visibleChanges, createUi);
         if (filteredChanges == null) {
             return null;
         }
@@ -114,6 +116,16 @@ public class ToursInReview {
         }
 
         return new ToursInReview(repoChangeHistory, userSelection);
+    }
+
+    private static List<Commit> getVisibleChanges(List<Commit> changes) {
+        final List<Commit> ret = new ArrayList<>();
+        for (final Commit c : changes) {
+            if (c.isVisible()) {
+                ret.add(c);
+            }
+        }
+        return ret;
     }
 
     private static List<Commit> filterChanges(

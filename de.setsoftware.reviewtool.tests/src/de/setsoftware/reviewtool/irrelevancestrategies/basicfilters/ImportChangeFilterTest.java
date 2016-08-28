@@ -9,6 +9,9 @@ import de.setsoftware.reviewtool.model.changestructure.Change;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 
+/**
+ * Tests for {@link ImportChangeFilter}.
+ */
 public class ImportChangeFilterTest {
 
     private static Change change(String from, String to) {
@@ -16,7 +19,11 @@ public class ImportChangeFilterTest {
     }
 
     private static Fragment fragment(String content) {
-        return ChangestructureFactory.createFragment(null, null, null, content);
+        return ChangestructureFactory.createFragment(
+                ChangestructureFactory.createFileInRevision("", null, null),
+                ChangestructureFactory.createPositionInText(1, 1),
+                ChangestructureFactory.createPositionInText(2, 0),
+                content);
     }
 
     @Test

@@ -33,6 +33,10 @@ public class ReviewRound {
         return this.nbr;
     }
 
+    /**
+     * Merges the given review remarks into the remarks for this round: If a similar remark
+     * is existing, it is replaced, otherwise it is added as new.
+     */
     public void merge(ReviewRemark reviewRemark) {
         final int index = this.findSimilar(reviewRemark);
         if (index >= 0) {
@@ -61,6 +65,9 @@ public class ReviewRound {
         return this.remarks.isEmpty();
     }
 
+    /**
+     * Creates a String representation of this review round.
+     */
     public String serialize() {
         final StringBuilder ret = new StringBuilder();
         ret.append("Review ").append(this.nbr).append(":\n");
@@ -86,6 +93,9 @@ public class ReviewRound {
         }
     }
 
+    /**
+     * Parses the string representation of the remark type.
+     */
     public static RemarkType parseType(String string) {
         switch (string) {
         case ALREADY_FIXED_HEADER:
@@ -105,6 +115,10 @@ public class ReviewRound {
         }
     }
 
+    /**
+     * Returns true iff there exist remarks in this review round that still
+     * need fixing.
+     */
     public boolean hasUnresolvedRemarks() {
         for (final ReviewRemark r : this.remarks) {
             if (r.needsFixing()) {
@@ -114,6 +128,9 @@ public class ReviewRound {
         return false;
     }
 
+    /**
+     * Return true iff there are temporary markers in this review round.
+     */
     public boolean hasTemporaryMarkers() {
         for (final ReviewRemark r : this.remarks) {
             if (r.getRemarkType() == RemarkType.TEMPORARY) {
@@ -123,6 +140,10 @@ public class ReviewRound {
         return false;
     }
 
+    /**
+     * Deletes the given remark from this review round.
+     * If it is not contained, nothing happens.
+     */
     public void deleteRemark(ReviewRemark reviewRemark) {
         final int i = this.findSimilar(reviewRemark);
         if (i >= 0) {

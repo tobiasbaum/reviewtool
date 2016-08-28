@@ -9,6 +9,9 @@ import java.util.List;
 
 import org.junit.Test;
 
+/**
+ * Tests for actions on {link FragmentList}s.
+ */
 public class FileDiffTest {
 
     private static FileInRevision file(String name, int revision) {
@@ -59,7 +62,7 @@ public class FileDiffTest {
         final Fragment f3 = new Fragment(file("a.java", 1), pos(4, 1), pos(5, 0), "X\n");
         ff.addFragment(f3);
         ff.coalesce();
-        List<Fragment> expected3 = new ArrayList<>();
+        final List<Fragment> expected3 = new ArrayList<>();
         expected3.add(f1);
         expected3.add(f3);
         expected3.add(f2);

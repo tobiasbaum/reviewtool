@@ -100,10 +100,10 @@ public class Hunk {
     @Override
     public boolean equals(final Object other) {
         if (other instanceof Hunk) {
-            Hunk hunk = (Hunk) other;
-            return this.getClass() == other.getClass() &&
-                    this.source.equals(hunk.getSource()) &&
-                    this.target.equals(hunk.getTarget());
+            final Hunk hunk = (Hunk) other;
+            return this.getClass() == other.getClass()
+                && this.source.equals(hunk.getSource())
+                && this.target.equals(hunk.getTarget());
         } else {
             return false;
         }
@@ -116,7 +116,8 @@ public class Hunk {
 
     @Override
     public String toString() {
-        return "Hunk: " + this.source + "(" + this.source.getContent() + ") --> " + this.target + "(" + this.target.getContent() + ")";
+        return "Hunk: " + this.source + "(" + this.source.getContent() + ") --> "
+                + this.target + "(" + this.target.getContent() + ")";
     }
 
     /**

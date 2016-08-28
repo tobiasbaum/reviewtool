@@ -88,7 +88,7 @@ public class FragmentList {
      * Adds the fragments of some other fragment list to this fragment list.
      * @param fragmentList The other fragment list.
      * @throws IncompatibleFragmentException if some fragment in the other fragment list overlaps some other fragment
-     * in this fragment list.
+     *                                          in this fragment list.
      */
     public void addFragmentList(final FragmentList fragmentList) throws IncompatibleFragmentException {
         for (final Fragment fragment : fragmentList.fragments) {

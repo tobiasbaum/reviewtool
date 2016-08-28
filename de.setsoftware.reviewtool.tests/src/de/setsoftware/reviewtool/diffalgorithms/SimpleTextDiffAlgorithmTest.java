@@ -15,12 +15,19 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
+/**
+ * Tests for {@link SimpleSourceDiffAlgorithm}.
+ */
 public class SimpleTextDiffAlgorithmTest {
 
     private static List<Pair<PositionInText, PositionInText>> determineDiff(String oldContent, String newContent)
             throws Exception {
         return toPositionsInNewFile(new SimpleSourceDiffAlgorithm().determineDiff(
-                null, oldContent.getBytes("UTF-8"), null, newContent.getBytes("UTF-8"), "UTF-8"));
+                ChangestructureFactory.createFileInRevision("", null, null),
+                oldContent.getBytes("UTF-8"),
+                ChangestructureFactory.createFileInRevision("", null, null),
+                newContent.getBytes("UTF-8"),
+                "UTF-8"));
     }
 
     private static List<Pair<PositionInText, PositionInText>> toPositionsInNewFile(
@@ -325,54 +332,54 @@ public class SimpleTextDiffAlgorithmTest {
     @Test
     public void testWhenInDoubtMarkAdditionRangeAtMethodBoundaries() throws Exception {
         final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
-                "package text.xyz.abc;\r\n" +
-                "\r\n" +
-                "import java.util.List;\r\n" +
-                "import java.util.ArrayList;\r\n" +
-                "\r\n" +
-                "public class Testklasse {\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 1.\r\n" +
-                "     */\r\n" +
-                "    public void method1() {\r\n" +
-                "    }\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 2.\r\n" +
-                "     */\r\n" +
-                "    public List<String> method2() {\r\n" +
-                "        return new ArrayList<>();\r\n" +
-                "    }\r\n" +
-                "}\r\n" +
-                "",
-                        "package text.xyz.abc;\r\n" +
-                        "\r\n" +
-                        "import java.util.List;\r\n" +
-                        "import java.util.ArrayList;\r\n" +
-                        "\r\n" +
-                        "public class Testklasse {\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 1.\r\n" +
-                        "     */\r\n" +
-                        "    public void method1() {\r\n" +
-                        "    }\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 1 1/2.\r\n" +
-                        "     */\r\n" +
-                        "    public void methodOneAndAHalf() {\r\n" +
-                        "    }\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 2.\r\n" +
-                        "     */\r\n" +
-                        "    public List<String> method2() {\r\n" +
-                        "        return new ArrayList<>();\r\n" +
-                        "    }\r\n" +
-                        "}\r\n" +
-                        "");
+                "package text.xyz.abc;\r\n"
+                + "\r\n"
+                + "import java.util.List;\r\n"
+                + "import java.util.ArrayList;\r\n"
+                + "\r\n"
+                + "public class Testklasse {\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 1.\r\n"
+                + "     */\r\n"
+                + "    public void method1() {\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 2.\r\n"
+                + "     */\r\n"
+                + "    public List<String> method2() {\r\n"
+                + "        return new ArrayList<>();\r\n"
+                + "    }\r\n"
+                + "}\r\n"
+                + "",
+                        "package text.xyz.abc;\r\n"
+                        + "\r\n"
+                        + "import java.util.List;\r\n"
+                        + "import java.util.ArrayList;\r\n"
+                        + "\r\n"
+                        + "public class Testklasse {\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 1.\r\n"
+                        + "     */\r\n"
+                        + "    public void method1() {\r\n"
+                        + "    }\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 1 1/2.\r\n"
+                        + "     */\r\n"
+                        + "    public void methodOneAndAHalf() {\r\n"
+                        + "    }\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 2.\r\n"
+                        + "     */\r\n"
+                        + "    public List<String> method2() {\r\n"
+                        + "        return new ArrayList<>();\r\n"
+                        + "    }\r\n"
+                        + "}\r\n"
+                        + "");
         assertEquals(Arrays.asList(insertedLines(14, 19)), diff);
     }
 
@@ -380,128 +387,128 @@ public class SimpleTextDiffAlgorithmTest {
     @Test
     public void testWhenInDoubtMarkAdditionRangeAtMethodBoundariesWithDeletion() throws Exception {
         final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
-                "package text.xyz.abc;\r\n" +
-                "\r\n" +
-                "import java.util.List;\r\n" +
-                "import java.util.ArrayList;\r\n" +
-                "\r\n" +
-                "public class Testklasse {\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 1.\r\n" +
-                "     */\r\n" +
-                "    public void method1() {\r\n" +
-                "    }\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 1 1/2.\r\n" +
-                "     */\r\n" +
-                "    public void methodOneAndAHalf() {\r\n" +
-                "    }\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 2.\r\n" +
-                "     */\r\n" +
-                "    public List<String> method2() {\r\n" +
-                "        return new ArrayList<>();\r\n" +
-                "    }\r\n" +
-                "}\r\n" +
-                "",
-                        "package text.xyz.abc;\r\n" +
-                        "\r\n" +
-                        "import java.util.List;\r\n" +
-                        "import java.util.ArrayList;\r\n" +
-                        "\r\n" +
-                        "public class Testklasse {\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 1.\r\n" +
-                        "     */\r\n" +
-                        "    public void method1() {\r\n" +
-                        "    }\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 2.\r\n" +
-                        "     */\r\n" +
-                        "    public List<String> method2() {\r\n" +
-                        "        return new ArrayList<>();\r\n" +
-                        "    }\r\n" +
-                        "}\r\n" +
-                        "");
+                "package text.xyz.abc;\r\n"
+                + "\r\n"
+                + "import java.util.List;\r\n"
+                + "import java.util.ArrayList;\r\n"
+                + "\r\n"
+                + "public class Testklasse {\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 1.\r\n"
+                + "     */\r\n"
+                + "    public void method1() {\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 1 1/2.\r\n"
+                + "     */\r\n"
+                + "    public void methodOneAndAHalf() {\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 2.\r\n"
+                + "     */\r\n"
+                + "    public List<String> method2() {\r\n"
+                + "        return new ArrayList<>();\r\n"
+                + "    }\r\n"
+                + "}\r\n"
+                + "",
+                        "package text.xyz.abc;\r\n"
+                        + "\r\n"
+                        + "import java.util.List;\r\n"
+                        + "import java.util.ArrayList;\r\n"
+                        + "\r\n"
+                        + "public class Testklasse {\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 1.\r\n"
+                        + "     */\r\n"
+                        + "    public void method1() {\r\n"
+                        + "    }\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 2.\r\n"
+                        + "     */\r\n"
+                        + "    public List<String> method2() {\r\n"
+                        + "        return new ArrayList<>();\r\n"
+                        + "    }\r\n"
+                        + "}\r\n"
+                        + "");
         assertEquals(Arrays.asList(deletionAt(14)), diff);
     }
 
     @Test
     public void testWhenInDoubtMarkAdditionRangeAtMethodBoundariesWithMultipleInserts() throws Exception {
         final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
-                "package text.xyz.abc;\r\n" +
-                "\r\n" +
-                "import java.util.List;\r\n" +
-                "import java.util.ArrayList;\r\n" +
-                "\r\n" +
-                "public class Testklasse {\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 1.\r\n" +
-                "     */\r\n" +
-                "    public void method1() {\r\n" +
-                "    }\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 2.\r\n" +
-                "     */\r\n" +
-                "    public List<String> method2() {\r\n" +
-                "        return new ArrayList<>();\r\n" +
-                "    }\r\n" +
-                "\r\n" +
-                "    /**\r\n" +
-                "     * Methode 3.\r\n" +
-                "     */\r\n" +
-                "    public List<String> method3() {\r\n" +
-                "        return new ArrayList<>();\r\n" +
-                "    }\r\n" +
-                "}\r\n" +
-                "",
-                        "package text.xyz.abc;\r\n" +
-                        "\r\n" +
-                        "import java.util.List;\r\n" +
-                        "import java.util.ArrayList;\r\n" +
-                        "\r\n" +
-                        "public class Testklasse {\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 1.\r\n" +
-                        "     */\r\n" +
-                        "    public void method1() {\r\n" +
-                        "    }\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode A.\r\n" +
-                        "     */\r\n" +
-                        "    public void methodA() {\r\n" +
-                        "    }\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 2.\r\n" +
-                        "     */\r\n" +
-                        "    public List<String> method2() {\r\n" +
-                        "        return new ArrayList<>();\r\n" +
-                        "    }\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode B.\r\n" +
-                        "     */\r\n" +
-                        "    public void methodB() {\r\n" +
-                        "    }\r\n" +
-                        "\r\n" +
-                        "    /**\r\n" +
-                        "     * Methode 3.\r\n" +
-                        "     */\r\n" +
-                        "    public List<String> method3() {\r\n" +
-                        "        return new ArrayList<>();\r\n" +
-                        "    }\r\n" +
-                        "}\r\n" +
-                        "");
+                "package text.xyz.abc;\r\n"
+                + "\r\n"
+                + "import java.util.List;\r\n"
+                + "import java.util.ArrayList;\r\n"
+                + "\r\n"
+                + "public class Testklasse {\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 1.\r\n"
+                + "     */\r\n"
+                + "    public void method1() {\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 2.\r\n"
+                + "     */\r\n"
+                + "    public List<String> method2() {\r\n"
+                + "        return new ArrayList<>();\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Methode 3.\r\n"
+                + "     */\r\n"
+                + "    public List<String> method3() {\r\n"
+                + "        return new ArrayList<>();\r\n"
+                + "    }\r\n"
+                + "}\r\n"
+                + "",
+                        "package text.xyz.abc;\r\n"
+                        + "\r\n"
+                        + "import java.util.List;\r\n"
+                        + "import java.util.ArrayList;\r\n"
+                        + "\r\n"
+                        + "public class Testklasse {\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 1.\r\n"
+                        + "     */\r\n"
+                        + "    public void method1() {\r\n"
+                        + "    }\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode A.\r\n"
+                        + "     */\r\n"
+                        + "    public void methodA() {\r\n"
+                        + "    }\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 2.\r\n"
+                        + "     */\r\n"
+                        + "    public List<String> method2() {\r\n"
+                        + "        return new ArrayList<>();\r\n"
+                        + "    }\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode B.\r\n"
+                        + "     */\r\n"
+                        + "    public void methodB() {\r\n"
+                        + "    }\r\n"
+                        + "\r\n"
+                        + "    /**\r\n"
+                        + "     * Methode 3.\r\n"
+                        + "     */\r\n"
+                        + "    public List<String> method3() {\r\n"
+                        + "        return new ArrayList<>();\r\n"
+                        + "    }\r\n"
+                        + "}\r\n"
+                        + "");
         assertEquals(Arrays.asList(insertedLines(14, 19), insertedLines(27, 32)), diff);
     }
 
@@ -512,7 +519,7 @@ public class SimpleTextDiffAlgorithmTest {
         }
     }
 
-    public void doTestNoExceptions(int seed) throws Exception {
+    private void doTestNoExceptions(int seed) throws Exception {
         try {
             final Random r = new Random(seed);
             final List<String> randomLines = createRandomLines(r);

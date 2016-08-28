@@ -23,6 +23,7 @@ public class Stop implements IReviewElement {
 
     private final FileInRevision mostRecentFile;
     private final Fragment mostRecentFragment;
+    //TODO does this flag make sense? visibility is an attribute of a tour (if at all)
     private final boolean isVisible;
 
     private final boolean irrelevantForReview;
