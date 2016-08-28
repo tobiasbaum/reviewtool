@@ -1,7 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.List;
-
 /**
  * Interface for strategies to determine the changes for a ticket, separated into commits.
  */
@@ -10,12 +8,6 @@ public interface IChangeSource {
     /**
      * Returns all changes (that are relevant for the review tool) for the ticket with the given key.
      */
-    public abstract List<Commit> getChanges(String key, IChangeSourceUi ui);
-
-    /**
-     * Creates a fragment tracer that is compatible with this change source.
-     * @param repoChangeHistory The {@link RepositoryChangeHistory} to use.
-     */
-    public abstract IFragmentTracer createTracer(RepositoryChangeHistory repoChangeHistory);
+    public abstract IChangeData getChanges(String key, IChangeSourceUi ui);
 
 }

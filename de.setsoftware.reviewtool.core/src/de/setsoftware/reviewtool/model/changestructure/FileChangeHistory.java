@@ -36,27 +36,10 @@ public class FileChangeHistory {
     }
 
     /**
-     * @return The first revision of the file.
-     */
-    public FileInRevision getFirstRevision() {
-        return this.revisions.isEmpty() ? null : this.revisions.get(0);
-    }
-
-    /**
      * @return The last revision of the file.
      */
     public FileInRevision getLastRevision() {
         return this.revisions.isEmpty() ? null : this.revisions.get(this.revisions.size() - 1);
-    }
-
-    /**
-     * Adds a binary file to this change history.
-     */
-    public void add(final FileInRevision sourceRev) {
-        if (!this.revisions.contains(sourceRev)) {
-            this.revisions.add(sourceRev);
-            this.isSorted = false;
-        }
     }
 
     /**
@@ -65,7 +48,10 @@ public class FileChangeHistory {
      */
     public void add(final Hunk hunk) {
         final FileInRevision sourceRev = hunk.getSource().getFile();
-        this.add(sourceRev);
+        if (!this.revisions.contains(sourceRev)) {
+            this.revisions.add(sourceRev);
+            this.isSorted = false;
+        }
         this.history.put(sourceRev, hunk);
     }
 

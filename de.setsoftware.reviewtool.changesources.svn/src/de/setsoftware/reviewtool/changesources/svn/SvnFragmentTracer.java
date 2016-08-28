@@ -15,10 +15,12 @@ import de.setsoftware.reviewtool.model.changestructure.RepositoryChangeHistory;
  */
 public class SvnFragmentTracer implements IFragmentTracer {
 
-    final RepositoryChangeHistory repoChangeHistory;
+    private final RepositoryChangeHistory repoChangeHistory;
+    private final FileHistoryGraph fileHistory;
 
-    public SvnFragmentTracer(final RepositoryChangeHistory repoChangeHistory) {
+    public SvnFragmentTracer(final RepositoryChangeHistory repoChangeHistory, FileHistoryGraph fileHistory) {
         this.repoChangeHistory = repoChangeHistory;
+        this.fileHistory = fileHistory;
     }
 
     @Override
@@ -31,7 +33,7 @@ public class SvnFragmentTracer implements IFragmentTracer {
                 if (hunk != null) {
                     final Fragment lastFragment = hunk.getTarget();
                     return ChangestructureFactory.createFragment(
-                            changeHistory.getLastRevision(),
+                            this.traceFile(fragment.getFile()),
                             lastFragment.getFrom(),
                             lastFragment.getTo(),
                             lastFragment.getContent());
@@ -52,8 +54,10 @@ public class SvnFragmentTracer implements IFragmentTracer {
 
     @Override
     public FileInRevision traceFile(FileInRevision file) {
-        final FileChangeHistory history = this.repoChangeHistory.getHistory(file);
-        assert history != null : "no history for file " + file;
-        return history.getLastRevision();
+        final FileInRevision latestRepoFile = this.fileHistory.getLatestFiles(file).get(0);
+        return ChangestructureFactory.createFileInRevision(
+                latestRepoFile.getPath(),
+                ChangestructureFactory.createLocalRevision(),
+                latestRepoFile.getRepository());
     }
 }

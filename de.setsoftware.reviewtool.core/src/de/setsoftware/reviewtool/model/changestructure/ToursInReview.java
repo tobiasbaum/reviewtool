@@ -99,33 +99,21 @@ public class ToursInReview {
             List<? extends ITourRestructuring> tourRestructuringStrategies,
             ICreateToursUi createUi,
             String ticketKey) {
-        final List<Commit> changes = src.getChanges(ticketKey, changeSourceUi);
-        final List<Commit> visibleChanges = getVisibleChanges(changes);
+        final IChangeData changes = src.getChanges(ticketKey, changeSourceUi);
         final List<Commit> filteredChanges =
-                filterChanges(irrelevanceDeterminationStrategies, visibleChanges, createUi);
+                filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(), createUi);
         if (filteredChanges == null) {
             return null;
         }
 
-        final RepositoryChangeHistory repoChangeHistory = new RepositoryChangeHistory(changes);
-        final List<Tour> tours = toTours(filteredChanges, src.createTracer(repoChangeHistory));
+        final List<Tour> tours = toTours(filteredChanges, changes.createTracer());
         final List<? extends Tour> userSelection =
                 determinePossibleRestructurings(tourRestructuringStrategies, tours, createUi);
         if (userSelection == null) {
             return null;
         }
 
-        return new ToursInReview(repoChangeHistory, userSelection);
-    }
-
-    private static List<Commit> getVisibleChanges(List<Commit> changes) {
-        final List<Commit> ret = new ArrayList<>();
-        for (final Commit c : changes) {
-            if (c.isVisible()) {
-                ret.add(c);
-            }
-        }
-        return ret;
+        return new ToursInReview(changes.createChangeHistory(), userSelection);
     }
 
     private static List<Commit> filterChanges(

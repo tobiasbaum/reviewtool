@@ -10,7 +10,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -19,10 +18,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNProperties;
@@ -42,11 +39,10 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.changestructure.IChangeData;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
-import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.RepositoryChangeHistory;
 
 /**
  * A simple change source that loads the changes from subversion.
@@ -116,41 +112,13 @@ public class SvnChangeSource implements IChangeSource {
                 Pattern.DOTALL);
     }
 
-    /**
-     * Handler that filters log entries with the given pattern.
-     */
-    private class LookupHandler implements ISVNLogEntryHandler {
-
-        private final Pattern pattern;
-        private final List<SvnRevision> matchingEntries = new ArrayList<>();
-        private SvnRepo currentRoot;
-
-        public LookupHandler(Pattern patternForKey) {
-            this.pattern = patternForKey;
-        }
-
-        public void setCurrentRepo(SvnRepo repo) {
-            this.currentRoot = repo;
-        }
-
-        @Override
-        public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
-            if (logEntry.getMessage() != null && this.pattern.matcher(logEntry.getMessage()).matches()) {
-                assert this.currentRoot != null;
-                this.matchingEntries.add(new SvnRevision(this.currentRoot, logEntry, true));
-            }
-        }
-
-    }
-
     @Override
-    public List<Commit> getChanges(String key, IChangeSourceUi ui) {
+    public IChangeData getChanges(String key, IChangeSourceUi ui) {
         try {
-            final List<SvnRevision> revisions = SvnRevisionCompleter.complete(this.mgr,
-                    this.determineRelevantRevisions(key));
-            this.sortByDate(revisions);
+            final FileHistoryGraph historyGraph = new FileHistoryGraph();
+            final List<SvnRevision> revisions = this.determineRelevantRevisions(key, historyGraph);
             this.checkWorkingCopiesUpToDate(revisions, ui);
-            return this.convertToChanges(revisions);
+            return new SvnChangeData(this.convertToChanges(revisions), historyGraph);
         } catch (final SVNException | IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -191,8 +159,9 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private List<SvnRevision> determineRelevantRevisions(String key) throws SVNException {
-        final LookupHandler handler = new LookupHandler(this.createPatternForKey(key));
+    private List<SvnRevision> determineRelevantRevisions(
+            final String key, FileHistoryGraph historyGraphBuffer) throws SVNException {
+        final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
             final SVNURL rootUrl = this.mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
             handler.setCurrentRepo(new SvnRepo(
@@ -215,7 +184,7 @@ public class SvnChangeSource implements IChangeSource {
                     new String[0],
                     handler);
         }
-        return handler.matchingEntries;
+        return handler.determineRelevantRevisions(historyGraphBuffer);
     }
 
     private int determineCheckoutPrefix(File workingCopyRoot, SVNURL rootUrl) throws SVNException {
@@ -226,15 +195,6 @@ public class SvnChangeSource implements IChangeSource {
             i++;
         }
         return i;
-    }
-
-    private void sortByDate(List<SvnRevision> revisions) {
-        Collections.sort(revisions, new Comparator<SvnRevision>() {
-            @Override
-            public int compare(SvnRevision o1, SvnRevision o2) {
-                return o1.getDate().compareTo(o2.getDate());
-            }
-        });
     }
 
     private List<Commit> convertToChanges(List<SvnRevision> revisions)
@@ -414,11 +374,6 @@ public class SvnChangeSource implements IChangeSource {
         }
         repo.getFile(path, revision, null, contents);
         return contents.toByteArray();
-    }
-
-    @Override
-    public IFragmentTracer createTracer(RepositoryChangeHistory repoChangeHistory) {
-        return new SvnFragmentTracer(repoChangeHistory);
     }
 
 }
