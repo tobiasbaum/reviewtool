@@ -1,6 +1,6 @@
 <reviewToolConfig>
   <versionCheck minVersion="1.0.0" />
-  <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" />
+  <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" maxTextDiffFileSizeThreshold="1048576" />
   <fileTicketStore defaultReviewer="${User-ID}" directory="C:\Temp\reviewData"/>
   <hackystatTelemetry dir="C:\Temp\hackybuffer" optOut="${Telemetrie OptOut}"/>
   <stopViewer type="combined"/>

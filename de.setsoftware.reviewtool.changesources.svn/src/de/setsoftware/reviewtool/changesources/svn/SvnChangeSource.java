@@ -59,9 +59,14 @@ public class SvnChangeSource implements IChangeSource {
     private final Set<File> workingCopyRoots;
     private final String logMessagePattern;
     private final SVNClientManager mgr = SVNClientManager.newInstance();
+    private final long maxTextDiffThreshold;
 
     public SvnChangeSource(
-            List<File> projectRoots, String logMessagePattern, String user, String pwd) {
+            List<File> projectRoots,
+            String logMessagePattern,
+            String user,
+            String pwd,
+            long maxTextDiffThreshold) {
         this.mgr.setAuthenticationManager(new DefaultSVNAuthenticationManager(
                 null, false, user, pwd.toCharArray(), null, null));
         this.workingCopyRoots = this.determineWorkingCopyRoots(projectRoots);
@@ -69,6 +74,7 @@ public class SvnChangeSource implements IChangeSource {
         this.logMessagePattern = logMessagePattern;
         //check that the pattern can be parsed
         this.createPatternForKey("TEST-123");
+        this.maxTextDiffThreshold = maxTextDiffThreshold;
     }
 
     private Set<File> determineWorkingCopyRoots(List<File> projectRoots) {
@@ -296,11 +302,11 @@ public class SvnChangeSource implements IChangeSource {
             throws SVNException, IOException {
         final String oldPath = this.determineOldPath(entryInfo);
         final byte[] oldFileContent = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
-        if (this.contentLooksBinary(oldFileContent)) {
+        if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
         final byte[] newFileContent = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
-        if (this.contentLooksBinary(newFileContent)) {
+        if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
 

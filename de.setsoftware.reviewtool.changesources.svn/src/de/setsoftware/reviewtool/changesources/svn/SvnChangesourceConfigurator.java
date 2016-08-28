@@ -39,7 +39,9 @@ public class SvnChangesourceConfigurator implements IConfigurator {
         final String user = xml.getAttribute("user");
         final String pwd = xml.getAttribute("password");
         final String pattern = xml.getAttribute("pattern");
-        configurable.setChangeSource(new SvnChangeSource(projectDirs, pattern, user, pwd));
+        final String maxTextDiffThreshold = xml.getAttribute("maxTextDiffFileSizeThreshold");
+        configurable.setChangeSource(new SvnChangeSource(
+                projectDirs, pattern, user, pwd, Long.parseLong(maxTextDiffThreshold)));
     }
 
 }
