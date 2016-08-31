@@ -172,7 +172,9 @@ public class JiraPersistence implements IReviewPersistence {
     }
 
     private String getToUser(JsonValue v) {
-        return v.asObject().get("author").asObject().get("name").asString();
+        final JsonValue author = v.asObject().get("author");
+        final JsonValue authorName = author == null ? null : author.asObject().get("name");
+        return authorName == null ? "" : authorName.toString();
     }
 
     private JsonArray getHistories(JsonObject ticket) {
@@ -265,7 +267,10 @@ public class JiraPersistence implements IReviewPersistence {
         final JsonArray histories = JiraPersistence.this.getHistories(ticket);
         for (final JsonValue v : histories) {
             if (this.isToReview(v)) {
-                reviewers.add(this.getToUser(v).toUpperCase());
+                final String reviewer = this.getToUser(v);
+                if (!reviewer.isEmpty()) {
+                    reviewers.add(reviewer.toUpperCase());
+                }
             }
         }
         return reviewers;
