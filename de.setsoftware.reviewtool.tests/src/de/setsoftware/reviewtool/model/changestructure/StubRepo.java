@@ -18,4 +18,9 @@ public final class StubRepo extends Repository {
     public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
         return this.getSmallestOfComparableRevisions(revisions);
     }
+
+    @Override
+    public byte[] getFileContents(final String path, final RepoRevision revision) {
+        return new byte[0];
+    }
 }

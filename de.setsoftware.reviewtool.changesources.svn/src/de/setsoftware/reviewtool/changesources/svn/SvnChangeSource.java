@@ -41,14 +41,12 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.IChangeData;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
-import de.setsoftware.reviewtool.model.changestructure.IContentSource;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.Repository;
 
 /**
  * A simple change source that loads the changes from subversion.
  */
-public class SvnChangeSource implements IChangeSource, IContentSource {
+public class SvnChangeSource implements IChangeSource {
 
     private static final String KEY_PLACEHOLDER = "${key}";
     private static final int LOOKUP_LIMIT = 1000;
@@ -57,7 +55,6 @@ public class SvnChangeSource implements IChangeSource, IContentSource {
     private final String logMessagePattern;
     private final SVNClientManager mgr = SVNClientManager.newInstance();
     private final long maxTextDiffThreshold;
-    private final SvnFileCache fileCache;
 
     public SvnChangeSource(
             List<File> projectRoots,
@@ -73,8 +70,6 @@ public class SvnChangeSource implements IChangeSource, IContentSource {
         //check that the pattern can be parsed
         this.createPatternForKey("TEST-123");
         this.maxTextDiffThreshold = maxTextDiffThreshold;
-
-        this.fileCache = new SvnFileCache(this.mgr);
     }
 
     private Set<File> determineWorkingCopyRoots(List<File> projectRoots) {
@@ -169,6 +164,7 @@ public class SvnChangeSource implements IChangeSource, IContentSource {
         for (final File workingCopyRoot : this.workingCopyRoots) {
             final SVNURL rootUrl = this.mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
             handler.setCurrentRepo(new SvnRepo(
+                    this.mgr,
                     workingCopyRoot,
                     rootUrl,
                     this.determineCheckoutPrefix(workingCopyRoot, rootUrl)));
@@ -247,9 +243,9 @@ public class SvnChangeSource implements IChangeSource, IContentSource {
             final boolean isVisible) {
         final String oldPath = this.determineOldPath(entryInfo);
         final FileInRevision oldFileInfo =
-                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo, this);
+                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo);
         final FileInRevision newFileInfo =
-                ChangestructureFactory.createFileInRevision(entryInfo.getPath(), this.revision(revision), repo, this);
+                ChangestructureFactory.createFileInRevision(entryInfo.getPath(), this.revision(revision), repo);
         return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo, false, isVisible);
     }
 
@@ -265,23 +261,22 @@ public class SvnChangeSource implements IChangeSource, IContentSource {
             final boolean isVisible)
             throws IOException {
         final String oldPath = this.determineOldPath(entryInfo);
-        final byte[] oldFileContent = this.fileCache.getFileContents(repoUrl, oldPath, revision.getNumber() - 1);
+        final byte[] oldFileContent = repoUrl.getFileContents(oldPath, this.previousRevision(revision));
         if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
-        final byte[] newFileContent = this.fileCache.getFileContents(repoUrl, entryInfo.getPath(),
-                revision.getNumber());
+        final byte[] newFileContent = repoUrl.getFileContents(entryInfo.getPath(), this.revision(revision));
         if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
 
 
         final FileInRevision oldFileInfo =
-                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repoUrl, this);
+                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repoUrl);
         //in case of deletions, the path is null, but FileInRevision does not allow null paths
         final String newPath = entryInfo.getPath() != null ? entryInfo.getPath() : oldPath;
         final FileInRevision newFileInfo =
-                ChangestructureFactory.createFileInRevision(newPath, this.revision(revision), repoUrl, this);
+                ChangestructureFactory.createFileInRevision(newPath, this.revision(revision), repoUrl);
         final List<Change> ret = new ArrayList<>();
         final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
         final List<Pair<Fragment, Fragment>> changes = diffAlgorithm.determineDiff(
@@ -369,15 +364,6 @@ public class SvnChangeSource implements IChangeSource, IContentSource {
         }
 
         return ret;
-    }
-
-    @Override
-    public byte[] getContents(String path, RepoRevision revision, Repository repository) {
-        if (repository instanceof SvnRepo) {
-            final SvnRepo repo = (SvnRepo) repository;
-            return this.fileCache.getFileContents(repo, path, (Long) revision.getId());
-        }
-        return null;
     }
 
 }

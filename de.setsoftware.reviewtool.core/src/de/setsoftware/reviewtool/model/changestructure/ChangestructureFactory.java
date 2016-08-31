@@ -26,11 +26,6 @@ public class ChangestructureFactory {
         return new FileInRevision(path, revision, repository);
     }
 
-    public static FileInRevision createFileInRevision(final String path, final Revision revision,
-            final Repository repository, final IContentSource contentSource) {
-        return new FileInRevision(path, revision, repository, contentSource);
-    }
-
     public static Fragment createFragment(FileInRevision file, PositionInText from, PositionInText to, String content) {
         return new Fragment(file, from, to, content);
     }

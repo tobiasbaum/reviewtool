@@ -21,6 +21,14 @@ public abstract class Repository {
     public abstract Revision getSmallestRevision(Collection<? extends Revision> revisions);
 
     /**
+     * Returns the contents of some revisioned file in the repository.
+     * @param path The path to the file.
+     * @param revision The revision of the file. This is also used as peg revision of the path passed above.
+     * @return The file contents as a byte array or null if an error occurs.
+     */
+    public abstract byte[] getFileContents(String path, RepoRevision revision);
+
+    /**
      * Simple implementation for {@link #getSmallestRevision} that uses a comparable revision number.
      */
     protected final Revision getSmallestOfComparableRevisions(Collection<? extends Revision> revisions) {

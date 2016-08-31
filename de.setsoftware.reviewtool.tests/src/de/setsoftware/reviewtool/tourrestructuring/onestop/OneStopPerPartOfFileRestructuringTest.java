@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
+import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.Repository;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -32,6 +33,11 @@ public class OneStopPerPartOfFileRestructuringTest {
         @Override
         public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
             return this.getSmallestOfComparableRevisions(revisions);
+        }
+
+        @Override
+        public byte[] getFileContents(final String path, final RepoRevision revision) {
+            return new byte[0];
         }
     };
 

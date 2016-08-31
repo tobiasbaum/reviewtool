@@ -26,18 +26,11 @@ public class FileInRevision {
     private final Revision revision;
     private final Repository repo;
     private Path localPath;
-    private final IContentSource contentSource;
 
     FileInRevision(String path, Revision revision, Repository repository) {
-        this(path, revision, repository, null);
-    }
-
-    FileInRevision(final String path, final Revision revision, final Repository repository,
-            final IContentSource contentSource) {
         this.path = path;
         this.revision = revision;
         this.repo = repository;
-        this.contentSource = contentSource;
     }
 
     /**
@@ -75,12 +68,8 @@ public class FileInRevision {
 
             @Override
             public byte[] handleRepoRevision(RepoRevision revision) {
-                if (FileInRevision.this.contentSource != null && FileInRevision.this.revision instanceof RepoRevision) {
-                    return FileInRevision.this.contentSource.getContents(FileInRevision.this.path,
-                            (RepoRevision) FileInRevision.this.revision, FileInRevision.this.repo);
-                } else {
-                    return null;
-                }
+                return FileInRevision.this.repo.getFileContents(FileInRevision.this.path,
+                            (RepoRevision) FileInRevision.this.revision);
             }
 
         });
