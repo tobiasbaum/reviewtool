@@ -88,12 +88,21 @@ class MutableTour implements IReviewElement {
     }
 
     private StopInTour getStopToMergeWith(Stop s, List<MutableTour> mutableTours, int excludedIndex) {
+        // try to merge with stops of later tours
         for (int tourIndex = excludedIndex + 1; tourIndex < mutableTours.size(); tourIndex++) {
             final StopInTour mergeWith = mutableTours.get(tourIndex).getStopToMergeWith(s);
             if (mergeWith != null) {
                 return mergeWith;
             }
         }
+        // try to merge with stops in this tour
+        {
+            final StopInTour mergeWith = mutableTours.get(excludedIndex).getStopToMergeWith(s);
+            if (mergeWith != null) {
+                return mergeWith;
+            }
+        }
+        // try to merge with stops of earlier tours (only necessary for resolving complete tours)
         for (int tourIndex = excludedIndex - 1; tourIndex >= 0; tourIndex--) {
             final StopInTour mergeWith = mutableTours.get(tourIndex).getStopToMergeWith(s);
             if (mergeWith != null) {
@@ -105,7 +114,8 @@ class MutableTour implements IReviewElement {
 
     private StopInTour getStopToMergeWith(Stop s) {
         for (int stopIndex = 0; stopIndex < this.stops.size(); stopIndex++) {
-            if (this.stops.get(stopIndex).canBeMergedWith(s)) {
+            final Stop stop = this.stops.get(stopIndex);
+            if (!s.equals(stop) && stop.canBeMergedWith(s)) {
                 return new StopInTour(this, stopIndex);
             }
         }
