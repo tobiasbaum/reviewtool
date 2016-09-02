@@ -90,7 +90,9 @@ class FileHistoryGraph {
         if (node == null) {
             return Collections.singletonList(file);
         } else if (node.getTargets().isEmpty()) {
-            return Collections.singletonList(node.getSource());
+            return Collections.singletonList(ChangestructureFactory.createFileInRevision(node.getSource().getPath(),
+                    ChangestructureFactory.createRepoRevision(this.getRevision(node.getSource()) - 1),
+                    node.getSource().getRepository()));
         } else {
             final List<FileInRevision> ret = new ArrayList<>();
             for (final FileInRevision target : node.getTargets()) {
