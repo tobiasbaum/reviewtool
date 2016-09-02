@@ -6,7 +6,9 @@ import java.nio.file.Paths;
 import java.util.Collection;
 
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.wc.SVNClientManager;
 
+import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.Repository;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
 
@@ -18,11 +20,13 @@ public class SvnRepo extends Repository {
     private final File workingCopyRoot;
     private final SVNURL remoteUrl;
     private final int checkoutPrefix;
+    private final SvnFileCache fileCache;
 
-    public SvnRepo(File workingCopyRoot, SVNURL rootUrl, int checkoutPrefix) {
+    public SvnRepo(final SVNClientManager mgr, File workingCopyRoot, SVNURL rootUrl, int checkoutPrefix) {
         this.workingCopyRoot = workingCopyRoot;
         this.remoteUrl = rootUrl;
         this.checkoutPrefix = checkoutPrefix;
+        this.fileCache = new SvnFileCache(mgr, this);
     }
 
     public SVNURL getRemoteUrl() {
@@ -51,6 +55,11 @@ public class SvnRepo extends Repository {
 
         return probableFile.toString();
 
+    }
+
+    @Override
+    public byte[] getFileContents(final String path, final RepoRevision revision) {
+        return this.fileCache.getFileContents(path, (Long) revision.getId());
     }
 
     private File combineWcRootAndSuffix(final Path p, int prefixLength) {

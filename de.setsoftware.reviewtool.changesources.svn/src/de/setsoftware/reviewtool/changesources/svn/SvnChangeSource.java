@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -165,6 +164,7 @@ public class SvnChangeSource implements IChangeSource {
         for (final File workingCopyRoot : this.workingCopyRoots) {
             final SVNURL rootUrl = this.mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
             handler.setCurrentRepo(new SvnRepo(
+                    this.mgr,
                     workingCopyRoot,
                     rootUrl,
                     this.determineCheckoutPrefix(workingCopyRoot, rootUrl)));
@@ -259,13 +259,13 @@ public class SvnChangeSource implements IChangeSource {
 
     private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo,
             final boolean isVisible)
-            throws SVNException, IOException {
+            throws IOException {
         final String oldPath = this.determineOldPath(entryInfo);
-        final byte[] oldFileContent = this.loadFile(repoUrl, oldPath, revision.getNumber() - 1);
+        final byte[] oldFileContent = repoUrl.getFileContents(oldPath, this.previousRevision(revision));
         if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
-        final byte[] newFileContent = this.loadFile(repoUrl, entryInfo.getPath(), revision.getNumber());
+        final byte[] newFileContent = repoUrl.getFileContents(entryInfo.getPath(), this.revision(revision));
         if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
         }
@@ -364,16 +364,6 @@ public class SvnChangeSource implements IChangeSource {
         }
 
         return ret;
-    }
-
-    private byte[] loadFile(SvnRepo repoUrl, String path, long revision) throws SVNException {
-        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.getRemoteUrl(), true);
-        final ByteArrayOutputStream contents = new ByteArrayOutputStream();
-        if (repo.checkPath(path, revision) != SVNNodeKind.FILE) {
-            return new byte[0];
-        }
-        repo.getFile(path, revision, null, contents);
-        return contents.toByteArray();
     }
 
 }

@@ -34,7 +34,7 @@ public class SeparateDiffsStopViewer extends AbstractStopViewer {
             final FileInRevision oldRevision, final FileInRevision newRevision) {
         final List<Fragment> oldContent = stop.getContentFor(oldRevision);
         final List<Fragment> newContent = stop.getContentFor(newRevision);
-        this.createDiffViewer(view, scrollContent, oldRevision, newRevision, oldContent, newContent);
+        this.createDiffViewer(view, scrollContent, oldRevision, newRevision, oldContent, newContent, null, null);
     }
 
 }

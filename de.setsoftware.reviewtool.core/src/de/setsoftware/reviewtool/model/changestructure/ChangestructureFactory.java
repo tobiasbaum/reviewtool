@@ -41,4 +41,8 @@ public class ChangestructureFactory {
     public static PositionInText createPositionInText(int line, int column) {
         return new PositionInText(line, column);
     }
+
+    public static PositionInText createPositionInText(int line, int column, int absoluteOffset) {
+        return new PositionInText(line, column, absoluteOffset);
+    }
 }

@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,6 +46,33 @@ public class FileInRevision {
 
     public Repository getRepository() {
         return this.repo;
+    }
+
+    /**
+     * Returns this revisioned file's contents.
+     * @return The file contents or null if an error occurs.
+     */
+    public byte[] getContents() {
+        return this.revision.accept(new RevisionVisitor<byte[]>() {
+
+            @Override
+            public byte[] handleLocalRevision(LocalRevision revision) {
+                final IPath localPath = FileInRevision.this.toLocalPath();
+                final File file = localPath.toFile();
+                try {
+                    return Files.readAllBytes(file.toPath());
+                } catch (final IOException e) {
+                    return null;
+                }
+            }
+
+            @Override
+            public byte[] handleRepoRevision(RepoRevision revision) {
+                return FileInRevision.this.repo.getFileContents(FileInRevision.this.path,
+                            (RepoRevision) FileInRevision.this.revision);
+            }
+
+        });
     }
 
     @Override
