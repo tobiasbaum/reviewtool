@@ -113,13 +113,18 @@
                </with>
              </visibleWhen>
 	   </command>
-	   <command commandId="de.setsoftware.reviewtool.commands.markAsChecked"
-	   		 label="Mark/Unmark explicitly checked" 
-	   		 style="push">
-	   		 <!--<visibleWhen>
-               <adapt type="de.setsoftware.reviewtool.model.changestructure.Stop" />
-             </visibleWhen>-->
-	   </command>
+       <command commandId="de.setsoftware.reviewtool.commands.markAsChecked"
+             label="Mark/Unmark explicitly checked"
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.changestructure.Stop" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
 	 </menuContribution>
    </extension>
    <extension point="org.eclipse.ui.commands">
