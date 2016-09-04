@@ -290,11 +290,13 @@ public class ReviewPlugin implements IReviewConfigurable {
                 this.persistence.getCurrentRound());
         this.clearMarkers();
 
-        final boolean toursOk = this.loadToursAndCreateMarkers();
-        if (!toursOk) {
-            this.setMode(Mode.IDLE);
-            this.toursInReview = null;
-            return;
+        if (targetMode == Mode.REVIEWING) {
+            final boolean toursOk = this.loadToursAndCreateMarkers();
+            if (!toursOk) {
+                this.setMode(Mode.IDLE);
+                this.toursInReview = null;
+                return;
+            }
         }
 
         final ReviewData currentReviewData = CorrectSyntaxDialog.getCurrentReviewDataParsed(
