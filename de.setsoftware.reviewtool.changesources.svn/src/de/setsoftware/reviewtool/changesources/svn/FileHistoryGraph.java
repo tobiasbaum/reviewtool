@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Multimap;
@@ -44,38 +43,23 @@ class FileHistoryGraph {
             this.targets.add(fileTo);
         }
 
-        public void makeDeletion() {
-            final Iterator<FileInRevision> iter = this.targets.iterator();
-            while (iter.hasNext()) {
-                final FileInRevision target = iter.next();
-                if (target.getPath().equals(this.source.getPath())) {
-                    iter.remove();
-                }
-            }
-        }
-
     }
 
     private final Multimap<Pair<String, Repository>, FileHistoryNode> index = new Multimap<>();
 
     public void addDeletion(String path, Revision revision, Repository repo) {
         final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
-        final FileHistoryNode node = this.getNodeForExactRevision(file);
-        if (node == null) {
-            this.index.put(this.createKey(file), new FileHistoryNode(file));
-        } else {
-            node.makeDeletion();
-        }
+        assert this.getNodeForExactRevision(file) == null;
+        this.index.put(this.createKey(file), new FileHistoryNode(file));
     }
 
     public void addCopy(
-            String pathFrom, String pathTo, Revision revision, Repository repo) {
-        final FileInRevision fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revision, repo);
-        final FileInRevision fileTo = ChangestructureFactory.createFileInRevision(pathTo, revision, repo);
+            String pathFrom, String pathTo, Revision revisionFrom, Revision revisionTo, Repository repo) {
+        final FileInRevision fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom, repo);
+        final FileInRevision fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo, repo);
         FileHistoryNode node = this.getNodeForExactRevision(fileFrom);
         if (node == null) {
             node = new FileHistoryNode(fileFrom);
-            node.addTarget(ChangestructureFactory.createFileInRevision(pathFrom, revision, repo));
             this.index.put(this.createKey(fileFrom), node);
         }
         node.addTarget(fileTo);
@@ -106,7 +90,9 @@ class FileHistoryGraph {
         if (node == null) {
             return Collections.singletonList(file);
         } else if (node.getTargets().isEmpty()) {
-            return Collections.singletonList(node.getSource());
+            return Collections.singletonList(ChangestructureFactory.createFileInRevision(node.getSource().getPath(),
+                    ChangestructureFactory.createRepoRevision(this.getRevision(node.getSource()) - 1),
+                    node.getSource().getRepository()));
         } else {
             final List<FileInRevision> ret = new ArrayList<>();
             for (final FileInRevision target : node.getTargets()) {

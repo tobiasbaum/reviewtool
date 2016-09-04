@@ -97,6 +97,7 @@ class RelevantRevisionLookupHandler implements ISVNLogEntryHandler {
                     historyGraphBuffer.addCopy(
                             e.getValue().getCopyPath(),
                             e.getKey(),
+                            ChangestructureFactory.createRepoRevision(e.getValue().getCopyRevision()),
                             ChangestructureFactory.createRepoRevision(revision.getRevision()),
                             revision.getRepository());
                 }
@@ -114,6 +115,7 @@ class RelevantRevisionLookupHandler implements ISVNLogEntryHandler {
                 historyGraphBuffer.addCopy(
                         e.getValue().getCopyPath(),
                         e.getKey(),
+                        ChangestructureFactory.createRepoRevision(e.getValue().getCopyRevision()),
                         ChangestructureFactory.createRepoRevision(revision.getRevision()),
                         revision.getRepository());
             }
