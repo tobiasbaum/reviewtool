@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Multimap;
@@ -43,16 +44,36 @@ class FileHistoryGraph {
             this.targets.add(fileTo);
         }
 
+        public void makeDeletion() {
+            final Iterator<FileInRevision> iter = this.targets.iterator();
+            while (iter.hasNext()) {
+                final FileInRevision target = iter.next();
+                if (target.getPath().equals(this.source.getPath())) {
+                    iter.remove();
+                }
+            }
+        }
     }
 
     private final Multimap<Pair<String, Repository>, FileHistoryNode> index = new Multimap<>();
 
+    /**
+     * Adds the information that the file with the given path was deleted with the commit of the given revision.
+     */
     public void addDeletion(String path, Revision revision, Repository repo) {
-        final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
-        assert this.getNodeForExactRevision(file) == null;
-        this.index.put(this.createKey(file), new FileHistoryNode(file));
+        final FileInRevision file = ChangestructureFactory.createFileInRevision(path, adjust(revision, -1), repo);
+        final FileHistoryNode node = this.getNodeForExactRevision(file);
+        if (node == null) {
+            this.index.put(this.createKey(file), new FileHistoryNode(file));
+        } else {
+            node.makeDeletion();
+        }
     }
 
+    /**
+     * Adds the information that the file with the given "from" path was copied with the commit of the given revision
+     * to the given "to" path.
+     */
     public void addCopy(
             String pathFrom, String pathTo, Revision revisionFrom, Revision revisionTo, Repository repo) {
         final FileInRevision fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom, repo);
@@ -60,6 +81,7 @@ class FileHistoryGraph {
         FileHistoryNode node = this.getNodeForExactRevision(fileFrom);
         if (node == null) {
             node = new FileHistoryNode(fileFrom);
+            node.addTarget(ChangestructureFactory.createFileInRevision(pathFrom, adjust(revisionFrom, 1), repo));
             this.index.put(this.createKey(fileFrom), node);
         }
         node.addTarget(fileTo);
@@ -81,22 +103,33 @@ class FileHistoryGraph {
     }
 
     /**
-     * Returns the latest known versions of the given file. If the file was deleted, the last version
-     * before deletion is returned. If the file is unknown, a list with the file itself is
+     * Returns the latest known versions of the given file. If all versions were deleted, the last known versions
+     * before deletion are returned. If the file is unknown, a list with the file itself is
      * returned.
      */
     public List<FileInRevision> getLatestFiles(FileInRevision file) {
+        final List<FileInRevision> withoutDeletions = this.getLatestFilesHelper(file, false);
+        if (withoutDeletions.isEmpty()) {
+            return this.getLatestFilesHelper(file, true);
+        } else {
+            return withoutDeletions;
+        }
+    }
+
+    private List<FileInRevision> getLatestFilesHelper(FileInRevision file, boolean returnDeletions) {
         final FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             return Collections.singletonList(file);
         } else if (node.getTargets().isEmpty()) {
-            return Collections.singletonList(ChangestructureFactory.createFileInRevision(node.getSource().getPath(),
-                    ChangestructureFactory.createRepoRevision(this.getRevision(node.getSource()) - 1),
-                    node.getSource().getRepository()));
+            if (returnDeletions) {
+                return Collections.singletonList(node.getSource());
+            } else {
+                return Collections.emptyList();
+            }
         } else {
             final List<FileInRevision> ret = new ArrayList<>();
             for (final FileInRevision target : node.getTargets()) {
-                ret.addAll(this.getLatestFiles(target));
+                ret.addAll(this.getLatestFilesHelper(target, returnDeletions));
             }
             return ret;
         }
@@ -121,6 +154,11 @@ class FileHistoryGraph {
     private long getRevision(FileInRevision source) {
         final Revision rev = source.getRevision();
         return rev instanceof RepoRevision ? (Long) ((RepoRevision) rev).getId() : Long.MAX_VALUE;
+    }
+
+    private static Revision adjust(Revision revision, int change) {
+        final long oldRevision = (Long) ((RepoRevision) revision).getId();
+        return ChangestructureFactory.createRepoRevision(oldRevision + change);
     }
 
 }

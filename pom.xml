@@ -136,8 +136,9 @@
     <modules>
         <module>build-tools</module>
         <module>de.setsoftware.reviewtool.core</module>
-        <module>de.setsoftware.reviewtool.changesources.svn</module>
         <module>de.setsoftware.reviewtool.tests</module>
+        <module>de.setsoftware.reviewtool.changesources.svn</module>
+        <module>de.setsoftware.reviewtool.changesources.svn.tests</module>
         <module>de.setsoftware.reviewtool.feature</module>
         <module>de.setsoftware.reviewtool.updatesite</module>
     </modules>
