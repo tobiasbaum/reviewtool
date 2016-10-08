@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.plugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -594,5 +596,21 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     public IStopViewer getStopViewer() {
         return this.stopViewer;
+    }
+
+    /**
+     * Logs the given exception. Swallows all follow-up exceptions.
+     */
+    public void logException(Throwable t) {
+        try {
+            final StringWriter w = new StringWriter();
+            t.printStackTrace(new PrintWriter(w));
+            Telemetry.event("exception")
+                .param("exceptionClass", t.getClass().toString())
+                .param("details", w.toString())
+                .log();
+        } catch (final Throwable t2) {
+            //swallow possible follow-up exceptions
+        }
     }
 }

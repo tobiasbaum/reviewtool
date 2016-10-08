@@ -41,6 +41,7 @@ public class FixedResolution extends WorkbenchMarkerResolution {
                 .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
                 .log();
         } catch (final CoreException e) {
+            ReviewPlugin.getInstance().logException(e);
             throw new ReviewtoolException(e);
         }
     }

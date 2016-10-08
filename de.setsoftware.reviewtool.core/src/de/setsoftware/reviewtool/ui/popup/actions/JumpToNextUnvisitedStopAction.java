@@ -78,6 +78,7 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
         try {
             ReviewPlugin.getInstance().startReview();
         } catch (final CoreException e) {
+            ReviewPlugin.getInstance().logException(e);
             throw new ExecutionException("error while selecting ticket", e);
         }
         return ViewDataSource.get().getToursInReview();

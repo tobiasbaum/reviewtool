@@ -43,6 +43,7 @@ public class AddRemarkAction extends AbstractHandler {
             try {
                 ReviewPlugin.getInstance().startReview();
             } catch (final CoreException e) {
+                ReviewPlugin.getInstance().logException(e);
                 throw new ExecutionException("exception while starting review", e);
             }
         }

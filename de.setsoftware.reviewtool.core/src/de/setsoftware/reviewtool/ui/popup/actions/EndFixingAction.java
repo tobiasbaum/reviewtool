@@ -17,6 +17,7 @@ public class EndFixingAction extends AbstractHandler {
         try {
             ReviewPlugin.getInstance().endFixing();
         } catch (final CoreException e) {
+            ReviewPlugin.getInstance().logException(e);
             throw new ExecutionException("problem while ending fixing", e);
         }
         return null;

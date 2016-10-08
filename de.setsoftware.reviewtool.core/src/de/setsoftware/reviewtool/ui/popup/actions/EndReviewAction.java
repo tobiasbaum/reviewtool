@@ -17,6 +17,7 @@ public class EndReviewAction extends AbstractHandler {
         try {
             ReviewPlugin.getInstance().endReview();
         } catch (final CoreException e) {
+            ReviewPlugin.getInstance().logException(e);
             throw new ExecutionException("problem while ending review", e);
         }
         return null;

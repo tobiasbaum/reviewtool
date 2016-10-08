@@ -20,6 +20,7 @@ public class StartReviewAction extends AbstractHandler {
         try {
             ReviewPlugin.getInstance().startReview();
         } catch (final CoreException e) {
+            ReviewPlugin.getInstance().logException(e);
             throw new ExecutionException("problem while starting review", e);
         }
         return null;

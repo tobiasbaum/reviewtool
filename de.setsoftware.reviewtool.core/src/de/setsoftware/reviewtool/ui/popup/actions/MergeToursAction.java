@@ -12,6 +12,7 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import de.setsoftware.reviewtool.model.changestructure.Tour;
+import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.ViewDataSource;
 
@@ -33,6 +34,7 @@ public class MergeToursAction extends AbstractHandler {
         try {
             ViewDataSource.get().getToursInReview().mergeTours(tours, new RealMarkerFactory());
         } catch (final CoreException e) {
+            ReviewPlugin.getInstance().logException(e);
             throw new ExecutionException("error during merge of tours", e);
         }
         return null;
