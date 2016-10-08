@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.telemetry;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Date;
 import java.util.Map;
 
 import org.osgi.framework.Version;
@@ -40,7 +39,6 @@ public class HackystatProtocolTelemetry extends AbstractTelemetry {
 
         try {
             this.hacky.writeData(
-                    new Date(),
                     "CoRT " + this.version,
                     eventType,
                     ticketKey,
