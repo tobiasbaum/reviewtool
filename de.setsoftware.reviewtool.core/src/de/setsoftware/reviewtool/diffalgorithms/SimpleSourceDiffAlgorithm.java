@@ -98,7 +98,7 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
         final FullFileView<LogicalChunk> chunks1 = this.chunk(lines1);
         final FullFileView<LogicalChunk> chunks2 = this.chunk(lines2);
         final List<ContentView<LogicalChunk>> logicalChunksWithDifferences =
-                new ContentView<>(chunks1, chunks2).patienceDiff();
+                new ContentView<>(chunks1, chunks2).lcsDiff();
 
         final List<ContentView<String>> linesWithDifferences = new ArrayList<>();
         for (final ContentView<LogicalChunk> cur : logicalChunksWithDifferences) {
@@ -106,7 +106,7 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
                     new ContentView<>(
                             LogicalChunk.resolveChunking(chunks1, cur.getFile1()),
                             LogicalChunk.resolveChunking(chunks2, cur.getFile2()))
-                    .patienceDiff());
+                    .lcsDiff());
         }
 
         return this.toFragments(fileOldInfo, fileNewInfo, linesWithDifferences);

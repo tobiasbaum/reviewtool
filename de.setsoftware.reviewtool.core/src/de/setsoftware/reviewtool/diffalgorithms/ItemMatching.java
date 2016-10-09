@@ -32,7 +32,7 @@ final class ItemMatching<T> {
      * In other words, all lines which have a proper matching partner are left out.
      */
     public List<ContentView<T>> determineNonIdentifiedFragments() {
-        this.removeIncompatibleMatchings();
+//        this.removeIncompatibleMatchings();
 
         final List<ContentView<T>> ret = new ArrayList<>();
         int idx2 = 0;

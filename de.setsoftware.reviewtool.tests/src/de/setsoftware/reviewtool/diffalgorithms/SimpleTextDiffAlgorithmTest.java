@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.diffalgorithms;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -637,6 +639,106 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "line 08\r\n"
                                 + "line 09\r\n");
         assertEquals(Arrays.asList(changeIn(3, 3), changeIn(7, 7)), diff);
+    }
+
+    @Test
+    public void testNoUniqueLines() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "<?xml version=\"1.0\"?>\r\n"
+                        + "<test>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                        + "    <var name=\"a\" value=\"b\"/>\r\n"
+                        + "    <var name=\"A\" value=\"X\"/>\r\n"
+                        + "  </sendung>\r\n"
+                        + "</test>\r\n",
+                        "<?xml version=\"1.0\"?>\r\n"
+                                + "<test>\r\n"
+                                + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1.5mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1.5mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"10mm\" gewicht=\"20g\">\r\n"
+                                + "    <var name=\"a0\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A0\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
+                                + "    <var name=\"a\" value=\"b\"/>\r\n"
+                                + "    <var name=\"A\" value=\"X\"/>\r\n"
+                                + "  </sendung>\r\n"
+                                + "</test>\r\n");
+        assertEquals(Arrays.asList(changeIn(11, 11), changeIn(15, 15), insertedLines(31, 34)), diff);
+    }
+
+    @Test
+    public void testPerformance() throws Exception {
+        final byte[] bytes1 = Files.readAllBytes(Paths.get("test1.xml"));
+        final byte[] bytes2 = Files.readAllBytes(Paths.get("test3.xml"));
+        final long startTime = System.currentTimeMillis();
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                new String(bytes1, "UTF-8"),
+                new String(bytes2, "UTF-8"));
+        System.out.println("time=" + (System.currentTimeMillis() - startTime));
+        System.out.println(diff);
     }
 
 }

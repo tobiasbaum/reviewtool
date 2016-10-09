@@ -90,4 +90,23 @@ final class ContentView<T> {
         return matching.determineNonIdentifiedFragments();
     }
 
+    List<ContentView<T>> myersDiff() {
+        final ItemMatching<T> matching = new ItemMatching<T>(this.file1, this.file2);
+        final ContentView<T> stripped = this.stripCommonPrefixAndSuffix(matching);
+        if (stripped.isEmpty()) {
+            return Collections.emptyList();
+        }
+        MyersDiff.doStuff(stripped.file1, stripped.file2, matching);
+        return matching.determineNonIdentifiedFragments();
+    }
+
+    List<ContentView<T>> lcsDiff() {
+        final ItemMatching<T> matching = new ItemMatching<T>(this.file1, this.file2);
+        final ContentView<T> stripped = this.stripCommonPrefixAndSuffix(matching);
+        if (stripped.isEmpty()) {
+            return Collections.emptyList();
+        }
+        LongestCommonSubsequenceDiff.doStuff(stripped.file1, stripped.file2, matching);
+        return matching.determineNonIdentifiedFragments();
+    }
 }
