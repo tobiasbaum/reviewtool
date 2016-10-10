@@ -20,7 +20,10 @@ public class CurrentStop {
         }
     }
 
-    static void unsetCurrentStop() {
+    /**
+     * Resets the current stop to "no selection" and notifies all listeners of this.
+     */
+    public static void unsetCurrentStop() {
         currentStop = null;
         for (final StopSelectionListener l : listeners.getListeners()) {
             l.notifyStopChange(null);

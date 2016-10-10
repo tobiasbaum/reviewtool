@@ -79,6 +79,7 @@ import de.setsoftware.reviewtool.ui.dialogs.SelectIrrelevantDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTourStructureDialog;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
+import de.setsoftware.reviewtool.ui.views.CurrentStop;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.ui.views.SeparateDiffsStopViewer;
@@ -401,6 +402,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.clearMarkers();
         this.setMode(Mode.IDLE);
         this.toursInReview = null;
+        CurrentStop.unsetCurrentStop();
         this.unregisterGlobalTelemetryListeners();
     }
 
