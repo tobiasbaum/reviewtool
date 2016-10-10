@@ -137,8 +137,8 @@ public abstract class AbstractStopViewer implements IStopViewer {
             final List<Fragment> sourceFragments, final List<Fragment> targetFragments,
             final Position rangeLeft, final Position rangeRight) {
         final CompareConfiguration compareConfiguration = new CompareConfiguration();
-        compareConfiguration.setLeftLabel(sourceRevision.getRevision().toString());
-        compareConfiguration.setRightLabel(targetRevision.getRevision().toString());
+        compareConfiguration.setLeftLabel(this.toLabel(sourceRevision));
+        compareConfiguration.setRightLabel(this.toLabel(targetRevision));
         final SelectableTextMergeViewer viewer = new SelectableTextMergeViewer(parent, SWT.BORDER,
                 compareConfiguration);
         viewer.setInput(new DiffNode(
@@ -154,6 +154,10 @@ public abstract class AbstractStopViewer implements IStopViewer {
         if (rangeRight != null) {
             viewer.selectRight(rangeRight);
         }
+    }
+
+    private String toLabel(FileInRevision revision) {
+        return revision.toString();
     }
 
 }
