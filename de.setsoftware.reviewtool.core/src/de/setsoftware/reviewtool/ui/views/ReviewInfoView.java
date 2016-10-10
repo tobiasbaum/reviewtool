@@ -32,6 +32,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     private Text reviewDataText;
 
     private String lastText = "";
+    private String ticketId;
 
     @Override
     public void createPartControl(Composite comp) {
@@ -90,6 +91,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
 
         final ITicketData ticketData = mgr.getCurrentTicketData();
         final TicketInfo ticketInfo = ticketData.getTicketInfo();
+        this.ticketId = ticketInfo.getId();
         this.createLabelAndText(scrollContent, title, ticketInfo.getId() + ", round " + mgr.getCurrentRound(),
                 SWT.SINGLE, GridData.FILL_HORIZONTAL);
         this.createLabelAndText(scrollContent, "Title:", ticketInfo.getSummary(),
@@ -159,7 +161,11 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
-        label.setText("No review or fixing active");
+        if (this.ticketId == null) {
+            label.setText("No review or fixing active");
+        } else {
+            label.setText("No review or fixing active. Last finished: " + this.ticketId);
+        }
 
         ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
 

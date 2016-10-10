@@ -2,8 +2,8 @@ package de.setsoftware.reviewtool.ui.views;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -134,6 +134,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     private FilterStateAction hideChecked;
     private FilterStateAction hideVisited;
     private FilterStateAction hideIrrelevant;
+    private String ticketId;
 
     @Override
     public void createPartControl(Composite comp) {
@@ -179,6 +180,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     public void notifyReview(ReviewStateManager mgr, ToursInReview tours) {
         this.disposeOldContent();
         this.currentContent = this.createReviewContent(tours);
+        this.ticketId = mgr.getTicketKey();
         this.comp.layout();
     }
 
@@ -353,7 +355,11 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
-        label.setText("Not in review mode");
+        if (this.ticketId == null) {
+            label.setText("Not in review mode");
+        } else {
+            label.setText("Not in review mode\nLast finished: " + this.ticketId);
+        }
         ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
         return panel;
     }
@@ -386,7 +392,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
          * @return A list where all {@link IReviewElement}s are visible.
          */
         private <T extends IReviewElement> List<T> filterOutInvisible(final List<T> elements) {
-            List<T> result = new ArrayList<>();
+            final List<T> result = new ArrayList<>();
             for (final T element : elements) {
                 if (element.isVisible()) {
                     result.add(element);
@@ -404,10 +410,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement == null) {
-                return filterOutInvisible(this.tours.getTours()).toArray();
+                return this.filterOutInvisible(this.tours.getTours()).toArray();
             } else if (parentElement instanceof Tour) {
                 final Tour s = (Tour) parentElement;
-                return filterOutInvisible(s.getStops()).toArray();
+                return this.filterOutInvisible(s.getStops()).toArray();
             } else {
                 return new Object[0];
             }
