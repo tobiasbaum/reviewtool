@@ -7,8 +7,16 @@ import java.util.Map;
 
 import de.setsoftware.reviewtool.base.Multiset;
 
-public class LongestCommonSubsequenceDiff {
+/**
+ * Helper class containing the algorithm to calculate the longest common subsequence.
+ */
+class LongestCommonSubsequence {
 
+    private static final int CUTOFF_LIMIT = 1000000;
+
+    /**
+     * Helper class for making the recursive algorithm iterative.
+     */
     private static class WorkItem {
         private final int pos1;
         private final int pos2;
@@ -51,6 +59,9 @@ public class LongestCommonSubsequenceDiff {
         }
     }
 
+    /**
+     * An work item resulting from going to the left.
+     */
     private static class WorkItemL extends WorkItem {
 
         public WorkItemL(int pos1, int pos2, int sum) {
@@ -59,6 +70,9 @@ public class LongestCommonSubsequenceDiff {
 
     }
 
+    /**
+     * An work item resulting from going up.
+     */
     private static class WorkItemU extends WorkItem {
 
         public WorkItemU(int pos1, int pos2, int sum) {
@@ -67,6 +81,9 @@ public class LongestCommonSubsequenceDiff {
 
     }
 
+    /**
+     * An work item resulting from going diagonal (with change).
+     */
     private static class WorkItemD extends WorkItem {
 
         public WorkItemD(int pos1, int pos2, int sum) {
@@ -75,6 +92,9 @@ public class LongestCommonSubsequenceDiff {
 
     }
 
+    /**
+     * An work item resulting from skipping an item that is the same on both sides (also going diagonal).
+     */
     private static class WorkItemS extends WorkItem {
 
         public WorkItemS(int pos1, int pos2, int sum) {
@@ -83,12 +103,16 @@ public class LongestCommonSubsequenceDiff {
 
     }
 
-    public static<T> void doStuff(OneFileView<T> file1, OneFileView<T> file2, ItemMatching<T> matching) {
+    /**
+     * Determines the longest common subsequence between the given files and adds all matched
+     * lines to the given matching. Uses the simple dynamic programming algorithm with some
+     * additional pruning.
+     */
+    public static<T> void determineLcs(OneFileView<T> file1, OneFileView<T> file2, ItemMatching<T> matching) {
         final List<WorkItem> workStack = new ArrayList<>();
         final Map<WorkItem, WorkItem> bestSoFar = new HashMap<>();
         int totalBestSum = Integer.MAX_VALUE;
         final int bestPossibleResult = determineBestPossibleResult(file1, file2);
-        System.out.println("best possible = " + bestPossibleResult);
 
         workStack.add(new WorkItem(file1.getItemCount(), file2.getItemCount(), 0));
         while (!workStack.isEmpty()) {
@@ -108,7 +132,6 @@ public class LongestCommonSubsequenceDiff {
                 if (cur.pos2 == 0) {
                     //new best result found
                     totalBestSum = cur.sum;
-                    System.out.println("new best found = " + totalBestSum);
                     if (cur.sum == bestPossibleResult) {
                         break;
                     }
@@ -134,10 +157,17 @@ public class LongestCommonSubsequenceDiff {
                     workStack.add(cur.left());
                 }
             }
+
+            if (bestSoFar.size() > CUTOFF_LIMIT) {
+                break;
+            }
         }
 
         final WorkItem best = bestSoFar.get(new WorkItem(0, 0, 0));
-        System.out.println("result=" + best.sum);
+        if (best == null) {
+            //can happen if the calculation was stopped for performance reasons
+            return;
+        }
 
         WorkItem cur = best;
         while (true) {
@@ -173,25 +203,6 @@ public class LongestCommonSubsequenceDiff {
         }
 
         return Math.max(file1.getItemCount(), file2.getItemCount()) - equalItemCount;
-    }
-
-    public static void main(String[] args) {
-        final FullFileView<String> file1 = new FullFileView<>(new String[] {
-                "a",
-                "b",
-                "c",
-                "d",
-        });
-        final FullFileView<String> file2 = new FullFileView<>(new String[] {
-                "a",
-                "b",
-                "C",
-                "C",
-                "d",
-        });
-        final ItemMatching<String> m = new ItemMatching<>(file1, file2);
-        doStuff(file1, file2, m);
-        System.out.println(m);
     }
 
 }

@@ -5,8 +5,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import de.setsoftware.reviewtool.base.Multimap;
-
 /**
  * A matching of equal items in one sequence to the other sequence.
  * @param <T> Type of the items in the sequences.
@@ -32,8 +30,6 @@ final class ItemMatching<T> {
      * In other words, all lines which have a proper matching partner are left out.
      */
     public List<ContentView<T>> determineNonIdentifiedFragments() {
-//        this.removeIncompatibleMatchings();
-
         final List<ContentView<T>> ret = new ArrayList<>();
         int idx2 = 0;
         int changeSize1 = 0;
@@ -62,51 +58,6 @@ final class ItemMatching<T> {
         }
         this.createChangeFragment(ret, this.lines1.getItemCount(), idx2, changeSize1, changeSize2);
         return ret;
-    }
-
-    /**
-     * As moves are currently not supported, matchings are not allowed to cross each other (e.g.
-     * line A.1 -> B.7 and A.3 -> B.5). This method removes these "incompatible matches".
-     */
-    void removeIncompatibleMatchings() {
-        //the best removal is the one that keeps the maximum number of assignments
-        //this is the co-clique problem in the conflict graph and therefore NP-complete
-        //we use a simple greedy heuristic instead
-
-        //determine conflicts
-        final List<Integer> indices1 = new ArrayList<>(this.matchedLines.keySet());
-        final Multimap<Integer, Integer> conflictsForNodes = new Multimap<>();
-        for (int i = 0; i < indices1.size(); i++) {
-            for (int j = i + 1; j < indices1.size(); j++) {
-                final int indexI = indices1.get(i);
-                final int indexJ = indices1.get(j);
-                if (this.isMatchingConflict(indexI, indexJ)) {
-                    conflictsForNodes.put(indexI, indexJ);
-                    conflictsForNodes.put(indexJ, indexI);
-                }
-            }
-        }
-
-        //remove matchings with the maximum number of conflicts until no conflicts are left
-        while (true) {
-            final Integer maxConflictSizeIndex = conflictsForNodes.keyWithMaxNumberOfValues();
-            final List<Integer> conflictPartners = conflictsForNodes.get(maxConflictSizeIndex);
-            if (conflictPartners.isEmpty()) {
-                return;
-            }
-            this.matchedLines.remove(maxConflictSizeIndex);
-            for (final Integer conflictPartner : conflictPartners) {
-                conflictsForNodes.removeValue(conflictPartner, maxConflictSizeIndex);
-            }
-            conflictsForNodes.removeKey(maxConflictSizeIndex);
-        }
-    }
-
-    private boolean isMatchingConflict(int indexI, int indexJ) {
-        assert indexI != indexJ;
-        final int matchI = this.matchedLines.get(indexI);
-        final int matchJ = this.matchedLines.get(indexJ);
-        return (indexI < indexJ) != (matchI < matchJ);
     }
 
     private void createChangeFragment(

@@ -2,8 +2,6 @@ package de.setsoftware.reviewtool.diffalgorithms;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -727,18 +725,6 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "  </sendung>\r\n"
                                 + "</test>\r\n");
         assertEquals(Arrays.asList(changeIn(11, 11), changeIn(15, 15), insertedLines(31, 34)), diff);
-    }
-
-    @Test
-    public void testPerformance() throws Exception {
-        final byte[] bytes1 = Files.readAllBytes(Paths.get("test1.xml"));
-        final byte[] bytes2 = Files.readAllBytes(Paths.get("test3.xml"));
-        final long startTime = System.currentTimeMillis();
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
-                new String(bytes1, "UTF-8"),
-                new String(bytes2, "UTF-8"));
-        System.out.println("time=" + (System.currentTimeMillis() - startTime));
-        System.out.println(diff);
     }
 
 }
