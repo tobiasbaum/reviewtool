@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.model.remarks;
 
 /**
  * The different types for the resolution of a review remark.

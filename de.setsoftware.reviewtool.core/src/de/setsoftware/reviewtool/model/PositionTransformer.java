@@ -24,6 +24,11 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobFunction;
 import org.eclipse.core.runtime.jobs.Job;
 
+import de.setsoftware.reviewtool.model.remarks.FileLinePosition;
+import de.setsoftware.reviewtool.model.remarks.FilePosition;
+import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
+import de.setsoftware.reviewtool.model.remarks.Position;
+
 /**
  * Is able to transform short filenames into paths and positions with short filenames into positions
  * for Eclipse. Reverse transformation is also supported.

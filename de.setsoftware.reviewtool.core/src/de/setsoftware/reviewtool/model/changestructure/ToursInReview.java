@@ -22,7 +22,6 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.IMarkerFactory;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
@@ -293,7 +292,7 @@ public class ToursInReview {
     /**
      * Creates markers for the tour stops. Takes the currently active tour into account.
      */
-    public void createMarkers(IMarkerFactory markerFactory) {
+    public void createMarkers(IStopMarkerFactory markerFactory) {
         if (this.tours.size() <= this.currentTourIndex) {
             return;
         }
@@ -305,7 +304,7 @@ public class ToursInReview {
     }
 
     private static IMarker createMarkerFor(
-            IMarkerFactory markerFactory,
+            IStopMarkerFactory markerFactory,
             final Map<IResource, PositionLookupTable> lookupTables,
             final Stop f) {
 
@@ -319,7 +318,7 @@ public class ToursInReview {
                     lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
                 }
                 final Fragment pos = f.getMostRecentFragment();
-                final IMarker marker = markerFactory.createMarker(resource, Constants.STOPMARKER_ID);
+                final IMarker marker = markerFactory.createStopMarker(resource);
                 marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
                 marker.setAttribute(IMarker.CHAR_START,
                         lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()) - 1);
@@ -327,7 +326,7 @@ public class ToursInReview {
                         lookupTables.get(resource).getCharsSinceFileStart(pos.getTo()));
                 return marker;
             } else {
-                return markerFactory.createMarker(resource, Constants.STOPMARKER_ID);
+                return markerFactory.createStopMarker(resource);
             }
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
@@ -341,7 +340,7 @@ public class ToursInReview {
      * is returned.
      */
     public static IMarker createMarkerFor(
-            IMarkerFactory markerFactory,
+            IStopMarkerFactory markerFactory,
             final Stop f) {
         return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f);
     }
@@ -363,7 +362,7 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(Tour t, IMarkerFactory markerFactory) throws CoreException {
+    public void ensureTourActive(Tour t, IStopMarkerFactory markerFactory) throws CoreException {
         this.ensureTourActive(t, markerFactory, true);
     }
 
@@ -371,7 +370,7 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(Tour t, IMarkerFactory markerFactory, boolean notify)
+    public void ensureTourActive(Tour t, IStopMarkerFactory markerFactory, boolean notify)
         throws CoreException {
 
         final int index = this.tours.indexOf(t);
@@ -413,7 +412,7 @@ public class ToursInReview {
      * afterwards, otherwise the active tour stays the same. The merged tour's position is the previous
      * position of the "biggest" part.
      */
-    public void mergeTours(List<Tour> toursToMerge, IMarkerFactory markerFactory) throws CoreException {
+    public void mergeTours(List<Tour> toursToMerge, IStopMarkerFactory markerFactory) throws CoreException {
         if (toursToMerge.size() <= 1) {
             return;
         }

@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.model.remarks;
 
 /**
  * A dummy position that is used by global remarks.

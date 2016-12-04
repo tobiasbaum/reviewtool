@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.model.remarks;
 
 /**
  * Position for a review remarks that denotes a specific line in a file.

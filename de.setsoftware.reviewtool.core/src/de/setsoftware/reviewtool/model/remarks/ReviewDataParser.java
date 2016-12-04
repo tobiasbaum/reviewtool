@@ -1,14 +1,11 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.model.remarks;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.eclipse.core.runtime.CoreException;
-
-import de.setsoftware.reviewtool.base.ReviewtoolException;
 
 /**
  * Parser for serialized review data.
@@ -33,22 +30,22 @@ class ReviewDataParser {
         IN_COMMENT
     }
 
-    private final ReviewStateManager persistence;
     private final IMarkerFactory markerFactory;
 
     private ParseState state = ParseState.BEFORE_ROUND;
+    private final Map<Integer, String> reviewersForRounds;
     private ReviewRound currentRound;
     private final List<ReviewRound> rounds = new ArrayList<>();
     private RemarkType currentType;
     private final StringBuilder currentText = new StringBuilder();
     private ReviewRemark currentRemark;
 
-    public ReviewDataParser(ReviewStateManager persistence, IMarkerFactory markerFactory) {
-        this.persistence = persistence;
+    public ReviewDataParser(Map<Integer, String> reviewersForRounds, IMarkerFactory markerFactory) {
+        this.reviewersForRounds = reviewersForRounds;
         this.markerFactory = markerFactory;
     }
 
-    public void handleNextLine(String trimmedLine) throws CoreException {
+    public void handleNextLine(String trimmedLine) throws ReviewRemarkException {
         if (this.state == ParseState.BEFORE_ROUND) {
             if (trimmedLine.isEmpty()) {
                 //ist OK, nichts tun
@@ -59,7 +56,7 @@ class ReviewDataParser {
                 this.rounds.add(this.currentRound);
                 this.state = ParseState.IN_ROUND;
             } else {
-                throw new ReviewtoolException("parse exception: " + trimmedLine);
+                throw new ReviewRemarkException("parse exception: " + trimmedLine);
             }
         } else {
             if (trimmedLine.isEmpty()) {
@@ -83,7 +80,7 @@ class ReviewDataParser {
                         || this.state == ParseState.IN_COMMENT) {
                     this.currentText .append("\n").append(trimmedLine);
                 } else {
-                    throw new ReviewtoolException("parse exception: " + trimmedLine);
+                    throw new ReviewRemarkException("parse exception: " + trimmedLine);
                 }
             }
         }
@@ -101,15 +98,14 @@ class ReviewDataParser {
         this.currentText.append(trimmedLine.substring(COMMENT_PREFIX.length()));
     }
 
-    void endLastItem() throws CoreException {
+    void endLastItem() throws ReviewRemarkException {
         switch (this.state) {
         case IN_REMARK:
             final ResolutionType resoRemark = this.handleResolutionMarkers();
             final Position pos = this.parsePosition();
             this.currentRemark = ReviewRemark.create(
-                    this.persistence,
-                    this.markerFactory.createMarker(pos, Constants.REVIEWMARKER_ID),
-                    this.persistence.getReviewerForCurrentRound(),
+                    this.markerFactory.createMarker(pos),
+                    this.getReviewerForCurrentRound(),
                     pos,
                     this.currentText.toString(),
                     this.currentType);
@@ -127,7 +123,7 @@ class ReviewDataParser {
                     this.currentRemark.setResolution(resoComment);
                 }
             } else {
-                throw new ReviewtoolException("parse exception: " + this.currentText);
+                throw new ReviewRemarkException("parse exception: " + this.currentText);
             }
             break;
         case BEFORE_ROUND:
@@ -171,7 +167,7 @@ class ReviewDataParser {
         return null;
     }
 
-    public ReviewData getResult() {
+    public ReviewData getResult() throws ReviewRemarkException {
         if (this.rounds.isEmpty()) {
             return new ReviewData();
         }
@@ -179,7 +175,7 @@ class ReviewDataParser {
         final TreeMap<Integer, ReviewRound> roundMap = new TreeMap<>();
         for (final ReviewRound round : this.rounds) {
             if (roundMap.containsKey(round.getNumber())) {
-                throw new ReviewtoolException("duplicate round: " + round.getNumber());
+                throw new ReviewRemarkException("duplicate round: " + round.getNumber());
             }
             roundMap.put(round.getNumber(), round);
         }
@@ -193,6 +189,11 @@ class ReviewDataParser {
             }
         }
         return new ReviewData(sortedRounds);
+    }
+
+    private String getReviewerForCurrentRound() {
+        final String r = this.reviewersForRounds.get(this.currentRound.getNumber());
+        return r != null ? r : "??";
     }
 
 }

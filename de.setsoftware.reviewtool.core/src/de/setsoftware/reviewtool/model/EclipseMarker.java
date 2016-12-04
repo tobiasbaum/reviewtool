@@ -1,0 +1,87 @@
+package de.setsoftware.reviewtool.model;
+
+import org.eclipse.core.resources.IMarker;
+import org.eclipse.core.runtime.CoreException;
+
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
+
+/**
+ * Adapter from {@link IReviewMarker} to Eclipse's {@link IMarker}.
+ */
+public class EclipseMarker implements IReviewMarker {
+
+    private final IMarker marker;
+
+    public EclipseMarker(IMarker marker) {
+        this.marker = marker;
+        try {
+            marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
+        } catch (final CoreException e) {
+            throw new ReviewtoolException(e);
+        }
+    }
+
+    @Override
+    public void delete() throws ReviewRemarkException {
+        try {
+            this.marker.delete();
+        } catch (final CoreException e) {
+            throw new ReviewRemarkException(e);
+        }
+    }
+
+    @Override
+    public void setMessage(String newText) throws ReviewRemarkException {
+        try {
+            this.marker.setAttribute(IMarker.MESSAGE, newText);
+        } catch (final CoreException e) {
+            throw new ReviewRemarkException(e);
+        }
+    }
+
+    @Override
+    public String getMessage() {
+        return this.marker.getAttribute(IMarker.MESSAGE, "");
+    }
+
+    @Override
+    public void setAttribute(String attributeName, int value) throws ReviewRemarkException {
+        try {
+            this.marker.setAttribute(attributeName, value);
+        } catch (final CoreException e) {
+            throw new ReviewRemarkException(e);
+        }
+    }
+
+    @Override
+    public void setAttribute(String attributeName, String value) throws ReviewRemarkException {
+        try {
+            this.marker.setAttribute(attributeName, value);
+        } catch (final CoreException e) {
+            throw new ReviewRemarkException(e);
+        }
+    }
+
+    @Override
+    public String getAttribute(String attributeName, String defaultValue) throws ReviewRemarkException {
+        return this.marker.getAttribute(attributeName, defaultValue);
+    }
+
+    @Override
+    public void setLineNumber(int line) {
+        this.setAttribute(IMarker.LINE_NUMBER, line);
+    }
+
+    @Override
+    public void setSeverityInfo() {
+        this.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_INFO);
+    }
+
+    @Override
+    public void setSeverityWarning() {
+        this.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
+    }
+
+}

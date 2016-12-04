@@ -10,8 +10,10 @@ import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.ResolutionType;
-import de.setsoftware.reviewtool.model.ReviewRemark;
+import de.setsoftware.reviewtool.model.EclipseMarker;
+import de.setsoftware.reviewtool.model.remarks.ResolutionType;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
@@ -33,14 +35,14 @@ public class FixedResolution extends WorkbenchMarkerResolution {
     @Override
     public void run(IMarker marker) {
         try {
-            final ReviewRemark review = ReviewRemark.getFor(ReviewPlugin.getPersistence(), marker);
+            final ReviewRemark review = ReviewRemark.getFor(new EclipseMarker(marker));
             review.setResolution(ResolutionType.FIXED);
-            review.save();
+            ReviewPlugin.getPersistence().saveRemark(review);
             Telemetry.event("resolutionFixed")
                 .param("resource", marker.getResource())
                 .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
                 .log();
-        } catch (final CoreException e) {
+        } catch (final ReviewRemarkException e) {
             ReviewPlugin.getInstance().logException(e);
             throw new ReviewtoolException(e);
         }

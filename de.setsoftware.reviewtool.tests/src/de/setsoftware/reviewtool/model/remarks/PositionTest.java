@@ -1,8 +1,13 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.model.remarks;
 
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
+
+import de.setsoftware.reviewtool.model.remarks.FileLinePosition;
+import de.setsoftware.reviewtool.model.remarks.FilePosition;
+import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
+import de.setsoftware.reviewtool.model.remarks.Position;
 
 /**
  * Tests for {@link Position} and its subclasses.

@@ -17,7 +17,7 @@ import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
-import de.setsoftware.reviewtool.model.ReviewData;
+import de.setsoftware.reviewtool.model.remarks.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 
 /**

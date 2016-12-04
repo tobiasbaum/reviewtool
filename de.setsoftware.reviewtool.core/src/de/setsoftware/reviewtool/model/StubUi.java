@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model;
 
+import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
+import de.setsoftware.reviewtool.model.remarks.ReviewData;
+
 /**
  * A stub implementation for the UI interfaces, to be used when a real UI is not wanted.
  */
@@ -28,7 +31,7 @@ public final class StubUi implements IUserInteraction, ITicketChooser, ISyntaxFi
 
     @Override
     public ReviewData getCurrentReviewDataParsed(ReviewStateManager persistence, IMarkerFactory factory) {
-        return ReviewData.parse(persistence, factory, persistence.getCurrentReviewData());
+        return ReviewData.parse(persistence.getReviewersForRounds(), factory, persistence.getCurrentReviewData());
     }
 
 }

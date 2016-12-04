@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.model.remarks;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -6,10 +6,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
-
-import org.eclipse.core.runtime.CoreException;
-
-import de.setsoftware.reviewtool.base.ReviewtoolException;
+import java.util.Map;
 
 /**
  * The data (collection of remarks and comments) belonging to a ticket. It is divided into multiple review
@@ -30,23 +27,23 @@ public class ReviewData {
      * Parse a review data object that has been serialized as a string.
      */
     public static ReviewData parse(
-            ReviewStateManager p, IMarkerFactory m, String oldReviewData) {
+            Map<Integer, String> reviewersForRounds, IMarkerFactory m, String oldReviewData) {
         try {
             final BufferedReader r = new BufferedReader(new StringReader(oldReviewData));
             String line;
-            final ReviewDataParser parser = new ReviewDataParser(p, m);
+            final ReviewDataParser parser = new ReviewDataParser(reviewersForRounds, m);
             while ((line = r.readLine()) != null) {
                 final String trimmedLine = line.trim();
                 parser.handleNextLine(trimmedLine);
             }
             parser.endLastItem();
             return parser.getResult();
-        } catch (final IOException | CoreException e) {
-            throw new ReviewtoolException(e);
+        } catch (final IOException e) {
+            throw new ReviewRemarkException(e);
         }
     }
 
-    public void merge(ReviewRemark reviewRemark, int roundNumber) {
+    public void merge(ReviewRemark reviewRemark, int roundNumber) throws ReviewRemarkException {
         this.getOrCreateRound(roundNumber).merge(reviewRemark);
     }
 
@@ -61,7 +58,7 @@ public class ReviewData {
     /**
      * Create a string representation of this review data.
      */
-    public String serialize() {
+    public String serialize() throws ReviewRemarkException {
         final ListIterator<ReviewRound> iter = this.rounds.listIterator(this.rounds.size());
         final StringBuilder ret = new StringBuilder();
         while (iter.hasPrevious()) {
@@ -79,7 +76,7 @@ public class ReviewData {
     /**
      * Returns true iff there are unresolved remarks in any of the review rounds.
      */
-    public boolean hasUnresolvedRemarks() {
+    public boolean hasUnresolvedRemarks() throws ReviewRemarkException {
         for (final ReviewRound r : this.rounds) {
             if (r.hasUnresolvedRemarks()) {
                 return true;
@@ -91,7 +88,7 @@ public class ReviewData {
     /**
      * Returns true iff there are temporary markers in any of the review rounds.
      */
-    public boolean hasTemporaryMarkers() {
+    public boolean hasTemporaryMarkers() throws ReviewRemarkException {
         for (final ReviewRound r : this.rounds) {
             if (r.hasTemporaryMarkers()) {
                 return true;
@@ -103,7 +100,7 @@ public class ReviewData {
     /**
      * Deletes the given remark.
      */
-    public void deleteRemark(ReviewRemark reviewRemark) {
+    public void deleteRemark(ReviewRemark reviewRemark) throws ReviewRemarkException {
         for (final ReviewRound r: this.rounds) {
             r.deleteRemark(reviewRemark);
         }

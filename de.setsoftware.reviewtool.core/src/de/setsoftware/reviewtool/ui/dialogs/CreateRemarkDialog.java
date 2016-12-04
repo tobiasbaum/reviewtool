@@ -18,8 +18,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
-import de.setsoftware.reviewtool.model.RemarkType;
-import de.setsoftware.reviewtool.model.ReviewRound;
+import de.setsoftware.reviewtool.model.remarks.RemarkType;
+import de.setsoftware.reviewtool.model.remarks.ReviewRound;
 
 /**
  * Dialog for the creation of review remarks.

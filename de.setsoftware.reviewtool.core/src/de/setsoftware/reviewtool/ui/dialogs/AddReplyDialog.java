@@ -15,8 +15,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
-import de.setsoftware.reviewtool.model.ReviewRemark;
-import de.setsoftware.reviewtool.model.ReviewRemarkComment;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemarkComment;
 
 /**
  * Dialog to add a reply to a review remark or comment.

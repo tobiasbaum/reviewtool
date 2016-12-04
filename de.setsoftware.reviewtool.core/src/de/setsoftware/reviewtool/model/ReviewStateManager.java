@@ -1,8 +1,14 @@
 package de.setsoftware.reviewtool.model;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
+import de.setsoftware.reviewtool.model.remarks.DummyMarker;
+import de.setsoftware.reviewtool.model.remarks.ReviewData;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 
 /**
  * Manages the current ticket under review and provides a facade to the persistence layer.
@@ -139,6 +145,37 @@ public class ReviewStateManager {
 
     public void startFixing() {
         this.persistence.startFixing(this.ticketKey);
+    }
+
+    /**
+     * Deletes the given review remark. Persists the changed review data and deletes the marker as well.
+     */
+    public void deleteRemark(ReviewRemark remark) throws ReviewRemarkException {
+        final ReviewData data = this.getUi().getSyntaxFixer().getCurrentReviewDataParsed(this, DummyMarker.FACTORY);
+        data.deleteRemark(remark);
+        this.saveCurrentReviewData(data.serialize());
+        remark.deleteMarker();
+    }
+
+    /**
+     * Merges the given remark into the existing remarks and saves it to the persistence.
+     */
+    public void saveRemark(ReviewRemark remark) {
+        final ReviewData r = this.getUi().getSyntaxFixer().getCurrentReviewDataParsed(
+                this, DummyMarker.FACTORY);
+        r.merge(remark, this.getCurrentRound());
+        this.saveCurrentReviewData(r.serialize());
+    }
+
+    /**
+     * Returns the reviewers for all review rounds.
+     */
+    public Map<Integer, String> getReviewersForRounds() {
+        final Map<Integer, String> ret = new TreeMap<>();
+        for (int round = 1; round <= this.getCurrentRound(); round++) {
+            ret.put(round, this.getReviewerForRound(round));
+        }
+        return ret;
     }
 
 }

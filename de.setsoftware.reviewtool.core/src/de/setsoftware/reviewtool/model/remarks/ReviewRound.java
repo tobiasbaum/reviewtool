@@ -1,9 +1,7 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.model.remarks;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import de.setsoftware.reviewtool.base.ReviewtoolException;
 
 /**
  * A review round corresponds to the phase between implementation and fixing.
@@ -37,7 +35,7 @@ public class ReviewRound {
      * Merges the given review remarks into the remarks for this round: If a similar remark
      * is existing, it is replaced, otherwise it is added as new.
      */
-    public void merge(ReviewRemark reviewRemark) {
+    public void merge(ReviewRemark reviewRemark) throws ReviewRemarkException {
         final int index = this.findSimilar(reviewRemark);
         if (index >= 0) {
             this.remarks.set(index, reviewRemark);
@@ -46,7 +44,7 @@ public class ReviewRound {
         }
     }
 
-    private int findSimilar(ReviewRemark reviewRemark) {
+    private int findSimilar(ReviewRemark reviewRemark) throws ReviewRemarkException {
         int i = 0;
         for (final ReviewRemark r : this.remarks) {
             if (r.hasSameTextAndPositionAs(reviewRemark)) {
@@ -68,7 +66,7 @@ public class ReviewRound {
     /**
      * Creates a String representation of this review round.
      */
-    public String serialize() {
+    public String serialize() throws ReviewRemarkException {
         final StringBuilder ret = new StringBuilder();
         ret.append("Review ").append(this.nbr).append(":\n");
         this.serializeRemarksWithType(OTHER_REMARK_HEADER, ret, RemarkType.OTHER);
@@ -80,7 +78,8 @@ public class ReviewRound {
         return ret.toString();
     }
 
-    private void serializeRemarksWithType(String title, StringBuilder ret, RemarkType type) {
+    private void serializeRemarksWithType(String title, StringBuilder ret, RemarkType type)
+            throws ReviewRemarkException {
         boolean titleWritten = false;
         for (final ReviewRemark remark : this.remarks) {
             if (remark.getRemarkType() == type) {
@@ -111,7 +110,7 @@ public class ReviewRound {
         case OTHER_REMARK_HEADER:
             return RemarkType.OTHER;
         default:
-            throw new ReviewtoolException("parse exception: " + string);
+            throw new ReviewRemarkException("parse exception: " + string);
         }
     }
 
@@ -119,7 +118,7 @@ public class ReviewRound {
      * Returns true iff there exist remarks in this review round that still
      * need fixing.
      */
-    public boolean hasUnresolvedRemarks() {
+    public boolean hasUnresolvedRemarks() throws ReviewRemarkException {
         for (final ReviewRemark r : this.remarks) {
             if (r.needsFixing()) {
                 return true;
@@ -131,7 +130,7 @@ public class ReviewRound {
     /**
      * Return true iff there are temporary markers in this review round.
      */
-    public boolean hasTemporaryMarkers() {
+    public boolean hasTemporaryMarkers() throws ReviewRemarkException {
         for (final ReviewRemark r : this.remarks) {
             if (r.getRemarkType() == RemarkType.TEMPORARY) {
                 return true;
@@ -144,7 +143,7 @@ public class ReviewRound {
      * Deletes the given remark from this review round.
      * If it is not contained, nothing happens.
      */
-    public void deleteRemark(ReviewRemark reviewRemark) {
+    public void deleteRemark(ReviewRemark reviewRemark) throws ReviewRemarkException {
         final int i = this.findSimilar(reviewRemark);
         if (i >= 0) {
             this.remarks.remove(i);

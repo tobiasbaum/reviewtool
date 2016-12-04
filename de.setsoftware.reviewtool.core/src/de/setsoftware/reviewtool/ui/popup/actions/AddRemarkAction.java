@@ -19,10 +19,13 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.EclipsePathResource;
+import de.setsoftware.reviewtool.model.EclipseResource;
 import de.setsoftware.reviewtool.model.PositionTransformer;
-import de.setsoftware.reviewtool.model.RemarkType;
-import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.remarks.RemarkType;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
@@ -85,15 +88,15 @@ public class AddRemarkAction extends AbstractHandler {
                                 ? resource : ResourcesPlugin.getWorkspace().getRoot();
                         final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
                         final String reviewer = p.getReviewerForCurrentRound();
-                        ReviewRemark.create(
-                                p,
-                                resourceFiltered,
+                        final ReviewRemark remark = ReviewRemark.create(
+                                new EclipseResource(resourceFiltered),
                                 reviewer,
                                 text,
                                 lineFiltered,
-                                type).save();
+                                type);
+                        p.saveRemark(remark);
                         AddRemarkAction.this.logRemarkCreated(resource.getFullPath(), type, lineFiltered);
-                    } catch (final CoreException e) {
+                    } catch (final ReviewRemarkException e) {
                         throw new ReviewtoolException(e);
                     }
                 }
@@ -116,16 +119,15 @@ public class AddRemarkAction extends AbstractHandler {
                                 ? path : workspace.getRoot().getFullPath();
                         final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
                         final String reviewer = p.getReviewerForCurrentRound();
-                        ReviewRemark.createWithoutMarker(
-                                p,
-                                pathFiltered,
+                        final ReviewRemark remark = ReviewRemark.create(
+                                new EclipsePathResource(pathFiltered, workspace),
                                 reviewer,
                                 text,
                                 lineFiltered,
-                                type,
-                                workspace).save();
+                                type);
+                        p.saveRemark(remark);
                         AddRemarkAction.this.logRemarkCreated(path, type, lineFiltered);
-                    } catch (final CoreException e) {
+                    } catch (final ReviewRemarkException e) {
                         throw new ReviewtoolException(e);
                     }
                 }

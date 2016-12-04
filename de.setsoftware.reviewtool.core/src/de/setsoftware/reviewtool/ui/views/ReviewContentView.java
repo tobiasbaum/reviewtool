@@ -46,8 +46,6 @@ import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.GlobalPosition;
-import de.setsoftware.reviewtool.model.Position;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -58,6 +56,8 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
+import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
+import de.setsoftware.reviewtool.model.remarks.Position;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;

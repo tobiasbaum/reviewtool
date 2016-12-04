@@ -1,7 +1,5 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
-import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -13,18 +11,20 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
-import de.setsoftware.reviewtool.model.DummyMarker;
-import de.setsoftware.reviewtool.model.FileLinePosition;
-import de.setsoftware.reviewtool.model.FilePosition;
-import de.setsoftware.reviewtool.model.GlobalPosition;
-import de.setsoftware.reviewtool.model.IMarkerFactory;
 import de.setsoftware.reviewtool.model.PersistenceStub;
-import de.setsoftware.reviewtool.model.RemarkType;
-import de.setsoftware.reviewtool.model.ResolutionType;
-import de.setsoftware.reviewtool.model.ReviewData;
-import de.setsoftware.reviewtool.model.ReviewRemark;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.StubUi;
+import de.setsoftware.reviewtool.model.remarks.DummyMarker;
+import de.setsoftware.reviewtool.model.remarks.FileLinePosition;
+import de.setsoftware.reviewtool.model.remarks.FilePosition;
+import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
+import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
+import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
+import de.setsoftware.reviewtool.model.remarks.RemarkType;
+import de.setsoftware.reviewtool.model.remarks.ResolutionType;
+import de.setsoftware.reviewtool.model.remarks.ReviewData;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
+import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 
 /**
  * Dialog that allows the user to manually correct the syntax of review data.
@@ -78,44 +78,44 @@ public class CorrectSyntaxDialog extends Dialog {
             final PersistenceStub s = new PersistenceStub();
             final ReviewStateManager p = new ReviewStateManager(s, new StubUi("TEST-1234"));
             final ReviewRemark r1 = ReviewRemark.create(
-                    p, newMarker(), "TB", new GlobalPosition(),
+                    newMarker(), "TB", new GlobalPosition(),
                     "global review remark important to the reviewer", RemarkType.MUST_FIX);
             r1.addComment("AUTHOR-ID", "Nachfrage");
             r1.setResolution(ResolutionType.QUESTION);
-            r1.save();
+            p.saveRemark(r1);
             final ReviewRemark r2 = ReviewRemark.create(
-                    p, newMarker(), "TB", new FilePosition("FileName"),
+                    newMarker(), "TB", new FilePosition("FileName"),
                     "optional remark, with reference to a file", RemarkType.CAN_FIX);
             r2.addComment("AUTHOR-ID", "comment to refuse fixing");
             r2.setResolution(ResolutionType.WONT_FIX);
-            r2.save();
+            p.saveRemark(r2);
             final ReviewRemark r3 = ReviewRemark.create(
-                    p, newMarker(), "TB", new FileLinePosition("FileName", 42),
+                    newMarker(), "TB", new FileLinePosition("FileName", 42),
                     "remark for direct fixing in a certain line", RemarkType.ALREADY_FIXED);
-            r3.save();
+            p.saveRemark(r3);
 
             s.setReviewRound(2);
             final ReviewRemark r4 = ReviewRemark.create(
-                    p, newMarker(), "TB", new GlobalPosition(),
+                    newMarker(), "TB", new GlobalPosition(),
                     "well done", RemarkType.POSITIVE);
-            r4.save();
+            p.saveRemark(r4);
             final ReviewRemark r5 = ReviewRemark.create(
-                    p, newMarker(), "TB", new GlobalPosition(),
+                    newMarker(), "TB", new GlobalPosition(),
                     "temporary marker for the reviewer", RemarkType.TEMPORARY);
-            r5.save();
+            p.saveRemark(r5);
             final ReviewRemark r6 = ReviewRemark.create(
-                    p, newMarker(), "TB", new GlobalPosition(),
+                    newMarker(), "TB", new GlobalPosition(),
                     "some other remark, e.g. 'part of the remarks have been communicated orally'", RemarkType.OTHER);
-            r6.save();
+            p.saveRemark(r6);
 
             return p.getCurrentReviewData();
-        } catch (final CoreException e) {
+        } catch (final ReviewRemarkException e) {
             throw new AssertionError(e);
         }
     }
 
-    private static IMarker newMarker() {
-        return new DummyMarker("marker.type.id");
+    private static IReviewMarker newMarker() {
+        return new DummyMarker();
     }
 
     @Override
@@ -162,12 +162,12 @@ public class CorrectSyntaxDialog extends Dialog {
         if (hadError) {
             persistence.saveCurrentReviewData(reviewData);
         }
-        return ReviewData.parse(persistence, factory, reviewData);
+        return ReviewData.parse(persistence.getReviewersForRounds(), factory, reviewData);
     }
 
     private static String canBeParsed(ReviewStateManager persistence, String reviewData) {
         try {
-            ReviewData.parse(persistence, DummyMarker.FACTORY, reviewData);
+            ReviewData.parse(persistence.getReviewersForRounds(), DummyMarker.FACTORY, reviewData);
             return null;
         } catch (final RuntimeException e) {
             return e.getMessage() == null ? e.toString() : e.getMessage();
