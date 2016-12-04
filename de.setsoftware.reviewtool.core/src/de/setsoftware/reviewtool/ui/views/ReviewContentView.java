@@ -274,7 +274,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath());
             final IEditorPart part = IDE.openEditorOnFileStore(page, fileStore);
             //for files not in the workspace, we cannot create markers, but let's at least select the text
-            if (stop.isDetailedFragmentKnown()) {
+            if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {
                 final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
                 final int posStart = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getFrom()) - 1;
                 final int posEnd = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getTo());
