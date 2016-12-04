@@ -213,12 +213,43 @@ public class SvnChangeSource implements IChangeSource {
                         this.determineChangesInCommit(e), e.isVisible());
     }
 
+    /**
+     * Helpers class to account for the fact that SVN does not fill the copy path
+     * for single files when the whole containing directory has been copied.
+     */
+    private static final class DirectoryMoveInfo {
+        private final List<Pair<String, String>> directoryCopies = new ArrayList<>();
+
+        public DirectoryMoveInfo(Collection<SVNLogEntryPath> values) {
+            for (final SVNLogEntryPath p : values) {
+                if (p.getKind() == SVNNodeKind.DIR && p.getCopyPath() != null) {
+                    this.directoryCopies.add(Pair.create(p.getCopyPath(), p.getPath()));
+                }
+            }
+        }
+
+        private String determineOldPath(SVNLogEntryPath entryInfo) {
+            if (entryInfo.getCopyPath() != null) {
+                return entryInfo.getCopyPath();
+            }
+            final String path = entryInfo.getPath();
+            for (final Pair<String, String> dirCopy : this.directoryCopies) {
+                if (path.startsWith(dirCopy.getSecond())) {
+                    return dirCopy.getFirst() + path.substring(dirCopy.getSecond().length());
+                }
+            }
+            return path;
+        }
+
+    }
+
     private List<Change> determineChangesInCommit(SvnRevision e)
             throws SVNException, IOException {
         final List<Change> ret = new ArrayList<>();
         final SVNRevision revision = SVNRevision.create(e.getRevision());
         final Map<String, SVNLogEntryPath> changedPaths = e.getChangedPaths();
-        final Set<String> moveSources = this.determineMoveSources(changedPaths.values());
+        final DirectoryMoveInfo dirMoves = new DirectoryMoveInfo(changedPaths.values());
+        final Set<String> moveSources = this.determineMoveSources(changedPaths.values(), dirMoves);
         final List<String> sortedPaths = new ArrayList<>(changedPaths.keySet());
         Collections.sort(sortedPaths);
         for (final String path : sortedPaths) {
@@ -231,17 +262,17 @@ public class SvnChangeSource implements IChangeSource {
                 continue;
             }
             if (this.isBinaryFile(e.getRepository(), value, e.getRevision())) {
-                ret.add(this.createBinaryChange(revision, value, e.getRepository(), e.isVisible()));
+                ret.add(this.createBinaryChange(revision, value, e.getRepository(), e.isVisible(), dirMoves));
             } else {
-                ret.addAll(this.determineChangesInFile(revision, e.getRepository(), value, e.isVisible()));
+                ret.addAll(this.determineChangesInFile(revision, e.getRepository(), value, e.isVisible(), dirMoves));
             }
         }
         return ret;
     }
 
     private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo,
-            final boolean isVisible) {
-        final String oldPath = this.determineOldPath(entryInfo);
+            final boolean isVisible, DirectoryMoveInfo dirMoves) {
+        final String oldPath = dirMoves.determineOldPath(entryInfo);
         final FileInRevision oldFileInfo =
                 ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo);
         final FileInRevision newFileInfo =
@@ -258,16 +289,18 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo,
-            final boolean isVisible)
+            final boolean isVisible, DirectoryMoveInfo dirMoves)
             throws IOException {
-        final String oldPath = this.determineOldPath(entryInfo);
+        final String oldPath = dirMoves.determineOldPath(entryInfo);
         final byte[] oldFileContent = repoUrl.getFileContents(oldPath, this.previousRevision(revision));
         if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
-            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
+            return Collections.singletonList(
+                    this.createBinaryChange(revision, entryInfo, repoUrl, isVisible, dirMoves));
         }
         final byte[] newFileContent = repoUrl.getFileContents(entryInfo.getPath(), this.revision(revision));
         if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
-            return Collections.singletonList(this.createBinaryChange(revision, entryInfo, repoUrl, isVisible));
+            return Collections.singletonList(
+                    this.createBinaryChange(revision, entryInfo, repoUrl, isVisible, dirMoves));
         }
 
 
@@ -310,10 +343,6 @@ public class SvnChangeSource implements IChangeSource {
         return b != '\n' && b != '\r' && b != '\t' && b < 0x20 && b >= 0;
     }
 
-    private String determineOldPath(SVNLogEntryPath entryInfo) {
-        return entryInfo.getCopyPath() == null ? entryInfo.getPath() : entryInfo.getCopyPath();
-    }
-
     private String guessEncoding(byte[] oldFileContent, byte[] newFileContent) {
         if (this.isValidUtf8(oldFileContent) && this.isValidUtf8(newFileContent)) {
             return "UTF-8";
@@ -346,13 +375,14 @@ public class SvnChangeSource implements IChangeSource {
         return SVNProperty.isBinaryMimeType(mimeType);
     }
 
-    private Set<String> determineMoveSources(Collection<SVNLogEntryPath> entries) {
+    private Set<String> determineMoveSources(Collection<SVNLogEntryPath> entries, DirectoryMoveInfo dirMoves) {
         final Set<String> ret = new LinkedHashSet<>();
 
         //determine all copy sources
         for (final SVNLogEntryPath p : entries) {
-            if (p.getCopyPath() != null) {
-                ret.add(p.getCopyPath());
+            final String copyPath = dirMoves.determineOldPath(p);
+            if (!copyPath.equals(p.getPath())) {
+                ret.add(copyPath);
             }
         }
 
