@@ -68,15 +68,16 @@ class MutableTour implements IReviewElement {
     }
 
     private boolean canBeMerged(Stop s, List<MutableTour> mutableTours, int excludedIndex) {
-        return this.getStopToMergeWith(s, mutableTours, excludedIndex) != null;
+        final StopInTour toMergeWith = this.getStopToMergeWith(s, mutableTours, excludedIndex);
+        return toMergeWith != null && !mutableTours.get(excludedIndex).equals(toMergeWith.tour);
     }
 
-    public boolean resolve(List<MutableTour> mutableTours, int excludedIndex) {
+    public boolean resolve(List<MutableTour> mutableTours, int currentIndex) {
         boolean didSomething = false;
         final Iterator<Stop> iter = this.stops.iterator();
         while (iter.hasNext()) {
             final Stop s = iter.next();
-            final StopInTour toMergeWith = this.getStopToMergeWith(s, mutableTours, excludedIndex);
+            final StopInTour toMergeWith = this.getStopToMergeWith(s, mutableTours, currentIndex);
             if (toMergeWith != null) {
                 toMergeWith.merge(s);
                 toMergeWith.tour.descriptionParts.addAll(this.descriptionParts);
@@ -87,9 +88,9 @@ class MutableTour implements IReviewElement {
         return didSomething;
     }
 
-    private StopInTour getStopToMergeWith(Stop s, List<MutableTour> mutableTours, int excludedIndex) {
+    private StopInTour getStopToMergeWith(Stop s, List<MutableTour> mutableTours, int currentIndex) {
         // try to merge with stops of later tours
-        for (int tourIndex = excludedIndex + 1; tourIndex < mutableTours.size(); tourIndex++) {
+        for (int tourIndex = currentIndex + 1; tourIndex < mutableTours.size(); tourIndex++) {
             final StopInTour mergeWith = mutableTours.get(tourIndex).getStopToMergeWith(s);
             if (mergeWith != null) {
                 return mergeWith;
@@ -97,13 +98,13 @@ class MutableTour implements IReviewElement {
         }
         // try to merge with stops in this tour
         {
-            final StopInTour mergeWith = mutableTours.get(excludedIndex).getStopToMergeWith(s);
+            final StopInTour mergeWith = mutableTours.get(currentIndex).getStopToMergeWith(s);
             if (mergeWith != null) {
                 return mergeWith;
             }
         }
         // try to merge with stops of earlier tours (only necessary for resolving complete tours)
-        for (int tourIndex = excludedIndex - 1; tourIndex >= 0; tourIndex--) {
+        for (int tourIndex = currentIndex - 1; tourIndex >= 0; tourIndex--) {
             final StopInTour mergeWith = mutableTours.get(tourIndex).getStopToMergeWith(s);
             if (mergeWith != null) {
                 return mergeWith;

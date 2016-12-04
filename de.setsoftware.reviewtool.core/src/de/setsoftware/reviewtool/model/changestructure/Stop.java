@@ -157,6 +157,7 @@ public class Stop implements IReviewElement {
         final Multimap<FileInRevision, Fragment> mergedHistory = new Multimap<>();
         mergedHistory.putAll(this.history);
         mergedHistory.putAll(other.history);
+        mergedHistory.sortValues();
 
         return new Stop(
                 mergedHistoryOrder,

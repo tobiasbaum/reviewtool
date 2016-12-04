@@ -108,4 +108,14 @@ public final class Multimap<K, V> {
         return maxKey;
     }
 
+    /**
+     * Sorts all value lists.
+     * @pre The values are comparable.
+     */
+    public void sortValues() {
+        for (final Entry<K, List<V>> e : this.map.entrySet()) {
+            Collections.sort((List<Comparable<Object>>) e.getValue());
+        }
+    }
+
 }
