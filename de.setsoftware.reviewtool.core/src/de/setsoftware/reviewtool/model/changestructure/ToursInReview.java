@@ -55,6 +55,7 @@ public class ToursInReview {
          * Lets the user choose one of the given tour structures.
          * The given list contains pairs with a description of the merge algorithm and the resulting tours.
          * There always is at least one choice.
+         * When the user cancels, null is returned.
          */
         public abstract List<? extends Tour> selectInitialTours(
                 List<? extends Pair<String, List<? extends Tour>>> choices);
@@ -63,6 +64,7 @@ public class ToursInReview {
          * Lets the user choose any subset (including the empty set) of the given sets of
          * changes that shall be considered irrelevant for review. The given list contains
          * pairs with a description of the filter strategy and the resulting filter candidates.
+         * When the user cancels, null is returned.
          */
         public abstract List<? extends Pair<String, Set<? extends Change>>> selectIrrelevant(
                 List<? extends Pair<String, Set<? extends Change>>> strategyResuls);
@@ -149,6 +151,9 @@ public class ToursInReview {
         }
 
         final List<? extends Pair<String, Set<? extends Change>>> selected = createUi.selectIrrelevant(strategyResuls);
+        if (selected == null) {
+            return null;
+        }
         final Set<Change> toMakeIrrelevant = new HashSet<>();
         final Set<String> selectedDescriptions = new LinkedHashSet<>();
         for (final Pair<String, Set<? extends Change>> set : selected) {
