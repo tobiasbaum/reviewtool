@@ -2,21 +2,14 @@ package de.setsoftware.reviewtool.model;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.Collections;
-
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.model.IUserInteraction;
-import de.setsoftware.reviewtool.model.PersistenceStub;
-import de.setsoftware.reviewtool.model.ReviewStateManager;
-import de.setsoftware.reviewtool.model.StubUi;
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.FilePosition;
 import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.RemarkType;
 import de.setsoftware.reviewtool.model.remarks.ResolutionType;
-import de.setsoftware.reviewtool.model.remarks.ReviewData;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
 
 /**
@@ -294,66 +287,40 @@ public class RemarkSaveTest {
     }
 
     @Test
-    public void testLoadWithWrongOrder() throws Exception {
-        final String input = "Review 1:\n"
-                + "* muss\n"
-                + "*# Anm A\n"
-                + "*# Anm B\n"
-                + "\n"
-                + "Review 2:\n"
+    public void testAddComment() throws Exception {
+        final ReviewStateManager p = createPersistence();
+        p.saveCurrentReviewData("Review 2:\n"
                 + "* muss\n"
                 + "*# Anm C\n"
-                + "*# Anm D\n";
+                + "*# Anm D\n"
+                + "\n"
+                + "Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n");
 
-        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
+        final ReviewRemark r1 = ReviewRemark.create(newMarker(), "TB", global(), "Anm A", RemarkType.MUST_FIX);
+        r1.addComment("AA", "ein Kommentar fuer A");
+        r1.setResolution(ResolutionType.QUESTION);
+        p.saveRemark(r1);
+
+        final ReviewRemark r2 = ReviewRemark.create(newMarker(), "XX", global(), "Anm D", RemarkType.MUST_FIX);
+        r2.addComment("DD", "ein Kommentar fuer D");
+        r2.setResolution(ResolutionType.QUESTION);
+        p.saveRemark(r2);
 
         assertEquals("Review 2:\n"
                 + "* muss\n"
                 + "*# Anm C\n"
                 + "*# Anm D\n"
+                + "*#* (?) DD: ein Kommentar fuer D\n"
                 + "\n"
                 + "Review 1:\n"
                 + "* muss\n"
                 + "*# Anm A\n"
+                + "*#* (?) AA: ein Kommentar fuer A\n"
                 + "*# Anm B\n",
-                d.serialize());
-    }
-
-    @Test
-    public void testGapsInRoundNumbers() throws Exception {
-        final ReviewStateManager p = createPersistence();
-        final String input = "Review 3:\n"
-                + "* muss\n"
-                + "*# Anm C\n"
-                + "*# Anm D\n"
-                + "\n"
-                + "Review 1:\n"
-                + "* muss\n"
-                + "*# Anm A\n"
-                + "*# Anm B\n"
-                + "\n"
-                + "Review 5:\n"
-                + "* muss\n"
-                + "*# Anm E\n"
-                + "*# Anm F\n";
-
-        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
-
-        assertEquals("Review 5:\n"
-                + "* muss\n"
-                + "*# Anm E\n"
-                + "*# Anm F\n"
-                + "\n"
-                + "Review 3:\n"
-                + "* muss\n"
-                + "*# Anm C\n"
-                + "*# Anm D\n"
-                + "\n"
-                + "Review 1:\n"
-                + "* muss\n"
-                + "*# Anm A\n"
-                + "*# Anm B\n",
-                d.serialize());
+                p.getCurrentReviewData());
     }
 
 }

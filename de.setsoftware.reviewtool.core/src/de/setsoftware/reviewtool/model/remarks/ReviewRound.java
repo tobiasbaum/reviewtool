@@ -150,4 +150,11 @@ public class ReviewRound {
         }
     }
 
+    /**
+     * Returns true iff this review round contains a remark with the same message and position as the given one.
+     */
+    public boolean contains(ReviewRemark reviewRemark) {
+        return this.findSimilar(reviewRemark) >= 0;
+    }
+
 }

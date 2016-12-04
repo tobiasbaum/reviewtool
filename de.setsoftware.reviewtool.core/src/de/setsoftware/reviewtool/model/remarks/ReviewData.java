@@ -43,8 +43,27 @@ public class ReviewData {
         }
     }
 
-    public void merge(ReviewRemark reviewRemark, int roundNumber) throws ReviewRemarkException {
-        this.getOrCreateRound(roundNumber).merge(reviewRemark);
+    /**
+     * Writes a new version of the given remark into the review data (if already contained)
+     * or adds it to the given defaultRoundNumber (if not contained so far).
+     */
+    public void merge(ReviewRemark reviewRemark, int defaultRoundNumber) throws ReviewRemarkException {
+        ReviewRound round = this.findRoundWith(reviewRemark);
+        if (round == null) {
+            round = this.getOrCreateRound(defaultRoundNumber);
+        }
+        round.merge(reviewRemark);
+    }
+
+    private ReviewRound findRoundWith(ReviewRemark reviewRemark) {
+        final ListIterator<ReviewRound> iter = this.rounds.listIterator(this.rounds.size());
+        while (iter.hasPrevious()) {
+            final ReviewRound round = iter.previous();
+            if (round.contains(reviewRemark)) {
+                return round;
+            }
+        }
+        return null;
     }
 
     private ReviewRound getOrCreateRound(int roundNumber) {
