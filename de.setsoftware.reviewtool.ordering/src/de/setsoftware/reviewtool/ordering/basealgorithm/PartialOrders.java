@@ -1,7 +1,9 @@
 package de.setsoftware.reviewtool.ordering.basealgorithm;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class PartialOrders {
@@ -25,6 +27,17 @@ public class PartialOrders {
             }
         }
         return minElements;
+    }
+
+    public static<T> void topoSort(List<T> items, PartialOrder<T> order) {
+        //simple selection sort
+        final List<T> newOrder = new ArrayList<>();
+        while (!items.isEmpty()) {
+            final Set<T> min = determineMinElements(items, order);
+            items.removeAll(min);
+            newOrder.addAll(min);
+        }
+        items.addAll(newOrder);
     }
 
 }

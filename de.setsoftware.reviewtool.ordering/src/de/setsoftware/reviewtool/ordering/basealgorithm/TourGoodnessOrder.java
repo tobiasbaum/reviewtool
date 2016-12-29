@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.ordering.basealgorithm;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.TreeSet;
@@ -32,8 +33,14 @@ public class TourGoodnessOrder<S, R extends Comparable<R>> implements PartialOrd
 
         final Integer[] countVector1 = this.toCountVector(neighboringStopRelatednessCounts1, possibleRelatednesses);
         final Integer[] countVector2 = this.toCountVector(neighboringStopRelatednessCounts2, possibleRelatednesses);
-        return new LexicographicOrder<>(new InvertedOrder<>(new NaturalOrder<Integer>())).isLessOrEquals(
-                countVector1, countVector2);
+        if (Arrays.equals(countVector1, countVector2)) {
+            //when the scores are equal but the tours are different, we want to regard them as incomparable instead of equal
+            //  therefore this special case
+            return value1.equals(value2);
+        } else {
+            return new LexicographicOrder<>(new InvertedOrder<>(new NaturalOrder<Integer>())).isLessOrEquals(
+                    countVector1, countVector2);
+        }
     }
 
     private Multiset<R> determineNeighboringStopRelatednessCounts(Tour<S> tour) {
