@@ -3,9 +3,6 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Date;
 import java.util.Map;
 
-import org.tmatesoft.svn.core.SVNLogEntry;
-import org.tmatesoft.svn.core.SVNLogEntryPath;
-
 /**
  * Encapsulates a Subversion revision with associated information about the repository, the log message, the commit
  * date, the commit author, and the paths changed. In addition, a SvnRevision can be marked as "invisible". Invisible
@@ -14,7 +11,7 @@ import org.tmatesoft.svn.core.SVNLogEntryPath;
  */
 class SvnRevision {
     private final SvnRepo repository;
-    private final SVNLogEntry logEntry;
+    private final CachedLogEntry logEntry;
     private final boolean isVisible;
 
     /**
@@ -23,7 +20,7 @@ class SvnRevision {
      * @param logEntry The log entry.
      * @param isVisible True if the revision is visible, else false.
      */
-    public SvnRevision(final SvnRepo repository, final SVNLogEntry logEntry, final boolean isVisible) {
+    public SvnRevision(final SvnRepo repository, final CachedLogEntry logEntry, final boolean isVisible) {
         this.repository = repository;
         this.logEntry = logEntry;
         this.isVisible = isVisible;
@@ -67,7 +64,7 @@ class SvnRevision {
     /**
      * @return The associated commit paths.
      */
-    public Map<String, SVNLogEntryPath> getChangedPaths() {
+    public Map<String, CachedLogEntryPath> getChangedPaths() {
         return this.logEntry.getChangedPaths();
     }
 

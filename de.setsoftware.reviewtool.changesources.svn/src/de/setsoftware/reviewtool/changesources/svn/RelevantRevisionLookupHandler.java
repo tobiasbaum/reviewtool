@@ -11,11 +11,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNLogEntry;
-import org.tmatesoft.svn.core.SVNLogEntryPath;
-import org.tmatesoft.svn.core.SVNNodeKind;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
@@ -26,7 +22,7 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
  * inaccurate. Revisions that are retrofitted are marked as "invisible" in order to be able to differentiate between
  * "proper" and "technically necessary" revisions.
  */
-class RelevantRevisionLookupHandler implements ISVNLogEntryHandler {
+class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
 
     private final Pattern pattern;
     private final List<SvnRevision> potentiallyRelevantEntries = new ArrayList<>();
@@ -37,13 +33,14 @@ class RelevantRevisionLookupHandler implements ISVNLogEntryHandler {
         this.pattern = patternForKey;
     }
 
-    public void setCurrentRepo(SvnRepo repo) {
+    @Override
+    public void startNewRepo(SvnRepo repo) {
         this.currentRoot = repo;
         this.entriesSinceLastMatching.clear();
     }
 
     @Override
-    public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
+    public void handleLogEntry(CachedLogEntry logEntry) throws SVNException {
         if (logEntry.getMessage() != null && this.pattern.matcher(logEntry.getMessage()).matches()) {
             assert this.currentRoot != null;
             this.potentiallyRelevantEntries.add(new SvnRevision(this.currentRoot, logEntry, true));
@@ -81,11 +78,11 @@ class RelevantRevisionLookupHandler implements ISVNLogEntryHandler {
     private void adjustRelevantPaths(
             SvnRevision revision, Set<String> relevantPaths, FileHistoryGraph historyGraphBuffer) {
         assert revision.isVisible();
-        for (final Entry<String, SVNLogEntryPath> e : revision.getChangedPaths().entrySet()) {
-            if (e.getValue().getKind() != SVNNodeKind.FILE) {
+        for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
+            if (!e.getValue().isFile()) {
                 continue;
             }
-            if (e.getValue().getType() == SVNLogEntryPath.TYPE_DELETED) {
+            if (e.getValue().isDeleted()) {
                 relevantPaths.remove(e.getKey());
                 historyGraphBuffer.addDeletion(
                         e.getKey(),
@@ -108,7 +105,7 @@ class RelevantRevisionLookupHandler implements ISVNLogEntryHandler {
     private void trackMovesAndCopies(
             SvnRevision revision, Set<String> relevantPaths, FileHistoryGraph historyGraphBuffer) {
         assert !revision.isVisible();
-        for (final Entry<String, SVNLogEntryPath> e : revision.getChangedPaths().entrySet()) {
+        for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String copyPath = e.getValue().getCopyPath();
             if (copyPath != null && relevantPaths.contains(copyPath)) {
                 relevantPaths.add(e.getKey());
@@ -120,8 +117,8 @@ class RelevantRevisionLookupHandler implements ISVNLogEntryHandler {
                         revision.getRepository());
             }
         }
-        for (final Entry<String, SVNLogEntryPath> e : revision.getChangedPaths().entrySet()) {
-            if (e.getValue().getType() == SVNLogEntryPath.TYPE_DELETED) {
+        for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
+            if (e.getValue().isDeleted()) {
                 relevantPaths.remove(e.getKey());
                 historyGraphBuffer.addDeletion(
                         e.getKey(),

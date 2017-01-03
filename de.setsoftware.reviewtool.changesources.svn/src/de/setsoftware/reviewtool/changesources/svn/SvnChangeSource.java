@@ -19,11 +19,8 @@ import java.util.regex.Pattern;
 
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
-import org.tmatesoft.svn.core.SVNLogEntryPath;
-import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.SVNProperties;
 import org.tmatesoft.svn.core.SVNProperty;
-import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
@@ -49,7 +46,6 @@ import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 public class SvnChangeSource implements IChangeSource {
 
     private static final String KEY_PLACEHOLDER = "${key}";
-    private static final int LOOKUP_LIMIT = 1000;
 
     private final Set<File> workingCopyRoots;
     private final String logMessagePattern;
@@ -162,39 +158,9 @@ public class SvnChangeSource implements IChangeSource {
             final String key, FileHistoryGraph historyGraphBuffer) throws SVNException {
         final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
-            final SVNURL rootUrl = this.mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
-            handler.setCurrentRepo(new SvnRepo(
-                    this.mgr,
-                    workingCopyRoot,
-                    rootUrl,
-                    this.determineCheckoutPrefix(workingCopyRoot, rootUrl)));
-
-            final SVNURL wcUrl = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.WORKING).getURL();
-            final String relPath = wcUrl.toString().substring(rootUrl.toString().length());
-            this.mgr.getLogClient().doLog(
-                    rootUrl,
-                    new String[] { relPath },
-                    SVNRevision.HEAD,
-                    SVNRevision.HEAD,
-                    SVNRevision.create(0),
-                    false,
-                    true,
-                    false,
-                    LOOKUP_LIMIT,
-                    new String[0],
-                    handler);
+            CachedLog.getInstance().traverseRecentEntries(this.mgr, workingCopyRoot, handler);
         }
         return handler.determineRelevantRevisions(historyGraphBuffer);
-    }
-
-    private int determineCheckoutPrefix(File workingCopyRoot, SVNURL rootUrl) throws SVNException {
-        SVNURL checkoutRootUrlPrefix = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.HEAD).getURL();
-        int i = 0;
-        while (!(checkoutRootUrlPrefix.equals(rootUrl) || checkoutRootUrlPrefix.getPath().equals("//"))) {
-            checkoutRootUrlPrefix = checkoutRootUrlPrefix.removePathTail();
-            i++;
-        }
-        return i;
     }
 
     private List<Commit> convertToChanges(List<SvnRevision> revisions)
@@ -220,15 +186,15 @@ public class SvnChangeSource implements IChangeSource {
     private static final class DirectoryMoveInfo {
         private final List<Pair<String, String>> directoryCopies = new ArrayList<>();
 
-        public DirectoryMoveInfo(Collection<SVNLogEntryPath> values) {
-            for (final SVNLogEntryPath p : values) {
-                if (p.getKind() == SVNNodeKind.DIR && p.getCopyPath() != null) {
+        public DirectoryMoveInfo(Collection<CachedLogEntryPath> values) {
+            for (final CachedLogEntryPath p : values) {
+                if (p.isDir() && p.getCopyPath() != null) {
                     this.directoryCopies.add(Pair.create(p.getCopyPath(), p.getPath()));
                 }
             }
         }
 
-        private String determineOldPath(SVNLogEntryPath entryInfo) {
+        private String determineOldPath(CachedLogEntryPath entryInfo) {
             if (entryInfo.getCopyPath() != null) {
                 return entryInfo.getCopyPath();
             }
@@ -247,14 +213,14 @@ public class SvnChangeSource implements IChangeSource {
             throws SVNException, IOException {
         final List<Change> ret = new ArrayList<>();
         final SVNRevision revision = SVNRevision.create(e.getRevision());
-        final Map<String, SVNLogEntryPath> changedPaths = e.getChangedPaths();
+        final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();
         final DirectoryMoveInfo dirMoves = new DirectoryMoveInfo(changedPaths.values());
         final Set<String> moveSources = this.determineMoveSources(changedPaths.values(), dirMoves);
         final List<String> sortedPaths = new ArrayList<>(changedPaths.keySet());
         Collections.sort(sortedPaths);
         for (final String path : sortedPaths) {
-            final SVNLogEntryPath value = changedPaths.get(path);
-            if (value.getKind() != SVNNodeKind.FILE) {
+            final CachedLogEntryPath value = changedPaths.get(path);
+            if (!value.isFile()) {
                 continue;
             }
             if (moveSources.contains(value.getPath())) {
@@ -270,7 +236,7 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private Change createBinaryChange(SVNRevision revision, SVNLogEntryPath entryInfo, SvnRepo repo,
+    private Change createBinaryChange(SVNRevision revision, CachedLogEntryPath entryInfo, SvnRepo repo,
             final boolean isVisible, DirectoryMoveInfo dirMoves) {
         final String oldPath = dirMoves.determineOldPath(entryInfo);
         final FileInRevision oldFileInfo =
@@ -288,7 +254,7 @@ public class SvnChangeSource implements IChangeSource {
         return ChangestructureFactory.createRepoRevision(revision.getNumber() - 1);
     }
 
-    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, SVNLogEntryPath entryInfo,
+    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, CachedLogEntryPath entryInfo,
             final boolean isVisible, DirectoryMoveInfo dirMoves)
             throws IOException {
         final String oldPath = dirMoves.determineOldPath(entryInfo);
@@ -366,8 +332,8 @@ public class SvnChangeSource implements IChangeSource {
         }
     }
 
-    private boolean isBinaryFile(SvnRepo repoUrl, SVNLogEntryPath path, long revision) throws SVNException {
-        final long revisionToUse = path.getType() == 'D' ? revision - 1 : revision;
+    private boolean isBinaryFile(SvnRepo repoUrl, CachedLogEntryPath path, long revision) throws SVNException {
+        final long revisionToUse = path.isDeleted() ? revision - 1 : revision;
         final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.getRemoteUrl(), true);
         final SVNProperties propertyBuffer = new SVNProperties();
         repo.getFile(path.getPath(), revisionToUse, propertyBuffer, null);
@@ -375,11 +341,11 @@ public class SvnChangeSource implements IChangeSource {
         return SVNProperty.isBinaryMimeType(mimeType);
     }
 
-    private Set<String> determineMoveSources(Collection<SVNLogEntryPath> entries, DirectoryMoveInfo dirMoves) {
+    private Set<String> determineMoveSources(Collection<CachedLogEntryPath> entries, DirectoryMoveInfo dirMoves) {
         final Set<String> ret = new LinkedHashSet<>();
 
         //determine all copy sources
-        for (final SVNLogEntryPath p : entries) {
+        for (final CachedLogEntryPath p : entries) {
             final String copyPath = dirMoves.determineOldPath(p);
             if (!copyPath.equals(p.getPath())) {
                 ret.add(copyPath);
@@ -387,8 +353,8 @@ public class SvnChangeSource implements IChangeSource {
         }
 
         //if a copy source was deleted, we consider this a "move", everything else is not a move
-        for (final SVNLogEntryPath p : entries) {
-            if (p.getType() != 'D') {
+        for (final CachedLogEntryPath p : entries) {
+            if (!p.isDeleted()) {
                 ret.remove(p.getPath());
             }
         }
