@@ -16,6 +16,6 @@ public interface IStopViewer {
      * @param scrollContent The parent {@link Composite}.
      * @param stop The {@link Stop} to display.
      */
-    void createStopView(ViewPart view, Composite scrollContent, Stop stop);
+    public abstract void createStopView(ViewPart view, Composite scrollContent, Stop stop);
 
 }

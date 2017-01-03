@@ -1,10 +1,13 @@
 package de.setsoftware.reviewtool.ui.views;
 
+import java.net.URI;
+
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.action.MenuManager;
@@ -15,6 +18,7 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.part.ViewPart;
 
@@ -95,12 +99,16 @@ public class ViewHelper {
         return null;
     }
 
-    private static Pair<? extends IResource, Integer> handleTextSelection(ITextSelection sel, Object input)
+    private static Pair<? extends Object, Integer> handleTextSelection(ITextSelection sel, Object input)
             throws ExecutionException {
 
         if (input instanceof FileEditorInput) {
             final IFile f = ((FileEditorInput) input).getFile();
             return Pair.create(f, sel.getStartLine() + 1);
+        } else if (input instanceof FileStoreEditorInput) {
+            final URI uri = ((FileStoreEditorInput) input).getURI();
+            final IPath path = Path.fromOSString(uri.getPath());
+            return Pair.create(path, sel.getStartLine() + 1);
         } else {
             return null;
         }

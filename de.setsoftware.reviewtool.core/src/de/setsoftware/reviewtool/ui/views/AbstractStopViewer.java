@@ -120,7 +120,7 @@ public abstract class AbstractStopViewer implements IStopViewer {
                 || sourceFragments.isEmpty() || targetFragments.isEmpty()) {
             this.createBinaryHunkViewer(view, parent);
         } else {
-            this.createTextHunkViewer(parent, sourceRevision, targetRevision, sourceFragments, targetFragments,
+            this.createTextHunkViewer(view, parent, sourceRevision, targetRevision, sourceFragments, targetFragments,
                     rangeLeft, rangeRight);
         }
     }
@@ -132,10 +132,15 @@ public abstract class AbstractStopViewer implements IStopViewer {
         ViewHelper.createContextMenuWithoutSelectionProvider(view, label);
     }
 
-    private void createTextHunkViewer(final Composite parent,
-            final FileInRevision sourceRevision, final FileInRevision targetRevision,
-            final List<Fragment> sourceFragments, final List<Fragment> targetFragments,
-            final Position rangeLeft, final Position rangeRight) {
+    private void createTextHunkViewer(
+            final ViewPart viewPart,
+            final Composite parent,
+            final FileInRevision sourceRevision,
+            final FileInRevision targetRevision,
+            final List<Fragment> sourceFragments,
+            final List<Fragment> targetFragments,
+            final Position rangeLeft,
+            final Position rangeRight) {
         final CompareConfiguration compareConfiguration = new CompareConfiguration();
         compareConfiguration.setLeftLabel(this.toLabel(sourceRevision));
         compareConfiguration.setRightLabel(this.toLabel(targetRevision));
@@ -153,6 +158,9 @@ public abstract class AbstractStopViewer implements IStopViewer {
         }
         if (rangeRight != null) {
             viewer.selectRight(rangeRight);
+        }
+        for (final SourceViewer v : viewer.viewers) {
+            ViewHelper.createContextMenu(viewPart, v.getTextWidget(), v);
         }
     }
 
