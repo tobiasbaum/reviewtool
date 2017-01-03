@@ -28,6 +28,7 @@ import de.setsoftware.reviewtool.model.EndTransition.Type;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
+import de.setsoftware.reviewtool.model.TicketLinkSettings;
 
 /**
  * Persists review comments in a special field of JIRA tickets.
@@ -103,6 +104,7 @@ public class JiraPersistence implements IReviewPersistence {
     private final Map<String, String> filtersForFixing;
 
     private String reviewFieldId;
+    private final TicketLinkSettings linkSettings;
 
     public JiraPersistence(
             String url,
@@ -112,7 +114,8 @@ public class JiraPersistence implements IReviewPersistence {
             String readyForReviewState,
             String rejectedState,
             String doneState,
-            String user, String password) {
+            String user, String password,
+            TicketLinkSettings linkSettings) {
         this.url = url;
         this.reviewFieldName = reviewFieldName;
         this.user = user;
@@ -125,6 +128,7 @@ public class JiraPersistence implements IReviewPersistence {
         this.doneStateId = this.getStateId(states, doneState);
         this.filtersForReview = new LinkedHashMap<>();
         this.filtersForFixing = new LinkedHashMap<>();
+        this.linkSettings = linkSettings;
     }
 
     private JsonArray loadStates() {
@@ -523,6 +527,11 @@ public class JiraPersistence implements IReviewPersistence {
             }
         }
         return null;
+    }
+
+    @Override
+    public TicketLinkSettings getLinkSettings() {
+        return this.linkSettings;
     }
 
 }

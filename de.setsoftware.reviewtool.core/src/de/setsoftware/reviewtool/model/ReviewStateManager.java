@@ -147,6 +147,10 @@ public class ReviewStateManager {
         this.persistence.startFixing(this.ticketKey);
     }
 
+    public TicketLinkSettings getTicketLinkSettings() {
+        return this.persistence.getLinkSettings();
+    }
+
     /**
      * Deletes the given review remark. Persists the changed review data and deletes the marker as well.
      */

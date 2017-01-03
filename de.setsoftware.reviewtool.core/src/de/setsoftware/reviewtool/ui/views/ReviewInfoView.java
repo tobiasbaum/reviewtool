@@ -1,13 +1,22 @@
 package de.setsoftware.reviewtool.ui.views;
 
+import java.awt.Desktop;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.layout.RowLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
@@ -19,6 +28,7 @@ import de.setsoftware.reviewtool.model.IReviewDataSaveListener;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.TicketInfo;
+import de.setsoftware.reviewtool.model.TicketLinkSettings;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.dialogs.RemarkMarkers;
 
@@ -39,6 +49,47 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
         this.comp = comp;
 
         ViewDataSource.get().registerListener(this);
+    }
+
+    private Text createIdStuff(Composite comp, String labelText, final String id, ReviewStateManager mgr) {
+        final Label label = new Label(comp, SWT.NULL);
+        label.setText(labelText);
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
+
+        final Composite textfieldAndButtons = new Composite(comp, SWT.NULL);
+        final RowLayout layout = new RowLayout();
+        textfieldAndButtons.setLayout(layout);
+        textfieldAndButtons.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
+        final Text field = new Text(textfieldAndButtons,
+                SWT.SINGLE | SWT.BORDER | SWT.RESIZE | SWT.H_SCROLL | SWT.V_SCROLL);
+        field.setText(id + ", round " + mgr.getCurrentRound());
+        field.setEditable(false);
+        ViewHelper.createContextMenuWithoutSelectionProvider(this, field);
+
+        final TicketLinkSettings linkSettings = mgr.getTicketLinkSettings();
+        if (linkSettings != null) {
+            final Button openButton = new Button(textfieldAndButtons, SWT.NULL);
+            openButton.setText(linkSettings.getText());
+
+            openButton.addSelectionListener(new SelectionListener() {
+                @Override
+                public void widgetSelected(SelectionEvent ev) {
+                    try {
+                        Desktop.getDesktop().browse(new URI(linkSettings.createLinkFor(id)));
+                    } catch (IOException | URISyntaxException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+
+                @Override
+                public void widgetDefaultSelected(SelectionEvent ev) {
+                    this.widgetSelected(ev);
+                }
+            });
+        }
+
+        return field;
     }
 
     private Text createLabelAndText(Composite comp, String labelText, String text, int style, int fill) {
@@ -92,8 +143,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
         final ITicketData ticketData = mgr.getCurrentTicketData();
         final TicketInfo ticketInfo = ticketData.getTicketInfo();
         this.ticketId = ticketInfo.getId();
-        this.createLabelAndText(scrollContent, title, ticketInfo.getId() + ", round " + mgr.getCurrentRound(),
-                SWT.SINGLE, GridData.FILL_HORIZONTAL);
+        this.createIdStuff(scrollContent, title, ticketInfo.getId(), mgr);
         this.createLabelAndText(scrollContent, "Title:", ticketInfo.getSummary(),
                 SWT.SINGLE | SWT.WRAP, GridData.FILL_HORIZONTAL);
         this.reviewDataText = this.createLabelAndText(scrollContent, "Review remarks:", ticketData.getReviewData(),

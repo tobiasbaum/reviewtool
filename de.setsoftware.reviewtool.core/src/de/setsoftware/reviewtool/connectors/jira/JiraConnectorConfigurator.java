@@ -8,6 +8,7 @@ import org.w3c.dom.NodeList;
 
 import de.setsoftware.reviewtool.config.IConfigurator;
 import de.setsoftware.reviewtool.config.IReviewConfigurable;
+import de.setsoftware.reviewtool.model.TicketLinkSettings;
 
 /**
  * Configurator for the JIRA connector.
@@ -21,6 +22,17 @@ public class JiraConnectorConfigurator implements IConfigurator {
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
+        final String ticketLinkPattern = xml.getAttribute("ticketLinkPattern");
+        final String ticketLinkText = xml.getAttribute("ticketLinkText");
+        final TicketLinkSettings linkSettings;
+        if (!ticketLinkPattern.isEmpty()) {
+            linkSettings = new TicketLinkSettings(
+                    ticketLinkPattern,
+                    ticketLinkText.isEmpty() ? "Open ticket" : ticketLinkText);
+        } else {
+            linkSettings = null;
+        }
+
         final JiraPersistence p = new JiraPersistence(
                 xml.getAttribute("url"),
                 xml.getAttribute("reviewRemarkField"),
@@ -30,7 +42,8 @@ public class JiraConnectorConfigurator implements IConfigurator {
                 xml.getAttribute("rejectedState"),
                 xml.getAttribute("doneState"),
                 xml.getAttribute("user"),
-                xml.getAttribute("password"));
+                xml.getAttribute("password"),
+                linkSettings);
         final NodeList filters = xml.getElementsByTagName("filter");
         for (int i = 0; i < filters.getLength(); i++) {
             final Element filter = (Element) filters.item(i);

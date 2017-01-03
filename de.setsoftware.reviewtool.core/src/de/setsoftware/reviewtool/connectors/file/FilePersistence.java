@@ -19,6 +19,7 @@ import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
+import de.setsoftware.reviewtool.model.TicketLinkSettings;
 
 /**
  * A simple review persistence layer based on a shared directory.
@@ -270,6 +271,13 @@ public class FilePersistence implements IReviewPersistence {
     @Override
     public void changeStateAtReviewEnd(String ticketKey, EndTransition transition) {
         this.changeState(ticketKey, this.getState(this.getTicketDir(ticketKey)), transition.getInternalName());
+    }
+
+    @Override
+    public TicketLinkSettings getLinkSettings() {
+        return new TicketLinkSettings(
+                "file:///" + this.rootDir.toString().replace('\\', '/') + "/%s",
+                "Open ticket dir");
     }
 
 }

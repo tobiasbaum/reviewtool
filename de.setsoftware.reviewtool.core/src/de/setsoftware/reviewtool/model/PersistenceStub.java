@@ -83,4 +83,9 @@ public class PersistenceStub implements IReviewPersistence {
         throw new RuntimeException("not yet implemented");
     }
 
+    @Override
+    public TicketLinkSettings getLinkSettings() {
+        return null;
+    }
+
 }

@@ -59,4 +59,10 @@ public interface IReviewPersistence {
      */
     public abstract void changeStateAtReviewEnd(String ticketKey, EndTransition transition);
 
+    /**
+     * Returns the settings that can be used to create a link to ticket's details.
+     * Returns null when no link should be shown.
+     */
+    public abstract TicketLinkSettings getLinkSettings();
+
 }

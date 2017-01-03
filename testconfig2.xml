@@ -2,7 +2,7 @@
   <versionCheck minVersion="2.0.0" />
   <svnChangeSource user="${User-ID}" password="${Passwort}" pattern=".*$${key}([^0-9].*)?" maxTextDiffFileSizeThreshold="1048576" />
   <jiraTicketStore user="${User-ID}" password="${Passwort}" url="jira.intranet.set.de" reviewRemarkField="Review-Anmerkungen" 
-	reviewState="Im Review" implementationState="In Arbeit" readyForReviewState="Bereit für Review" rejectedState="Review-Rückläufer" doneState="Abgeschlossen" />
+	reviewState="Im Review" implementationState="In Arbeit" readyForReviewState="Bereit für Review" rejectedState="Review-Rückläufer" doneState="Abgeschlossen" ticketLinkPattern="http://jira/issue/%s" ticketLinkText="Open in JIRA"/>
   <hackystatTelemetry dir="C:\Temp\hackybuffer" optOut="${Telemetrie OptOut}"/>
   <stopViewer type="combined"/>
 </reviewToolConfig>
