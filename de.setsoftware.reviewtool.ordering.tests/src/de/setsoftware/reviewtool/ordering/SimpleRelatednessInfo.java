@@ -109,4 +109,8 @@ public class SimpleRelatednessInfo extends RelatednessInfo<String> {
         return this.orders.get(reason);
     }
 
+    public Set<String> getStops() {
+        return this.reasons.keySet();
+    }
+
 }

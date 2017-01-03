@@ -33,4 +33,9 @@ public class RelatednessReason {
         return this.id.equals(r.id) && this.type.equals(r.type);
     }
 
+    @Override
+    public String toString() {
+        return this.type + "-" + this.id;
+    }
+
 }

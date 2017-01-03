@@ -55,12 +55,13 @@ public class GreedyClusteringAlgorithm {
                 }
             }
 
-            if (count1leq2 == 0 && count2leq1 == 0) {
-                //all stops incomparable: return null as special marker value
+            if (count1leq2 == count2leq1) {
+                //stops incomparable: return null as special marker value
                 return null;
+            } else if (count1leq2 > count2leq1) {
+                return true;
             } else {
-                final int diff = count1leq2 - count2leq1;
-                return diff >= 0;
+                return false;
             }
         }
 
@@ -177,6 +178,11 @@ public class GreedyClusteringAlgorithm {
             return commonReasons;
         }
 
+        @Override
+        public String toString() {
+            return this.items.toString();
+        }
+
     }
 
     private static final class ClusterLeaf<S> extends ClusterItem<S> {
@@ -206,6 +212,11 @@ public class GreedyClusteringAlgorithm {
         @Override
         public Set<? extends RelatednessReason> getRelatednessReasons() {
             return this.reasons;
+        }
+
+        @Override
+        public String toString() {
+            return this.stop.toString();
         }
 
     }

@@ -6,6 +6,11 @@ public enum RelationType {
     CALL_FLOW,
     DATA_FLOW,
     DECLARATION_USE,
-    SIMILARITY
+    SIMILARITY,
+    SAME_FILE,
+    LOGICAL_DEPENDENCY,
+    OVERRIDES,
+    CLASS_REFERENCE,
+    GLOBAL_ORDER
 
 }
