@@ -8,6 +8,9 @@ import java.net.URISyntaxException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.dnd.Clipboard;
+import org.eclipse.swt.dnd.TextTransfer;
+import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.events.SelectionEvent;
@@ -18,6 +21,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.part.ViewPart;
@@ -88,6 +92,22 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
                 }
             });
         }
+
+        final Button copyButton = new Button(textfieldAndButtons, SWT.NULL);
+        copyButton.setText("Copy ID to clipboard");
+        copyButton.addSelectionListener(new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent ev) {
+                final Clipboard cb = new Clipboard(Display.getCurrent());
+                cb.setContents(new Object[] {id}, new Transfer[] {TextTransfer.getInstance()});
+                cb.dispose();
+            }
+
+            @Override
+            public void widgetDefaultSelected(SelectionEvent ev) {
+                this.widgetSelected(ev);
+            }
+        });
 
         return field;
     }
