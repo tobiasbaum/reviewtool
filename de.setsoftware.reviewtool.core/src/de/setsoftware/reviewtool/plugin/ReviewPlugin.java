@@ -51,6 +51,7 @@ import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
 import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.ImportChangeFilter;
+import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.PackageDeclarationFilter;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.WhitespaceChangeFilter;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
@@ -492,7 +493,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.toursInReview = ToursInReview.create(
                 this.changeSource,
                 sourceUi,
-                Arrays.asList(new WhitespaceChangeFilter(), new ImportChangeFilter()),
+                Arrays.asList(new WhitespaceChangeFilter(), new ImportChangeFilter(), new PackageDeclarationFilter()),
                 Arrays.asList(new OneStopPerPartOfFileRestructuring()),
                 createUi,
                 ticketKey);
