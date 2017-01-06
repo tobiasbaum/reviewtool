@@ -37,7 +37,7 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
         if (tours == null) {
             return;
         }
-        final FileChangeHistory changeHistory = tours.getChangeHistory(stop.getHistory().get(0));
+        final FileChangeHistory changeHistory = tours.getChangeHistory(stop.getLastFileRevision());
         if (changeHistory != null) {
             final List<FileInRevision> history = stop.getHistory();
             final FileInRevision firstRevision = history.get(0);

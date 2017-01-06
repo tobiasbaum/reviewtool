@@ -106,6 +106,10 @@ public class Stop implements IReviewElement {
         return this.historyOrder;
     }
 
+    public FileInRevision getLastFileRevision() {
+        return this.historyOrder.get(this.historyOrder.size() - 1);
+    }
+
     public List<Fragment> getContentFor(FileInRevision revision) {
         return this.history.get(revision);
     }
