@@ -116,7 +116,7 @@ public class Stop implements IReviewElement {
 
     /**
      * Return true iff this stop can be merged with the given other stop.
-     * Two stops can be merged if they denote the same file and and directly
+     * Two stops can be merged if they denote the same file and directly
      * neighboring or overlapping segments of that file (or the whole binary file).
      * Neighboring segments are only considered mergeable if both are either
      * irrelevant or relevant.
