@@ -41,6 +41,7 @@ import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.IShowInTarget;
+import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.part.ViewPart;
 
@@ -278,9 +279,19 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
                 final int posStart = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getFrom()) - 1;
                 final int posEnd = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getTo());
-                part.getEditorSite().getSelectionProvider().setSelection(
-                        new TextSelection(posStart, posEnd - posStart));
+                setSelection(part, new TextSelection(posStart, posEnd - posStart));
             }
+        }
+    }
+
+    private static void setSelection(IEditorPart part, TextSelection textSelection) {
+        if (part instanceof MultiPageEditorPart) {
+            final MultiPageEditorPart multiPage = (MultiPageEditorPart) part;
+            for (final IEditorPart subPart : multiPage.findEditors(multiPage.getEditorInput())) {
+                setSelection(subPart, textSelection);
+            }
+        } else {
+            part.getEditorSite().getSelectionProvider().setSelection(textSelection);
         }
     }
 
