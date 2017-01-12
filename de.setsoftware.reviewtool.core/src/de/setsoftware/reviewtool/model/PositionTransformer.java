@@ -147,13 +147,22 @@ public class PositionTransformer {
     }
 
     private static synchronized List<IPath> getCachedPathsForName(IWorkspace workspace, String filename) {
-        if (cache == null) {
+        while (cache == null) {
             //should normally have already been initialized, but it wasn't, so take
             //  the last chance to do so and do it synchronously
             try {
                 fillCache(workspace, NO_CANCEL_MONITOR);
             } catch (final InterruptedException e) {
                 throw new AssertionError(e);
+            }
+            if (cache == null) {
+                //when the cache is still null here, it is currently being initialized. Wait a little
+                //  to make the busy waiting a bit less busy.
+                try {
+                    Thread.sleep(100);
+                } catch (final InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
         final List<IPath> cachedPaths = toList(cache.get(filename));
