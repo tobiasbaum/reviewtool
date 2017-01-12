@@ -11,10 +11,16 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.ui.IEditorInput;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.part.MultiPageEditorPart;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
@@ -55,8 +61,8 @@ public class AddRemarkAction extends AbstractHandler {
         final IEditorInput input = activeEditor != null ? activeEditor.getEditorInput() : null;
 
         ISelection sel = HandlerUtil.getActiveMenuSelection(event);
-        if (sel == null && activeEditor != null && activeEditor.getEditorSite().getSelectionProvider() != null) {
-            sel = activeEditor.getEditorSite().getSelectionProvider().getSelection();
+        if (sel == null && activeEditor != null) {
+            sel = this.getTextSelection(activeEditor);
         }
 
         final Pair<? extends Object, Integer> selectionPos = ViewHelper.extractFileAndLineFromSelection(sel, input);
@@ -79,7 +85,8 @@ public class AddRemarkAction extends AbstractHandler {
         try {
             final boolean isFile = resource.getType() == IResource.FILE;
             final Set<PositionReference> allowedRefs = this.determineAllowedRefs(line, isFile);
-            CreateRemarkDialog.get(allowedRefs, new CreateDialogCallback() {
+            final String prefillText = this.determinePrefillText();
+            CreateRemarkDialog.get(allowedRefs, prefillText, new CreateDialogCallback() {
                 @Override
                 public void execute(String text, RemarkType type, PositionReference chosenRef) {
                     try {
@@ -109,7 +116,8 @@ public class AddRemarkAction extends AbstractHandler {
     private void createMarker(final IPath path, final int line) throws ExecutionException {
         try {
             final Set<PositionReference> allowedRefs = this.determineAllowedRefs(line, !path.toFile().isDirectory());
-            CreateRemarkDialog.get(allowedRefs, new CreateDialogCallback() {
+            final String prefillText = this.determinePrefillText();
+            CreateRemarkDialog.get(allowedRefs, prefillText, new CreateDialogCallback() {
                 @Override
                 public void execute(String text, RemarkType type, PositionReference chosenRef) {
                     try {
@@ -134,6 +142,41 @@ public class AddRemarkAction extends AbstractHandler {
             });
         } catch (final ReviewtoolException e) {
             throw new ExecutionException("error creating marker", e);
+        }
+    }
+
+    private String determinePrefillText() {
+        final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+        if (window == null) {
+            return "";
+        }
+        final IWorkbenchPage page = window.getActivePage();
+        if (page == null) {
+            return "";
+        }
+        final IEditorPart part = page.getActiveEditor();
+        if (part == null) {
+            return "";
+        }
+        final ITextSelection sel = this.getTextSelection(part);
+        return sel == null ? "" : sel.getText();
+    }
+
+    private ITextSelection getTextSelection(final IEditorPart part) {
+        final ISelection selection = part.getEditorSite().getSelectionProvider().getSelection();
+        if (selection instanceof TextSelection) {
+            return (ITextSelection) selection;
+        } else {
+            if (part instanceof MultiPageEditorPart) {
+                final MultiPageEditorPart multiPage = (MultiPageEditorPart) part;
+                for (final IEditorPart subPart : multiPage.findEditors(multiPage.getEditorInput())) {
+                    final ITextSelection subSelection = this.getTextSelection(subPart);
+                    if (subSelection != null) {
+                        return subSelection;
+                    }
+                }
+            }
+            return null;
         }
     }
 

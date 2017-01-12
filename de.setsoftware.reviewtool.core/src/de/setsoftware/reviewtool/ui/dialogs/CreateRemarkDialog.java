@@ -51,18 +51,24 @@ public class CreateRemarkDialog extends Dialog {
     private Combo positionCombo;
     private final CreateDialogCallback callback;
     private final Set<PositionReference> possibleReferences;
+    private final String prefillText;
 
     protected CreateRemarkDialog(
-            Shell parentShell, CreateDialogCallback callback, Set<PositionReference> possibleReferences) {
+            Shell parentShell,
+            CreateDialogCallback callback,
+            Set<PositionReference> possibleReferences,
+            String prefillText) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.callback = callback;
         this.possibleReferences = possibleReferences;
+        this.prefillText = prefillText;
     }
 
-    public static void get(Set<PositionReference> possibleReferences, CreateDialogCallback callback) {
+    public static void get(
+            Set<PositionReference> possibleReferences, String prefillText, CreateDialogCallback callback) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-        new CreateRemarkDialog(s, callback, possibleReferences).open();
+        new CreateRemarkDialog(s, callback, possibleReferences, prefillText).open();
     }
 
     @Override
@@ -101,6 +107,7 @@ public class CreateRemarkDialog extends Dialog {
                 }
             }
         });
+        this.textField.setText(this.prefillText);
 
         this.positionCombo = new Combo(comp, SWT.BORDER | SWT.READ_ONLY);
         if (this.possibleReferences.contains(PositionReference.LINE)) {
