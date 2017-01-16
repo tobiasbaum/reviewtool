@@ -170,6 +170,10 @@
         <super type="org.eclipse.core.resources.textmarker"/>
     </extension>
 
+    <extension id="de.setsoftware.reviewtool.inactiveTourStopMarker" point="org.eclipse.core.resources.markers" name="Inactive review tour stop">
+        <super type="org.eclipse.core.resources.textmarker"/>
+    </extension>
+
 	<extension
 		point="org.eclipse.ui.ide.markerResolution">
 		<markerResolutionGenerator
@@ -218,6 +222,11 @@
           super="org.eclipse.ui.workbench.texteditor.info"
           markerType="de.setsoftware.reviewtool.tourStopMarker">
     </type>
+    <type
+          name="de.setsoftware.reviewtool.ui.inactiveTourStopAnnotation"
+          super="org.eclipse.ui.workbench.texteditor.info"
+          markerType="de.setsoftware.reviewtool.inactiveTourStopMarker">
+    </type>
  </extension>
  <extension
       point="org.eclipse.ui.editors.markerAnnotationSpecification">
@@ -244,6 +253,31 @@
             textStylePreferenceKey="tourStop_stylePreferences"
             textStylePreferenceValue="BOX"
             verticalRulerPreferenceKey="tourStop_verticalRuler"
+            verticalRulerPreferenceValue="true"
+            symbolicIcon="bookmark"/>
+    <specification
+            annotationType="de.setsoftware.reviewtool.ui.inactiveTourStopAnnotation"
+            colorPreferenceKey="inactiveTourStop_color"
+            colorPreferenceValue="212,212,245"
+            contributesToHeader="false"
+            highlightPreferenceKey="inactiveTourStop_highlight"
+            highlightPreferenceValue="true"
+            includeOnPreferencePage="true"
+            isGoToNextNavigationTarget="true"
+            isGoToNextNavigationTargetKey="inactiveTourStop_isGoToNextNavigationTargetKey"
+            isGoToPreviousNavigationTarget="true"
+            isGoToPreviousNavigationTargetKey="inactiveTourStop_isGoToPreviousNavigationTargetKey"
+            label="To review in another tour"
+            overviewRulerPreferenceKey="inactiveTourStop_overviewRuler"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            showInNextPrevDropdownToolbarAction="true"
+            showInNextPrevDropdownToolbarActionKey="inactiveTourStop_showInNextPrevDropdownToolbarAction"
+            textPreferenceKey="inactiveTourStop_text"
+            textPreferenceValue="true"
+            textStylePreferenceKey="inactiveTourStop_stylePreferences"
+            textStylePreferenceValue="BOX"
+            verticalRulerPreferenceKey="inactiveTourStop_verticalRuler"
             verticalRulerPreferenceValue="true"
             symbolicIcon="bookmark"/>
  </extension>

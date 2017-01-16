@@ -290,23 +290,23 @@ public class ToursInReview {
     }
 
     /**
-     * Creates markers for the tour stops. Takes the currently active tour into account.
+     * Creates markers for the tour stops.
      */
     public void createMarkers(IStopMarkerFactory markerFactory) {
-        if (this.tours.size() <= this.currentTourIndex) {
-            return;
-        }
-        final Tour s = this.tours.get(this.currentTourIndex);
         final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
-        for (final Stop f : s.getStops()) {
-            createMarkerFor(markerFactory, lookupTables, f);
+        for (int i = 0; i < this.tours.size(); i++) {
+            final Tour s = this.tours.get(i);
+            for (final Stop f : s.getStops()) {
+                createMarkerFor(markerFactory, lookupTables, f, i == this.currentTourIndex);
+            }
         }
     }
 
     private static IMarker createMarkerFor(
             IStopMarkerFactory markerFactory,
             final Map<IResource, PositionLookupTable> lookupTables,
-            final Stop f) {
+            final Stop f,
+            final boolean tourActive) {
 
         try {
             final IResource resource = f.getMostRecentFile().determineResource();
@@ -318,7 +318,7 @@ public class ToursInReview {
                     lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
                 }
                 final Fragment pos = f.getMostRecentFragment();
-                final IMarker marker = markerFactory.createStopMarker(resource);
+                final IMarker marker = markerFactory.createStopMarker(resource, tourActive);
                 marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
                 marker.setAttribute(IMarker.CHAR_START,
                         lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()) - 1);
@@ -326,7 +326,7 @@ public class ToursInReview {
                         lookupTables.get(resource).getCharsSinceFileStart(pos.getTo()));
                 return marker;
             } else {
-                return markerFactory.createStopMarker(resource);
+                return markerFactory.createStopMarker(resource, tourActive);
             }
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
@@ -342,7 +342,7 @@ public class ToursInReview {
     public static IMarker createMarkerFor(
             IStopMarkerFactory markerFactory,
             final Stop f) {
-        return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f);
+        return createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f, true);
     }
 
     /**
@@ -396,6 +396,8 @@ public class ToursInReview {
     public void clearMarkers() throws CoreException {
         ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
                 Constants.STOPMARKER_ID, true, IResource.DEPTH_INFINITE);
+        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
+                Constants.INACTIVESTOPMARKER_ID, true, IResource.DEPTH_INFINITE);
     }
 
     /**

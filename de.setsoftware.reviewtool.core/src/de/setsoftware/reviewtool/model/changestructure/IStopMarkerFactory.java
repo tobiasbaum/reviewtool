@@ -9,6 +9,6 @@ import org.eclipse.core.runtime.CoreException;
  */
 public interface IStopMarkerFactory {
 
-    public abstract IMarker createStopMarker(IResource resource) throws CoreException;
+    public abstract IMarker createStopMarker(IResource resource, boolean tourActive) throws CoreException;
 
 }

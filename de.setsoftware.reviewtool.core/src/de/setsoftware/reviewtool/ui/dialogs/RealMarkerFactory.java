@@ -35,8 +35,8 @@ public class RealMarkerFactory implements IStopMarkerFactory, IMarkerFactory {
     }
 
     @Override
-    public IMarker createStopMarker(IResource resource) throws CoreException {
-        return resource.createMarker(Constants.STOPMARKER_ID);
+    public IMarker createStopMarker(IResource resource, boolean tourActive) throws CoreException {
+        return resource.createMarker(tourActive ? Constants.STOPMARKER_ID : Constants.INACTIVESTOPMARKER_ID);
     }
 
 }
