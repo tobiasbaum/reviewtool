@@ -341,20 +341,15 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 return false;
             }
 
-            final Tour activeTour = tours.getActiveTour();
-            if (activeTour == null) {
-                return false;
-            }
-
             final Object pathOrResource = pos.getFirst();
             final IPath path = pathOrResource instanceof IPath
                     ? (IPath) pathOrResource : ((IResource) pathOrResource).getLocation();
-            final Stop nearestStop = activeTour.findNearestStop(path, pos.getSecond());
+            final Pair<Tour, Stop> nearestStop = tours.findNearestStop(path, pos.getSecond());
             if (nearestStop == null) {
                 return false;
             }
 
-            jumpTo(tours, activeTour, nearestStop, "showIn");
+            jumpTo(tours, nearestStop.getFirst(), nearestStop.getSecond(), "showIn");
 
             return true;
         } catch (final ExecutionException e) {

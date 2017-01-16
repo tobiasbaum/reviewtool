@@ -15,6 +15,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
@@ -502,4 +503,49 @@ public class ToursInReview {
         return 0;
     }
 
+    /**
+     * Determines a stop that is as close as possible to the given line in the given resource.
+     * The closeness measure is tweaked to (hopefully) capture the users intention as good as possible
+     * for cases where he did not click directly on a stop.
+     */
+    public Pair<Tour, Stop> findNearestStop(IPath absoluteResourcePath, int line) {
+        if (this.tours.isEmpty()) {
+            return null;
+        }
+        Tour bestTour = null;
+        Stop bestStop = null;
+        int bestDist = Integer.MAX_VALUE;
+        for (final Tour t : this.tours) {
+            for (final Stop stop : t.getStops()) {
+                final int candidateDist = this.calculateDistance(stop, absoluteResourcePath, line);
+                if (candidateDist < bestDist) {
+                    bestTour = t;
+                    bestStop = stop;
+                    bestDist = candidateDist;
+                }
+            }
+        }
+        return Pair.create(bestTour, bestStop);
+    }
+
+    private int calculateDistance(Stop stop, IPath resource, int line) {
+        if (!stop.getMostRecentFile().toLocalPath().equals(resource)) {
+            return Integer.MAX_VALUE;
+        }
+
+        final Fragment fragment = stop.getMostRecentFragment();
+        if (fragment == null) {
+            return Integer.MAX_VALUE - 1;
+        }
+
+        if (line < fragment.getFrom().getLine()) {
+            //there is a bias that lets lines between stops belong more closely to the stop above than below
+            //  to a certain degree
+            return (fragment.getFrom().getLine() - line) * 4;
+        } else if (line > fragment.getTo().getLine()) {
+            return line - fragment.getTo().getLine();
+        } else {
+            return 0;
+        }
+    }
 }
