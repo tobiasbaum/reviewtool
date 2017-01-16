@@ -5,12 +5,14 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -24,6 +26,7 @@ import org.eclipse.ui.PlatformUI;
 import de.setsoftware.reviewtool.base.Util;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.TicketInfo;
+import de.setsoftware.reviewtool.model.TicketLinkSettings;
 
 /**
  * Dialog to select a ticket to review. The normal usage is to select the ticket
@@ -143,6 +146,60 @@ public class SelectTicketDialog extends Dialog {
         });
 
         return comp;
+    }
+
+    @Override
+    protected Control createButtonBar(final Composite parent) {
+        final Composite buttonBar = new Composite(parent, SWT.NONE);
+
+        final GridLayout layout = new GridLayout();
+        layout.numColumns = 2;
+        layout.makeColumnsEqualWidth = false;
+        layout.horizontalSpacing = this.convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_SPACING);
+        buttonBar.setLayout(layout);
+
+        final GridData data = new GridData(SWT.FILL, SWT.BOTTOM, true, false);
+        data.grabExcessHorizontalSpace = true;
+        data.grabExcessVerticalSpace = false;
+        buttonBar.setLayoutData(data);
+
+        buttonBar.setFont(parent.getFont());
+
+        // place open button on the left
+        final TicketLinkSettings linkSettings = this.persistence.getLinkSettings();
+        if (linkSettings != null) {
+            final Button openButton = new Button(buttonBar, SWT.PUSH);
+            openButton.setText(linkSettings.getText());
+            openButton.addSelectionListener(new SelectionListener() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    final TableItem[] selection = SelectTicketDialog.this.selectionTable.getSelection();
+                    if (selection.length == 0) {
+                        MessageDialog.openInformation(SelectTicketDialog.this.getShell(),
+                                "No ticket selected", "Please select a ticket to open.");
+                    }
+                    for (final TableItem item : selection) {
+                        DialogHelper.openLink(linkSettings.createLinkFor(item.getText(0)));
+                    }
+                }
+
+                @Override
+                public void widgetDefaultSelected(SelectionEvent e) {
+                    this.widgetSelected(e);
+                }
+            });
+
+            final GridData leftButtonData = new GridData(SWT.LEFT, SWT.CENTER, true, true);
+            leftButtonData.grabExcessHorizontalSpace = true;
+            leftButtonData.horizontalIndent = this.convertHorizontalDLUsToPixels(IDialogConstants.HORIZONTAL_MARGIN);
+            openButton.setLayoutData(leftButtonData);
+        }
+
+        // add the dialog's button bar to the right
+        final Control buttonControl = super.createButtonBar(buttonBar);
+        buttonControl.setLayoutData(new GridData(SWT.RIGHT, SWT.CENTER, true, false));
+
+        return buttonBar;
     }
 
     private String filterKey() {

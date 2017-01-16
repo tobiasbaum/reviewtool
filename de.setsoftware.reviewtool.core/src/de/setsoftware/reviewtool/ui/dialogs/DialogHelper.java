@@ -1,6 +1,9 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
+import java.awt.Desktop;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.window.Window;
@@ -99,6 +102,17 @@ public class DialogHelper {
      */
     public static String getSetting(String id) {
         return preferenceStore.getString("dialogSetting_" + id);
+    }
+
+    /**
+     * Opens the given link (normally in a browser, depending on the platform settings).
+     */
+    public static void openLink(String link) {
+        try {
+            Desktop.getDesktop().browse(new URI(link));
+        } catch (IOException | URISyntaxException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
 }

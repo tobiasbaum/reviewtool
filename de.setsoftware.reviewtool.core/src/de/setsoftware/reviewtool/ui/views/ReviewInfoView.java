@@ -1,10 +1,5 @@
 package de.setsoftware.reviewtool.ui.views;
 
-import java.awt.Desktop;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -34,6 +29,7 @@ import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.TicketInfo;
 import de.setsoftware.reviewtool.model.TicketLinkSettings;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.RemarkMarkers;
 
 /**
@@ -79,11 +75,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
             openButton.addSelectionListener(new SelectionListener() {
                 @Override
                 public void widgetSelected(SelectionEvent ev) {
-                    try {
-                        Desktop.getDesktop().browse(new URI(linkSettings.createLinkFor(id)));
-                    } catch (IOException | URISyntaxException ex) {
-                        throw new RuntimeException(ex);
-                    }
+                    DialogHelper.openLink(linkSettings.createLinkFor(id));
                 }
 
                 @Override
