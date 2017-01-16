@@ -19,12 +19,12 @@ public class RemarkSaveTest {
 
     //  Review 1 (Std.rev 12345):
     //  * muss
-    //  *# (Testklasse, 1234) das ist bl�d
+    //  *# (Testklasse, 1234) das ist blöd
     //  *#* stimmt gar nicht
     //  *#* stimmt doch
-    //  *# das ist auch bl�d
+    //  *# das ist auch blöd
     //  * weniger wichtig
-    //  ** asdf jkl�
+    //  ** asdf jklö
     //
     //  Review 2:
     //  - hier wurde was vergessen
