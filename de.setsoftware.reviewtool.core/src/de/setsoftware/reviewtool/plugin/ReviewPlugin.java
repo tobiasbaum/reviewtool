@@ -32,6 +32,7 @@ import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
@@ -137,8 +138,9 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
     private ILaunchesListener launchesListener;
     private IResourceChangeListener changeListener;
-    List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
+    private final List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
     private IStopViewer stopViewer = new SeparateDiffsStopViewer();
+    private final List<Runnable> postInitTasks = new ArrayList<>();
 
 
     private ReviewPlugin() {
@@ -200,6 +202,20 @@ public class ReviewPlugin implements IReviewConfigurable {
                     this.mode == Mode.FIXING ? "F" : "R",
                     this.persistence.getCurrentRound());
         }
+
+        this.enqueuePostInitTasks();
+    }
+
+    @Override
+    public void addPostInitTask(Runnable r) {
+        this.postInitTasks.add(r);
+    }
+
+    private void enqueuePostInitTasks() {
+        for (final Runnable r : this.postInitTasks) {
+            Display.getDefault().asyncExec(r);
+        }
+        this.postInitTasks.clear();
     }
 
     private static ISecurePreferences getSecurePrefs() throws StorageException {

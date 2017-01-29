@@ -101,6 +101,10 @@ public class ConfigurationInterpreterTest {
         public void setStopViewer(IStopViewer stopViewer) {
         }
 
+        @Override
+        public void addPostInitTask(Runnable r) {
+        }
+
     }
 
     private static Document load(String xml) throws Exception {

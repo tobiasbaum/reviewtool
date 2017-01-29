@@ -30,4 +30,9 @@ public interface IReviewConfigurable {
      * Sets a stop viewer.
      */
     public abstract void setStopViewer(IStopViewer stopViewer);
+
+    /**
+     * Adds a task that is called in the UI thread as soon as configuration is finished.
+     */
+    public void addPostInitTask(Runnable r);
 }

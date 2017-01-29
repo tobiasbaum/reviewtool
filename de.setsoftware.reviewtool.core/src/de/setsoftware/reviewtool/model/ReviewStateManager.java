@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
@@ -180,6 +181,17 @@ public class ReviewStateManager {
             ret.put(round, this.getReviewerForRound(round));
         }
         return ret;
+    }
+
+    /**
+     * Returns the tickets that are ready for review or fixing based on the given filter.
+     * When the filter name is invalid, falls back to the first filter for the given mode.
+     */
+    public List<TicketInfo> getTicketsForFilter(String filter, boolean review) {
+        final Set<String> allowedNames =
+                review ? this.persistence.getFilterNamesForReview() : this.persistence.getFilterNamesForFixing();
+        return this.persistence.getTicketsForFilter(
+                allowedNames.contains(filter) ? filter : allowedNames.iterator().next());
     }
 
 }

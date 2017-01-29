@@ -34,4 +34,5 @@
       <choice id="4" text="sehr gut (umfassend an der Planung von Task und Story beteiligt)"/>
     </question>
   </surveyAtReviewEnd>
+  <reminder minCount="3"/>
 </reviewToolConfig>

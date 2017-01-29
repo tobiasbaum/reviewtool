@@ -203,7 +203,11 @@ public class SelectTicketDialog extends Dialog {
     }
 
     private String filterKey() {
-        return this.review ? KEY_LAST_USED_FILTER_REVIEW : KEY_LAST_USED_FILTER_FIXING;
+        return getFilterKey(this.review);
+    }
+
+    public static String getFilterKey(boolean review) {
+        return review ? KEY_LAST_USED_FILTER_REVIEW : KEY_LAST_USED_FILTER_FIXING;
     }
 
     private void fillTable() {
