@@ -21,7 +21,8 @@ public class ReminderConfigurator implements IConfigurator {
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
         final int minCount = Integer.parseInt(xml.getAttribute("minCount"));
-        configurable.addPostInitTask(new Reminder(minCount));
+        final int minDays = Integer.parseInt(xml.getAttribute("minDays"));
+        configurable.addPostInitTask(new Reminder(minCount, minDays));
     }
 
 }
