@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -16,8 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-
-import javax.xml.bind.DatatypeConverter;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -303,7 +302,11 @@ public class JiraPersistence implements IReviewPersistence {
             final String fromStatus = this.getFromStatus(v);
             if (fromStatus != null) {
                 final String dateString = v.asObject().get("created").asString();
-                ret = DatatypeConverter.parseDateTime(dateString).getTime();
+                try {
+                    ret = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX").parse(dateString);
+                } catch (final java.text.ParseException e) {
+                    throw new ReviewtoolException(e);
+                }
             }
         }
         return ret;
