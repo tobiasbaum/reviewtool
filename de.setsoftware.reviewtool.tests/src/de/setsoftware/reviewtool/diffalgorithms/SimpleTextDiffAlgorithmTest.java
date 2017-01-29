@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.diffalgorithms;
 
 import static org.junit.Assert.assertEquals;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -22,12 +24,18 @@ public class SimpleTextDiffAlgorithmTest {
 
     private static List<Pair<PositionInText, PositionInText>> determineDiff(String oldContent, String newContent)
             throws Exception {
-        return toPositionsInNewFile(new SimpleSourceDiffAlgorithm().determineDiff(
+        return toPositionsInNewFile(new MyersSourceDiffAlgorithm().determineDiff(
                 ChangestructureFactory.createFileInRevision("", null, null),
                 oldContent.getBytes("UTF-8"),
                 ChangestructureFactory.createFileInRevision("", null, null),
                 newContent.getBytes("UTF-8"),
                 "UTF-8"));
+//        return toPositionsInNewFile(diffUtilsDiff(
+//                ChangestructureFactory.createFileInRevision("", null, null),
+//                oldContent.getBytes("UTF-8"),
+//                ChangestructureFactory.createFileInRevision("", null, null),
+//                newContent.getBytes("UTF-8"),
+//                "UTF-8"));
     }
 
     private static List<Pair<PositionInText, PositionInText>> toPositionsInNewFile(
@@ -514,7 +522,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testNoExceptions() throws Exception {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 10000; i++) {
             this.doTestNoExceptions(i);
         }
     }
@@ -725,6 +733,81 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "  </sendung>\r\n"
                                 + "</test>\r\n");
         assertEquals(Arrays.asList(changeIn(11, 11), changeIn(15, 15), insertedLines(31, 34)), diff);
+    }
+
+    @Test
+    public void testPerformanceA() throws Exception {
+        final byte[] textA1 = Files.readAllBytes(Paths.get("perftestA1.txt"));
+        final byte[] textA2 = Files.readAllBytes(Paths.get("perftestA2.txt"));
+
+        int total = 0;
+        final long start = System.currentTimeMillis();
+        for (int i = 0; i < 500; i++) {
+            total += new MyersSourceDiffAlgorithm().determineDiff(
+                    ChangestructureFactory.createFileInRevision("", null, null),
+                    textA1,
+                    ChangestructureFactory.createFileInRevision("", null, null),
+                    textA2,
+                    "UTF-8").size();
+        }
+        System.out.println("end after " + (System.currentTimeMillis() - start));
+        System.out.println("total A=" + total);
+    }
+
+    @Test
+    public void testPerformanceB() throws Exception {
+        final byte[] textB1 = Files.readAllBytes(Paths.get("perftestB1.txt"));
+        final byte[] textB2 = Files.readAllBytes(Paths.get("perftestB2.txt"));
+
+        int total = 0;
+        final long start = System.currentTimeMillis();
+        for (int i = 0; i < 10; i++) {
+            total += new MyersSourceDiffAlgorithm().determineDiff(
+                    ChangestructureFactory.createFileInRevision("", null, null),
+                    textB1,
+                    ChangestructureFactory.createFileInRevision("", null, null),
+                    textB2,
+                    "UTF-8").size();
+        }
+        System.out.println("end after " + (System.currentTimeMillis() - start));
+        System.out.println("total B=" + total);
+    }
+
+    @Test
+    public void testInsertMethod() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "/**\r\n"
+                        + " * asdf\r\n"
+                        + " */\r\n"
+                        + "foo() {\r\n"
+                        + "}\r\n",
+                        "/**\r\n"
+                                + " * asdf\r\n"
+                                + " * jklö\r\n"
+                                + " */\r\n"
+                                + "bar() {\r\n"
+                                + "}\r\n"
+                                + "\r\n"
+                                + "/**\r\n"
+                                + " * asdf\r\n"
+                                + " */\r\n"
+                                + "foo() {\r\n"
+                                + "}\r\n"
+                                );
+        assertEquals(Arrays.asList(insertedLines(1, 7)), diff);
+    }
+
+    @Test
+    public void testInsertXml() throws Exception {
+        //in this example common suffix stripping has to be undone by moving the diff down
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                        "</abc>\r\n",
+                        "</abc>\r\n"
+                                + "<abc>\r\n"
+                                + "  <child/>\r\n"
+                                + "</abc>\r\n"
+                                );
+        assertEquals(Arrays.asList(insertedLines(2, 4)), diff);
     }
 
 }
