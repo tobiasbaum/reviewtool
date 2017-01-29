@@ -30,4 +30,11 @@ public final class Snake extends PathNode {
         return true;
     }
 
+    @Override
+    public final PathNode previousSnake() {
+        if (this.isBootstrap()) {
+            return null;
+        }
+        return this;
+    }
 }

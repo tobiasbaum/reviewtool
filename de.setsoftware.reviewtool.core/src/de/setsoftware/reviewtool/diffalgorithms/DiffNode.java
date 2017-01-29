@@ -36,4 +36,8 @@ public final class DiffNode extends PathNode {
         return false;
     }
 
+    @Override
+    public final PathNode previousSnake() {
+        return this.getPrev() == null ? this : this.getPrev().previousSnake();
+    }
 }

@@ -10,7 +10,7 @@ public class DiffAlgorithmFactory {
      * Creates the default diff algorithm.
      */
     public static IDiffAlgorithm createDefault() {
-        return new SimpleSourceDiffAlgorithm();
+        return new MyersSourceDiffAlgorithm();
     }
 
 }

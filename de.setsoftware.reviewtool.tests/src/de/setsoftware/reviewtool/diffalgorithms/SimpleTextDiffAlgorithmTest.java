@@ -2,8 +2,6 @@ package de.setsoftware.reviewtool.diffalgorithms;
 
 import static org.junit.Assert.assertEquals;
 
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -522,7 +520,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testNoExceptions() throws Exception {
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 1000; i++) {
             this.doTestNoExceptions(i);
         }
     }
@@ -733,44 +731,6 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "  </sendung>\r\n"
                                 + "</test>\r\n");
         assertEquals(Arrays.asList(changeIn(11, 11), changeIn(15, 15), insertedLines(31, 34)), diff);
-    }
-
-    @Test
-    public void testPerformanceA() throws Exception {
-        final byte[] textA1 = Files.readAllBytes(Paths.get("perftestA1.txt"));
-        final byte[] textA2 = Files.readAllBytes(Paths.get("perftestA2.txt"));
-
-        int total = 0;
-        final long start = System.currentTimeMillis();
-        for (int i = 0; i < 500; i++) {
-            total += new MyersSourceDiffAlgorithm().determineDiff(
-                    ChangestructureFactory.createFileInRevision("", null, null),
-                    textA1,
-                    ChangestructureFactory.createFileInRevision("", null, null),
-                    textA2,
-                    "UTF-8").size();
-        }
-        System.out.println("end after " + (System.currentTimeMillis() - start));
-        System.out.println("total A=" + total);
-    }
-
-    @Test
-    public void testPerformanceB() throws Exception {
-        final byte[] textB1 = Files.readAllBytes(Paths.get("perftestB1.txt"));
-        final byte[] textB2 = Files.readAllBytes(Paths.get("perftestB2.txt"));
-
-        int total = 0;
-        final long start = System.currentTimeMillis();
-        for (int i = 0; i < 10; i++) {
-            total += new MyersSourceDiffAlgorithm().determineDiff(
-                    ChangestructureFactory.createFileInRevision("", null, null),
-                    textB1,
-                    ChangestructureFactory.createFileInRevision("", null, null),
-                    textB2,
-                    "UTF-8").size();
-        }
-        System.out.println("end after " + (System.currentTimeMillis() - start));
-        System.out.println("total B=" + total);
     }
 
     @Test

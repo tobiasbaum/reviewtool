@@ -29,15 +29,15 @@ public abstract class PathNode {
         this.prev = prev;
     }
 
-    int getPosOld() {
+    final int getPosOld() {
         return this.posOld;
     }
 
-    int getPosNew() {
+    final int getPosNew() {
         return this.posNew;
     }
 
-    PathNode getPrev() {
+    final PathNode getPrev() {
         return this.prev;
     }
 
@@ -52,7 +52,7 @@ public abstract class PathNode {
      * In bootstrap nodes one of the two coordinates is
      * less than zero.
      */
-    public boolean isBootstrap() {
+    public final boolean isBootstrap() {
         return this.posOld < 0 || this.posNew < 0;
     }
 
@@ -63,15 +63,7 @@ public abstract class PathNode {
      * @return The next first {@link Snake} or bootstrap node in the path, or
      * <code>null</code> if none found.
      */
-    public final PathNode previousSnake() {
-        if (this.isBootstrap()) {
-            return null;
-        }
-        if (!this.isSnake() && this.prev != null) {
-            return this.prev.previousSnake();
-        }
-        return this;
-    }
+    public abstract PathNode previousSnake();
 
     /**
      * {@inheritDoc}.
@@ -92,26 +84,26 @@ public abstract class PathNode {
         return buf.toString();
     }
 
-    public int getLengthNew() {
+    public final int getLengthNew() {
         return this.posNew - this.getStartPosNew();
     }
 
-    public int getStartPosNew() {
+    public final int getStartPosNew() {
         return this.prev == null ? 0 : this.prev.posNew;
     }
 
-    public int getLengthOld() {
+    public final int getLengthOld() {
         return this.posOld - this.getStartPosOld();
     }
 
-    public int getStartPosOld() {
+    public final int getStartPosOld() {
         return this.prev == null ? 0 : this.prev.posOld;
     }
 
     /**
      * Moves the node upwards by the given number of steps.
      */
-    public void moveUpwards(int steps) {
+    public final void moveUpwards(int steps) {
         this.posOld -= steps;
         this.posNew -= steps;
         if (this.prev != null) {
@@ -123,7 +115,7 @@ public abstract class PathNode {
     /**
      * Joins this diff node with the next diff node (because the snake in between is empty).
      */
-    public void joinWithNextDiff() {
+    public final void joinWithNextDiff() {
         assert this.prev.getLengthNew() == 0;
         final PathNode prevDiff = this.prev.prev;
         if (prevDiff == null) {
@@ -140,7 +132,7 @@ public abstract class PathNode {
     /**
      * Enlarges this node by the given amount.
      */
-    public void enlargeBy(int length) {
+    public final void enlargeBy(int length) {
         this.posOld += length;
         this.posNew += length;
     }
