@@ -1,11 +1,14 @@
 package de.setsoftware.reviewtool.model;
 
+import java.util.Date;
 import java.util.Set;
 
 /**
  * Basic information for a ticket.
  */
 public class TicketInfo {
+
+    private static final long MS_PER_DAY = 24L * 60 * 60 * 1000;
 
     private final String key;
     private final String description;
@@ -14,9 +17,10 @@ public class TicketInfo {
     private final String component;
     private final String parentSummary;
     private final Set<String> reviewers;
+    private final Date waitingSince;
 
     public TicketInfo(String key, String summary, String state, String previousState, String component,
-            String parentSummary, Set<String> reviewers) {
+            String parentSummary, Set<String> reviewers, Date waitingSince) {
         this.key = key;
         this.description = summary;
         this.state = state;
@@ -24,6 +28,7 @@ public class TicketInfo {
         this.component = component;
         this.parentSummary = parentSummary;
         this.reviewers = reviewers;
+        this.waitingSince = waitingSince;
     }
 
     public String getId() {
@@ -59,6 +64,14 @@ public class TicketInfo {
 
     public Set<String> getReviewers() {
         return this.reviewers;
+    }
+
+    public Date getWaitingSince() {
+        return this.waitingSince;
+    }
+
+    public int getWaitingForDays(Date date) {
+        return (int) Math.round(((double) (date.getTime() - this.waitingSince.getTime())) / MS_PER_DAY);
     }
 
 }

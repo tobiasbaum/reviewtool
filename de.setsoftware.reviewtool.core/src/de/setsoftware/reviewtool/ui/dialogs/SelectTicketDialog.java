@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -108,7 +109,8 @@ public class SelectTicketDialog extends Dialog {
                 SWT.BORDER | SWT.V_SCROLL | SWT.H_SCROLL | SWT.FULL_SELECTION);
         this.selectionTable.setHeaderVisible(true);
         this.selectionTable.setLayoutData(new GridData(GridData.FILL_BOTH));
-        final String[] titles = {"ID", "Description", "State", "Prev. reviewers", "Prev. state", "Component"};
+        final String[] titles
+            = {"ID", "Description", "State", "Prev. reviewers", "Prev. state", "Component", "Open for"};
 
         for (int i = 0; i < titles.length; i++) {
             final TableColumn column = new TableColumn(this.selectionTable, SWT.NULL);
@@ -221,7 +223,12 @@ public class SelectTicketDialog extends Dialog {
             item.setText(3, Util.implode(ticket.getReviewers()));
             item.setText(4, ticket.getPreviousState());
             item.setText(5, ticket.getComponent());
+            item.setText(6, this.formatDays(ticket.getWaitingForDays(new Date())));
         }
+    }
+
+    private String formatDays(int days) {
+        return days + (days == 1 ? " day" : " days");
     }
 
     private List<TicketInfo> loadTickets() {

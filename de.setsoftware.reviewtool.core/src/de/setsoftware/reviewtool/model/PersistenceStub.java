@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -57,7 +58,8 @@ public class PersistenceStub implements IReviewPersistence {
 
             @Override
             public TicketInfo getTicketInfo() {
-                return new TicketInfo("123", "asdf", "hjkl", "", "qwer", null, Collections.<String>emptySet());
+                return new TicketInfo("123", "asdf", "hjkl", "", "qwer", null,
+                        Collections.<String>emptySet(), new Date(42));
             }
         };
     }

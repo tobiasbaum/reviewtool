@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Properties;
@@ -180,7 +181,13 @@ public class FilePersistence implements IReviewPersistence {
                 "?",
                 ticketProperties.getProperty("component", ""),
                 ticketProperties.getProperty("parentSummary"),
-                new LinkedHashSet<>(new TicketDir(child).readReviewHistory()));
+                new LinkedHashSet<>(new TicketDir(child).readReviewHistory()),
+                this.determineWaitingSince(child));
+    }
+
+    private Date determineWaitingSince(File child) {
+        final File stateFile = this.getStateFile(child);
+        return stateFile == null ? new Date() : new Date(stateFile.lastModified());
     }
 
     private boolean hasState(File child, String state) {
@@ -194,6 +201,15 @@ public class FilePersistence implements IReviewPersistence {
             }
         }
         return "unknown";
+    }
+
+    private File getStateFile(File child) {
+        for (final File file : child.listFiles()) {
+            if (file.getName().startsWith(STATE_PREFIX)) {
+                return file;
+            }
+        }
+        return null;
     }
 
     @Override

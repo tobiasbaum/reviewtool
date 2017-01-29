@@ -9,12 +9,15 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+
+import javax.xml.bind.DatatypeConverter;
 
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
@@ -263,7 +266,8 @@ public class JiraPersistence implements IReviewPersistence {
                 this.getPreviousStatus(ticket),
                 this.formatComponents(ticket.get("fields").asObject().get("components").asArray()),
                 parent == null ? null : parent.asObject().get("fields").asObject().get("summary").asString(),
-                this.getReviewers(ticket));
+                this.getReviewers(ticket),
+                this.getTimeOfTransferToCurrentStatus(ticket));
     }
 
     private Set<String> getReviewers(JsonObject ticket) {
@@ -290,6 +294,19 @@ public class JiraPersistence implements IReviewPersistence {
             }
         }
         return prevStatus;
+    }
+
+    private Date getTimeOfTransferToCurrentStatus(JsonObject ticket) {
+        Date ret = new Date();
+        final JsonArray histories = JiraPersistence.this.getHistories(ticket);
+        for (final JsonValue v : histories) {
+            final String fromStatus = this.getFromStatus(v);
+            if (fromStatus != null) {
+                final String dateString = v.asObject().get("created").asString();
+                ret = DatatypeConverter.parseDateTime(dateString).getTime();
+            }
+        }
+        return ret;
     }
 
     private String getFromStatus(JsonValue v) {
