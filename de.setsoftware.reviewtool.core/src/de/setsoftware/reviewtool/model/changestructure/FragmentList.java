@@ -171,4 +171,21 @@ public class FragmentList {
         }
         return result;
     }
+
+    /**
+     * Moves fragments starting at a given position.
+     * @param pos The start position.
+     * @param offset The offset to apply.
+     */
+    public FragmentList move(final PositionInText pos, final int offset) {
+        final FragmentList result = new FragmentList();
+        for (final Fragment fragment : this.fragments) {
+            if (fragment.getFrom().lessThan(pos)) {
+                result.fragments.add(fragment);
+            } else {
+                result.fragments.add(fragment.adjust(offset));
+            }
+        }
+        return result;
+    }
 }

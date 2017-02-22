@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.setsoftware.reviewtool.model.changestructure.Commit;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.IChangeData;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
-import de.setsoftware.reviewtool.model.changestructure.RepositoryChangeHistory;
 
 /**
  * Implementation of {@link IChangeData} that caches data needed for tracing in addition to the matched commits.
@@ -14,13 +14,11 @@ import de.setsoftware.reviewtool.model.changestructure.RepositoryChangeHistory;
 public class SvnChangeData implements IChangeData {
 
     private final List<Commit> commits;
-    private final FileHistoryGraph fileHistory;
-    private final RepositoryChangeHistory changeHistory;
+    private final SvnFileHistoryGraph fileHistoryGraph;
 
-    public SvnChangeData(List<Commit> commits, FileHistoryGraph fileHistory) {
+    public SvnChangeData(List<Commit> commits, final SvnFileHistoryGraph fileHistoryGraph) {
         this.commits = commits;
-        this.fileHistory = fileHistory;
-        this.changeHistory = new RepositoryChangeHistory(commits);
+        this.fileHistoryGraph = fileHistoryGraph;
     }
 
     @Override
@@ -36,12 +34,12 @@ public class SvnChangeData implements IChangeData {
 
     @Override
     public IFragmentTracer createTracer() {
-        return new SvnFragmentTracer(this.createChangeHistory(), this.fileHistory);
+        return new SvnFragmentTracer(this.fileHistoryGraph);
     }
 
     @Override
-    public RepositoryChangeHistory createChangeHistory() {
-        return this.changeHistory;
+    public FileHistoryGraph getHistoryGraph() {
+        return this.fileHistoryGraph;
     }
 
 }
