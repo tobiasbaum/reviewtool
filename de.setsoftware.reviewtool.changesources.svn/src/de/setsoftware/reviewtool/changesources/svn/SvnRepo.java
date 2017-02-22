@@ -75,4 +75,8 @@ public class SvnRepo extends Repository {
         return this.workingCopyRoot;
     }
 
+    @Override
+    public String toString() {
+        return this.remoteUrl.toString();
+    }
 }

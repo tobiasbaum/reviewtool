@@ -54,4 +54,8 @@ public class CachedLogEntry implements Serializable {
         return this.paths;
     }
 
+    @Override
+    public String toString() {
+        return Long.toString(this.revision);
+    }
 }
