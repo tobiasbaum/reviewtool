@@ -257,13 +257,21 @@ public class SvnChangeSource implements IChangeSource {
     private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, CachedLogEntryPath entryInfo,
             final boolean isVisible, DirectoryMoveInfo dirMoves)
             throws IOException {
+        final List<Change> ret = new ArrayList<>();
+
         final String oldPath = dirMoves.determineOldPath(entryInfo);
         final byte[] oldFileContent = repoUrl.getFileContents(oldPath, this.previousRevision(revision));
+        if (oldFileContent == null) {
+            return ret; // loading old file data failed
+        }
         if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(
                     this.createBinaryChange(revision, entryInfo, repoUrl, isVisible, dirMoves));
         }
         final byte[] newFileContent = repoUrl.getFileContents(entryInfo.getPath(), this.revision(revision));
+        if (newFileContent == null) {
+            return ret; // loading new file data failed
+        }
         if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(
                     this.createBinaryChange(revision, entryInfo, repoUrl, isVisible, dirMoves));
@@ -276,7 +284,6 @@ public class SvnChangeSource implements IChangeSource {
         final String newPath = entryInfo.getPath() != null ? entryInfo.getPath() : oldPath;
         final FileInRevision newFileInfo =
                 ChangestructureFactory.createFileInRevision(newPath, this.revision(revision), repoUrl);
-        final List<Change> ret = new ArrayList<>();
         final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
         final List<Pair<Fragment, Fragment>> changes = diffAlgorithm.determineDiff(
                 oldFileInfo,
