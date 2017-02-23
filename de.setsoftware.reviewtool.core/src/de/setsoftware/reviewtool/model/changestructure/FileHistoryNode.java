@@ -4,7 +4,7 @@ import java.util.Set;
 
 /**
  * A node in a {@link FileHistoryGraph}.
- * It is bound to a {@link FileInRevision} and knows at most one direct ancestor, called its source.
+ * It is bound to a {@link FileInRevision} and knows at most one direct ancestor.
  */
 public interface FileHistoryNode {
 
@@ -27,9 +27,9 @@ public interface FileHistoryNode {
     public abstract FileHistoryEdge getAncestor();
 
     /**
-     * Returns a list of target {@link FileHistoryNode}s this node evolves to.
+     * Returns a list of descendant {@link FileHistoryNode}s this node evolves to.
      */
-    public abstract Set<? extends FileHistoryNode> getTargets();
+    public abstract Set<? extends FileHistoryNode> getDescendants();
 
     /**
      * Computes a combined {@link FileDiff} from passed history node to this one.

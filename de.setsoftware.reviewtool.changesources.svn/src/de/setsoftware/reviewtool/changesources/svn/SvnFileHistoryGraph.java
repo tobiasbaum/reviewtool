@@ -28,13 +28,18 @@ import de.setsoftware.reviewtool.model.changestructure.Revision;
 final class SvnFileHistoryGraph implements FileHistoryGraph {
 
     /**
-     * An edge in the history tree.
+     * An edge in a {@link SvnFileHistoryGraph}. It always goes from a descendant node to an ancestor node.
      */
     public static final class SvnFileHistoryEdge implements FileHistoryEdge {
 
         private final SvnFileHistoryNode target;
         private FileDiff diff;
 
+        /**
+         * Constructor.
+         * @param target The target node of the edge.
+         * @param diff The associated {@link FileDiff} object. It can be changed later using {@link #setDiff(FileDiff)}.
+         */
         public SvnFileHistoryEdge(final SvnFileHistoryNode target, final FileDiff diff) {
             this.target = target;
             this.diff = diff;
@@ -50,6 +55,9 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
             return this.diff;
         }
 
+        /**
+         * Sets the associated {@link FileDiff} object.
+         */
         void setDiff(final FileDiff diff) {
             this.diff = diff;
         }
@@ -57,8 +65,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     }
 
     /**
-     * A node in one of the history trees.
-     * It is bound to a {@link FileInRevision} and knows at most one direct ancestor, called its source.
+     * A node in a {@link SvnFileHistoryGraph}.
      */
     public abstract static class SvnFileHistoryNode implements FileHistoryNode {
 
@@ -74,7 +81,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         };
 
         /**
-         * Creates a {@link SvnFileHistoryNode}. The source is initially set to <code>null</code>.
+         * Creates a {@link SvnFileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
          * @param file The {@link FileInRevision} to wrap.
          */
         public SvnFileHistoryNode(final FileInRevision file) {
@@ -124,7 +131,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
          * This operation is called internally when this node becomes/stops being a target of some other
          * {@link SvnFileHistoryNode}.
          */
-        private void setSource(final SvnFileHistoryEdge ancestor) {
+        private void setAncestor(final SvnFileHistoryEdge ancestor) {
             this.ancestor = ancestor;
         }
 
@@ -219,38 +226,38 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     }
 
     /**
-     * A node in one of the history trees.
-     * It denotes an existing revisioned file in the {@link SvnFileHistoryGraph}.
-     * It has a list of target {@link SvnFileHistoryNode}s this file evolves to due to changes, copies, or deletions.
+     * A node in a {@link SvnFileHistoryGraph} which denotes an existing revisioned file.
+     * It has a list of descendant {@link SvnFileHistoryNode}s this file evolves to due to changes, copies, or
+     * deletions.
      */
     public static final class ExistingFileHistoryNode extends SvnFileHistoryNode {
 
-        private final Set<SvnFileHistoryNode> targets;
+        private final Set<SvnFileHistoryNode> descendants;
 
         public ExistingFileHistoryNode(final FileInRevision file) {
             super(file);
-            this.targets = new LinkedHashSet<>();
+            this.descendants = new LinkedHashSet<>();
         }
 
         @Override
         protected final void attributesToString(final List<String> attributes) {
             super.attributesToString(attributes);
-            if (!this.targets.isEmpty()) {
-                attributes.add("targets=" + this.targets);
+            if (!this.descendants.isEmpty()) {
+                attributes.add("descendants=" + this.descendants);
             }
         }
 
         @Override
-        public Set<SvnFileHistoryNode> getTargets() {
-            return this.targets;
+        public Set<SvnFileHistoryNode> getDescendants() {
+            return this.descendants;
         }
 
         /**
-         * Adds a target {@link SvnFileHistoryNode}s this node evolves to.
+         * Adds a descendant {@link SvnFileHistoryNode} this node evolves to.
          */
-        public void addTarget(final SvnFileHistoryNode target, final FileDiff diff) {
-            this.targets.add(target);
-            target.setSource(new SvnFileHistoryEdge(this, diff));
+        public void addDescendant(final SvnFileHistoryNode descendant, final FileDiff diff) {
+            this.descendants.add(descendant);
+            descendant.setAncestor(new SvnFileHistoryEdge(this, diff));
         }
 
         @Override
@@ -260,8 +267,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     }
 
     /**
-     * A node in one of the history trees.
-     * When it has no targets, it is a pure deletion.
+     * A node in a {@link SvnFileHistoryGraph} which denotes a deleted file.
      */
     public static final class NonExistingFileHistoryNode extends SvnFileHistoryNode {
 
@@ -270,7 +276,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         }
 
         @Override
-        public Set<FileHistoryNode> getTargets() {
+        public Set<FileHistoryNode> getDescendants() {
             return Collections.emptySet();
         }
 
@@ -337,7 +343,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
                     true,   // must not exist
                     false,  // is not known to be a new node
                     false); // don't copy children (they do not exist anyway)
-            ancestor.addTarget(node, new FileDiff());
+            ancestor.addDescendant(node, new FileDiff());
         }
     }
 
@@ -361,7 +367,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         this.addParentNodes(deletionNode, true, false);
         final Pair<String, Repository> key = this.createKey(file);
         this.index.put(key, deletionNode);
-        oldNode.addTarget(deletionNode, new FileDiff());
+        oldNode.addDescendant(deletionNode, new FileDiff());
 
         for (final SvnFileHistoryNode child : oldNode.getChildren()) {
             this.addDeletion(child.getFile().getPath(), prevRevision, revision, repo);
@@ -381,7 +387,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         final ExistingFileHistoryNode fromNode = this.getOrCreateExistingFileHistoryNode(fileFrom, false, false, true);
         final ExistingFileHistoryNode toNode = this.getOrCreateExistingFileHistoryNode(fileTo, true, false, true);
 
-        if (!fromNode.getTargets().contains(toNode)) {
+        if (!fromNode.getDescendants().contains(toNode)) {
             this.addEdge(fromNode, toNode, true);
         }
     }
@@ -394,7 +400,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
      */
     private void addEdge(final ExistingFileHistoryNode ancestor, final SvnFileHistoryNode descendant,
             final boolean copyChildren) {
-        ancestor.addTarget(descendant, new FileDiff());
+        ancestor.addDescendant(descendant, new FileDiff());
         if (copyChildren) {
             this.copyChildNodes(ancestor, descendant);
         }
@@ -531,13 +537,13 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
      * @param descendant The descendant.
      */
     private void injectInteriorNode(final ExistingFileHistoryNode ancestor, final ExistingFileHistoryNode descendant) {
-        final Iterator<SvnFileHistoryNode> it = ancestor.getTargets().iterator();
+        final Iterator<SvnFileHistoryNode> it = ancestor.getDescendants().iterator();
         while (it.hasNext()) {
-            final SvnFileHistoryNode target = it.next();
+            final SvnFileHistoryNode descendantOfAncestor = it.next();
             // only inject interior node if it's the same path (i.e. no rename/move)
-            if (ancestor.getFile().getPath().equals(target.getFile().getPath())) {
+            if (ancestor.getFile().getPath().equals(descendantOfAncestor.getFile().getPath())) {
                 it.remove();
-                descendant.addTarget(target, target.getAncestor().getDiff());
+                descendant.addDescendant(descendantOfAncestor, descendantOfAncestor.getAncestor().getDiff());
             }
         }
     }
@@ -609,16 +615,16 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
 
             @Override
             public void handleExistingNode(ExistingFileHistoryNode node) {
-                if (node.getTargets().isEmpty()) {
+                if (node.getDescendants().isEmpty()) {
                     ret.get().add(node);
                 } else {
                     // is this node the last known one given its path?
                     boolean samePathFound = false;
-                    for (final SvnFileHistoryNode target : node.getTargets()) {
-                        if (node.getFile().getPath().equals(target.getFile().getPath())) {
+                    for (final SvnFileHistoryNode descendant : node.getDescendants()) {
+                        if (node.getFile().getPath().equals(descendant.getFile().getPath())) {
                             samePathFound = true;
                         }
-                        ret.get().addAll(SvnFileHistoryGraph.this.getLatestFilesHelper(target, returnDeletions));
+                        ret.get().addAll(SvnFileHistoryGraph.this.getLatestFilesHelper(descendant, returnDeletions));
                     }
                     if (!samePathFound || (returnDeletions && ret.get().isEmpty())) {
                         // either this node is the last known one existing for its path, or this node is the last node
@@ -686,11 +692,11 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     /**
      * Returns the underlying revision number.
      *
-     * @param source The revision.
+     * @param revision The revision.
      * @return The revision number.
      */
-    private long getRevision(FileInRevision source) {
-        final Revision rev = source.getRevision();
+    private long getRevision(FileInRevision revision) {
+        final Revision rev = revision.getRevision();
         return rev instanceof RepoRevision ? (Long) ((RepoRevision) rev).getId() : Long.MAX_VALUE;
     }
 
