@@ -91,11 +91,19 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                     isRelevant = true;
                 } else if (e.getValue().isFile()
                         && (isVisible || historyGraphBuffer.contains(path, revision.getRepository()))) {
-                    historyGraphBuffer.addChange(
-                            path,
-                            ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
-                            ChangestructureFactory.createRepoRevision(revision.getRevision()),
-                            revision.getRepository());
+                    if (e.getValue().isNew()) {
+                        historyGraphBuffer.addAddition(
+                                path,
+                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
+                                ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                revision.getRepository());
+                    } else {
+                        historyGraphBuffer.addChange(
+                                path,
+                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
+                                ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                revision.getRepository());
+                    }
                     isRelevant = true;
                 }
             }

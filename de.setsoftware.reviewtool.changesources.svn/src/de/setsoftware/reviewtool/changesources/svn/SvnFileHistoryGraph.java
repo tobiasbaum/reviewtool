@@ -64,6 +64,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
 
         private final FileInRevision file;
         private SvnFileHistoryEdge ancestor;
+        private SvnFileHistoryNode parent;
         private final List<SvnFileHistoryNode> children;
         private static final ThreadLocal<Boolean> inToString = new ThreadLocal<Boolean>() {
             @Override
@@ -123,12 +124,12 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
          * This operation is called internally when this node becomes/stops being a target of some other
          * {@link SvnFileHistoryNode}.
          */
-        void setSource(final SvnFileHistoryEdge ancestor) {
+        private void setSource(final SvnFileHistoryEdge ancestor) {
             this.ancestor = ancestor;
         }
 
         /**
-         * Returns a list of child {@link SvnFileHistoryNode}s.
+         * Returns a list of child  s.
          */
         public List<SvnFileHistoryNode> getChildren() {
             return this.children;
@@ -139,6 +140,37 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
          */
         public void addChild(final SvnFileHistoryNode child) {
             this.children.add(child);
+            child.setParent(this);
+        }
+
+        /**
+         * Returns <code>true</code> if this node has a parent {@link SvnFileHistoryNode}.
+         */
+        public boolean hasParent() {
+            return this.parent != null;
+        }
+
+        /**
+         * Returns the parent {@link SvnFileHistoryNode} or <code>null</code> if no parent has been set.
+         */
+        public SvnFileHistoryNode getParent() {
+            return this.parent;
+        }
+
+        /**
+         * Sets the parent {@link SvnFileHistoryNode}.
+         * This operation is called internally when this node becomes/stops being a child of some other
+         * {@link SvnFileHistoryNode}.
+         */
+        void setParent(final SvnFileHistoryNode newParent) {
+            this.parent = newParent;
+        }
+
+        /**
+         * Returns <code>true</code> if this node results from a copy operations.
+         */
+        public boolean isCopied() {
+            return !this.isRoot() && !this.getFile().getPath().equals(this.ancestor.getTarget().getFile().getPath());
         }
 
         /**
@@ -277,16 +309,34 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     }
 
     /**
+     * Adds the information that the file with the given path was added at the commit of the given revision.
+     */
+    void addAddition(String path, Revision prevRevision, Revision revision, Repository repo) {
+        this.addAdditionOrChange(path, prevRevision, revision, repo, true);
+    }
+
+    /**
      * Adds the information that the file with the given path was changed at the commit of the given revision.
      */
     void addChange(String path, Revision prevRevision, Revision revision, Repository repo) {
+        this.addAdditionOrChange(path, prevRevision, revision, repo, false);
+    }
+
+    /**
+     * Adds the information that the file with the given path was added or changed at the commit of the given revision.
+     */
+    private void addAdditionOrChange(final String path, final Revision prevRevision, final Revision revision,
+            final Repository repo, final boolean isNew) {
         final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
-        final SvnFileHistoryNode node = this.getOrCreateExistingFileHistoryNode(file, true);
+        final SvnFileHistoryNode node = this.getOrCreateExistingFileHistoryNode(file, true, isNew, !isNew);
         if (node.isRoot()) {
-            // if a file starts its existence within the history graph with a change, we need an
-            // artificial ancestor node to record the changes
+            // for each root file within the history graph, we need an artificial ancestor node to record the changes
             final FileInRevision prevFile = ChangestructureFactory.createFileInRevision(path, prevRevision, repo);
-            final ExistingFileHistoryNode ancestor = this.getOrCreateExistingFileHistoryNode(prevFile, true);
+            final ExistingFileHistoryNode ancestor = this.getOrCreateExistingFileHistoryNode(
+                    prevFile,
+                    true,   // must not exist
+                    false,  // is not known to be a new node
+                    false); // don't copy children (they do not exist anyway)
             ancestor.addTarget(node, new FileDiff());
         }
     }
@@ -300,14 +350,15 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     void addDeletion(String path, Revision prevRevision, Revision revision, Repository repo) {
         final FileInRevision previousFile =
                 ChangestructureFactory.createFileInRevision(path, prevRevision, repo);
-        final ExistingFileHistoryNode oldNode = this.getOrCreateExistingFileHistoryNode(previousFile, false);
+        final ExistingFileHistoryNode oldNode = this.getOrCreateExistingFileHistoryNode(previousFile, false, false,
+                true);
 
         final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
         // a file can have at most one associated node per revision
         assert this.getNodeFor(file) == null;
 
         final SvnFileHistoryNode deletionNode = new NonExistingFileHistoryNode(file);
-        this.addParentNodes(deletionNode);
+        this.addParentNodes(deletionNode, true, false);
         final Pair<String, Repository> key = this.createKey(file);
         this.index.put(key, deletionNode);
         oldNode.addTarget(deletionNode, new FileDiff());
@@ -327,20 +378,34 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         final FileInRevision fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom, repo);
         final FileInRevision fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo, repo);
 
-        final ExistingFileHistoryNode fromNode = this.getOrCreateExistingFileHistoryNode(fileFrom, false);
-        final ExistingFileHistoryNode toNode = this.getOrCreateExistingFileHistoryNode(fileTo, true);
+        final ExistingFileHistoryNode fromNode = this.getOrCreateExistingFileHistoryNode(fileFrom, false, false, true);
+        final ExistingFileHistoryNode toNode = this.getOrCreateExistingFileHistoryNode(fileTo, true, false, true);
 
         if (!fromNode.getTargets().contains(toNode)) {
-            fromNode.addTarget(toNode, new FileDiff());
-            this.copyChildNodes(fromNode, toNode);
+            this.addEdge(fromNode, toNode, true);
+        }
+    }
+
+    /**
+     * Adds an ancestor/descendant relationship between two nodes.
+     * @param ancestor The ancestor.
+     * @param descendant The descendant.
+     * @param copyChildren If <code>true</code>, the children of the ancestor node are copied to the descendant node.
+     */
+    private void addEdge(final ExistingFileHistoryNode ancestor, final SvnFileHistoryNode descendant,
+            final boolean copyChildren) {
+        ancestor.addTarget(descendant, new FileDiff());
+        if (copyChildren) {
+            this.copyChildNodes(ancestor, descendant);
         }
     }
 
     /**
      * Adds a parent node to the node passed. Either an existing parent node is used or a new one is created.
      * @param node The node which to find/create parent node for.
+     * @param isNew If <code>true</code>, it is known that the node has been added in its revision.
      */
-    private void addParentNodes(final SvnFileHistoryNode node) {
+    private void addParentNodes(final SvnFileHistoryNode node, final boolean isNew, final boolean copyChildren) {
         final FileInRevision file = node.getFile();
         final String path = file.getPath();
         if (path.contains("/")) {
@@ -351,8 +416,21 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
                         file.getRevision(),
                         file.getRepository());
                 // don't copy child nodes when traversing upwards the tree as they already exist
-                final SvnFileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false);
+                final SvnFileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false, false);
                 parent.addChild(node);
+
+                if (!isNew && !node.isCopied() && parent.isCopied()) {
+                    // special case: node begins lifetime with a change in a copied directory
+                    final String name = path.substring(path.lastIndexOf("/") + 1);
+                    final FileInRevision parentAncestorRev = parent.getAncestor().getTarget().getFile();
+                    final FileInRevision ancestorRev = ChangestructureFactory.createFileInRevision(
+                            parentAncestorRev.getPath() + "/" + name,
+                            parentAncestorRev.getRevision(),
+                            parentAncestorRev.getRepository());
+                    final ExistingFileHistoryNode ancestor =
+                            this.getOrCreateExistingFileHistoryNode(ancestorRev, false, false, false);
+                    this.addEdge(ancestor, node, copyChildren);
+                }
             }
         }
     }
@@ -398,10 +476,13 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
      * Finally, child nodes are copied from the ancestor node.
      *
      * @param mustNotExist If <code>true</code>, the node may not already exist.
+     * @param isNew If <code>true</code>, the node is known to have been added in passed revision. This makes a
+     *      difference when the node's parent is a copied directory: New nodes remain root nodes, while other nodes
+     *      will be associated to an ancestor in the parent's copy source.
      */
     private ExistingFileHistoryNode getOrCreateExistingFileHistoryNode(final FileInRevision file,
-            final boolean mustNotExist) {
-        final SvnFileHistoryNode node = this.getOrCreateFileHistoryNode(file, mustNotExist, true);
+            final boolean mustNotExist, final boolean isNew, final boolean copyChildren) {
+        final SvnFileHistoryNode node = this.getOrCreateFileHistoryNode(file, mustNotExist, isNew, copyChildren);
         return (ExistingFileHistoryNode) node;
     }
 
@@ -415,27 +496,29 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
      * @param mustNotExist If <code>true</code>, the node may not already exist.
      * @param copyChildren If <code>true</code> and a new node is created, child nodes are copied from the ancestor
      *      (if it exists) to the new node.
+     * @param isNew If <code>true</code>, the node is known to have been added in passed revision. This makes a
+     *      difference when the node's parent is a copied directory: New nodes remain root nodes, while other nodes
+     *      will be associated to an ancestor in the parent's copy source.
      */
     private SvnFileHistoryNode getOrCreateFileHistoryNode(final FileInRevision file, final boolean mustNotExist,
-            final boolean copyChildren) {
+            final boolean isNew, final boolean copyChildren) {
         SvnFileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             final ExistingFileHistoryNode newNode = new ExistingFileHistoryNode(file);
             this.index.put(this.createKey(file), newNode);
 
-            final ExistingFileHistoryNode ancestor = this.findAncestorFor(file);
-            if (ancestor != null) {
-                this.injectInteriorNode(ancestor, newNode);
-                ancestor.addTarget(newNode, new FileDiff());
-                if (copyChildren) {
-                    this.copyChildNodes(ancestor, newNode);
+            this.addParentNodes(newNode, isNew, copyChildren);
+            if (!isNew && newNode.isRoot()) { // addParentNodes() may have already added an ancestor
+                final ExistingFileHistoryNode ancestor = this.findAncestorFor(file);
+                if (ancestor != null) {
+                    this.injectInteriorNode(ancestor, newNode);
+                    this.addEdge(ancestor, newNode, copyChildren);
                 }
             }
 
-            this.addParentNodes(newNode);
             return newNode;
         } else {
-            assert !mustNotExist;
+            assert !isNew && !mustNotExist;
             return node;
         }
     }
