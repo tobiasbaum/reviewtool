@@ -1,6 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.Set;
+import java.util.List;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
@@ -20,7 +20,9 @@ public interface FileHistoryGraph {
      * Returns the latest known versions of the given file. If all versions were deleted, the last known versions
      * before deletion are returned. If the file is unknown, a list with the file itself is
      * returned.
+     * <p/>
+     * The revisions returned are topologically sorted according to their dependencies.
      */
-    public abstract Set<FileInRevision> getLatestFiles(FileInRevision file);
+    public abstract List<FileInRevision> getLatestFiles(FileInRevision file);
 
 }

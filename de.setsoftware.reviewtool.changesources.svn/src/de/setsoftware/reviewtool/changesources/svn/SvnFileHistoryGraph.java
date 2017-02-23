@@ -565,20 +565,20 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     }
 
     @Override
-    public Set<FileInRevision> getLatestFiles(FileInRevision file) {
+    public List<FileInRevision> getLatestFiles(FileInRevision file) {
         Set<SvnFileHistoryNode> nodes = this.getLatestFilesHelper(file, false);
         if (nodes.isEmpty()) {
             nodes = this.getLatestFilesHelper(file, true);
         }
 
         if (nodes.isEmpty()) {
-            return Collections.singleton(file);
+            return Collections.singletonList(file);
         } else {
-            final Set<FileInRevision> revs = new HashSet<>();
+            final List<FileInRevision> revs = new ArrayList<>();
             for (final SvnFileHistoryNode node : nodes) {
                 revs.add(node.getFile());
             }
-            return revs;
+            return FileInRevision.sortByRevision(revs);
         }
     }
 
