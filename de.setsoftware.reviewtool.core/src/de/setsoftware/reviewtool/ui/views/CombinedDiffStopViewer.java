@@ -45,7 +45,7 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
 
             final List<Fragment> fragmentsFirst = stop.getContentFor(firstRevision);
             final List<Fragment> fragmentsLast = stop.getContentFor(lastRevision);
-            if (fragmentsFirst == null || fragmentsLast == null) { // binary change
+            if (fragmentsFirst.isEmpty() || fragmentsLast.isEmpty()) { // binary change
                 this.createDiffViewer(view, scrollContent, firstRevision, lastRevision, fragmentsFirst, fragmentsLast,
                         null, null);
             } else { // textual change
