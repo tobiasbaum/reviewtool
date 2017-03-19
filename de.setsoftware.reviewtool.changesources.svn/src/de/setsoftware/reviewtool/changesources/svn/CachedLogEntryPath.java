@@ -52,8 +52,12 @@ public class CachedLogEntryPath implements Serializable {
         return this.kind == 'D';
     }
 
+    public boolean isNew() {
+        return this.type == SVNLogEntryPath.TYPE_ADDED || this.type == SVNLogEntryPath.TYPE_REPLACED;
+    }
+
     public boolean isDeleted() {
-        return this.type == 'D';
+        return this.type == SVNLogEntryPath.TYPE_DELETED;
     }
 
 }

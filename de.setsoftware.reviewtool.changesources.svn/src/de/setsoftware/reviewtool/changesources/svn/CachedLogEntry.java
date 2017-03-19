@@ -2,9 +2,10 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNLogEntryPath;
@@ -20,7 +21,7 @@ public class CachedLogEntry implements Serializable {
     private final String message;
     private final String author;
     private final Date date;
-    private final Map<String, CachedLogEntryPath> paths;
+    private final SortedMap<String, CachedLogEntryPath> paths;
 
     public CachedLogEntry(SVNLogEntry logEntry) {
         this.revision = logEntry.getRevision();
@@ -28,7 +29,7 @@ public class CachedLogEntry implements Serializable {
         this.author = logEntry.getAuthor();
         this.date = logEntry.getDate();
 
-        this.paths = new LinkedHashMap<>();
+        this.paths = new TreeMap<>();
         for (final Entry<String, SVNLogEntryPath> e : logEntry.getChangedPaths().entrySet()) {
             this.paths.put(e.getKey(), new CachedLogEntryPath(e.getValue()));
         }
@@ -54,4 +55,8 @@ public class CachedLogEntry implements Serializable {
         return this.paths;
     }
 
+    @Override
+    public String toString() {
+        return Long.toString(this.revision);
+    }
 }

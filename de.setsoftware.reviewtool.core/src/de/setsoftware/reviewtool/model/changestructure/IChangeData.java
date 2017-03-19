@@ -19,8 +19,8 @@ public interface IChangeData {
     public abstract IFragmentTracer createTracer();
 
     /**
-     * Creates a {@link RepositoryChangeHistory} from the change data.
+     * Returns a {@link FileHistoryGraph} for the change data.
      */
-    public abstract RepositoryChangeHistory createChangeHistory();
+    public abstract FileHistoryGraph getHistoryGraph();
 
 }

@@ -28,6 +28,8 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.changesources.svn.SvnFileHistoryGraph.SvnFileHistoryEdge;
+import de.setsoftware.reviewtool.changesources.svn.SvnFileHistoryGraph.SvnFileHistoryNode;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.changestructure.Change;
@@ -35,9 +37,11 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.changestructure.Hunk;
 import de.setsoftware.reviewtool.model.changestructure.IChangeData;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.changestructure.IncompatibleFragmentException;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 
 /**
@@ -110,10 +114,10 @@ public class SvnChangeSource implements IChangeSource {
     @Override
     public IChangeData getChanges(String key, IChangeSourceUi ui) {
         try {
-            final FileHistoryGraph historyGraph = new FileHistoryGraph();
+            final SvnFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
             final List<SvnRevision> revisions = this.determineRelevantRevisions(key, historyGraph);
             this.checkWorkingCopiesUpToDate(revisions, ui);
-            return new SvnChangeData(this.convertToChanges(revisions), historyGraph);
+            return new SvnChangeData(this.convertToChanges(historyGraph, revisions), historyGraph);
         } catch (final SVNException | IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -155,7 +159,7 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private List<SvnRevision> determineRelevantRevisions(
-            final String key, FileHistoryGraph historyGraphBuffer) throws SVNException {
+            final String key, SvnFileHistoryGraph historyGraphBuffer) throws SVNException {
         final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
             CachedLog.getInstance().traverseRecentEntries(this.mgr, workingCopyRoot, handler);
@@ -163,30 +167,31 @@ public class SvnChangeSource implements IChangeSource {
         return handler.determineRelevantRevisions(historyGraphBuffer);
     }
 
-    private List<Commit> convertToChanges(List<SvnRevision> revisions)
+    private List<Commit> convertToChanges(final SvnFileHistoryGraph historyGraph, List<SvnRevision> revisions)
             throws SVNException, IOException {
         final List<Commit> ret = new ArrayList<>();
         for (final SvnRevision e : revisions) {
-            ret.add(this.convertToCommit(e));
+            ret.add(this.convertToCommit(historyGraph, e));
         }
         return ret;
     }
 
-    private Commit convertToCommit(SvnRevision e) throws SVNException, IOException {
+    private Commit convertToCommit(final SvnFileHistoryGraph historyGraph, SvnRevision e)
+            throws SVNException, IOException {
         return ChangestructureFactory.createCommit(
                 String.format("%s (Rev. %s, %s)" + (e.isVisible() ? "" : " [invisible]"),
                         e.getMessage(), e.getRevision(), e.getAuthor()),
-                        this.determineChangesInCommit(e), e.isVisible());
+                        this.determineChangesInCommit(historyGraph, e), e.isVisible());
     }
 
     /**
      * Helpers class to account for the fact that SVN does not fill the copy path
      * for single files when the whole containing directory has been copied.
      */
-    private static final class DirectoryMoveInfo {
+    private static final class DirectoryCopyInfo {
         private final List<Pair<String, String>> directoryCopies = new ArrayList<>();
 
-        public DirectoryMoveInfo(Collection<CachedLogEntryPath> values) {
+        public DirectoryCopyInfo(Collection<CachedLogEntryPath> values) {
             for (final CachedLogEntryPath p : values) {
                 if (p.isDir() && p.getCopyPath() != null) {
                     this.directoryCopies.add(Pair.create(p.getCopyPath(), p.getPath()));
@@ -209,13 +214,12 @@ public class SvnChangeSource implements IChangeSource {
 
     }
 
-    private List<Change> determineChangesInCommit(SvnRevision e)
+    private List<Change> determineChangesInCommit(final SvnFileHistoryGraph historyGraph, SvnRevision e)
             throws SVNException, IOException {
         final List<Change> ret = new ArrayList<>();
-        final SVNRevision revision = SVNRevision.create(e.getRevision());
         final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();
-        final DirectoryMoveInfo dirMoves = new DirectoryMoveInfo(changedPaths.values());
-        final Set<String> moveSources = this.determineMoveSources(changedPaths.values(), dirMoves);
+        final DirectoryCopyInfo dirCopies = new DirectoryCopyInfo(changedPaths.values());
+        final Set<String> copySources = this.determineCopySources(changedPaths.values(), dirCopies);
         final List<String> sortedPaths = new ArrayList<>(changedPaths.keySet());
         Collections.sort(sortedPaths);
         for (final String path : sortedPaths) {
@@ -223,69 +227,80 @@ public class SvnChangeSource implements IChangeSource {
             if (!value.isFile()) {
                 continue;
             }
-            if (moveSources.contains(value.getPath())) {
+            if (value.isDeleted() && copySources.contains(value.getPath())) {
                 //Moves are contained twice, as a copy and a deletion. The deletion shall not result in a fragment.
                 continue;
             }
-            if (this.isBinaryFile(e.getRepository(), value, e.getRevision())) {
-                ret.add(this.createBinaryChange(revision, value, e.getRepository(), e.isVisible(), dirMoves));
-            } else {
-                ret.addAll(this.determineChangesInFile(revision, e.getRepository(), value, e.isVisible(), dirMoves));
+
+            final FileInRevision fileInfo = ChangestructureFactory.createFileInRevision(path,
+                    this.revision(SVNRevision.create(e.getRevision())),
+                    e.getRepository());
+            final SvnFileHistoryNode node = historyGraph.getNodeFor(fileInfo);
+            if (node != null) {
+                if (this.isBinaryFile(e.getRepository(), value, e.getRevision())) {
+                    ret.add(this.createBinaryChange(e.getRepository(), node, e.isVisible()));
+                } else {
+                    ret.addAll(this.determineChangesInFile(e.getRepository(), node, e.isVisible()));
+                }
             }
         }
         return ret;
     }
 
-    private Change createBinaryChange(SVNRevision revision, CachedLogEntryPath entryInfo, SvnRepo repo,
-            final boolean isVisible, DirectoryMoveInfo dirMoves) {
-        final String oldPath = dirMoves.determineOldPath(entryInfo);
-        final FileInRevision oldFileInfo =
-                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repo);
-        final FileInRevision newFileInfo =
-                ChangestructureFactory.createFileInRevision(entryInfo.getPath(), this.revision(revision), repo);
-        return ChangestructureFactory.createBinaryChange(oldFileInfo, newFileInfo, false, isVisible);
+    private Change createBinaryChange(final SvnRepo repo, final SvnFileHistoryNode node, final boolean isVisible) {
+
+        final SvnFileHistoryEdge ancestorEdge = node.getAncestor();
+        final SvnFileHistoryNode ancestor = ancestorEdge.getTarget();
+        final FileInRevision oldFileInfo = ChangestructureFactory.createFileInRevision(ancestor.getFile().getPath(),
+                        ancestor.getFile().getRevision(), repo);
+
+        return ChangestructureFactory.createBinaryChange(
+                oldFileInfo,
+                node.getFile(),
+                false,
+                isVisible);
     }
 
     private RepoRevision revision(SVNRevision revision) {
         return ChangestructureFactory.createRepoRevision(revision.getNumber());
     }
 
-    private RepoRevision previousRevision(SVNRevision revision) {
-        return ChangestructureFactory.createRepoRevision(revision.getNumber() - 1);
-    }
+    private List<Change> determineChangesInFile(final SvnRepo repo, final SvnFileHistoryNode node,
+            final boolean isVisible) throws IOException {
 
-    private List<Change> determineChangesInFile(SVNRevision revision, SvnRepo repoUrl, CachedLogEntryPath entryInfo,
-            final boolean isVisible, DirectoryMoveInfo dirMoves)
-            throws IOException {
-        final String oldPath = dirMoves.determineOldPath(entryInfo);
-        final byte[] oldFileContent = repoUrl.getFileContents(oldPath, this.previousRevision(revision));
+        final SvnFileHistoryEdge ancestorEdge = node.getAncestor();
+        final SvnFileHistoryNode ancestor = ancestorEdge.getTarget();
+
+        final byte[] oldFileContent = repo.getFileContents(ancestor.getFile().getPath(),
+                (RepoRevision) ancestor.getFile().getRevision());
         if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
-            return Collections.singletonList(
-                    this.createBinaryChange(revision, entryInfo, repoUrl, isVisible, dirMoves));
+            return Collections.singletonList(this.createBinaryChange(repo, node, isVisible));
         }
-        final byte[] newFileContent = repoUrl.getFileContents(entryInfo.getPath(), this.revision(revision));
+
+        final byte[] newFileContent = repo.getFileContents(node.getFile().getPath(),
+                (RepoRevision) node.getFile().getRevision());
         if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
-            return Collections.singletonList(
-                    this.createBinaryChange(revision, entryInfo, repoUrl, isVisible, dirMoves));
+            return Collections.singletonList(this.createBinaryChange(repo, node, isVisible));
         }
 
-
-        final FileInRevision oldFileInfo =
-                ChangestructureFactory.createFileInRevision(oldPath, this.previousRevision(revision), repoUrl);
-        //in case of deletions, the path is null, but FileInRevision does not allow null paths
-        final String newPath = entryInfo.getPath() != null ? entryInfo.getPath() : oldPath;
-        final FileInRevision newFileInfo =
-                ChangestructureFactory.createFileInRevision(newPath, this.revision(revision), repoUrl);
         final List<Change> ret = new ArrayList<>();
         final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
         final List<Pair<Fragment, Fragment>> changes = diffAlgorithm.determineDiff(
-                oldFileInfo,
+                ancestor.getFile(),
                 oldFileContent,
-                newFileInfo,
+                node.getFile(),
                 newFileContent,
                 this.guessEncoding(oldFileContent, newFileContent));
+        final List<Hunk> hunks = new ArrayList<>();
         for (final Pair<Fragment, Fragment> pos : changes) {
             ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond(), false, isVisible));
+            hunks.add(new Hunk(pos.getFirst(), pos.getSecond()));
+        }
+
+        try {
+            ancestorEdge.setDiff(ancestorEdge.getDiff().merge(hunks));
+        } catch (final IncompatibleFragmentException e) {
+            throw new Error(e);
         }
         return ret;
     }
@@ -341,21 +356,13 @@ public class SvnChangeSource implements IChangeSource {
         return SVNProperty.isBinaryMimeType(mimeType);
     }
 
-    private Set<String> determineMoveSources(Collection<CachedLogEntryPath> entries, DirectoryMoveInfo dirMoves) {
+    private Set<String> determineCopySources(Collection<CachedLogEntryPath> entries, DirectoryCopyInfo dirMoves) {
         final Set<String> ret = new LinkedHashSet<>();
 
-        //determine all copy sources
         for (final CachedLogEntryPath p : entries) {
             final String copyPath = dirMoves.determineOldPath(p);
             if (!copyPath.equals(p.getPath())) {
                 ret.add(copyPath);
-            }
-        }
-
-        //if a copy source was deleted, we consider this a "move", everything else is not a move
-        for (final CachedLogEntryPath p : entries) {
-            if (!p.isDeleted()) {
-                ret.remove(p.getPath());
             }
         }
 

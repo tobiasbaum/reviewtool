@@ -66,7 +66,7 @@ public class CachedLog {
 
         try {
             this.readCacheFromFile();
-        } catch (ClassNotFoundException | IOException e) {
+        } catch (final ClassNotFoundException | IOException | ClassCastException e) {
             Logger.error("problem while loading svn cache", e);
         }
     }

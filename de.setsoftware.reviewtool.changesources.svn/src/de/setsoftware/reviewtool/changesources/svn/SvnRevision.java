@@ -74,4 +74,9 @@ class SvnRevision {
     public boolean isVisible() {
         return this.isVisible;
     }
+
+    @Override
+    public String toString() {
+        return this.repository.toString() + "@" + this.logEntry.toString() + (this.isVisible ? "(+)" : "(-)");
+    }
 }

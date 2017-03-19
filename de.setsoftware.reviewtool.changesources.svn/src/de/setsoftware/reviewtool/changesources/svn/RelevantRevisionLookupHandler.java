@@ -1,13 +1,10 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
@@ -55,81 +52,63 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
      * Returns all revisions that matched the given pattern and all revisions in between that touched
      * files changed in a matching revision.
      */
-    public List<SvnRevision> determineRelevantRevisions(FileHistoryGraph historyGraphBuffer) {
+    public List<SvnRevision> determineRelevantRevisions(SvnFileHistoryGraph historyGraphBuffer) {
         final List<SvnRevision> ret = new ArrayList<>();
         for (final TreeMap<Long, SvnRevision> revisionsInRepo : this.groupResultsByRepository().values()) {
-            //iterate over revisions in order and keep track of the relevant paths
-            final Set<String> relevantPaths = new HashSet<>();
             for (final SvnRevision revision : revisionsInRepo.values()) {
-                if (revision.isVisible()) {
+                if (this.processRevision(revision, historyGraphBuffer, revision.isVisible())) {
                     ret.add(revision);
-                    this.adjustRelevantPaths(revision, relevantPaths, historyGraphBuffer);
-                } else {
-                    if (this.touchesRelevantPath(revision, relevantPaths)) {
-                        ret.add(revision);
-                        this.trackMovesAndCopies(revision, relevantPaths, historyGraphBuffer);
-                    }
                 }
             }
         }
         return ret;
     }
 
-    private void adjustRelevantPaths(
-            SvnRevision revision, Set<String> relevantPaths, FileHistoryGraph historyGraphBuffer) {
-        assert revision.isVisible();
+    private boolean processRevision(
+            SvnRevision revision, SvnFileHistoryGraph historyGraphBuffer, boolean isVisible) {
+        boolean isRelevant = false;
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
-            if (!e.getValue().isFile()) {
-                continue;
-            }
+            final String path = e.getKey();
             if (e.getValue().isDeleted()) {
-                relevantPaths.remove(e.getKey());
-                historyGraphBuffer.addDeletion(
-                        e.getKey(),
-                        ChangestructureFactory.createRepoRevision(revision.getRevision()),
-                        revision.getRepository());
+                if (isVisible || historyGraphBuffer.contains(path, revision.getRepository())) {
+                    historyGraphBuffer.addDeletion(
+                            path,
+                            ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
+                            ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                            revision.getRepository());
+                    isRelevant = true;
+                }
             } else {
-                relevantPaths.add(e.getKey());
-                if (e.getValue().getCopyPath() != null) {
+                final String copyPath = e.getValue().getCopyPath();
+                if (copyPath != null
+                        && (isVisible || historyGraphBuffer.contains(copyPath, revision.getRepository()))) {
                     historyGraphBuffer.addCopy(
-                            e.getValue().getCopyPath(),
-                            e.getKey(),
+                            copyPath,
+                            path,
                             ChangestructureFactory.createRepoRevision(e.getValue().getCopyRevision()),
                             ChangestructureFactory.createRepoRevision(revision.getRevision()),
                             revision.getRepository());
+                    isRelevant = true;
+                } else if (e.getValue().isFile()
+                        && (isVisible || historyGraphBuffer.contains(path, revision.getRepository()))) {
+                    if (e.getValue().isNew()) {
+                        historyGraphBuffer.addAddition(
+                                path,
+                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
+                                ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                revision.getRepository());
+                    } else {
+                        historyGraphBuffer.addChange(
+                                path,
+                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
+                                ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                revision.getRepository());
+                    }
+                    isRelevant = true;
                 }
             }
         }
-    }
-
-    private void trackMovesAndCopies(
-            SvnRevision revision, Set<String> relevantPaths, FileHistoryGraph historyGraphBuffer) {
-        assert !revision.isVisible();
-        for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
-            final String copyPath = e.getValue().getCopyPath();
-            if (copyPath != null && relevantPaths.contains(copyPath)) {
-                relevantPaths.add(e.getKey());
-                historyGraphBuffer.addCopy(
-                        e.getValue().getCopyPath(),
-                        e.getKey(),
-                        ChangestructureFactory.createRepoRevision(e.getValue().getCopyRevision()),
-                        ChangestructureFactory.createRepoRevision(revision.getRevision()),
-                        revision.getRepository());
-            }
-        }
-        for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
-            if (e.getValue().isDeleted()) {
-                relevantPaths.remove(e.getKey());
-                historyGraphBuffer.addDeletion(
-                        e.getKey(),
-                        ChangestructureFactory.createRepoRevision(revision.getRevision()),
-                        revision.getRepository());
-            }
-        }
-    }
-
-    private boolean touchesRelevantPath(SvnRevision revision, Set<String> relevantPaths) {
-        return !Collections.disjoint(relevantPaths, revision.getChangedPaths().keySet());
+        return isRelevant;
     }
 
     private Map<SvnRepo, TreeMap<Long, SvnRevision>> groupResultsByRepository() {

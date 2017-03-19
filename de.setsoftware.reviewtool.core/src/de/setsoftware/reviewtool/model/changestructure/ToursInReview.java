@@ -20,7 +20,6 @@ import org.eclipse.core.runtime.IPath;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
@@ -71,13 +70,13 @@ public class ToursInReview {
 
     }
 
-    private final RepositoryChangeHistory changeHistory;
+    private final FileHistoryGraph historyGraph;
     private final List<Tour> tours;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
-    private ToursInReview(final RepositoryChangeHistory changeHistory, List<? extends Tour> tours) {
-        this.changeHistory = changeHistory;
+    private ToursInReview(final FileHistoryGraph historyGraph, List<? extends Tour> tours) {
+        this.historyGraph = historyGraph;
         this.tours = new ArrayList<>(tours);
         this.currentTourIndex = 0;
     }
@@ -86,7 +85,7 @@ public class ToursInReview {
      * Creates a new object with the given tours (mainly for tests).
      */
     public static ToursInReview create(List<Tour> tours) {
-        return new ToursInReview(new RepositoryChangeHistory(), tours);
+        return new ToursInReview(/* TODO */ null, tours);
     }
 
     /**
@@ -115,7 +114,7 @@ public class ToursInReview {
             return null;
         }
 
-        return new ToursInReview(changes.createChangeHistory(), userSelection);
+        return new ToursInReview(changes.getHistoryGraph(), userSelection);
     }
 
     private static List<Commit> filterChanges(
@@ -257,37 +256,42 @@ public class ToursInReview {
     private static List<Stop> toSliceFragments(List<Change> changes, IFragmentTracer tracer) {
         final List<Stop> ret = new ArrayList<>();
         for (final Change c : changes) {
-            ret.add(toSliceFragment(c, tracer));
+            ret.addAll(toSliceFragment(c, tracer));
         }
         return ret;
     }
 
-    private static Stop toSliceFragment(Change c, final IFragmentTracer tracer) {
-        final ValueWrapper<Stop> ret = new ValueWrapper<>();
+    private static List<Stop> toSliceFragment(Change c, final IFragmentTracer tracer) {
+        final List<Stop> ret = new ArrayList<>();
         c.accept(new ChangeVisitor() {
 
             @Override
             public void handle(TextualChangeHunk visitee) {
-                ret.setValue(new Stop(
-                        visitee.getFromFragment(),
-                        visitee.getToFragment(),
-                        tracer.traceFragment(visitee.getFromFragment()),
-                        visitee.isIrrelevantForReview(),
-                        visitee.isVisible()));
+                final List<Fragment> mostRecentFragments = tracer.traceFragment(visitee.getToFragment());
+                for (final Fragment fragment : mostRecentFragments) {
+                    ret.add(new Stop(
+                            visitee.getFromFragment(),
+                            visitee.getToFragment(),
+                            fragment,
+                            visitee.isIrrelevantForReview(),
+                            visitee.isVisible()));
+                }
             }
 
             @Override
             public void handle(BinaryChange visitee) {
-                ret.setValue(new Stop(
-                        visitee.getFrom(),
-                        visitee.getTo(),
-                        tracer.traceFile(visitee.getFrom()),
-                        visitee.isIrrelevantForReview(),
-                        visitee.isVisible()));
+                for (final FileInRevision fileInRevision : tracer.traceFile(visitee.getFrom())) {
+                    ret.add(new Stop(
+                            visitee.getFrom(),
+                            visitee.getTo(),
+                            fileInRevision,
+                            visitee.isIrrelevantForReview(),
+                            visitee.isVisible()));
+                }
             }
 
         });
-        return ret.get();
+        return ret;
     }
 
     /**
@@ -347,12 +351,12 @@ public class ToursInReview {
     }
 
     /**
-     * Returns a {@link FileChangeHistory} for passed file.
+     * Returns a {@link FileHistoryNode} for passed file.
      * @param file The file whose change history to retrieve.
-     * @return The {@link FileChangeHistory} describing changes for passed {@link FileInRevision} or null if not found.
+     * @return The {@link FileHistoryNode} describing changes for passed {@link FileInRevision} or null if not found.
      */
-    public FileChangeHistory getChangeHistory(final FileInRevision file) {
-        return this.changeHistory.getHistory(file);
+    public FileHistoryNode getFileHistoryNode(final FileInRevision file) {
+        return this.historyGraph.getNodeFor(file);
     }
 
     public List<Tour> getTours() {

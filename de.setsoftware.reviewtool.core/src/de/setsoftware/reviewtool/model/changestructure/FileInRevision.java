@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -136,7 +137,7 @@ public class FileInRevision {
     }
 
     /**
-     * Sorts the given files topologically by their revisions.
+     * Sorts the given files topologically by their revisions. Per revision, the files are sorted by path.
      * This makes most sense when they all denote different versions of the same file.
      * For non-comparable revisions, the sort is stable.
      * Does NOT sort in-place.
@@ -159,7 +160,15 @@ public class FileInRevision {
         final List<FileInRevision> ret = new ArrayList<>();
         while (!remainingRevisions.isEmpty()) {
             final Revision smallest = repo.getSmallestRevision(remainingRevisions);
-            ret.addAll(filesForRevision.get(smallest));
+            final List<FileInRevision> revs = new ArrayList<>(filesForRevision.get(smallest));
+            Collections.sort(revs, new Comparator<FileInRevision>() {
+
+                @Override
+                public int compare(final FileInRevision o1, final FileInRevision o2) {
+                    return o1.getPath().compareTo(o2.getPath());
+                }
+            });
+            ret.addAll(revs);
             remainingRevisions.remove(smallest);
         }
         return ret;

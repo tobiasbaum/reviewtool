@@ -1,63 +1,59 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileChangeHistory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
-import de.setsoftware.reviewtool.model.changestructure.Hunk;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
-import de.setsoftware.reviewtool.model.changestructure.IncompatibleFragmentException;
-import de.setsoftware.reviewtool.model.changestructure.RepositoryChangeHistory;
 
 /**
- * A simple svn based fragment tracer that does not trace position changes and only traces file renames.
+ * A SVN based fragment tracer.
  */
 public class SvnFragmentTracer implements IFragmentTracer {
 
-    private final RepositoryChangeHistory repoChangeHistory;
-    private final FileHistoryGraph fileHistory;
+    private final SvnFileHistoryGraph fileHistoryGraph;
 
-    public SvnFragmentTracer(final RepositoryChangeHistory repoChangeHistory, FileHistoryGraph fileHistory) {
-        this.repoChangeHistory = repoChangeHistory;
-        this.fileHistory = fileHistory;
+    public SvnFragmentTracer(final SvnFileHistoryGraph fileHistoryGraph) {
+        this.fileHistoryGraph = fileHistoryGraph;
     }
 
     @Override
-    public Fragment traceFragment(Fragment fragment) {
-        final FileChangeHistory changeHistory = this.repoChangeHistory.getHistory(fragment.getFile());
-        if (changeHistory != null) {
-            try {
-                final FileDiff fileDiff = changeHistory.build(fragment.getFile(), changeHistory.getLastRevision());
-                final Hunk hunk = fileDiff.getHunkForSource(fragment);
-                if (hunk != null) {
-                    final Fragment lastFragment = hunk.getTarget();
-                    return ChangestructureFactory.createFragment(
-                            this.traceFile(fragment.getFile()),
-                            lastFragment.getFrom(),
-                            lastFragment.getTo(),
-                            lastFragment.getContent());
-                }
-            } catch (final IncompatibleFragmentException e) {
-                // fall through
+    public List<Fragment> traceFragment(Fragment fragment) {
+        final ArrayList<Fragment> result = new ArrayList<>();
+        final FileHistoryNode node = this.fileHistoryGraph.getNodeFor(fragment.getFile());
+        if (node != null) {
+            for (final FileInRevision leafRevision : this.fileHistoryGraph.getLatestFiles(node.getFile())) {
+                final FileHistoryNode descendant = this.fileHistoryGraph.getNodeFor(leafRevision);
+                final FileDiff fileDiff = descendant.buildHistory(node);
+                final Fragment lastFragment = fileDiff.traceFragment(fragment);
+                result.add(ChangestructureFactory.createFragment(
+                        descendant.getFile(),
+                        lastFragment.getFrom(),
+                        lastFragment.getTo(),
+                        lastFragment.getContent()));
             }
         }
 
-        // safety belt
-        return ChangestructureFactory.createFragment(
-                this.traceFile(fragment.getFile()),
-                fragment.getFrom(),
-                fragment.getTo(),
-                fragment.getContent());
+        return result;
     }
 
-
     @Override
-    public FileInRevision traceFile(FileInRevision file) {
-        final FileInRevision latestRepoFile = this.fileHistory.getLatestFiles(file).get(0);
-        return ChangestructureFactory.createFileInRevision(
-                latestRepoFile.getPath(),
-                ChangestructureFactory.createLocalRevision(),
-                latestRepoFile.getRepository());
+    public List<FileInRevision> traceFile(FileInRevision file) {
+        final ArrayList<FileInRevision> result = new ArrayList<>();
+        final FileHistoryNode node = this.fileHistoryGraph.getNodeFor(file);
+        if (node != null) {
+            for (final FileInRevision leafRevision : this.fileHistoryGraph.getLatestFiles(file)) {
+                result.add(ChangestructureFactory.createFileInRevision(
+                        leafRevision.getPath(),
+                        ChangestructureFactory.createLocalRevision(),
+                        leafRevision.getRepository()));
+            }
+        }
+
+        return result;
     }
 }

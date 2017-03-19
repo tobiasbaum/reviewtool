@@ -33,33 +33,24 @@ public class FileDiff {
     }
 
     /**
-     * Returns the hunk matching a given source fragment. First, equal or overlapping fragments are considered. If not
-     * found and the fragment passed is a deletion, adjacent fragments are considered.
-     *
-     * @param fragment The source fragment.
-     * @return The hunk whose source fragment matches passed source fragment or null if no such hunk has been found.
+     * Traces a source fragment over the recorded hunks to the last known file revision.
+     * @param source The source fragment.
+     * @return The resulting fragment matching the last known file revision.
      */
-    public Hunk getHunkForSource(final Fragment fragment) {
-        // first try: search for equal or overlapping fragment
+    public Fragment traceFragment(Fragment source) {
+        final List<Hunk> hunks = new ArrayList<Hunk>();
         for (final Hunk hunk : this.hunks) {
-            final Fragment source = hunk.getSource();
-            if (source.equals(fragment) || source.overlaps(fragment)) {
-                return hunk;
+            if (hunk.getSource().overlaps(source)) {
+                hunks.add(hunk);
+            } else if (source.getTo().lessThan(hunk.getSource().getFrom())) {
+                break;
             }
         }
-
-        // second try: if fragment is a deletion, search for neighbour fragment
-        if (fragment.isDeletion()) {
-            for (final Hunk hunk : this.hunks) {
-                final Fragment source = hunk.getSource();
-                if (source.isAdjacentTo(fragment)) {
-                    return hunk;
-                }
-            }
+        try {
+            return this.createCombinedFragment(hunks, source);
+        } catch (final IncompatibleFragmentException e) {
+            throw new Error(e);
         }
-
-        // not found
-        return null;
     }
 
     /**
@@ -87,14 +78,15 @@ public class FileDiff {
 
     /**
      * Merges a hunk into this FileDiff. This is allowed only for hunks that do not overlap with hunks in this FileDiff
-     * object. The FileDiff object is not changed, rather a new FileDiff object is created and returned (value
-     * semantics).
+     * object.
+     * <p/>
+     * The FileDiff object is not changed, rather a new FileDiff object is created and returned (value semantics).
      *
      * @param hunkToMerge The hunk to be merged.
      * @return The new FileDiff object containing the merged hunk.
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object.
      */
-    FileDiff merge(final Hunk hunkToMerge) throws IncompatibleFragmentException {
+    public FileDiff merge(final Hunk hunkToMerge) throws IncompatibleFragmentException {
         final FileDiff result = new FileDiff();
         final List<Hunk> hunks = new ArrayList<Hunk>();
         boolean hunkCreated = false;
@@ -121,12 +113,14 @@ public class FileDiff {
      * Merges a list of hunks into this FileDiff. This operation assumes that the hunks do not know anything about each
      * other, i.e. the source/target fragments refer to the same state of file. Therefore, applying two hunks
      * separately is different from applying them together.
+     * <p/>
+     * The FileDiff object is not changed, rather a new FileDiff object is created and returned (value semantics).
      *
      * @param hunksToMerge A list of hunks to be merged.
      * @return The new FileDiff object containing the merged hunks.
      * @throws IncompatibleFragmentException if some hunk to be merged overlaps with some hunk in the FileDiff object.
      */
-    FileDiff merge(final Collection<? extends Hunk> hunksToMerge) throws IncompatibleFragmentException {
+    public FileDiff merge(final Collection<? extends Hunk> hunksToMerge) throws IncompatibleFragmentException {
         FileDiff result = this;
         int delta = 0;
         for (Hunk hunk : hunksToMerge) {
@@ -138,12 +132,26 @@ public class FileDiff {
     }
 
     /**
+     * Merges a list of hunks of a FileDiff into this FileDiff.
+     * <p/>
+     * The FileDiff object is not changed, rather a new FileDiff object is created and returned (value semantics).
+     *
+     * @param diff A FileDiff to merge.
+     * @return The new FileDiff object containing the merged hunks.
+     * @throws IncompatibleFragmentException if some hunk to be merged overlaps with some hunk in the FileDiff object.
+     */
+    public FileDiff merge(final FileDiff diff) throws IncompatibleFragmentException {
+        return this.merge(diff.hunks);
+    }
+
+    /**
      * Combines a list of neighbour hunks with a new hunk to be merged.
      *
      * @param hunks The neighbour hunks.
      * @param hunkToMerge The hunk to be merged.
      * @return The combined hunk.
-     * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the hunk list.
+     * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the hunk list
+     *      or if the resulting parts cannot be combined into one hunk.
      */
     private Hunk createCombinedHunk(final Collection<? extends Hunk> hunks, final Hunk hunkToMerge)
             throws IncompatibleFragmentException {
@@ -171,7 +179,37 @@ public class FileDiff {
     }
 
     /**
-     * Combines the source fragments of meighbour hunks with the source fragment of a hunk to be merged. The result
+     * Combines a list of neighbour hunks with a fragment to be merged.
+     *
+     * @param hunks The neighbour hunks.
+     * @param fragment The fragment to be merged.
+     * @return The combined fragment.
+     * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the hunk list
+     *      or if the resulting parts cannot be combined into one fragment.
+     */
+    private Fragment createCombinedFragment(final Collection<? extends Hunk> hunks, final Fragment fragment)
+            throws IncompatibleFragmentException {
+
+        final int targetDelta = this.computeDeltaViaSourceFragmentUpTo(fragment.getFrom());
+        int sourceDelta = 0;
+
+        FragmentList result = new FragmentList(fragment);
+        for (final Hunk hunk : hunks) {
+            final Fragment source = hunk.getSource().adjust(sourceDelta);
+            result = result.subtract(source).move(source.getTo(), hunk.getDelta());
+            result.addFragment(hunk.getTarget().adjust(-targetDelta));
+            sourceDelta += hunk.getDelta();
+        }
+
+        result.coalesce();
+        if (result.getFragments().size() != 1) {
+            throw new IncompatibleFragmentException();
+        }
+        return result.getFragments().get(0).adjust(targetDelta);
+    }
+
+    /**
+     * Combines the source fragments of neighbour hunks with the source fragment of a hunk to be merged. The result
      * needs to be a single fragment.
      *
      * @param hunkToMerge The hunk to be merged.
@@ -185,7 +223,7 @@ public class FileDiff {
             throws IncompatibleFragmentException {
         final FragmentList combinedSources = new FragmentList();
         for (final Fragment fragment : hunkToMerge.getSource().subtract(targets).getFragments()) {
-            combinedSources.addFragment(fragment.adjust(-this.computeDeltaUpTo(fragment.getFrom())));
+            combinedSources.addFragment(fragment.adjust(-this.computeDeltaViaTargetFragmentUpTo(fragment.getFrom())));
         }
 
         combinedSources.addFragmentList(sources);
@@ -197,7 +235,7 @@ public class FileDiff {
     }
 
     /**
-     * Combines the target fragments of meighbour hunks with the target fragment of a hunk to be merged. The result
+     * Combines the target fragments of neighbour hunks with the target fragment of a hunk to be merged. The result
      * needs to be a single fragment.
      *
      * @param hunkToMerge The hunk to be merged.
@@ -242,18 +280,39 @@ public class FileDiff {
     }
 
     /**
-     * Returns the target line delta to be added given a {@link PositionInText} because of hunks applied before this
-     * line. It is computed as the number of lines earlier hunks added minus the number of lines earlier hunks deleted.
+     * Returns the target line delta to be added given a target {@link PositionInText} because of hunks applied
+     * before this line. It is computed as the number of lines earlier hunks added minus the number of lines
+     * earlier hunks deleted.
      *
-     * @param pos The position in question.
+     * @param pos The position in the target file.
      * @return The line delta.
      */
-    private int computeDeltaUpTo(final PositionInText pos) {
+    private int computeDeltaViaTargetFragmentUpTo(final PositionInText pos) {
         int result = 0;
         for (final Hunk hunk : this.hunks) {
             if (hunk.getTarget().getTo().lessThan(pos)) {
                 result += hunk.getDelta();
-            } else if (pos.lessThan(hunk.getTarget().getFrom())) {
+            } else if (!hunk.getTarget().getFrom().lessThan(pos)) {
+                break;
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns the target line delta to be added given a source {@link PositionInText} because of hunks applied
+     * before this line. It is computed as the number of lines earlier hunks added minus the number of lines
+     * earlier hunks deleted.
+     *
+     * @param pos The position in the source file.
+     * @return The line delta.
+     */
+    private int computeDeltaViaSourceFragmentUpTo(final PositionInText pos) {
+        int result = 0;
+        for (final Hunk hunk : this.hunks) {
+            if (hunk.getSource().getTo().lessThan(pos)) {
+                result += hunk.getDelta();
+            } else if (!hunk.getSource().getFrom().lessThan(pos)) {
                 break;
             }
         }
