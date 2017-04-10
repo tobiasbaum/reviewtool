@@ -16,6 +16,7 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
  */
 public class ReviewStateManager {
 
+    private final IReviewDataCache localReviewData;
     private IReviewPersistence persistence;
     private final IUserInteraction userInteraction;
 
@@ -23,7 +24,11 @@ public class ReviewStateManager {
 
     private final WeakListeners<IReviewDataSaveListener> saveListeners = new WeakListeners<>();
 
-    public ReviewStateManager(IReviewPersistence persistence, IUserInteraction userInteraction) {
+    public ReviewStateManager(
+            IReviewDataCache localReviewData,
+            IReviewPersistence persistence,
+            IUserInteraction userInteraction) {
+        this.localReviewData = localReviewData;
         this.persistence = persistence;
         this.userInteraction = userInteraction;
     }
@@ -40,15 +45,34 @@ public class ReviewStateManager {
     }
 
     /**
-     * Save the given review data in the current ticket.
+     * Save the given review data in the local cache.
      * Notifies all listeners of the save.
      */
     public void saveCurrentReviewData(String newData) {
         this.loadTicketDataAndCheckExistence(true);
-        this.persistence.saveReviewData(this.ticketKey, newData);
+        this.localReviewData.saveLocalReviewData(newData);
         for (final IReviewDataSaveListener l : this.saveListeners) {
             l.onSave(newData);
         }
+    }
+
+    /**
+     * Writes the current review data from the local cache to the ticket
+     * and clear the local cache.
+     */
+    public void flushReviewData() {
+        final String cachedData = this.localReviewData.getLocalReviewData();
+        if (cachedData != null) {
+            this.persistence.saveReviewData(this.ticketKey, cachedData);
+        }
+        this.localReviewData.clearLocalReviewData();
+    }
+
+    /**
+     * Clears the locally cached review data, so that the next load will go through to the persistence layer.
+     */
+    public void clearLocalReviewData() {
+        this.localReviewData.clearLocalReviewData();
     }
 
     public void addSaveListener(IReviewDataSaveListener l) {
@@ -86,7 +110,7 @@ public class ReviewStateManager {
                 }
                 data = this.persistence.loadTicket(this.ticketKey);
             } while (data == null);
-            return data;
+            return this.decorateIfNeeded(data);
         } else {
             ITicketData data = this.persistence.loadTicket(this.ticketKey);
             while (data == null) {
@@ -97,8 +121,13 @@ public class ReviewStateManager {
                 }
                 data = this.persistence.loadTicket(this.ticketKey);
             }
-            return data;
+            return this.decorateIfNeeded(data);
         }
+    }
+
+    private ITicketData decorateIfNeeded(ITicketData data) {
+        final String localData = this.localReviewData.getLocalReviewData();
+        return localData != null ? new LocalReviewDataDecorator(localData, data) : data;
     }
 
     /**

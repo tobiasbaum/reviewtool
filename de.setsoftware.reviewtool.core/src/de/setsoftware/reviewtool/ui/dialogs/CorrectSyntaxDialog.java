@@ -11,6 +11,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+import de.setsoftware.reviewtool.model.InMemoryReviewDataCache;
 import de.setsoftware.reviewtool.model.PersistenceStub;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.StubUi;
@@ -76,7 +77,8 @@ public class CorrectSyntaxDialog extends Dialog {
     private String createExampleData() {
         try {
             final PersistenceStub s = new PersistenceStub();
-            final ReviewStateManager p = new ReviewStateManager(s, new StubUi("TEST-1234"));
+            final InMemoryReviewDataCache c = new InMemoryReviewDataCache();
+            final ReviewStateManager p = new ReviewStateManager(c, s, new StubUi("TEST-1234"));
             final ReviewRemark r1 = ReviewRemark.create(
                     newMarker(), "TB", new GlobalPosition(),
                     "global review remark important to the reviewer", RemarkType.MUST_FIX);

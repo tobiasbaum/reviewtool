@@ -55,6 +55,7 @@ import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.ImportChange
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.PackageDeclarationFilter;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.WhitespaceChangeFilter;
 import de.setsoftware.reviewtool.model.EndTransition;
+import de.setsoftware.reviewtool.model.FileReviewDataCache;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ISyntaxFixer;
 import de.setsoftware.reviewtool.model.ITicketChooser;
@@ -144,7 +145,10 @@ public class ReviewPlugin implements IReviewConfigurable {
 
 
     private ReviewPlugin() {
-        this.persistence = new ReviewStateManager(new FilePersistence(new File("."), "please configure"), new RealUi());
+        this.persistence = new ReviewStateManager(
+                new FileReviewDataCache(Activator.getDefault().getStateLocation().toFile()),
+                new FilePersistence(new File("."), "please configure"),
+                new RealUi());
 
         final Version bundleVersion = Activator.getDefault().getBundle().getVersion();
         this.configInterpreter.addConfigurator(new FileTicketConnectorConfigurator());
@@ -409,13 +413,14 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (typeOfEnd.getType() != EndTransition.Type.PAUSE) {
             this.persistence.changeStateAtReviewEnd(typeOfEnd);
         }
-        this.leaveReviewMode();
+        this.leaveActiveMode();
 
         //TODO is this the the right time to clear the image cache?
         ImageCache.dispose();
     }
 
-    private void leaveReviewMode() throws CoreException {
+    private void leaveActiveMode() throws CoreException {
+        this.persistence.flushReviewData();
         this.clearMarkers();
         this.setMode(Mode.IDLE);
         this.toursInReview = null;
@@ -442,7 +447,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             .param("round", this.persistence.getCurrentRound())
             .log();
         this.persistence.changeStateToReadyForReview();
-        this.leaveReviewMode();
+        this.leaveActiveMode();
     }
 
     private boolean invalidMode(Mode expectedMode) {
@@ -468,9 +473,22 @@ public class ReviewPlugin implements IReviewConfigurable {
      * Removes all markers, reloads the underlying data and recreates the markers with this new data.
      */
     public void refreshMarkers() throws CoreException {
+        final boolean cont = MessageDialog.openQuestion(null, "Really reload?",
+                "If you made local changes to the review remarks, these will be lost. Continue reload?");
+        if (!cont) {
+            return;
+        }
+        this.persistence.clearLocalReviewData();
         this.clearMarkers();
         this.loadToursAndCreateMarkers();
         RemarkMarkers.loadRemarks(this.persistence);
+    }
+
+    /**
+     * Saves the local review remarks to the persistence layer.
+     */
+    public void flushLocalReviewData() throws CoreException {
+        this.persistence.flushReviewData();
     }
 
     private boolean loadToursAndCreateMarkers() {

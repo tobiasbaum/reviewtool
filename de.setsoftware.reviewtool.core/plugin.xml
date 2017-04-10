@@ -97,6 +97,19 @@
 	               </with>
 	            </visibleWhen>
 		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.writeremarks"
+		   		 label="Write remarks to ticket system" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	               	  <or>
+	                    <equals value="REVIEWING"/>
+	                    <equals value="FIXING"/>
+	                  </or>
+	               </with>
+	            </visibleWhen>
+		   </command>
 	   </menu>
 	 </menuContribution>
 	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.reviewcontentview?after=additions">
@@ -148,6 +161,9 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.RefreshReviewMarkersAction"
         id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh review markers">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.WriteToTicketSystemAction"
+        id="de.setsoftware.reviewtool.commands.writeremarks" name="Write remarks to ticket system">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MergeToursAction"
         id="de.setsoftware.reviewtool.commands.mergetours" name="Merge review tours">
