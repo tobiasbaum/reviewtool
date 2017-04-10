@@ -183,12 +183,18 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void reconfigure() {
+        final String configFile =
+                Activator.getDefault().getPreferenceStore().getString(ReviewToolPreferencePage.TEAM_CONFIG_FILE);
+        if (configFile.isEmpty()) {
+            //avoid errors in workspaces where CoRT shall not be used
+            return;
+        }
+
         this.changeSource = null;
         this.endReviewExtensions.clear();
 
         try {
-            final Document config = ConfigurationInterpreter.load(
-                    Activator.getDefault().getPreferenceStore().getString(ReviewToolPreferencePage.TEAM_CONFIG_FILE));
+            final Document config = ConfigurationInterpreter.load(configFile);
             final Map<String, String> userParams = ReviewToolPreferencePage.getUserParams(config, getSecurePrefs());
             this.configInterpreter.configure(config, userParams, this);
         } catch (IOException | SAXException | ParserConfigurationException | ReviewtoolException | StorageException e) {
@@ -253,6 +259,7 @@ public class ReviewPlugin implements IReviewConfigurable {
      * Lets the user select a ticket and starts reviewing for it.
      */
     public void startReview() throws CoreException {
+        this.checkConfigured();
         if (this.invalidMode(Mode.IDLE)) {
             return;
         }
@@ -284,6 +291,7 @@ public class ReviewPlugin implements IReviewConfigurable {
      * Lets the user select a ticket and starts fixing for it.
      */
     public void startFixing() throws CoreException {
+        this.checkConfigured();
         if (this.invalidMode(Mode.IDLE)) {
             return;
         }
@@ -293,6 +301,13 @@ public class ReviewPlugin implements IReviewConfigurable {
                 .param("round", this.persistence.getCurrentRound())
                 .log();
             this.registerGlobalTelemetryListeners();
+        }
+    }
+
+    private void checkConfigured() {
+        if (this.changeSource == null) {
+            MessageDialog.openInformation(null, "Not configured",
+                    "CoRT is not configured. Go to the preferences dialog and select a config file.");
         }
     }
 
