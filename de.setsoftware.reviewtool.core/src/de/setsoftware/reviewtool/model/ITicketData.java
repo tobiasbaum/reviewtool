@@ -5,6 +5,14 @@ package de.setsoftware.reviewtool.model;
  */
 public interface ITicketData {
 
+    /**
+     * Returns the tickets ID.
+     */
+    public abstract String getId();
+
+    /**
+     * Returns the string represenation of the review remarks.
+     */
     public abstract String getReviewData();
 
     /**

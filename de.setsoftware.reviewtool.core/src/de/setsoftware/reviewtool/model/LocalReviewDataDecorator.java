@@ -33,4 +33,9 @@ class LocalReviewDataDecorator implements ITicketData {
         return this.decorated.getTicketInfo();
     }
 
+    @Override
+    public String getId() {
+        return this.decorated.getId();
+    }
+
 }

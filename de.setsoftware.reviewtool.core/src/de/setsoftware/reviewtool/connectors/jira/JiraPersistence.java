@@ -88,7 +88,12 @@ public class JiraPersistence implements IReviewPersistence {
 
         @Override
         public TicketInfo getTicketInfo() {
-            return JiraPersistence.this.queryTickets("key=" + this.ticket.get("key").asString()).get(0);
+            return JiraPersistence.this.queryTickets("key=" + this.getId()).get(0);
+        }
+
+        @Override
+        public String getId() {
+            return this.ticket.get("key").asString();
         }
 
     }

@@ -110,6 +110,11 @@ public class FilePersistence implements IReviewPersistence {
             return FilePersistence.this.createTicketInfo(this.ticketDir);
         }
 
+        @Override
+        public String getId() {
+            return this.ticketDir.getName();
+        }
+
     }
 
     private final File rootDir;

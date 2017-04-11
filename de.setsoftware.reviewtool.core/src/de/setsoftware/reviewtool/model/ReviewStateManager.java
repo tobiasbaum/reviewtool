@@ -50,7 +50,7 @@ public class ReviewStateManager {
      */
     public void saveCurrentReviewData(String newData) {
         this.loadTicketDataAndCheckExistence(true);
-        this.localReviewData.saveLocalReviewData(newData);
+        this.localReviewData.saveLocalReviewData(this.ticketKey, newData);
         for (final IReviewDataSaveListener l : this.saveListeners) {
             l.onSave(newData);
         }
@@ -61,18 +61,18 @@ public class ReviewStateManager {
      * and clear the local cache.
      */
     public void flushReviewData() {
-        final String cachedData = this.localReviewData.getLocalReviewData();
+        final String cachedData = this.localReviewData.getLocalReviewData(this.ticketKey);
         if (cachedData != null) {
             this.persistence.saveReviewData(this.ticketKey, cachedData);
         }
-        this.localReviewData.clearLocalReviewData();
+        this.localReviewData.clearLocalReviewData(this.ticketKey);
     }
 
     /**
      * Clears the locally cached review data, so that the next load will go through to the persistence layer.
      */
     public void clearLocalReviewData() {
-        this.localReviewData.clearLocalReviewData();
+        this.localReviewData.clearLocalReviewData(this.ticketKey);
     }
 
     public void addSaveListener(IReviewDataSaveListener l) {
@@ -126,7 +126,7 @@ public class ReviewStateManager {
     }
 
     private ITicketData decorateIfNeeded(ITicketData data) {
-        final String localData = this.localReviewData.getLocalReviewData();
+        final String localData = this.localReviewData.getLocalReviewData(data.getTicketInfo().getId());
         return localData != null ? new LocalReviewDataDecorator(localData, data) : data;
     }
 

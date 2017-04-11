@@ -11,26 +11,31 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
  */
 public class FileReviewDataCache implements IReviewDataCache {
 
-    private final File localReviewData;
+    private final File localStateDirectory;
 
     public FileReviewDataCache(File localStateDirectory) {
-        this.localReviewData = new File(localStateDirectory, "localReviewData");
+        this.localStateDirectory = localStateDirectory;
+    }
+
+    private File getFile(String key) {
+        return new File(this.localStateDirectory, "localReviewData." + key);
     }
 
     @Override
-    public void saveLocalReviewData(String data) {
+    public void saveLocalReviewData(String key, String data) {
         try {
-            Files.write(this.localReviewData.toPath(), data.getBytes("UTF-8"));
+            Files.write(this.getFile(key).toPath(), data.getBytes("UTF-8"));
         } catch (final IOException e) {
             throw new ReviewtoolException(e);
         }
     }
 
     @Override
-    public String getLocalReviewData() {
+    public String getLocalReviewData(String key) {
         try {
-            if (this.localReviewData.exists()) {
-                final byte[] bytes = Files.readAllBytes(this.localReviewData.toPath());
+            final File file = this.getFile(key);
+            if (file.exists()) {
+                final byte[] bytes = Files.readAllBytes(file.toPath());
                 return new String(bytes, "UTF-8");
             } else {
                 return null;
@@ -41,7 +46,7 @@ public class FileReviewDataCache implements IReviewDataCache {
     }
 
     @Override
-    public void clearLocalReviewData() {
-        this.localReviewData.delete();
+    public void clearLocalReviewData(String key) {
+        this.getFile(key).delete();
     }
 }
