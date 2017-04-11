@@ -22,6 +22,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
         case FIXING:
             return new IMarkerResolution[] {
                     FixedResolution.INSTANCE,
+                    FixedAndCommentResolution.INSTANCE,
                     WontFixResolution.INSTANCE,
                     QuestionResolution.INSTANCE
             };
