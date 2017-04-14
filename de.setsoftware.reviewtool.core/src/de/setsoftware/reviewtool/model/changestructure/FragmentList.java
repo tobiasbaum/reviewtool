@@ -175,7 +175,7 @@ public class FragmentList {
     /**
      * Moves fragments starting at a given position.
      * @param pos The start position.
-     * @param offset The offset to apply.
+     * @param offset The line offset to apply.
      */
     public FragmentList move(final PositionInText pos, final int offset) {
         final FragmentList result = new FragmentList();
@@ -184,6 +184,27 @@ public class FragmentList {
                 result.fragments.add(fragment);
             } else {
                 result.fragments.add(fragment.adjust(offset));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Moves fragments that occur in the same line as pos after pos' column
+     * @param pos The start position.
+     * @param offsetInColumns The column offset to apply.
+     */
+    public FragmentList moveInLine(final PositionInText pos, final int offsetInColumns) {
+        if (offsetInColumns == 0) {
+            return this;
+        }
+
+        final FragmentList result = new FragmentList();
+        for (final Fragment fragment : this.fragments) {
+            if (fragment.getFrom().getLine() != pos.getLine() || fragment.getFrom().lessThan(pos)) {
+                result.fragments.add(fragment);
+            } else {
+                result.fragments.add(fragment.adjustColumnIfInLine(offsetInColumns, pos.getLine()));
             }
         }
         return result;

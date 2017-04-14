@@ -9,7 +9,6 @@ public class PositionInText implements Comparable<PositionInText> {
 
     private final int line;
     private final int column;
-    private final int absoluteOffset;
 
     PositionInText(int line, int column) {
         this(line, column, -1);
@@ -18,12 +17,11 @@ public class PositionInText implements Comparable<PositionInText> {
     PositionInText(final int line, final int column, final int absoluteOffset) {
         this.line = line;
         this.column = column;
-        this.absoluteOffset = absoluteOffset;
     }
 
     @Override
     public int hashCode() {
-        return (100 * this.line + this.column) * 37 + this.absoluteOffset;
+        return (100 * this.line + this.column) * 37;
     }
 
     @Override
@@ -32,7 +30,7 @@ public class PositionInText implements Comparable<PositionInText> {
             return false;
         }
         final PositionInText p = (PositionInText) o;
-        return this.line == p.line && this.column == p.column && this.absoluteOffset == p.absoluteOffset;
+        return this.line == p.line && this.column == p.column;
     }
 
     @Override
@@ -48,21 +46,15 @@ public class PositionInText implements Comparable<PositionInText> {
         return this.column;
     }
 
-    public int getAbsoluteOffset() {
-        return this.absoluteOffset;
-    }
-
     public PositionInText nextInLine() {
-        return new PositionInText(this.line, this.column + 1,
-                this.absoluteOffset == -1 ? -1 : this.absoluteOffset + 1);
+        return new PositionInText(this.line, this.column + 1);
     }
 
     /**
      * @return A new PositionInText object with the same line but decremented column.
      */
     public PositionInText prevInLine() {
-        return new PositionInText(this.line, this.column - 1,
-                this.absoluteOffset == -1 ? -1 : this.absoluteOffset - 1);
+        return new PositionInText(this.line, this.column - 1);
     }
 
     public PositionInText toPrevLine() {
@@ -89,5 +81,14 @@ public class PositionInText implements Comparable<PositionInText> {
      */
     public PositionInText adjust(int lineOffset) {
         return new PositionInText(this.line + lineOffset, this.column);
+    }
+
+    /**
+     * Adjusts the position giving a column offset.
+     * @param columnOffset The column offset to add to current column.
+     * @return A new PositionInText object with the same line but adjusted column.
+     */
+    public PositionInText adjustColumn(int columnOffset) {
+        return new PositionInText(this.line, this.column + columnOffset);
     }
 }

@@ -30,10 +30,16 @@ public class Fragment implements Comparable<Fragment> {
         return this.file;
     }
 
+    /**
+     * The start position of the fragment (inclusive).
+     */
     public PositionInText getFrom() {
         return this.from;
     }
 
+    /**
+     * The end position of the fragment (inclusive).
+     */
     public PositionInText getTo() {
         return this.to;
     }
@@ -55,8 +61,7 @@ public class Fragment implements Comparable<Fragment> {
         if (!this.file.equals(other.file)) {
             return false;
         }
-        return this.to.nextInLine().equals(other.from)
-            || other.to.nextInLine().equals(this.from);
+        return this.isAdjacentTo(other);
     }
 
     /**
@@ -193,7 +198,9 @@ public class Fragment implements Comparable<Fragment> {
             lastOffset = this.content.indexOf('\n', lastOffset) + 1;
             ++line;
         }
-        return this.content.substring(0, lastOffset + pos.getColumn());
+        final int startColumnCorrection = lastOffset == 0 ? this.from.getColumn() - 1 : 0;
+        final int endOffset = Math.min(this.content.length(), lastOffset + pos.getColumn() - startColumnCorrection);
+        return this.content.substring(0, endOffset);
     }
 
     public boolean isDeletion() {
@@ -219,14 +226,11 @@ public class Fragment implements Comparable<Fragment> {
 
     /**
      * Returns the number of lines in this fragment. For deletion fragments, zero is returned.
+     * A line that is not contained up to its end is not counted. As a special case, this means
+     * that for changes inside a single line, zero is returned.
      */
     public int getNumberOfLines() {
-        final int rawLineDiff = this.to.getLine() - this.from.getLine();
-        if (this.to.getColumn() > this.from.getColumn()) {
-            return rawLineDiff + 1;
-        } else {
-            return rawLineDiff;
-        }
+        return this.to.getLine() - this.from.getLine();
     }
 
     /**
@@ -236,6 +240,17 @@ public class Fragment implements Comparable<Fragment> {
      */
     public Fragment adjust(final int offset) {
         return new Fragment(this.file, this.from.adjust(offset), this.to.adjust(offset), this.content);
+    }
+
+    /**
+     * Creates a new fragment whose start and end positions are shifted by the given column offset
+     * if the respective position is in the given targetLine.
+     */
+    public Fragment adjustColumnIfInLine(final int offset, int targetLine) {
+        return new Fragment(this.file,
+                this.from.getLine() == targetLine ? this.from.adjustColumn(offset) : this.from,
+                this.to.getLine() == targetLine ? this.to.adjustColumn(offset) : this.to,
+                this.content);
     }
 
     @Override

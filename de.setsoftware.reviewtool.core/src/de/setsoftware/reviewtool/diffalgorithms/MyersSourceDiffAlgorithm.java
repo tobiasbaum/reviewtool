@@ -169,16 +169,27 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
             final int startOld = cur.getPosOld();
             final int startNew = cur.getPosNew();
 
-            final Fragment original = ChangestructureFactory.createFragment(fileOldInfo,
-                    ChangestructureFactory.createPositionInText(startOld + 1, 1),
-                    ChangestructureFactory.createPositionInText(endOld + 1, 0),
-                    this.joinRange(fileOld, startOld, endOld));
-            final Fragment revised = ChangestructureFactory.createFragment(fileNewInfo,
-                    ChangestructureFactory.createPositionInText(startNew + 1, 1),
-                    ChangestructureFactory.createPositionInText(endNew + 1, 0),
-                    this.joinRange(fileNew, startNew, endNew));
-            final Pair<Fragment, Fragment> delta = Pair.create(original, revised);
-            ret.add(delta);
+            final boolean isSingleLineChange = (endOld - startOld == 1) && (endNew - startNew == 1);
+            if (isSingleLineChange) {
+                ret.add(this.createInLineDiffFragment(
+                        fileOldInfo,
+                        fileNewInfo,
+                        startOld,
+                        fileOld.getItem(startOld),
+                        startNew,
+                        fileNew.getItem(startNew)));
+            } else {
+                final Fragment original = ChangestructureFactory.createFragment(fileOldInfo,
+                        ChangestructureFactory.createPositionInText(startOld + 1, 1),
+                        ChangestructureFactory.createPositionInText(endOld + 1, 0),
+                        this.joinRange(fileOld, startOld, endOld));
+                final Fragment revised = ChangestructureFactory.createFragment(fileNewInfo,
+                        ChangestructureFactory.createPositionInText(startNew + 1, 1),
+                        ChangestructureFactory.createPositionInText(endNew + 1, 0),
+                        this.joinRange(fileNew, startNew, endNew));
+                final Pair<Fragment, Fragment> delta = Pair.create(original, revised);
+                ret.add(delta);
+            }
 
             if (cur.isSnake()) {
                 cur = cur.getPrev();
@@ -203,5 +214,48 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
             ret.append(file.getItem(i)).append("\n");
         }
         return ret.toString();
+    }
+
+    private Pair<Fragment, Fragment> createInLineDiffFragment(FileInRevision fileOldInfo, FileInRevision fileNewInfo,
+            int lineIndexOld, String content1,
+            int lineIndexNew, String content2) {
+        assert !content1.equals(content2);
+        final int commonPrefixLength = this.determineCommonPrefixLength(content1, content2);
+        final int commonSuffixLength = this.determineCommonSuffixLength(
+                content1.substring(commonPrefixLength),
+                content2.substring(commonPrefixLength));
+        return Pair.create(
+                this.toInLineFileFragment(fileOldInfo, content1, lineIndexOld, commonPrefixLength, commonSuffixLength),
+                this.toInLineFileFragment(fileNewInfo, content2, lineIndexNew, commonPrefixLength, commonSuffixLength));
+    }
+
+    private int determineCommonPrefixLength(String content1, String content2) {
+        final int max = Math.min(content1.length(), content2.length());
+        for (int i = 0; i < max; i++) {
+            if (content1.charAt(i) != content2.charAt(i)) {
+                return i;
+            }
+        }
+        return max;
+    }
+
+    private int determineCommonSuffixLength(String content1, String content2) {
+        final int max = Math.min(content1.length(), content2.length());
+        for (int i = 1; i <= max; i++) {
+            if (content1.charAt(content1.length() - i) != content2.charAt(content2.length() - i)) {
+                return i - 1;
+            }
+        }
+        return max;
+    }
+
+    private Fragment toInLineFileFragment(FileInRevision fileInfo, String line,
+            int lineIndex, int prefixLength, int suffixLength) {
+        return ChangestructureFactory.createFragment(fileInfo,
+                ChangestructureFactory.createPositionInText(
+                        lineIndex + 1, prefixLength + 1),
+                ChangestructureFactory.createPositionInText(
+                        lineIndex + 1, line.length() - suffixLength),
+                line.substring(prefixLength, line.length() - suffixLength));
     }
 }

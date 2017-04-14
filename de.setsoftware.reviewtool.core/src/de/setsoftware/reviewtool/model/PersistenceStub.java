@@ -39,7 +39,7 @@ public class PersistenceStub implements IReviewPersistence {
 
 
     @Override
-    public ITicketData loadTicket(String ticketKey) {
+    public ITicketData loadTicket(final String ticketKey) {
         return new ITicketData() {
             @Override
             public String getReviewerForRound(int number) {
@@ -64,7 +64,7 @@ public class PersistenceStub implements IReviewPersistence {
 
             @Override
             public String getId() {
-                return "123";
+                return ticketKey;
             }
         };
     }

@@ -271,4 +271,46 @@ public class FragmentTest {
         assertFalse(f1.isNeighboring(f2));
     }
 
+    @Test
+    public void testGetNumberOfLines1() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(2, 0), "a\n");
+        assertEquals(1, f1.getNumberOfLines());
+    }
+
+    @Test
+    public void testGetNumberOfLines2() {
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0), "a\nb\n");
+        assertEquals(2, f1.getNumberOfLines());
+    }
+
+    @Test
+    public void testGetNumberOfLines3() {
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(6, 0), "a\nb\n");
+        assertEquals(2, f1.getNumberOfLines());
+    }
+
+    @Test
+    public void testGetNumberOfLines4() {
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 0), "");
+        assertEquals(0, f1.getNumberOfLines());
+    }
+
+    @Test
+    public void testGetNumberOfLines5() {
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 1), "a");
+        assertEquals(0, f1.getNumberOfLines());
+    }
+
+    @Test
+    public void testGetNumberOfLines6() {
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(5, 1), "a\nb");
+        assertEquals(1, f1.getNumberOfLines());
+    }
+
+    @Test
+    public void testGetNumberOfLines7() {
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 3), "abc");
+        assertEquals(0, f1.getNumberOfLines());
+    }
+
 }

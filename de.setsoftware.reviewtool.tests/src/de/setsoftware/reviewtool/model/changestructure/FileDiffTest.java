@@ -194,4 +194,89 @@ public class FileDiffTest {
             assertTrue(true);
         }
     }
+
+    @Test
+    public void testTraceFragmentLineAdded() throws Exception {
+        final FileInRevision f1 = file("a.java", 1);
+        final FileInRevision f2 = file("a.java", 2);
+        final FileInRevision f3 = file("a.java", 3);
+
+        final FileDiff diff = new FileDiff().merge(new Hunk(
+                new Fragment(f2, pos(5, 1), pos(5, 0), ""),
+                new Fragment(f3, pos(5, 1), pos(6, 0), "A\n")));
+
+        final Fragment actual1 = diff.traceFragment(new Fragment(f1, pos(1, 1), pos(2, 0), "A\n"));
+        //TODO shouldn't the resulting fragment have file revision 3 (and not 1)? applies to other tests, too.
+        assertEquals(
+                new Fragment(f1, pos(1, 1), pos(2, 0), "A\n"),
+                actual1);
+
+        final Fragment actual2 = diff.traceFragment(new Fragment(f1, pos(7, 1), pos(9, 0), "X\nY\n"));
+        assertEquals(
+                new Fragment(f1, pos(8, 1), pos(10, 0), "X\nY\n"),
+                actual2);
+
+        final Fragment actual3 = diff.traceFragment(new Fragment(f1, pos(2, 1), pos(7, 0), "2\n3\n4\n5\n6\n"));
+        assertEquals(
+                new Fragment(f1, pos(2, 1), pos(8, 0), "2\n3\n4\nA\n5\n6\n"),
+                actual3);
+    }
+
+    @Test
+    public void testTraceFragmentChangeInLine() throws Exception {
+        final FileInRevision f1 = file("a.java", 1);
+        final FileInRevision f2 = file("a.java", 2);
+        final FileInRevision f3 = file("a.java", 3);
+
+        final FileDiff diff = new FileDiff().merge(new Hunk(
+                new Fragment(f2, pos(5, 10), pos(5, 14), "hallo"),
+                new Fragment(f3, pos(5, 10), pos(5, 14), "HALLO")));
+
+        final Fragment actual1 = diff.traceFragment(
+                new Fragment(f1, pos(1, 1), pos(2, 0), "A\n"));
+        assertEquals(
+                new Fragment(f1, pos(1, 1), pos(2, 0), "A\n"),
+                actual1);
+
+        final Fragment actual2 = diff.traceFragment(
+                new Fragment(f1, pos(7, 1), pos(9, 0), "X\nY\n"));
+        assertEquals(
+                new Fragment(f1, pos(7, 1), pos(9, 0), "X\nY\n"),
+                actual2);
+
+        final Fragment actual3 = diff.traceFragment(
+                new Fragment(f1, pos(2, 1), pos(7, 0), "2\n3\n4\n5---+----hallo\n6\n"));
+        assertEquals(
+                new Fragment(f1, pos(2, 1), pos(7, 0), "2\n3\n4\n5---+----HALLO\n6\n"),
+                actual3);
+
+        final Fragment actual4 = diff.traceFragment(
+                new Fragment(f1, pos(5, 9), pos(5, 11), "oha"));
+        //TODO the fragment is enlarged, which is more or less OK, but not always necessary
+        assertEquals(
+                new Fragment(f3, pos(5, 9), pos(5, 14), "oHALLO"),
+                actual4);
+    }
+
+    @Test
+    public void testTraceFragmentTwoAdditionsInLine() throws Exception {
+        final FileInRevision f1 = file("a.java", 1);
+        final FileInRevision f2 = file("a.java", 2);
+        final FileInRevision f3 = file("a.java", 3);
+        final FileInRevision f4 = file("a.java", 4);
+
+        final FileDiff diff = new FileDiff()
+                .merge(new Hunk(
+                    new Fragment(f2, pos(5, 7), pos(5, 6), ""),
+                    new Fragment(f3, pos(5, 7), pos(5, 8), "AB")))
+                .merge(new Hunk(
+                    new Fragment(f3, pos(5, 9), pos(5, 8), ""),
+                    new Fragment(f4, pos(5, 9), pos(5, 10), "CD")));
+
+        final Fragment actual1 = diff.traceFragment(
+                new Fragment(f1, pos(1, 1), pos(6, 0), "1\n2\n3\n4\n5---+-"));
+        assertEquals(
+                new Fragment(f1, pos(1, 1), pos(6, 0), "1\n2\n3\n4\n5---+-ABCD"),
+                actual1);
+    }
 }

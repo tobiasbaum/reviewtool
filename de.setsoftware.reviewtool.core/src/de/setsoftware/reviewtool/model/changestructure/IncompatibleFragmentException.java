@@ -11,7 +11,6 @@ public class IncompatibleFragmentException extends Exception {
      * Default constructor.
      */
     IncompatibleFragmentException() {
-        super();
     }
 
     /**

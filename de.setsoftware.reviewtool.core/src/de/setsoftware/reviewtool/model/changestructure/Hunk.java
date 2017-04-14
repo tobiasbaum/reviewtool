@@ -62,6 +62,19 @@ public class Hunk {
     }
 
     /**
+     * @return The delta in columns, when this is a single line change. Otherwise zero is returned.
+     */
+    int getColumnDelta() {
+        if (this.source.getNumberOfLines() == 0 && this.target.getNumberOfLines() == 0) {
+            final int colsTarget = this.target.getTo().getColumn() - this.target.getFrom().getColumn() + 1;
+            final int colsSource = this.source.getTo().getColumn() - this.source.getFrom().getColumn() + 1;
+            return colsTarget - colsSource;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
      * Combines all source fragments of a collection of hunks.
      * @param hunks The collection of hunks.
      * @return A FragmentList containing all source fragments of the hunks in order.

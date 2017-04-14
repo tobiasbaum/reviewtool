@@ -196,7 +196,9 @@ public class FileDiff {
         FragmentList result = new FragmentList(fragment);
         for (final Hunk hunk : hunks) {
             final Fragment source = hunk.getSource().adjust(sourceDelta);
-            result = result.subtract(source).move(source.getTo(), hunk.getDelta());
+            result = result.subtract(source)
+                    .move(source.getTo(), hunk.getDelta())
+                    .moveInLine(source.getTo(), hunk.getColumnDelta());
             result.addFragment(hunk.getTarget().adjust(-targetDelta));
             sourceDelta += hunk.getDelta();
         }

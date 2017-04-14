@@ -55,6 +55,12 @@ public class SimpleTextDiffAlgorithmTest {
                 ChangestructureFactory.createPositionInText(endIncl + 1, 0));
     }
 
+    private static Pair<PositionInText, PositionInText> inLineChange(int line, int startCharIncl, int endCharExcl) {
+        return Pair.create(
+                ChangestructureFactory.createPositionInText(line, startCharIncl),
+                ChangestructureFactory.createPositionInText(line, endCharExcl - 1));
+    }
+
     private static Pair<PositionInText, PositionInText> deletionAt(int line) {
         return changeIn(line, line - 1);
     }
@@ -138,7 +144,7 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "class X {\r\n"
                                 + "    private int x;\r\n"
                                 + "}\r\n");
-        assertEquals(Arrays.asList(changeIn(4, 4)), diff);
+        assertEquals(Arrays.asList(inLineChange(4, 13, 18)), diff);
     }
 
     @Test
@@ -158,7 +164,7 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "    private long y;\r\n"
                                 + "    private int z;\r\n"
                                 + "}\r\n");
-        assertEquals(Arrays.asList(changeIn(4, 4), changeIn(6, 6)), diff);
+        assertEquals(Arrays.asList(inLineChange(4, 13, 16), inLineChange(6, 13, 16)), diff);
     }
 
     @Test
@@ -180,7 +186,7 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "    private int a3;\r\n"
                                 + "    private int a4;\r\n"
                                 + "}\r\n");
-        assertEquals(Arrays.asList(changeIn(4, 4), changeIn(6, 7)), diff);
+        assertEquals(Arrays.asList(inLineChange(4, 13, 16), changeIn(6, 7)), diff);
     }
 
     @Test
@@ -642,7 +648,7 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "line 03\r\n"
                                 + "line 08\r\n"
                                 + "line 09\r\n");
-        assertEquals(Arrays.asList(changeIn(3, 3), changeIn(7, 7)), diff);
+        assertEquals(Arrays.asList(inLineChange(3, 7, 8), inLineChange(7, 7, 8)), diff);
     }
 
     @Test
@@ -730,7 +736,7 @@ public class SimpleTextDiffAlgorithmTest {
                                 + "    <var name=\"A\" value=\"X\"/>\r\n"
                                 + "  </sendung>\r\n"
                                 + "</test>\r\n");
-        assertEquals(Arrays.asList(changeIn(11, 11), changeIn(15, 15), insertedLines(31, 34)), diff);
+        assertEquals(Arrays.asList(inLineChange(11, 20, 22), inLineChange(15, 20, 22), insertedLines(31, 34)), diff);
     }
 
     @Test

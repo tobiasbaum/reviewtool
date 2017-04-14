@@ -140,11 +140,64 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
             FileInRevision fileOldInfo, FileInRevision fileNewInfo, List<ContentView<String>> changedFragments) {
         final List<Pair<Fragment, Fragment>> ret = new ArrayList<>();
         for (final ContentView<String> v : changedFragments) {
-            ret.add(Pair.create(
-                    this.toFileFragment(fileOldInfo, v.getFile1()),
-                    this.toFileFragment(fileNewInfo, v.getFile2())));
+            if (this.isSingleLineChange(v)) {
+                ret.add(this.createInLineDiffFragment(fileOldInfo, fileNewInfo, v));
+            } else {
+                ret.add(Pair.create(
+                        this.toFileFragment(fileOldInfo, v.getFile1()),
+                        this.toFileFragment(fileNewInfo, v.getFile2())));
+            }
         }
         return ret;
+    }
+
+    private boolean isSingleLineChange(ContentView<String> v) {
+        return v.getFile1().getItemCount() == 1 && v.getFile2().getItemCount() == 1;
+    }
+
+    private Pair<Fragment, Fragment> createInLineDiffFragment(FileInRevision fileOldInfo, FileInRevision fileNewInfo,
+            ContentView<String> v) {
+        final String content1 = v.getFile1().getItem(0);
+        final String content2 = v.getFile2().getItem(0);
+        assert !content1.equals(content2);
+        final int commonPrefixLength = this.determineCommonPrefixLength(content1, content2);
+        final int commonSuffixLength = this.determineCommonSuffixLength(
+                content1.substring(commonPrefixLength),
+                content2.substring(commonPrefixLength));
+        return Pair.create(
+                this.toInLineFileFragment(fileOldInfo, v.getFile1(), commonPrefixLength, commonSuffixLength),
+                this.toInLineFileFragment(fileNewInfo, v.getFile2(), commonPrefixLength, commonSuffixLength));
+    }
+
+    private int determineCommonPrefixLength(String content1, String content2) {
+        final int max = Math.min(content1.length(), content2.length());
+        for (int i = 0; i < max; i++) {
+            if (content1.charAt(i) != content2.charAt(i)) {
+                return i;
+            }
+        }
+        return max;
+    }
+
+    private int determineCommonSuffixLength(String content1, String content2) {
+        final int max = Math.min(content1.length(), content2.length());
+        for (int i = 1; i <= max; i++) {
+            if (content1.charAt(content1.length() - i) != content2.charAt(content2.length() - i)) {
+                return i - 1;
+            }
+        }
+        return max;
+    }
+
+    private Fragment toInLineFileFragment(FileInRevision fileInfo, OneFileView<String> fragmentData,
+            int prefixLength, int suffixLength) {
+        final String line = fragmentData.getItem(0);
+        return ChangestructureFactory.createFragment(fileInfo,
+                ChangestructureFactory.createPositionInText(
+                        fragmentData.toIndexInWholeFile(0) + 1, prefixLength + 1),
+                ChangestructureFactory.createPositionInText(
+                        fragmentData.toIndexInWholeFile(0) + 1, line.length() - suffixLength),
+                line.substring(prefixLength, line.length() - suffixLength));
     }
 
     private Fragment toFileFragment(FileInRevision fileInfo, OneFileView<String> fragmentData) {
