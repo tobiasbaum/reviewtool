@@ -70,6 +70,8 @@ import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateTour
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.ReviewData;
+import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
+import de.setsoftware.reviewtool.preferredtransitions.basicstrategies.PathRegexStrategyConfigurator;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.tourrestructuring.onestop.OneStopPerPartOfFileRestructuring;
 import de.setsoftware.reviewtool.ui.IStopViewer;
@@ -140,6 +142,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private ILaunchesListener launchesListener;
     private IResourceChangeListener changeListener;
     private final List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
+    private final List<IPreferredTransitionStrategy> preferredTransitionStrategies = new ArrayList<>();
     private IStopViewer stopViewer = new SeparateDiffsStopViewer();
     private final List<Runnable> postInitTasks = new ArrayList<>();
 
@@ -157,6 +160,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.configInterpreter.addConfigurator(new VersionChecker(bundleVersion));
         this.configInterpreter.addConfigurator(new SurveyAtEndConfigurator());
         this.configInterpreter.addConfigurator(new StopViewConfigurator());
+        this.configInterpreter.addConfigurator(new PathRegexStrategyConfigurator());
         final IExtensionPoint configuratorExtensions =
                 Platform.getExtensionRegistry().getExtensionPoint("de.setsoftware.reviewtool.configurator");
         for (final IExtension extension : configuratorExtensions.getExtensions()) {
@@ -422,7 +426,10 @@ public class ReviewPlugin implements IReviewConfigurable {
             return;
         }
         final EndTransition typeOfEnd = EndReviewDialog.selectTypeOfEnd(
-                this.persistence, this.getCurrentReviewDataParsed(), this.endReviewExtensions);
+                this.persistence,
+                this.getCurrentReviewDataParsed(),
+                this.endReviewExtensions,
+                this.determinePreferredEndTransitions());
         if (typeOfEnd == null) {
             return;
         }
@@ -447,6 +454,15 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         //TODO is this the the right time to clear the image cache?
         ImageCache.dispose();
+    }
+
+    private List<String> determinePreferredEndTransitions() {
+        final List<String> ret = new ArrayList<>();
+        for (final IPreferredTransitionStrategy strategy : this.preferredTransitionStrategies) {
+            ret.addAll(strategy.determinePreferredTransitions(
+                    this.persistence.getCurrentTicketData(), this.toursInReview));
+        }
+        return ret;
     }
 
     private void leaveActiveMode() throws CoreException {
@@ -654,6 +670,11 @@ public class ReviewPlugin implements IReviewConfigurable {
     @Override
     public void addEndReviewExtension(EndReviewExtension extension) {
         this.endReviewExtensions.add(extension);
+    }
+
+    @Override
+    public void addPreferredTransitionStrategy(IPreferredTransitionStrategy strategy) {
+        this.preferredTransitionStrategies.add(strategy);
     }
 
     @Override

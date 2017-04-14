@@ -15,10 +15,11 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
-import de.setsoftware.reviewtool.model.remarks.ReviewData;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.remarks.ReviewData;
 
 /**
  * Dialog that is shown before the review is ended and that let's the user select
@@ -34,19 +35,22 @@ public class EndReviewDialog extends Dialog {
     private Text textField;
     private final List<EndReviewExtension> endReviewExtensions;
     private final List<EndReviewExtensionData> endReviewExtensionData = new ArrayList<>();
+    private final List<String> namesOfPreferredTransitions;
 
     protected EndReviewDialog(
             Shell parentShell,
             ReviewStateManager persistence,
             ReviewData reviewData,
             List<EndTransition> endTransitions,
-            List<EndReviewExtension> endReviewExtensions) {
+            List<EndReviewExtension> endReviewExtensions,
+            List<String> namesOfPreferredTransitions) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.persistence = persistence;
         this.reviewData = reviewData;
         this.possibleChoices = endTransitions;
         this.endReviewExtensions = endReviewExtensions;
+        this.namesOfPreferredTransitions = namesOfPreferredTransitions;
     }
 
     @Override
@@ -88,11 +92,11 @@ public class EndReviewDialog extends Dialog {
         }
 
         if (this.reviewData.hasTemporaryMarkers()) {
-            this.selectFirstButtonWithType(EndTransition.Type.PAUSE);
+            this.selectMatchingButtonWithType(EndTransition.Type.PAUSE);
         } else if (this.reviewData.hasUnresolvedRemarks()) {
-            this.selectFirstButtonWithType(EndTransition.Type.REJECTION);
+            this.selectMatchingButtonWithType(EndTransition.Type.REJECTION);
         } else {
-            this.selectFirstButtonWithType(EndTransition.Type.OK);
+            this.selectMatchingButtonWithType(EndTransition.Type.OK);
         }
 
         for (final EndReviewExtension ext : this.endReviewExtensions) {
@@ -102,14 +106,36 @@ public class EndReviewDialog extends Dialog {
         return comp;
     }
 
-    private void selectFirstButtonWithType(Type type) {
+    private void selectMatchingButtonWithType(Type type) {
+        //determine buttons with the correct type
+        Button firstMatch = null;
+        final Multimap<String, Button> buttons = new Multimap<>();
         for (final Button b : this.radioButtons) {
-            if (((EndTransition) b.getData()).getType() == type) {
-                b.setSelection(true);
-                b.setFocus();
-                break;
+            final EndTransition endTransition = (EndTransition) b.getData();
+            if (endTransition.getType() == type) {
+                if (firstMatch == null) {
+                    firstMatch = b;
+                }
+                buttons.put(endTransition.getNameForUser(), b);
             }
         }
+
+        //of these, select the most preferred one
+        for (final String preferred : this.namesOfPreferredTransitions) {
+            final List<Button> matches = buttons.get(preferred);
+            if (!matches.isEmpty()) {
+                this.selectAndFocus(matches.get(0));
+                return;
+            }
+        }
+        if (firstMatch != null) {
+            this.selectAndFocus(firstMatch);
+        }
+    }
+
+    private void selectAndFocus(Button b) {
+        b.setSelection(true);
+        b.setFocus();
     }
 
     @Override
@@ -142,14 +168,17 @@ public class EndReviewDialog extends Dialog {
      * If the user decides to continue reviewing, null is returned.
      */
     public static EndTransition selectTypeOfEnd(
-            ReviewStateManager persistence, ReviewData reviewData, List<EndReviewExtension> extensions) {
+            ReviewStateManager persistence,
+            ReviewData reviewData,
+            List<EndReviewExtension> extensions,
+            List<String> namesOfPreferredTransitions) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
         final List<EndTransition> endTransitions = new ArrayList<>();
         endTransitions.add(new EndTransition("Pause", null, EndTransition.Type.PAUSE));
         endTransitions.addAll(persistence.getPossibleTransitionsForReviewEnd());
-        final EndReviewDialog dialog =
-                new EndReviewDialog(s, persistence, reviewData, endTransitions, extensions);
+        final EndReviewDialog dialog = new EndReviewDialog(
+                s, persistence, reviewData, endTransitions, extensions, namesOfPreferredTransitions);
         final int ret = dialog.open();
         if (ret != OK) {
             return null;

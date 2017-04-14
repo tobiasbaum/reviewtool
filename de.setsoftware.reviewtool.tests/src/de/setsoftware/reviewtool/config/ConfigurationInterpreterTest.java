@@ -28,6 +28,7 @@ import org.xml.sax.InputSource;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
+import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
 import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 
@@ -103,6 +104,10 @@ public class ConfigurationInterpreterTest {
 
         @Override
         public void addPostInitTask(Runnable r) {
+        }
+
+        @Override
+        public void addPreferredTransitionStrategy(IPreferredTransitionStrategy strategy) {
         }
 
     }

@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.config;
 
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
+import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
 import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 
@@ -35,4 +36,10 @@ public interface IReviewConfigurable {
      * Adds a task that is called in the UI thread as soon as configuration is finished.
      */
     public void addPostInitTask(Runnable r);
+
+    /**
+     * Adds a strategy to determine the preferred end transition.
+     */
+    public abstract void addPreferredTransitionStrategy(IPreferredTransitionStrategy strategy);
+
 }
