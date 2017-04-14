@@ -263,6 +263,17 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (this.invalidMode(Mode.IDLE)) {
             return;
         }
+
+        if (this.openTasksForFixingExist()) {
+            final boolean startFixingInstead = MessageDialog.openQuestion(null,
+                    "Start fixing instead?",
+                    "You have open tickets with review remarks. Start fixing instead?");
+            if (startFixingInstead) {
+                this.startFixing();
+                return;
+            }
+        }
+
         this.loadReviewData(Mode.REVIEWING);
         if (this.mode == Mode.REVIEWING) {
             this.switchToReviewPerspective();
@@ -275,6 +286,10 @@ public class ReviewPlugin implements IReviewConfigurable {
             this.registerGlobalTelemetryListeners();
             TrackerManager.get().startTracker();
         }
+    }
+
+    private boolean openTasksForFixingExist() {
+        return !this.persistence.getTicketsForFilter("", false).isEmpty();
     }
 
     private void switchToReviewPerspective() {
