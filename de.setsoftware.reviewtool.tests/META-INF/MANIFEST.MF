@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Tests
 Bundle-SymbolicName: de.setsoftware.reviewtool.tests
-Bundle-Version: 1.0.11.qualifier
-Fragment-Host: de.setsoftware.reviewtool.core;bundle-version="1.0.11"
+Bundle-Version: 1.0.12.qualifier
+Fragment-Host: de.setsoftware.reviewtool.core;bundle-version="1.0.12"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.junit
