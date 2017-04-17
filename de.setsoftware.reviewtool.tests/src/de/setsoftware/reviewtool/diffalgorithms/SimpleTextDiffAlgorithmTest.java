@@ -22,7 +22,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     private static List<Pair<PositionInText, PositionInText>> determineDiff(String oldContent, String newContent)
             throws Exception {
-        return toPositionsInNewFile(new MyersSourceDiffAlgorithm().determineDiff(
+        return toPositionsInNewFile(new MyersSourceDiffAlgorithm(true).determineDiff(
                 ChangestructureFactory.createFileInRevision("", null, null),
                 oldContent.getBytes("UTF-8"),
                 ChangestructureFactory.createFileInRevision("", null, null),

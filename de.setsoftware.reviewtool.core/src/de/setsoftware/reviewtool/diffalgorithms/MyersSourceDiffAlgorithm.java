@@ -18,6 +18,17 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
  */
 class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
 
+    //TODO fix tracing with in line diffs and remove this flag
+    private boolean allowInLineDiff = false;
+
+    public MyersSourceDiffAlgorithm() {
+        this(false);
+    }
+
+    public MyersSourceDiffAlgorithm(boolean allowInLineDiff) {
+        this.allowInLineDiff = allowInLineDiff;
+    }
+
     @Override
     public List<Pair<Fragment, Fragment>> determineDiff(FileInRevision fileOldInfo, byte[] fileOldContent,
             FileInRevision fileNewInfo, byte[] fileNewContent, String charset) throws IOException {
@@ -170,7 +181,7 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
             final int startNew = cur.getPosNew();
 
             final boolean isSingleLineChange = (endOld - startOld == 1) && (endNew - startNew == 1);
-            if (isSingleLineChange) {
+            if (isSingleLineChange && this.allowInLineDiff) {
                 ret.add(this.createInLineDiffFragment(
                         fileOldInfo,
                         fileNewInfo,
