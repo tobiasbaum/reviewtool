@@ -3,13 +3,15 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a set of difference hunks between different revisions of the same file. A FileDiff object can accumulate
  * hunks of different source/target revisions.
  */
-public class FileDiff {
+public final class FileDiff {
 
     /**
      * The hunks this FileDiff object is made of. Later hunks depend on earlier hunks, i.e. the source/target fragment
@@ -123,6 +125,20 @@ public class FileDiff {
     }
 
     /**
+     * Returns a list of hunks related to a collection of target {@link Fragment}s. A hunk is related if its target
+     * fragment originates from some fragment that overlaps or is adjacent to at least one of the fragments passed.
+     */
+    public List<Hunk> getHunksWithTargetChangesInOneOf(final Collection<Fragment> fragments) {
+        final List<Hunk> result = new ArrayList<>();
+        for (final Hunk hunk : this.hunks) {
+            if (hunk.getTarget().containsChangeInOneOf(fragments)) {
+                result.add(hunk);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Merges a hunk into this FileDiff. This is allowed only for hunks that do not overlap with hunks in this FileDiff
      * object.
      * <p/>
@@ -223,7 +239,7 @@ public class FileDiff {
     }
 
     private Fragment makeFullLine(Fragment target) {
-        return new Fragment(target.getFile(), target.getFrom().startOfLine(), target.getTo().endOfLine());
+        return new Fragment(target.getFile(), target.getFrom().startOfLine(), target.getTo().endOfLine(), target);
     }
 
     /**
@@ -269,7 +285,8 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the hunk list
      *      or if the resulting parts cannot be combined into one fragment.
      */
-    private Fragment createCombinedFragment(final Collection<? extends Hunk> hunks, final Fragment fragment)
+    private Fragment createCombinedFragment(final Collection<? extends Hunk> hunks,
+            final Fragment fragment)
             throws IncompatibleFragmentException {
 
         final int targetDelta = this.computeDeltaViaSourceFragmentUpTo(fragment.getFrom());
@@ -303,8 +320,10 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object
      *              or if the resulting source parts cannot be combined into one fragment.
      */
-    private Fragment combineSources(final Hunk hunkToMerge, final FragmentList sources, final FragmentList targets)
-            throws IncompatibleFragmentException {
+    private Fragment combineSources(
+            final Hunk hunkToMerge,
+            final FragmentList sources,
+            final FragmentList targets) throws IncompatibleFragmentException {
         final FragmentList combinedSources = new FragmentList();
         for (final Fragment fragment : hunkToMerge.getSource().subtract(targets).getFragments()) {
             combinedSources.addFragment(fragment.adjust(-this.computeDeltaViaTargetFragmentUpTo(fragment.getFrom())));
@@ -334,9 +353,12 @@ public class FileDiff {
         final int hunkDelta = hunkToMerge.getDelta();
         final Fragment hunkTarget = hunkToMerge.getTarget();
         final PositionInText hunkTargetStart = hunkTarget.getFrom();
+        final Set<Fragment> hunkOrigins = new LinkedHashSet<>();
+        hunkOrigins.add(hunkTarget);
         try {
             for (final Fragment curTarget : targets.getFragments()) {
                 if (curTarget.overlaps(hunkToMerge.getSource())) {
+                    hunkOrigins.add(curTarget);
                     final FragmentList pieces = curTarget.subtract(hunkToMerge.getSource());
                     for (final Fragment piece : pieces.getFragments()) {
                         if (piece.getTo().lessThan(hunkTargetStart)) {
@@ -355,7 +377,12 @@ public class FileDiff {
             throw new Error(e);
         }
 
-        final FragmentList combinedTargets = adjustedTargets.overlayBy(hunkTarget);
+        final Fragment newHunkTarget = new Fragment(
+                hunkTarget.getFile(),
+                hunkTarget.getFrom(),
+                hunkTarget.getTo(),
+                hunkOrigins);
+        final FragmentList combinedTargets = adjustedTargets.overlayBy(newHunkTarget);
         combinedTargets.coalesce();
         if (combinedTargets.getFragments().size() != 1) {
             throw new IncompatibleFragmentException();

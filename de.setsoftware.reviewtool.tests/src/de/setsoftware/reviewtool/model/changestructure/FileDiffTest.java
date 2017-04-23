@@ -83,7 +83,7 @@ public class FileDiffTest {
         ff.addFragment(f2);
         ff.coalesce();
         final List<Fragment> expected2 = new ArrayList<>();
-        expected2.add(new Fragment(file("a.java", 1), pos(1, 1), pos(4, 0)));
+        expected2.add(new Fragment(file("a.java", 1), pos(1, 1), pos(4, 0), f1, f2));
         assertEquals(expected2, ff.getFragments());
     }
 
@@ -101,12 +101,12 @@ public class FileDiffTest {
         ff.addFragment(f2);
         ff.coalesce();
         final List<Fragment> expected2 = new ArrayList<>();
-        expected2.add(new Fragment(file("a.java", 1), pos(1, 1), pos(4, 0)));
+        expected2.add(new Fragment(file("a.java", 1), pos(1, 1), pos(4, 0), f1, f2));
         assertEquals(expected2, ff.getFragments());
     }
 
     @Test
-    public void testAddAdjacent3() throws Exception {
+    public void testAddAdjacent3a() throws Exception {
         final FragmentList ff = new FragmentList();
 
         final Fragment f1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 0));
@@ -126,12 +126,12 @@ public class FileDiffTest {
         ff.addFragment(f3);
         ff.coalesce();
         final List<Fragment> expected3 = new ArrayList<>();
-        expected3.add(new Fragment(file("a.java", 1), pos(1, 1), pos(5, 0)));
+        expected3.add(new Fragment(file("a.java", 1), pos(1, 1), pos(5, 0), f1, f2, f3));
         assertEquals(expected3, ff.getFragments());
     }
 
     @Test
-    public void testAddAdjacent4() throws Exception {
+    public void testAddAdjacent4a() throws Exception {
         final FragmentList ff = new FragmentList();
 
         final Fragment f1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 0));
@@ -162,7 +162,7 @@ public class FileDiffTest {
         ff.addFragmentList(ff2);
         ff.coalesce();
         final List<Fragment> expected4 = new ArrayList<>();
-        expected4.add(new Fragment(file("a.java", 1), pos(1, 1), pos(6, 0)));
+        expected4.add(new Fragment(file("a.java", 1), pos(1, 1), pos(6, 0), f1, f2, f3, f4));
         assertEquals(expected4, ff.getFragments());
     }
 
@@ -205,19 +205,25 @@ public class FileDiffTest {
                 new Fragment(f2, pos(5, 1), pos(5, 0)),
                 new Fragment(f3, pos(5, 1), pos(6, 0))));
 
-        final Fragment actual1 = diff.traceFragment(new Fragment(f1, pos(1, 1), pos(2, 0)));
+        final Fragment source1 = new Fragment(f1, pos(1, 1), pos(2, 0));
+        final Fragment actual1 = diff.traceFragment(source1);
         assertEquals(
-                new Fragment(f3, pos(1, 1), pos(2, 0)),
+                new Fragment(f3, pos(1, 1), pos(2, 0),
+                        source1),
                 actual1);
 
-        final Fragment actual2 = diff.traceFragment(new Fragment(f1, pos(7, 1), pos(9, 0)));
+        final Fragment source2 = new Fragment(f1, pos(7, 1), pos(9, 0));
+        final Fragment actual2 = diff.traceFragment(source2);
         assertEquals(
-                new Fragment(f3, pos(8, 1), pos(10, 0)),
+                new Fragment(f3, pos(8, 1), pos(10, 0), source2),
                 actual2);
 
-        final Fragment actual3 = diff.traceFragment(new Fragment(f1, pos(2, 1), pos(7, 0)));
+        final Fragment source3 = new Fragment(f1, pos(2, 1), pos(7, 0));
+        final Fragment actual3 = diff.traceFragment(source3);
         assertEquals(
-                new Fragment(f3, pos(2, 1), pos(8, 0)),
+                new Fragment(f3, pos(2, 1), pos(8, 0),
+                        source3,
+                        new Fragment(f3, pos(5, 1), pos(6, 0))),
                 actual3);
     }
 
@@ -234,26 +240,31 @@ public class FileDiffTest {
         final Fragment actual1 = diff.traceFragment(
                 new Fragment(f1, pos(1, 1), pos(2, 0)));
         assertEquals(
-                new Fragment(f3, pos(1, 1), pos(2, 0)),
+                new Fragment(f3, pos(1, 1), pos(2, 0),
+                        new Fragment(f1, pos(1, 1), pos(2, 0))),
                 actual1);
 
         final Fragment actual2 = diff.traceFragment(
                 new Fragment(f1, pos(7, 1), pos(9, 0)));
         assertEquals(
-                new Fragment(f3, pos(7, 1), pos(9, 0)),
+                new Fragment(f3, pos(7, 1), pos(9, 0),
+                        new Fragment(f1, pos(7, 1), pos(9, 0))),
                 actual2);
 
         final Fragment actual3 = diff.traceFragment(
                 new Fragment(f1, pos(2, 1), pos(7, 0)));
         assertEquals(
-                new Fragment(f3, pos(2, 1), pos(7, 0)),
+                new Fragment(f3, pos(2, 1), pos(7, 0),
+                        new Fragment(f1, pos(2, 1), pos(7, 0)),
+                        new Fragment(f3, pos(5, 10), pos(5, 14))),
                 actual3);
 
         final Fragment actual4 = diff.traceFragment(
                 new Fragment(f1, pos(5, 9), pos(5, 11)));
         //TODO the fragment is enlarged, which is more or less OK, but not always necessary
         assertEquals(
-                new Fragment(f3, pos(5, 1), pos(6, 0)),
+                new Fragment(f3, pos(5, 1), pos(6, 0),
+                        new Fragment(f3, pos(5, 10), pos(5, 14))),
                 actual4);
     }
 
@@ -275,7 +286,10 @@ public class FileDiffTest {
         final Fragment actual1 = diff.traceFragment(
                 new Fragment(f1, pos(1, 1), pos(6, 0)));
         assertEquals(
-                new Fragment(f4, pos(1, 1), pos(6, 0)),
+                new Fragment(f4, pos(1, 1), pos(6, 0),
+                        new Fragment(f1, pos(1, 1), pos(6, 0)),
+                        new Fragment(f3, pos(5, 7), pos(5, 8)),
+                        new Fragment(f4, pos(5, 9), pos(5, 10))),
                 actual1);
     }
 }

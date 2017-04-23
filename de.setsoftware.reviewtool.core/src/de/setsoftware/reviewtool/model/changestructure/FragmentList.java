@@ -34,8 +34,15 @@ public class FragmentList {
     /**
      * @return A read-only view on the fragments in this fragment list.
      */
-    public List<Fragment> getFragments() {
+    public List<? extends Fragment> getFragments() {
         return Collections.unmodifiableList(this.fragments);
+    }
+
+    /**
+     * @return {@code true} if this fragment list is empty.
+     */
+    public boolean isEmpty() {
+        return this.fragments.isEmpty();
     }
 
     /**
@@ -97,8 +104,8 @@ public class FragmentList {
     }
 
     /**
-     * Overlays this fragment list by some {@link Fragment}. That means that parts that overlap are taken from the
-     * fragment passed.
+     * Overlays this fragment list by some {@link Fragment}. That means that parts that overlap are taken
+     * from the fragment passed.
      * @param fragment The fragment.
      * @return A fragment list storing the overlay result.
      */

@@ -150,42 +150,42 @@ public class FragmentTest {
     public void testMerge2() {
         final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
         final Fragment f2 = new Fragment(file(), pos(2, 1), pos(3, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 0), f1, f2));
     }
 
     @Test
     public void testMerge3() {
         final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
         final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 5));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 0), f1, f2));
     }
 
     @Test
     public void testMerge4() {
         final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
         final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 0), f1, f2));
     }
 
     @Test
     public void testMerge5() {
         final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
         final Fragment f2 = new Fragment(file(), pos(3, 1), pos(7, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 0), f1, f2));
     }
 
     @Test
     public void testMerge7() {
         final Fragment f1 = new Fragment(file(), pos(3, 1), pos(5, 0));
         final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(2, 1), pos(7, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(2, 1), pos(7, 0), f1, f2));
     }
 
     @Test
     public void testMerge8() {
         final Fragment f1 = new Fragment(file(), pos(3, 1), pos(4, 6));
         final Fragment f2 = new Fragment(file(), pos(4, 3), pos(5, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(3, 1), pos(5, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(3, 1), pos(5, 0), f1, f2));
     }
 
     @Test
@@ -199,14 +199,14 @@ public class FragmentTest {
     public void testMergeWithDeletionFragment4() {
         final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 0));
         final Fragment f2 = new Fragment(file(), pos(5, 1), pos(5, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 0), f1, f2));
     }
 
     @Test
     public void testMergeWithDeletionFragment5() {
         final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 0));
         final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 0)));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 0), f1, f2));
     }
 
     @Test

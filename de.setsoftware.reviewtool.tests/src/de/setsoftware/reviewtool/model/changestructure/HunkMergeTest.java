@@ -30,9 +30,7 @@ public class HunkMergeTest {
 
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(
-                sourceRev1,
-                new Fragment(file(2), pos(1, 1), pos(1, 0))));
+        expectedHunks.add(new Hunk(sourceRev1, targetRev2));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -48,7 +46,7 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 sourceRev1,
-                new Fragment(file(2), pos(1, 1), pos(3, 0))));
+                new Fragment(file(2), pos(1, 1), pos(3, 0), targetRev2)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -64,7 +62,7 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 sourceRev1,
-                new Fragment(file(2), pos(5, 1), pos(7, 0))));
+                new Fragment(file(2), pos(5, 1), pos(7, 0), targetRev2)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -84,10 +82,10 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 sourceRev1,
-                new Fragment(file(3), pos(1, 1), pos(2, 0))));
+                new Fragment(file(3), pos(1, 1), pos(2, 0), targetRev2)));
         expectedHunks.add(new Hunk(
-                new Fragment(file(1), pos(1, 1), pos(1, 0)),
-                new Fragment(file(3), pos(2, 1), pos(3, 0))));
+                new Fragment(file(1), pos(1, 1), pos(1, 0), sourceRev2),
+                new Fragment(file(3), pos(2, 1), pos(3, 0), targetRev3)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -107,10 +105,10 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 sourceRev2.setFile(file(1)),
-                new Fragment(file(3), pos(1, 1), pos(2, 0))));
+                new Fragment(file(3), pos(1, 1), pos(2, 0), targetRev3)));
         expectedHunks.add(new Hunk(
                 sourceRev1,
-                new Fragment(file(3), pos(2, 1), pos(3, 0))));
+                new Fragment(file(3), pos(2, 1), pos(3, 0), targetRev2)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -130,10 +128,10 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 sourceRev1,
-                new Fragment(file(3), pos(1, 1), pos(2, 0))));
+                new Fragment(file(3), pos(1, 1), pos(2, 0), targetRev2)));
         expectedHunks.add(new Hunk(
-                new Fragment(file(1), pos(2, 1), pos(2, 0)),
-                new Fragment(file(3), pos(3, 1), pos(4, 0))));
+                new Fragment(file(1), pos(2, 1), pos(2, 0), sourceRev2),
+                new Fragment(file(3), pos(3, 1), pos(4, 0), targetRev3)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -153,7 +151,7 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 sourceRev1,
-                new Fragment(file(3), pos(1, 1), pos(4, 0))));
+                new Fragment(file(3), pos(1, 1), pos(4, 0), targetRev2, targetRev3)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -175,7 +173,7 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 new Fragment(file(1), pos(1, 1), pos(1, 0)),
-                new Fragment(file(3), pos(1, 1), pos(4, 0))));
+                new Fragment(file(3), pos(1, 1), pos(4, 0), targetRev2, targetRev3)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -194,8 +192,8 @@ public class HunkMergeTest {
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
-                new Fragment(file(1), pos(1, 1), pos(3, 0)),
-                new Fragment(file(3), pos(1, 1), pos(4, 0))));
+                new Fragment(file(1), pos(1, 1), pos(3, 0), sourceRev1, sourceRev2),
+                new Fragment(file(3), pos(1, 1), pos(4, 0), targetRev2, targetRev3)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -218,8 +216,8 @@ public class HunkMergeTest {
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
-                new Fragment(file(1), pos(1, 1), pos(2, 0)),
-                new Fragment(file(4), pos(1, 1), pos(4, 0))));
+                new Fragment(file(1), pos(1, 1), pos(2, 0), sourceRev1, sourceRev2, sourceRev3),
+                new Fragment(file(4), pos(1, 1), pos(4, 0), targetRev2, targetRev3, targetRev4)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -247,8 +245,8 @@ public class HunkMergeTest {
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
-                new Fragment(file(1), pos(1, 1), pos(3, 0)),
-                new Fragment(file(5), pos(1, 1), pos(6, 0))));
+                new Fragment(file(1), pos(1, 1), pos(3, 0), sourceRev1, sourceRev2, sourceRev3, sourceRev4),
+                new Fragment(file(5), pos(1, 1), pos(6, 0), targetRev2, targetRev3, targetRev4, targetRev5)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -275,7 +273,7 @@ public class HunkMergeTest {
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
                 new Fragment(file(1), pos(1, 1), pos(1, 0)),
-                new Fragment(file(4), pos(1, 1), pos(3, 0))));
+                new Fragment(file(4), pos(1, 1), pos(3, 0), targetRev2, targetRev3, targetRev4)));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -294,8 +292,8 @@ public class HunkMergeTest {
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
         expectedHunks.add(new Hunk(
-                new Fragment(file(1), pos(1, 1), pos(4, 0)),
-                new Fragment(file(3), pos(1, 1), pos(3, 0))));
+                new Fragment(file(1), pos(1, 1), pos(4, 0), sourceRev1, sourceRev2),
+                new Fragment(file(3), pos(1, 1), pos(3, 0), targetRev2, targetRev3)));
         assertEquals(expectedHunks, actualHunks);
     }
 }
