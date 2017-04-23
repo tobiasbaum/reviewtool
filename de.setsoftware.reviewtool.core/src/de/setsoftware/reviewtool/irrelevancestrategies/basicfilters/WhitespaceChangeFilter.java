@@ -26,7 +26,7 @@ public class WhitespaceChangeFilter implements IIrrelevanceDetermination {
     }
 
     private String normalizeWhitespace(Fragment fragment) {
-        return fragment.getContentFullLines().replaceAll("[ \r\n\t]+", " ").trim();
+        return fragment.getContentFullLines().replaceAll("[ \r\n\t]+", "");
     }
 
 }

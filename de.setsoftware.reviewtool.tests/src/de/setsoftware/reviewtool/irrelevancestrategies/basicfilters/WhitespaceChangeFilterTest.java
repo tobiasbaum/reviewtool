@@ -78,4 +78,11 @@ public class WhitespaceChangeFilterTest {
                 "long a;")));
     }
 
+    @Test
+    public void testChangeInLineBreaking() {
+        assertTrue(new WhitespaceChangeFilter().isIrrelevant(change(
+                "{doStuff(1, 2, 3);}",
+                "{\n  doStuff(\n    1,\n    2,\n    3);\n}")));
+    }
+
 }
