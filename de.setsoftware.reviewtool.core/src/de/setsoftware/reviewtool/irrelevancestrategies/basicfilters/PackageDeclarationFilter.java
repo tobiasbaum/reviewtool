@@ -25,7 +25,7 @@ public class PackageDeclarationFilter implements IIrrelevanceDetermination {
     }
 
     private boolean isPackageDeclaration(Fragment fragment) {
-        return fragment.getContent().trim().matches("package [^;\n]+;");
+        return fragment.getContentFullLines().trim().matches("package [^;\n]+;");
     }
 
 }

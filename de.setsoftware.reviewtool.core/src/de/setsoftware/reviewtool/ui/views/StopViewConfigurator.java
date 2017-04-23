@@ -23,8 +23,6 @@ public class StopViewConfigurator implements IConfigurator {
         final String type = xml.getAttribute("type");
         if (type.equals("combined")) {
             configurable.setStopViewer(new CombinedDiffStopViewer());
-        } else {
-            configurable.setStopViewer(new SeparateDiffsStopViewer());
         }
     }
 

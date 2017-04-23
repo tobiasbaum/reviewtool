@@ -30,7 +30,7 @@ public class ImportChangeFilter implements IIrrelevanceDetermination {
     }
 
     private boolean isOnlyImports(Fragment fragment) {
-        final BufferedReader r = new BufferedReader(new StringReader(fragment.getContent()));
+        final BufferedReader r = new BufferedReader(new StringReader(fragment.getContentFullLines()));
         String line;
         try {
             while ((line = r.readLine()) != null) {
@@ -46,7 +46,7 @@ public class ImportChangeFilter implements IIrrelevanceDetermination {
     }
 
     private boolean isOnlyWhitespace(Fragment fragment) {
-        return fragment.getContent().trim().isEmpty();
+        return fragment.getContentFullLines().trim().isEmpty();
     }
 
 }

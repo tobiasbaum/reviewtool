@@ -84,10 +84,10 @@ import de.setsoftware.reviewtool.ui.dialogs.SelectIrrelevantDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTourStructureDialog;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
+import de.setsoftware.reviewtool.ui.views.CombinedDiffStopViewer;
 import de.setsoftware.reviewtool.ui.views.CurrentStop;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
-import de.setsoftware.reviewtool.ui.views.SeparateDiffsStopViewer;
 import de.setsoftware.reviewtool.ui.views.StopViewConfigurator;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
 
@@ -143,7 +143,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private IResourceChangeListener changeListener;
     private final List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
     private final List<IPreferredTransitionStrategy> preferredTransitionStrategies = new ArrayList<>();
-    private IStopViewer stopViewer = new SeparateDiffsStopViewer();
+    private IStopViewer stopViewer = new CombinedDiffStopViewer();
     private final List<Runnable> postInitTasks = new ArrayList<>();
 
 

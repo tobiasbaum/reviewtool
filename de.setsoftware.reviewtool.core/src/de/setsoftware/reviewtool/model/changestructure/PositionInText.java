@@ -91,4 +91,21 @@ public class PositionInText implements Comparable<PositionInText> {
     public PositionInText adjustColumn(int columnOffset) {
         return new PositionInText(this.line, this.column + columnOffset);
     }
+
+    /**
+     * Returns the position at the start of the line.
+     */
+    public PositionInText startOfLine() {
+        return new PositionInText(this.line, 1);
+    }
+
+    /**
+     * Returns the position at the end of the line.
+     */
+    public PositionInText endOfLine() {
+        if (this.column == 0) {
+            return this;
+        }
+        return new PositionInText(this.line + 1, 0);
+    }
 }

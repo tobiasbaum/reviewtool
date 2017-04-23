@@ -60,9 +60,10 @@ public class Fragment implements Comparable<Fragment> {
     }
 
     /**
-     * Returns the content underlying this change.
+     * Returns the content lines underlying this fragment.
+     * Full lines are returned, even if the fragment spans only part of the line(s).
      */
-    public String getContent() {
+    public String getContentFullLines() {
         if (this.content == null) {
             this.content = this.extractContent();
         }
@@ -84,17 +85,13 @@ public class Fragment implements Comparable<Fragment> {
             int lineNumber = 1;
             String lineContent;
             while ((lineContent = r.readLine()) != null) {
-                if (lineNumber > this.from.getLine()) {
+                if (lineNumber >= this.from.getLine()) {
                     if (lineNumber < this.to.getLine()) {
                         ret.append(lineContent).append('\n');
                     } else if (lineNumber == this.to.getLine()) {
-                        ret.append(lineContent, 0, this.to.getColumn());
-                    }
-                } else if (lineNumber == this.from.getLine()) {
-                    if (lineNumber == this.to.getLine()) {
-                        ret.append(lineContent, this.from.getColumn() - 1, this.to.getColumn());
-                    } else {
-                        ret.append(lineContent, this.from.getColumn() - 1, lineContent.length()).append('\n');
+                        if (this.to.getColumn() > 0) {
+                            ret.append(lineContent).append('\n');
+                        }
                     }
                 }
                 lineNumber++;

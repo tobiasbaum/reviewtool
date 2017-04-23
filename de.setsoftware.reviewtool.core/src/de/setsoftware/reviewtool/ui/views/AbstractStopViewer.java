@@ -98,7 +98,7 @@ public abstract class AbstractStopViewer implements IStopViewer {
             } else {
                 text.append("\n...\n\n");
             }
-            text.append(f.getContent());
+            text.append(f.getContentFullLines());
         }
         return text.toString();
     }

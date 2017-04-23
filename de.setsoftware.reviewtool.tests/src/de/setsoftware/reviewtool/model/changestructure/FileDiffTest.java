@@ -254,7 +254,7 @@ public class FileDiffTest {
                 new Fragment(f1, pos(5, 9), pos(5, 11)));
         //TODO the fragment is enlarged, which is more or less OK, but not always necessary
         assertEquals(
-                new Fragment(f3, pos(5, 9), pos(5, 14)),
+                new Fragment(f3, pos(5, 1), pos(6, 0)),
                 actual4);
     }
 
@@ -276,7 +276,7 @@ public class FileDiffTest {
         final Fragment actual1 = diff.traceFragment(
                 new Fragment(f1, pos(1, 1), pos(6, 0)));
         assertEquals(
-                new Fragment(f1, pos(1, 1), pos(6, 0)),
+                new Fragment(f4, pos(1, 1), pos(6, 0)),
                 actual1);
     }
 }

@@ -87,6 +87,9 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object.
      */
     public FileDiff merge(final Hunk hunkToMerge) throws IncompatibleFragmentException {
+        if (this.containsInLineDiff(hunkToMerge)) {
+            return this.merge(this.makeFullLine(hunkToMerge));
+        }
         final FileDiff result = new FileDiff();
         final List<Hunk> hunks = new ArrayList<Hunk>();
         boolean hunkCreated = false;
@@ -121,9 +124,11 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if some hunk to be merged overlaps with some hunk in the FileDiff object.
      */
     public FileDiff merge(final Collection<? extends Hunk> hunksToMerge) throws IncompatibleFragmentException {
+        final List<Hunk> fullLineHunks = this.makeFullLine(hunksToMerge);
+
         FileDiff result = this;
         int delta = 0;
-        for (Hunk hunk : hunksToMerge) {
+        for (Hunk hunk : fullLineHunks) {
             hunk = hunk.adjustSource(delta);
             result = result.merge(hunk);
             delta += hunk.getDelta();
@@ -142,6 +147,33 @@ public class FileDiff {
      */
     public FileDiff merge(final FileDiff diff) throws IncompatibleFragmentException {
         return this.merge(diff.hunks);
+    }
+
+    private boolean containsInLineDiff(Hunk hunk) {
+        return hunk.getSource().getFrom().getColumn() != 1
+            || hunk.getSource().getTo().getColumn() != 0
+            || hunk.getTarget().getFrom().getColumn() != 1
+            || hunk.getTarget().getTo().getColumn() != 0;
+    }
+
+    private List<Hunk> makeFullLine(Collection<? extends Hunk> hunks) {
+        final List<Hunk> ret = new ArrayList<>();
+        for (final Hunk hunk : hunks) {
+            if (this.containsInLineDiff(hunk)) {
+                ret.add(this.makeFullLine(hunk));
+            } else {
+                ret.add(hunk);
+            }
+        }
+        return ret;
+    }
+
+    private Hunk makeFullLine(Hunk hunk) {
+        return new Hunk(this.makeFullLine(hunk.getSource()), this.makeFullLine(hunk.getTarget()));
+    }
+
+    private Fragment makeFullLine(Fragment target) {
+        return new Fragment(target.getFile(), target.getFrom().startOfLine(), target.getTo().endOfLine());
     }
 
     /**

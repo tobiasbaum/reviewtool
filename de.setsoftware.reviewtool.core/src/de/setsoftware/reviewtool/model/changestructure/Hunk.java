@@ -129,8 +129,8 @@ public class Hunk {
 
     @Override
     public String toString() {
-        return "Hunk: " + this.source + "(" + this.source.getContent() + ") --> "
-                + this.target + "(" + this.target.getContent() + ")";
+        return "Hunk: " + this.source + "(" + this.source.getContentFullLines() + ") --> "
+                + this.target + "(" + this.target.getContentFullLines() + ")";
     }
 
     /**

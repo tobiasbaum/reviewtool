@@ -331,27 +331,27 @@ public class FragmentTest {
     @Test
     public void testGetContent1() {
         final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        assertEquals("", f1.getContent());
+        assertEquals("", f1.getContentFullLines());
     }
 
     @Test
     public void testGetContent2() {
         final String content = "abcdef";
         final Fragment f1 = new Fragment(fileWithContent(content), pos(1, 2), pos(1, 3));
-        assertEquals("bc", f1.getContent());
+        assertEquals("abcdef\n", f1.getContentFullLines());
     }
 
     @Test
     public void testGetContent3() {
         final String content = "a\nb\nc\nd\ne\nf\n";
         final Fragment f1 = new Fragment(fileWithContent(content), pos(2, 1), pos(5, 0));
-        assertEquals("b\nc\nd\n", f1.getContent());
+        assertEquals("b\nc\nd\n", f1.getContentFullLines());
     }
 
     @Test
     public void testGetContent4() {
         final String content = "a\nb\nc\nd\ne\nf\n";
         final Fragment f1 = new Fragment(fileWithContent(content), pos(2, 2), pos(5, 1));
-        assertEquals("\nc\nd\ne", f1.getContent());
+        assertEquals("b\nc\nd\ne\n", f1.getContentFullLines());
     }
 }
