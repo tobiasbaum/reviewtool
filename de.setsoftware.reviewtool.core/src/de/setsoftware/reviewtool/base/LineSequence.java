@@ -15,8 +15,8 @@ import java.util.Map;
  */
 public class LineSequence {
 
-    private List<String> lines;
-    private Map<Integer, Integer> lineOffsets;
+    private final List<String> lines;
+    private final Map<Integer, Integer> lineOffsets;
 
     /**
      * Default constructor. Creates an empty LineSequence.
@@ -38,7 +38,7 @@ public class LineSequence {
         final BufferedReader r = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contents), charset));
         String line;
         while ((line = r.readLine()) != null) {
-            this.addLine(line + System.lineSeparator());
+            this.addLine(line + '\n');
         }
     }
 
