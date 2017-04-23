@@ -1,4 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/de.setsoftware.reviewtool.feature_1.0.12.qualifier.jar" id="de.setsoftware.reviewtool.feature" version="1.0.12.qualifier"/>
+   <feature url="features/de.setsoftware.reviewtool.feature_1.0.13.qualifier.jar" id="de.setsoftware.reviewtool.feature" version="1.0.13.qualifier"/>
 </site>
