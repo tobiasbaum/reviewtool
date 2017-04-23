@@ -42,16 +42,13 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
 
         final FileHistoryNode node = tours.getFileHistoryNode(changes.get(lastRevision));
         if (node != null) {
-            final List<Hunk> hunksFirst = stop.getContentFor(firstRevision);
-            final List<Hunk> hunksLast = stop.getContentFor(lastRevision);
-            if (hunksFirst == null || hunksLast == null) {
-                // binary change
+            if (stop.isBinaryChange()) {
                 this.createDiffViewer(view, scrollContent, firstRevision, changes.get(lastRevision),
                         null, null, null, null);
             } else {
-                // textual change
                 final FileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
                 final FileDiff diff = node.buildHistory(ancestor);
+                final List<Hunk> hunksLast = stop.getContentFor(lastRevision);
                 final List<Hunk> hunks = diff.getHunksForTargets(Hunk.getTargets(hunksLast).getFragments());
 
                 final Fragment firstSourceFragment = Hunk.getSources(hunks).getFragments().get(0);

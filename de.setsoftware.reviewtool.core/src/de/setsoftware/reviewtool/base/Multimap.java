@@ -18,6 +18,13 @@ public final class Multimap<K, V> {
     private final Map<K, List<V>> map = new LinkedHashMap<>();
 
     /**
+     * @return {@code true} iff the multimap is empty.
+     */
+    public boolean isEmpty() {
+        return this.map.isEmpty();
+    }
+
+    /**
      * Add the given key value pair. If there already is an entry
      * for the given key, add the value to the end of this key's list.
      */
@@ -71,6 +78,9 @@ public final class Multimap<K, V> {
         final List<V> list = this.map.get(key);
         if (list != null) {
             list.remove(value);
+            if (list.isEmpty()) {
+                this.removeKey(key);
+            }
         }
     }
 

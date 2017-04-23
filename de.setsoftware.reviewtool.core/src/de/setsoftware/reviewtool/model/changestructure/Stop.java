@@ -108,6 +108,13 @@ public class Stop implements IReviewElement {
     }
 
     /**
+     * Returns {@code true} if this stop represents a binary change.
+     */
+    public boolean isBinaryChange() {
+        return this.history.isEmpty();
+    }
+
+    /**
      * Return true iff this stop can be merged with the given other stop.
      * Two stops can be merged if they denote the same file and directly
      * neighboring or overlapping segments of that file (or the whole binary file).
