@@ -425,16 +425,26 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (this.invalidMode(Mode.REVIEWING)) {
             return;
         }
+        final ReviewData reviewData = this.getCurrentReviewDataParsed();
+        final EndTransition.Type preferredEndTransitionType;
+        if (reviewData.hasTemporaryMarkers()) {
+            preferredEndTransitionType = EndTransition.Type.PAUSE;
+        } else if (reviewData.hasUnresolvedRemarks()) {
+            preferredEndTransitionType = EndTransition.Type.REJECTION;
+        } else {
+            preferredEndTransitionType = EndTransition.Type.OK;
+        }
         final EndTransition typeOfEnd = EndReviewDialog.selectTypeOfEnd(
                 this.persistence,
-                this.getCurrentReviewDataParsed(),
+                reviewData,
                 this.endReviewExtensions,
-                this.determinePreferredEndTransitions());
+                preferredEndTransitionType,
+                this.determinePreferredEndTransitions(preferredEndTransitionType));
         if (typeOfEnd == null) {
             return;
         }
         if (typeOfEnd.getType() != EndTransition.Type.PAUSE
-                && this.getCurrentReviewDataParsed().hasTemporaryMarkers()) {
+                && reviewData.hasTemporaryMarkers()) {
             final Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
             final boolean yes = MessageDialog.openQuestion(shell, "Open markers",
                     "There are still temporary markers. Finish anyway?");
@@ -456,11 +466,11 @@ public class ReviewPlugin implements IReviewConfigurable {
         ImageCache.dispose();
     }
 
-    private List<String> determinePreferredEndTransitions() {
+    private List<String> determinePreferredEndTransitions(EndTransition.Type type) {
         final List<String> ret = new ArrayList<>();
         for (final IPreferredTransitionStrategy strategy : this.preferredTransitionStrategies) {
             ret.addAll(strategy.determinePreferredTransitions(
-                    this.persistence.getCurrentTicketData(), this.toursInReview));
+                    type == EndTransition.Type.OK, this.persistence.getCurrentTicketData(), this.toursInReview));
         }
         return ret;
     }

@@ -27,7 +27,11 @@ public class PathRegexAndReviewerCountStrategy implements IPreferredTransitionSt
     }
 
     @Override
-    public List<String> determinePreferredTransitions(ITicketData ticketData, ToursInReview toursInReview) {
+    public List<String> determinePreferredTransitions(
+            boolean forOkCase, ITicketData ticketData, ToursInReview toursInReview) {
+        if (!forOkCase) {
+            return Collections.emptyList();
+        }
         if (ticketData.getTicketInfo().getReviewers().size() > this.maxReviewerCount) {
             return Collections.emptyList();
         }

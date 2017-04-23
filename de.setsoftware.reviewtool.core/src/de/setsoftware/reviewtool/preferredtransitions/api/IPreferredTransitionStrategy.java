@@ -16,6 +16,6 @@ public interface IPreferredTransitionStrategy {
      * If several entries are returned, the first is the most preferred, etc.
      */
     public abstract List<String> determinePreferredTransitions(
-            ITicketData ticketData, ToursInReview toursInReview);
+            boolean forOkCase, ITicketData ticketData, ToursInReview toursInReview);
 
 }
