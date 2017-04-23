@@ -34,14 +34,14 @@ public class TourTest {
 
     @Test
     public void testMergeWithDifferentFiles() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
+        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
         final Stop s1 = new Stop(from1, to1, current1, false, true);
 
-        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
+        final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
         final Stop s2 = new Stop(from2, to2, current2, false, true);
 
         final Tour t1 = new Tour("tA", Collections.singletonList(s1));
@@ -54,19 +54,19 @@ public class TourTest {
 
     @Test
     public void testMergeWithDifferentPartsOfSameFileAndDifferentFile() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
+        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
         final Stop s1 = new Stop(from1, to1, current1, false, true);
 
-        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
+        final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
         final Stop s2 = new Stop(from2, to2, current2, false, true);
 
-        final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 0),  "xyz");
-        final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0),  "XYZ");
-        final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0),  "XYZ");
+        final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 0));
+        final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
+        final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
         final Stop s3 = new Stop(from3, to3, current3, false, true);
 
         final Tour t1 = new Tour("tourA", Collections.singletonList(s1));
@@ -79,19 +79,19 @@ public class TourTest {
 
     @Test
     public void testMergeOrderInFileByLine() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
+        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
         final Stop s1 = new Stop(from1, to1, current1, false, true);
 
-        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
+        final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
         final Stop s2 = new Stop(from2, to2, current2, false, true);
 
-        final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 0),  "xyz");
-        final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0),  "XYZ");
-        final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0),  "XYZ");
+        final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 0));
+        final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
+        final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
         final Stop s3 = new Stop(from3, to3, current3, false, true);
 
         final Tour t1 = new Tour("tourA", Collections.singletonList(s1));
@@ -104,14 +104,14 @@ public class TourTest {
 
     @Test
     public void testMergeOfAdjacentLines() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
+        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
         final Stop s1 = new Stop(from1, to1, current1, false, true);
 
-        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 0),  "xyz");
-        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0),  "XYZ");
-        final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0),  "XYZ");
+        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 0));
+        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
+        final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
         final Stop s2 = new Stop(from2, to2, current2, false, true);
 
         final Tour t1 = new Tour("tourA", Collections.singletonList(s1));
@@ -141,14 +141,14 @@ public class TourTest {
 
     @Test
     public void testCannotMergeNeighboringStopsWithDifferentRelevance() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0),  "abc");
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0),  "ABC");
-        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0),  "ABC");
+        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
+        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
+        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
         final Stop s1 = new Stop(from1, to1, current1, false, true);
 
-        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 0),  "xyz");
-        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0),  "XYZ");
-        final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0),  "XYZ");
+        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 0));
+        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
+        final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
         final Stop s2 = new Stop(from2, to2, current2, true, true);
 
         assertFalse(s1.canBeMergedWith(s2));
@@ -157,14 +157,14 @@ public class TourTest {
 
     @Test
     public void testCanMergeOverlappingStopsWithDifferentRelevance() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 0),  "abc\nrrr");
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(3, 0),  "ABC\nrrr");
-        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(3, 0),  "ABC\nrrr");
+        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 0));
+        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(3, 0));
+        final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(3, 0));
         final Stop s1 = new Stop(from1, to1, current1, false, true);
 
-        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(4, 0),  "rrr\nxyz");
-        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0),  "rrr\nXYZ");
-        final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0),  "rrr\nXYZ");
+        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(4, 0));
+        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0));
+        final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0));
         final Stop s2 = new Stop(from2, to2, current2, true, true);
 
         assertTrue(s1.canBeMergedWith(s2));

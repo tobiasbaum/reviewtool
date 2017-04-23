@@ -23,8 +23,8 @@ public class HunkMergeTest {
     @Test
     public void testMergeSingleAdditionOnEmptyHunkList1() throws IncompatibleFragmentException {
         final FileDiff list = new FileDiff();
-        final Hunk hunk = new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(1, 0), ""));
+        final Hunk hunk = new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(1, 0)));
         final FileDiff mergedList = list.merge(hunk);
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
@@ -35,8 +35,8 @@ public class HunkMergeTest {
     @Test
     public void testMergeSingleAdditionOnEmptyHunkList12() throws IncompatibleFragmentException {
         final FileDiff list = new FileDiff();
-        final Hunk hunk = new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "Hallo\nWelt"));
+        final Hunk hunk = new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0)));
         final FileDiff mergedList = list.merge(hunk);
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
@@ -47,8 +47,8 @@ public class HunkMergeTest {
     @Test
     public void testMergeSingleAdditionOnEmptyHunkList13() throws IncompatibleFragmentException {
         final FileDiff list = new FileDiff();
-        final Hunk hunk = new Hunk(new Fragment(file(), pos(5, 1), pos(5, 0), ""),
-                new Fragment(file(), pos(5, 1), pos(7, 0), "Hallo\nWelt\n"));
+        final Hunk hunk = new Hunk(new Fragment(file(), pos(5, 1), pos(5, 0)),
+                new Fragment(file(), pos(5, 1), pos(7, 0)));
         final FileDiff mergedList = list.merge(hunk);
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
@@ -59,106 +59,106 @@ public class HunkMergeTest {
     @Test
     public void testMergeSingleAdditionOnNonEmptyHunkList1() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(2, 0), "A\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(2, 0), ""),
-                new Fragment(file(), pos(2, 1), pos(3, 0), "B\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(2, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(2, 0)),
+                new Fragment(file(), pos(2, 1), pos(3, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(2, 0), "A\n")));
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(2, 1), pos(3, 0), "B\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(2, 0))));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(2, 1), pos(3, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeSingleAdditionOnNonEmptyHunkList2() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(2, 0), "A\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(2, 0), "B\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(2, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(2, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(2, 0), "B\n")));
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(2, 1), pos(3, 0), "A\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(2, 0))));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(2, 1), pos(3, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeSingleAdditionOnNonEmptyHunkList3() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(2, 0), "A\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(3, 1), pos(3, 0), ""),
-                new Fragment(file(), pos(3, 1), pos(4, 0), "B\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(2, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(3, 1), pos(3, 0)),
+                new Fragment(file(), pos(3, 1), pos(4, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(2, 0), "A\n")));
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(2, 1), pos(2, 0), ""),
-                new Fragment(file(), pos(3, 1), pos(4, 0), "B\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(2, 0))));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(2, 1), pos(2, 0)),
+                new Fragment(file(), pos(3, 1), pos(4, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeSinglePartlyOverlappingChange1() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "A\nB\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(3, 0), "B\n"),
-                new Fragment(file(), pos(2, 1), pos(4, 0), "C\nD\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(3, 0)),
+                new Fragment(file(), pos(2, 1), pos(4, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "A\nC\nD\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeSinglePartlyOverlappingChange2() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "A\nB\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(2, 0), "A\n"),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "C\nD\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(2, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "C\nD\nB\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeSingleFullyOverlappingChange() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(2, 0), ""),
-                new Fragment(file(), pos(2, 1), pos(5, 0), "B\nC\nD\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(6, 0), "A\nB\nC\nD\nE\n"),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "B\nC\nD\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(2, 0)),
+                new Fragment(file(), pos(2, 1), pos(5, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(6, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0), "A\nE\n"),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "B\nC\nD\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeSingleMultiplyOverlappingChange1() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "A\nB\n")));
-        list = list.merge(new Hunk(new Fragment(file(), pos(4, 1), pos(4, 0), ""),
-                new Fragment(file(), pos(4, 1), pos(6, 0), "C\nD\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(5, 0), "B\nX\nC\n"),
-                new Fragment(file(), pos(2, 1), pos(3, 0), "Y\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0))));
+        list = list.merge(new Hunk(new Fragment(file(), pos(4, 1), pos(4, 0)),
+                new Fragment(file(), pos(4, 1), pos(6, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(5, 0)),
+                new Fragment(file(), pos(2, 1), pos(3, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(2, 0), "X\n"),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "A\nY\nD\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(2, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
@@ -166,49 +166,49 @@ public class HunkMergeTest {
     @Test
     public void testMergeSingleMultiplyOverlappingChange2() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "A\nB\n")));
-        list = list.merge(new Hunk(new Fragment(file(), pos(4, 1), pos(4, 0), ""),
-                new Fragment(file(), pos(4, 1), pos(6, 0), "C\nD\n")));
-        list = list.merge(new Hunk(new Fragment(file(), pos(7, 1), pos(7, 0), ""),
-                new Fragment(file(), pos(7, 1), pos(9, 0), "E\nF\n")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0))));
+        list = list.merge(new Hunk(new Fragment(file(), pos(4, 1), pos(4, 0)),
+                new Fragment(file(), pos(4, 1), pos(6, 0))));
+        list = list.merge(new Hunk(new Fragment(file(), pos(7, 1), pos(7, 0)),
+                new Fragment(file(), pos(7, 1), pos(9, 0))));
         final FileDiff mergedList =
-                list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(8, 0), "B\nX\nC\nD\nY\nE\n"),
-                        new Fragment(file(), pos(2, 1), pos(5, 0), "X\nY\nZ\n")));
+                list.merge(new Hunk(new Fragment(file(), pos(2, 1), pos(8, 0)),
+                        new Fragment(file(), pos(2, 1), pos(5, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0), "X\nY\n"),
-                new Fragment(file(), pos(1, 1), pos(6, 0), "A\nX\nY\nZ\nF\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0)),
+                new Fragment(file(), pos(1, 1), pos(6, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeAdditionAndDeletion() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "A\nB\nD\n")));
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0), "A\nB\n"),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "A'\nB'\nC\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(3, 1), pos(5, 0), "C\nD\n"),
-                new Fragment(file(), pos(3, 1), pos(3, 0), "")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(3, 1), pos(5, 0)),
+                new Fragment(file(), pos(3, 1), pos(3, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0), ""),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "A'\nB'\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(1, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 
     @Test
     public void testMergeChangeAndDeletion() throws IncompatibleFragmentException {
         FileDiff list = new FileDiff();
-        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0), "A\nB\n"),
-                new Fragment(file(), pos(1, 1), pos(4, 0), "A'\nB'\nC\n")));
-        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(3, 1), pos(5, 0), "C\nD\n"),
-                new Fragment(file(), pos(3, 1), pos(3, 0), "")));
+        list = list.merge(new Hunk(new Fragment(file(), pos(1, 1), pos(3, 0)),
+                new Fragment(file(), pos(1, 1), pos(4, 0))));
+        final FileDiff mergedList = list.merge(new Hunk(new Fragment(file(), pos(3, 1), pos(5, 0)),
+                new Fragment(file(), pos(3, 1), pos(3, 0))));
         final List<Hunk> actualHunks = mergedList.getHunks();
         final List<Hunk> expectedHunks = new ArrayList<>();
-        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(4, 0), "A\nB\nD\n"),
-                new Fragment(file(), pos(1, 1), pos(3, 0), "A'\nB'\n")));
+        expectedHunks.add(new Hunk(new Fragment(file(), pos(1, 1), pos(4, 0)),
+                new Fragment(file(), pos(1, 1), pos(3, 0))));
         assertEquals(expectedHunks, actualHunks);
     }
 }

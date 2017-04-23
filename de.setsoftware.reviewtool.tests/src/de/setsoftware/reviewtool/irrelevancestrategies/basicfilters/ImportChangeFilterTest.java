@@ -19,7 +19,7 @@ public class ImportChangeFilterTest {
     }
 
     private static Fragment fragment(String content) {
-        return ChangestructureFactory.createFragment(
+        return Fragment.createWithContent(
                 ChangestructureFactory.createFileInRevision("", null, null),
                 ChangestructureFactory.createPositionInText(1, 1),
                 ChangestructureFactory.createPositionInText(2, 0),

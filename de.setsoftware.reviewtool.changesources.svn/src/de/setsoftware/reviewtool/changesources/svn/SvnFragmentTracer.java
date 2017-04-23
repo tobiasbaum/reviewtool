@@ -33,8 +33,7 @@ public class SvnFragmentTracer implements IFragmentTracer {
                 result.add(ChangestructureFactory.createFragment(
                         descendant.getFile(),
                         lastFragment.getFrom(),
-                        lastFragment.getTo(),
-                        lastFragment.getContent()));
+                        lastFragment.getTo()));
             }
         }
 

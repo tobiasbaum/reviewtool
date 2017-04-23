@@ -1,5 +1,10 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
 /**
  * A fragment is the smallest unit of a change. A fragment is generally checked as a whole by a reviewer,
  * and separately from other fragments. Examples for fragments are methods that are new or changed considerably,
@@ -13,17 +18,27 @@ public class Fragment implements Comparable<Fragment> {
     private final FileInRevision file;
     private final PositionInText from;
     private final PositionInText to;
-    private final String content;
+    private String content;
 
-    Fragment(FileInRevision file, PositionInText from, PositionInText to, String content) {
+    Fragment(FileInRevision file, PositionInText from, PositionInText to) {
         assert file != null;
         assert from != null;
         assert to != null;
-        assert content != null;
         this.file = file;
         this.from = from;
         this.to = to;
-        this.content = content;
+    }
+
+    /**
+     * Factory method that creates a fragment with already set content string.
+     * Mainly for unit tests. Normally, fragments should be created using
+     * the {@link ChangestructureFactory}.
+     */
+    public static Fragment createWithContent(
+            FileInRevision file, PositionInText from, PositionInText to, String content) {
+        final Fragment ret = new Fragment(file, from, to);
+        ret.content = content;
+        return ret;
     }
 
     public FileInRevision getFile() {
@@ -44,8 +59,50 @@ public class Fragment implements Comparable<Fragment> {
         return this.to;
     }
 
+    /**
+     * Returns the content underlying this change.
+     */
     public String getContent() {
+        if (this.content == null) {
+            this.content = this.extractContent();
+        }
         return this.content;
+    }
+
+    private String extractContent() {
+        if (this.isDeletion()) {
+            return "";
+        }
+        final byte[] contents = this.file.getContents();
+        if (contents == null) {
+            return "?";
+        }
+        try {
+            final BufferedReader r = new BufferedReader(new InputStreamReader(
+                    new ByteArrayInputStream(contents), "UTF-8"));
+            final StringBuilder ret = new StringBuilder();
+            int lineNumber = 1;
+            String lineContent;
+            while ((lineContent = r.readLine()) != null) {
+                if (lineNumber > this.from.getLine()) {
+                    if (lineNumber < this.to.getLine()) {
+                        ret.append(lineContent).append('\n');
+                    } else if (lineNumber == this.to.getLine()) {
+                        ret.append(lineContent, 0, this.to.getColumn());
+                    }
+                } else if (lineNumber == this.from.getLine()) {
+                    if (lineNumber == this.to.getLine()) {
+                        ret.append(lineContent, this.from.getColumn() - 1, this.to.getColumn());
+                    } else {
+                        ret.append(lineContent, this.from.getColumn() - 1, lineContent.length()).append('\n');
+                    }
+                }
+                lineNumber++;
+            }
+            return ret.toString();
+        } catch (final IOException e) {
+            throw new AssertionError("unexpected exception", e);
+        }
     }
 
     @Override
@@ -92,9 +149,9 @@ public class Fragment implements Comparable<Fragment> {
     public Fragment adjoin(final Fragment other) {
         assert this.isAdjacentTo(other);
         if (this.to.nextInLine().equals(other.from)) {
-            return new Fragment(this.file, this.from, other.to, this.content + other.content);
+            return new Fragment(this.file, this.from, other.to);
         } else {
-            return new Fragment(this.file, other.from, this.to, other.content + this.content);
+            return new Fragment(this.file, other.from, this.to);
         }
     }
 
@@ -110,12 +167,10 @@ public class Fragment implements Comparable<Fragment> {
             final FragmentList fragmentList = new FragmentList();
             try {
                 if (this.from.lessThan(other.from)) {
-                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from.prevInLine(),
-                            this.subContentTo(other.from.prevInLine())));
+                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from.prevInLine()));
                 }
                 if (other.to.lessThan(this.to)) {
-                    fragmentList.addFragment(new Fragment(this.file, other.to.nextInLine(), this.to,
-                            this.subContentFrom(other.to.nextInLine())));
+                    fragmentList.addFragment(new Fragment(this.file, other.to.nextInLine(), this.to));
                 }
             } catch (final IncompatibleFragmentException e) {
                 throw new Error(e);
@@ -157,50 +212,12 @@ public class Fragment implements Comparable<Fragment> {
         assert this.canBeMergedWith(other);
         final PositionInText minFrom = this.from;
         final PositionInText maxTo;
-        final String combinedContent;
         if (this.to.lessThan(other.to)) {
             maxTo = other.to;
-            combinedContent = this.content + other.subContentFrom(this.to);
         } else {
             maxTo = this.to;
-            combinedContent = this.content;
         }
-        return new Fragment(this.file, minFrom, maxTo, combinedContent);
-    }
-
-    private String subContentFrom(PositionInText pos) {
-        String remainingContent = this.content;
-        PositionInText remainingFrom = this.from;
-
-        while (remainingFrom.getLine() < pos.getLine()) {
-            final int linebreak = remainingContent.indexOf('\n');
-            remainingContent = remainingContent.substring(linebreak + 1);
-            remainingFrom = new PositionInText(remainingFrom.getLine() + 1, 1);
-        }
-        final int diff = pos.getColumn() - this.from.getColumn();
-        if (diff < 0) {
-            return remainingContent;
-        }
-        return remainingContent.substring(diff);
-    }
-
-    /**
-     * Returns the fragment contents from the beginning of the fragment up to the passed {@link PositionInText}
-     * (inclusive).
-     * @param pos The end of the desired range.
-     * @return The contents.
-     */
-    private String subContentTo(final PositionInText pos) {
-        int lastOffset = 0;
-        int line = this.from.getLine();
-
-        while (line < pos.getLine()) {
-            lastOffset = this.content.indexOf('\n', lastOffset) + 1;
-            ++line;
-        }
-        final int startColumnCorrection = lastOffset == 0 ? this.from.getColumn() - 1 : 0;
-        final int endOffset = Math.min(this.content.length(), lastOffset + pos.getColumn() - startColumnCorrection);
-        return this.content.substring(0, endOffset);
+        return new Fragment(this.file, minFrom, maxTo);
     }
 
     public boolean isDeletion() {
@@ -209,7 +226,7 @@ public class Fragment implements Comparable<Fragment> {
 
     @Override
     public int hashCode() {
-        return this.from.hashCode() + 31 * this.content.hashCode();
+        return this.from.hashCode() + 31 * this.file.hashCode();
     }
 
     @Override
@@ -220,8 +237,7 @@ public class Fragment implements Comparable<Fragment> {
         final Fragment other = (Fragment) obj;
         return this.file.equals(other.file)
             && this.from.equals(other.from)
-            && this.to.equals(other.to)
-            && this.content.equals(other.content);
+            && this.to.equals(other.to);
     }
 
     /**
@@ -239,7 +255,7 @@ public class Fragment implements Comparable<Fragment> {
      * @return The resulting fragment.
      */
     public Fragment adjust(final int offset) {
-        return new Fragment(this.file, this.from.adjust(offset), this.to.adjust(offset), this.content);
+        return new Fragment(this.file, this.from.adjust(offset), this.to.adjust(offset));
     }
 
     /**
@@ -249,8 +265,7 @@ public class Fragment implements Comparable<Fragment> {
     public Fragment adjustColumnIfInLine(final int offset, int targetLine) {
         return new Fragment(this.file,
                 this.from.getLine() == targetLine ? this.from.adjustColumn(offset) : this.from,
-                this.to.getLine() == targetLine ? this.to.adjustColumn(offset) : this.to,
-                this.content);
+                this.to.getLine() == targetLine ? this.to.adjustColumn(offset) : this.to);
     }
 
     @Override

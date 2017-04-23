@@ -26,8 +26,8 @@ public class ChangestructureFactory {
         return new FileInRevision(path, revision, repository);
     }
 
-    public static Fragment createFragment(FileInRevision file, PositionInText from, PositionInText to, String content) {
-        return new Fragment(file, from, to, content);
+    public static Fragment createFragment(FileInRevision file, PositionInText from, PositionInText to) {
+        return new Fragment(file, from, to);
     }
 
     public static LocalRevision createLocalRevision() {

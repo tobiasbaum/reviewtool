@@ -192,12 +192,10 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
             } else {
                 final Fragment original = ChangestructureFactory.createFragment(fileOldInfo,
                         ChangestructureFactory.createPositionInText(startOld + 1, 1),
-                        ChangestructureFactory.createPositionInText(endOld + 1, 0),
-                        this.joinRange(fileOld, startOld, endOld));
+                        ChangestructureFactory.createPositionInText(endOld + 1, 0));
                 final Fragment revised = ChangestructureFactory.createFragment(fileNewInfo,
                         ChangestructureFactory.createPositionInText(startNew + 1, 1),
-                        ChangestructureFactory.createPositionInText(endNew + 1, 0),
-                        this.joinRange(fileNew, startNew, endNew));
+                        ChangestructureFactory.createPositionInText(endNew + 1, 0));
                 final Pair<Fragment, Fragment> delta = Pair.create(original, revised);
                 ret.add(delta);
             }
@@ -217,14 +215,6 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
             lines.add(line);
         }
         return new FullFileView<String>(lines.toArray(new String[lines.size()]));
-    }
-
-    private String joinRange(final OneFileView<String> file, final int fromIndex, final int to) {
-        final StringBuilder ret = new StringBuilder();
-        for (int i = fromIndex; i < to; i++) {
-            ret.append(file.getItem(i)).append("\n");
-        }
-        return ret.toString();
     }
 
     private Pair<Fragment, Fragment> createInLineDiffFragment(FileInRevision fileOldInfo, FileInRevision fileNewInfo,
@@ -266,7 +256,6 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
                 ChangestructureFactory.createPositionInText(
                         lineIndex + 1, prefixLength + 1),
                 ChangestructureFactory.createPositionInText(
-                        lineIndex + 1, line.length() - suffixLength),
-                line.substring(prefixLength, line.length() - suffixLength));
+                        lineIndex + 1, line.length() - suffixLength));
     }
 }

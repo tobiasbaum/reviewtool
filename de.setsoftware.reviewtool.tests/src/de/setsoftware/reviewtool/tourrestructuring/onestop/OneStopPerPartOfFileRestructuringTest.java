@@ -70,9 +70,9 @@ public class OneStopPerPartOfFileRestructuringTest {
         final PositionInText posFrom = ChangestructureFactory.createPositionInText(lineFrom, 1);
         final PositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 0);
         return new Stop(
-                ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo, ""),
-                ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo, ""),
-                ChangestructureFactory.createFragment(fileInRevision(file, 100), posFrom, posTo, ""),
+                ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),
+                ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo),
+                ChangestructureFactory.createFragment(fileInRevision(file, 100), posFrom, posTo),
                 false,
                 true);
     }

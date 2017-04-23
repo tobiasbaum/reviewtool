@@ -259,8 +259,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             final Fragment fragment = ChangestructureFactory.createFragment(
                     stop.getMostRecentFile(),
                     stop.getMostRecentFragment().getFrom(),
-                    stop.getMostRecentFragment().getFrom(),
-                    "");
+                    stop.getMostRecentFragment().getFrom());
             jumpTarget = new Stop(fragment, fragment, fragment, false, stop.isVisible());
         } else {
             jumpTarget = stop;

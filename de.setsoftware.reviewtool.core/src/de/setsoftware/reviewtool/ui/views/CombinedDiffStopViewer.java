@@ -68,15 +68,13 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
                 final Fragment oldFragment = ChangestructureFactory.createFragment(firstRevision,
                         ChangestructureFactory.createPositionInText(1, 1, 0),
                         ChangestructureFactory.createPositionInText(oldNumLines + 1, 0,
-                                oldContents.getStartPositionOfLine(oldNumLines)),
-                        oldContents.getLinesConcatenated(0, oldNumLines));
+                                oldContents.getStartPositionOfLine(oldNumLines)));
 
                 final int newNumLines = newContents.getNumberOfLines();
                 final Fragment newFragment = ChangestructureFactory.createFragment(lastRevision,
                         ChangestructureFactory.createPositionInText(1, 1, 0),
                         ChangestructureFactory.createPositionInText(newNumLines + 1, 0,
-                                newContents.getStartPositionOfLine(newNumLines)),
-                        newContents.getLinesConcatenated(0, newNumLines));
+                                newContents.getStartPositionOfLine(newNumLines)));
 
                 this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
                         Arrays.asList(new Fragment[] { oldFragment }),

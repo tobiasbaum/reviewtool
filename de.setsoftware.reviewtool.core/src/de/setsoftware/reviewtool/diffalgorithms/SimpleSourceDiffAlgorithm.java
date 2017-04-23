@@ -196,8 +196,7 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
                 ChangestructureFactory.createPositionInText(
                         fragmentData.toIndexInWholeFile(0) + 1, prefixLength + 1),
                 ChangestructureFactory.createPositionInText(
-                        fragmentData.toIndexInWholeFile(0) + 1, line.length() - suffixLength),
-                line.substring(prefixLength, line.length() - suffixLength));
+                        fragmentData.toIndexInWholeFile(0) + 1, line.length() - suffixLength));
     }
 
     private Fragment toFileFragment(FileInRevision fileInfo, OneFileView<String> fragmentData) {
@@ -205,8 +204,7 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
                 ChangestructureFactory.createPositionInText(
                         fragmentData.toIndexInWholeFile(0) + 1, 1),
                 ChangestructureFactory.createPositionInText(
-                        fragmentData.toIndexInWholeFile(fragmentData.getItemCount() - 1) + 2, 0),
-                fragmentData.getContent());
+                        fragmentData.toIndexInWholeFile(fragmentData.getItemCount() - 1) + 2, 0));
     }
 
     private FullFileView<String> toLines(byte[] contents, String charset) throws IOException {
