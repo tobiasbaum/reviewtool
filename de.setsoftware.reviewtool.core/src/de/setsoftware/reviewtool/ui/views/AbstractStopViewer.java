@@ -6,13 +6,19 @@ import org.eclipse.compare.CompareConfiguration;
 import org.eclipse.compare.contentmergeviewer.TextMergeViewer;
 import org.eclipse.compare.structuremergeviewer.DiffNode;
 import org.eclipse.jface.resource.JFaceResources;
+import org.eclipse.jface.text.ITextPresentationListener;
 import org.eclipse.jface.text.Position;
+import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
+import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.ui.IStopViewer;
@@ -23,9 +29,47 @@ import de.setsoftware.reviewtool.ui.IStopViewer;
 public abstract class AbstractStopViewer implements IStopViewer {
 
     /**
+     * Highlights a range by choosing a different colour.
+     */
+    private static final class ChangeHighlighter implements ITextPresentationListener {
+
+        private final Position range;
+        private Color hunkColor;
+
+        /**
+         * Constructor.
+         * @param range The range to highlight.
+         */
+        ChangeHighlighter(final Position range) {
+            this.range = range;
+        }
+
+        @Override
+        public void applyTextPresentation(final TextPresentation textPresentation) {
+            final Color fgColor = getTextColor();
+            final StyleRange range = new StyleRange(this.range.getOffset(), this.range.getLength(), fgColor, null);
+            textPresentation.mergeStyleRange(range);
+        }
+
+        /**
+         * @return The color to use for the range.
+         */
+        private Color getTextColor() {
+            if (this.hunkColor == null) {
+                this.hunkColor = JFaceResources.getColorRegistry().get(Constants.INCOMING_COLOR);
+                if (this.hunkColor == null) {
+                    return Display.getCurrent().getSystemColor(SWT.COLOR_BLUE);
+                }
+            }
+            return this.hunkColor;
+        }
+    }
+
+    /**
      * Subclass of TextMergeViewer which allows to access the left and right merge panes.
      */
-    private final class SelectableTextMergeViewer extends TextMergeViewer {
+    private static final class SelectableTextMergeViewer extends TextMergeViewer {
+
         private static final int CONTEXT_LENGTH = 3;
 
         private static final int VIEWER_LEFT = 1;
@@ -35,6 +79,9 @@ public abstract class AbstractStopViewer implements IStopViewer {
         private SourceViewer[] viewers;
         private int nextViewer;
 
+        /**
+         * Constructor.
+         */
         public SelectableTextMergeViewer(final Composite parent, final int style,
                 final CompareConfiguration configuration) {
             super(parent, style, configuration);
@@ -53,34 +100,52 @@ public abstract class AbstractStopViewer implements IStopViewer {
         }
 
         /**
-         * Selects some range of the left pane.
-         * @param range The range to select.
+         * Remove any text selections as those hide in-line differences.
          */
-        public void selectLeft(final Position range) {
-            this.select(this.viewers[VIEWER_LEFT], range);
+        public void clearSelections() {
+            for (final SourceViewer viewer : this.viewers) {
+                viewer.setSelectedRange(0, 0);
+            }
         }
 
         /**
-         * Selects some range of the right pane.
-         * @param range The range to select.
+         * Marks some range of the left pane.
+         * @param range The range to mark.
+         * @param reveal If {@code true}, the range is made visible within the pane.
          */
-        public void selectRight(final Position range) {
-            this.select(this.viewers[VIEWER_RIGHT], range);
+        public void markLeft(final Position range, final boolean reveal) {
+            this.mark(this.viewers[VIEWER_LEFT], range, reveal);
         }
 
         /**
-         * Selects some range of some pane.
+         * Marks some range of the right pane.
+         * @param range The range to mark.
+         * @param reveal If {@code true}, the range is made visible within the pane.
+         */
+        public void markRight(final Position range, final boolean reveal) {
+            this.mark(this.viewers[VIEWER_RIGHT], range, reveal);
+        }
+
+        /**
+         * Marks some range of some pane.
          * @param viewer The pane to use.
-         * @param range The range to select.
+         * @param range The range to mark.
+         * @param reveal If {@code true}, the range is made visible within the pane.
          */
-        private void select(final SourceViewer viewer, final Position range) {
+        private void mark(final SourceViewer viewer, final Position range, final boolean reveal) {
             if (viewer == null) {
                 return;
             }
-            viewer.setSelectedRange(range.getOffset(), range.getLength());
-            viewer.revealRange(range.getOffset(), range.getLength());
-            final int top = viewer.getTopIndex();
-            viewer.setTopIndex(top < CONTEXT_LENGTH ? 0 : top - CONTEXT_LENGTH);
+
+            final ChangeHighlighter listener = new ChangeHighlighter(range);
+            viewer.addTextPresentationListener(listener);
+            viewer.invalidateTextPresentation();
+
+            if (reveal) {
+                viewer.revealRange(range.getOffset(), range.getLength());
+                final int top = viewer.getTopIndex();
+                viewer.setTopIndex(top < CONTEXT_LENGTH ? 0 : top - CONTEXT_LENGTH);
+            }
         }
     }
 
@@ -114,14 +179,15 @@ public abstract class AbstractStopViewer implements IStopViewer {
      */
     protected void createDiffViewer(final ViewPart view, final Composite parent,
             final FileInRevision sourceRevision, final FileInRevision targetRevision,
-            final List<Fragment> sourceFragments, final List<Fragment> targetFragments,
-            final Position rangeLeft, final Position rangeRight) {
-        if (sourceFragments == null || targetFragments == null
-                || sourceFragments.isEmpty() || targetFragments.isEmpty()) {
+            final List<Fragment> sourceFragments,
+            final List<Fragment> targetFragments,
+            final List<Position> rangesLeft,
+            final List<Position> rangesRight) {
+        if (sourceFragments.isEmpty() || targetFragments.isEmpty()) {
             this.createBinaryHunkViewer(view, parent);
         } else {
             this.createTextHunkViewer(view, parent, sourceRevision, targetRevision, sourceFragments, targetFragments,
-                    rangeLeft, rangeRight);
+                    rangesLeft, rangesRight);
         }
     }
 
@@ -139,11 +205,11 @@ public abstract class AbstractStopViewer implements IStopViewer {
             final FileInRevision targetRevision,
             final List<Fragment> sourceFragments,
             final List<Fragment> targetFragments,
-            final Position rangeLeft,
-            final Position rangeRight) {
+            final List<Position> rangesLeft,
+            final List<Position> rangesRight) {
         final CompareConfiguration compareConfiguration = new CompareConfiguration();
-        compareConfiguration.setLeftLabel(this.toLabel(sourceRevision));
-        compareConfiguration.setRightLabel(this.toLabel(targetRevision));
+        compareConfiguration.setLeftLabel(toLabel(sourceRevision));
+        compareConfiguration.setRightLabel(toLabel(targetRevision));
         final SelectableTextMergeViewer viewer = new SelectableTextMergeViewer(parent, SWT.BORDER,
                 compareConfiguration);
         viewer.setInput(new DiffNode(
@@ -153,18 +219,24 @@ public abstract class AbstractStopViewer implements IStopViewer {
                 new TextItem(targetRevision.getRevision().toString(),
                         this.mapFragmentsToString(targetFragments),
                         System.currentTimeMillis())));
-        if (rangeLeft != null) {
-            viewer.selectLeft(rangeLeft);
+        viewer.clearSelections();
+
+        boolean reveal = true;
+        for (final Position rangeRight : rangesRight) {
+            viewer.markRight(rangeRight, reveal);
+            reveal = false;
         }
-        if (rangeRight != null) {
-            viewer.selectRight(rangeRight);
+        reveal = true;
+        for (final Position rangeLeft : rangesLeft) {
+            viewer.markLeft(rangeLeft, reveal);
+            reveal = false;
         }
         for (final SourceViewer v : viewer.viewers) {
             ViewHelper.createContextMenu(viewPart, v.getTextWidget(), v);
         }
     }
 
-    private String toLabel(FileInRevision revision) {
+    private static String toLabel(FileInRevision revision) {
         return revision.toString();
     }
 

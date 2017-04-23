@@ -5,6 +5,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -38,39 +39,54 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
         final Map<FileInRevision, FileInRevision> changes = stop.getHistory();
         final List<FileInRevision> sortedRevs = FileInRevision.sortByRevision(changes.keySet());
         final FileInRevision firstRevision = sortedRevs.get(0);
-        final FileInRevision lastRevision = sortedRevs.get(sortedRevs.size() - 1);
+        final FileInRevision lastRevision = changes.get(sortedRevs.get(sortedRevs.size() - 1));
 
-        final FileHistoryNode node = tours.getFileHistoryNode(changes.get(lastRevision));
+        final FileHistoryNode node = tours.getFileHistoryNode(lastRevision);
         if (node != null) {
             if (stop.isBinaryChange()) {
-                this.createDiffViewer(view, scrollContent, firstRevision, changes.get(lastRevision),
-                        null, null, null, null);
+                this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
+                        new ArrayList<Fragment>(), new ArrayList<Fragment>(),
+                        new ArrayList<Position>(), new ArrayList<Position>());
             } else {
                 final FileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
                 final FileDiff diff = node.buildHistory(ancestor);
-                final List<Hunk> hunksLast = stop.getContentFor(lastRevision);
-                final List<Hunk> hunks = diff.getHunksForTargets(Hunk.getTargets(hunksLast).getFragments());
 
-                final Fragment firstSourceFragment = Hunk.getSources(hunks).getFragments().get(0);
-                final Fragment firstTargetFragment = Hunk.getTargets(hunks).getFragments().get(0);
+                final List<Fragment> origins = new ArrayList<>();
+                for (final FileInRevision file : changes.keySet()) {
+                    for (final Hunk hunk : stop.getContentFor(file)) {
+                        origins.addAll(hunk.getTarget().getOrigins());
+                    }
+                }
+                final List<Hunk> relevantHunks = diff.getHunksWithTargetChangesInOneOf(origins);
 
                 final LineSequence oldContents = fileToLineSequence(firstRevision);
-                final LineSequence newContents = fileToLineSequence(changes.get(lastRevision));
+                final LineSequence newContents = fileToLineSequence(lastRevision);
 
-                final int oldStartOffset =
-                        oldContents.getStartPositionOfLine(firstSourceFragment.getFrom().getLine() - 1);
-                final int oldEndOffset =
-                        oldContents.getStartPositionOfLine(firstSourceFragment.getTo().getLine() - 1);
-                final int newStartOffset =
-                        newContents.getStartPositionOfLine(firstTargetFragment.getFrom().getLine() - 1);
-                final int newEndOffset =
-                        newContents.getStartPositionOfLine(firstTargetFragment.getTo().getLine() - 1);
+                final List<Position> oldPositions = new ArrayList<>();
+                final List<Position> newPositions = new ArrayList<>();
 
-                this.createDiffViewer(view, scrollContent, firstRevision, changes.get(lastRevision),
+                for (final Hunk hunk : relevantHunks) {
+                    final Fragment sourceFragment = hunk.getSource();
+                    final Fragment targetFragment = hunk.getTarget();
+
+                    final int oldStartOffset =
+                            oldContents.getStartPositionOfLine(sourceFragment.getFrom().getLine() - 1);
+                    final int oldEndOffset =
+                            oldContents.getStartPositionOfLine(sourceFragment.getTo().getLine() - 1);
+                    final int newStartOffset =
+                            newContents.getStartPositionOfLine(targetFragment.getFrom().getLine() - 1);
+                    final int newEndOffset =
+                            newContents.getStartPositionOfLine(targetFragment.getTo().getLine() - 1);
+
+                    oldPositions.add(new Position(oldStartOffset, oldEndOffset - oldStartOffset));
+                    newPositions.add(new Position(newStartOffset, newEndOffset - newStartOffset));
+                }
+
+                this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
                         Arrays.asList(createFragmentForWholeFile(firstRevision, oldContents)),
-                        Arrays.asList(createFragmentForWholeFile(changes.get(lastRevision), newContents)),
-                        new Position(oldStartOffset, oldEndOffset - oldStartOffset),
-                        new Position(newStartOffset, newEndOffset - newStartOffset));
+                        Arrays.asList(createFragmentForWholeFile(lastRevision, newContents)),
+                        oldPositions,
+                        newPositions);
             }
         }
     }
