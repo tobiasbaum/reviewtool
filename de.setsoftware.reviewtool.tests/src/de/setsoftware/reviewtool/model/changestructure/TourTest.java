@@ -37,12 +37,12 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s1 = new Stop(from1, to1, current1, false, true);
+        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
         final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0));
         final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
         final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s2 = new Stop(from2, to2, current2, false, true);
+        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
         final Tour t1 = new Tour("tA", Collections.singletonList(s1));
         final Tour t2 = new Tour("tB", Collections.singletonList(s2));
@@ -57,17 +57,17 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s1 = new Stop(from1, to1, current1, false, true);
+        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
         final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0));
         final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
         final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s2 = new Stop(from2, to2, current2, false, true);
+        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
         final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 0));
         final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
         final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
-        final Stop s3 = new Stop(from3, to3, current3, false, true);
+        final Stop s3 = new Stop(new TextualChangeHunk(from3, to3, false, true), current3);
 
         final Tour t1 = new Tour("tourA", Collections.singletonList(s1));
         final Tour t2 = new Tour("tourB", Arrays.asList(s2, s3));
@@ -82,17 +82,17 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s1 = new Stop(from1, to1, current1, false, true);
+        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
         final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 0));
         final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
         final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s2 = new Stop(from2, to2, current2, false, true);
+        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
         final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 0));
         final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
         final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 0));
-        final Stop s3 = new Stop(from3, to3, current3, false, true);
+        final Stop s3 = new Stop(new TextualChangeHunk(from3, to3, false, true), current3);
 
         final Tour t1 = new Tour("tourA", Collections.singletonList(s1));
         final Tour t2 = new Tour("tourB", Arrays.asList(s2, s3));
@@ -107,12 +107,12 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s1 = new Stop(from1, to1, current1, false, true);
+        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
         final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 0));
         final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
-        final Stop s2 = new Stop(from2, to2, current2, false, true);
+        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
         final Tour t1 = new Tour("tourA", Collections.singletonList(s1));
         final Tour t2 = new Tour("tourB", Collections.singletonList(s2));
@@ -126,8 +126,10 @@ public class TourTest {
 
     @Test
     public void testMergeOfBinaryChanges() {
-        final Stop s1 = new Stop(file("a.java", 1), file("a.java", 2), file("a.java", 3), false, true);
-        final Stop s2 = new Stop(file("a.java", 2), file("a.java", 3), file("a.java", 3), false, true);
+        final Stop s1 = new Stop(new BinaryChange(file("a.java", 1), file("a.java", 2), false, true),
+                file("a.java", 3));
+        final Stop s2 = new Stop(new BinaryChange(file("a.java", 2), file("a.java", 3), false, true),
+                file("a.java", 3));
 
         final Tour t1 = new Tour("tourA", Collections.singletonList(s1));
         final Tour t2 = new Tour("tourB", Collections.singletonList(s2));
@@ -144,12 +146,12 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 0));
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 0));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 0));
-        final Stop s1 = new Stop(from1, to1, current1, false, true);
+        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
         final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 0));
         final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 0));
-        final Stop s2 = new Stop(from2, to2, current2, true, true);
+        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, true, true), current2);
 
         assertFalse(s1.canBeMergedWith(s2));
         assertFalse(s2.canBeMergedWith(s1));
@@ -160,12 +162,12 @@ public class TourTest {
         final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 0));
         final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(3, 0));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(3, 0));
-        final Stop s1 = new Stop(from1, to1, current1, false, true);
+        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
         final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(4, 0));
         final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 0));
-        final Stop s2 = new Stop(from2, to2, current2, true, true);
+        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, true, true), current2);
 
         assertTrue(s1.canBeMergedWith(s2));
         assertTrue(s2.canBeMergedWith(s1));

@@ -4,8 +4,10 @@ import java.util.Collection;
 
 /**
  * Encapsulates a single difference between two revisions of a file, i.e. a pair (source fragment, target fragment).
+ * <p/>
+ * Hunks can be ordered according to their source fragment.
  */
-public class Hunk {
+public final class Hunk implements Comparable<Hunk> {
 
     /**
      * The source fragment.
@@ -77,7 +79,7 @@ public class Hunk {
     /**
      * Combines all source fragments of a collection of hunks.
      * @param hunks The collection of hunks.
-     * @return A FragmentList containing all source fragments of the hunks in order.
+     * @return A FragmentList containing all source fragments of the hunks in order. Adjacent fragments are merged.
      */
     public static FragmentList getSources(final Collection<? extends Hunk> hunks) {
         final FragmentList result = new FragmentList();
@@ -95,7 +97,7 @@ public class Hunk {
     /**
      * Combines all target fragments of a collection of hunks.
      * @param hunks The collection of hunks.
-     * @return A FragmentList containing all target fragments of the hunks in order.
+     * @return A FragmentList containing all target fragments of the hunks in order. Adjacent fragments are merged.
      */
     public static FragmentList getTargets(final Collection<? extends Hunk> hunks) {
         final FragmentList result = new FragmentList();
@@ -181,6 +183,11 @@ public class Hunk {
         } else {
             return 0;
         }
+    }
+
+    @Override
+    public int compareTo(final Hunk o) {
+        return this.source.compareTo(o.getSource());
     }
 
 }

@@ -269,24 +269,14 @@ public class ToursInReview {
             public void handle(TextualChangeHunk visitee) {
                 final List<Fragment> mostRecentFragments = tracer.traceFragment(visitee.getToFragment());
                 for (final Fragment fragment : mostRecentFragments) {
-                    ret.add(new Stop(
-                            visitee.getFromFragment(),
-                            visitee.getToFragment(),
-                            fragment,
-                            visitee.isIrrelevantForReview(),
-                            visitee.isVisible()));
+                    ret.add(new Stop(visitee, fragment));
                 }
             }
 
             @Override
             public void handle(BinaryChange visitee) {
                 for (final FileInRevision fileInRevision : tracer.traceFile(visitee.getFrom())) {
-                    ret.add(new Stop(
-                            visitee.getFrom(),
-                            visitee.getTo(),
-                            fileInRevision,
-                            visitee.isIrrelevantForReview(),
-                            visitee.isVisible()));
+                    ret.add(new Stop(visitee, fileInRevision));
                 }
             }
 

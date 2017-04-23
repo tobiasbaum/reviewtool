@@ -54,6 +54,7 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.IReviewElement;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
@@ -260,7 +261,12 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     stop.getMostRecentFile(),
                     stop.getMostRecentFragment().getFrom(),
                     stop.getMostRecentFragment().getFrom());
-            jumpTarget = new Stop(fragment, fragment, fragment, false, stop.isVisible());
+            final TextualChangeHunk change = ChangestructureFactory.createTextualChangeHunk(
+                    fragment,
+                    fragment,
+                    false,
+                    stop.isVisible());
+            jumpTarget = new Stop(change, fragment);
         } else {
             jumpTarget = stop;
         }
