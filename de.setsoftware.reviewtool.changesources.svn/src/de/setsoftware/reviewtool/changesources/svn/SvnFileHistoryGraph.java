@@ -107,7 +107,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         @Override
         public FileDiff buildHistory(final FileHistoryNode from) {
             if (from.equals(this)) {
-                return new FileDiff();
+                return new FileDiff(from.getFile());
             }
 
             if (this.ancestor == null) {
@@ -343,7 +343,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
                     true,   // must not exist
                     false,  // is not known to be a new node
                     false); // don't copy children (they do not exist anyway)
-            ancestor.addDescendant(node, new FileDiff());
+            ancestor.addDescendant(node, new FileDiff(prevFile));
         }
     }
 
@@ -367,7 +367,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         this.addParentNodes(deletionNode, true, false);
         final Pair<String, Repository> key = this.createKey(file);
         this.index.put(key, deletionNode);
-        oldNode.addDescendant(deletionNode, new FileDiff());
+        oldNode.addDescendant(deletionNode, new FileDiff(previousFile));
 
         for (final SvnFileHistoryNode child : oldNode.getChildren()) {
             this.addDeletion(child.getFile().getPath(), prevRevision, revision, repo);
@@ -400,7 +400,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
      */
     private void addEdge(final ExistingFileHistoryNode ancestor, final SvnFileHistoryNode descendant,
             final boolean copyChildren) {
-        ancestor.addDescendant(descendant, new FileDiff());
+        ancestor.addDescendant(descendant, new FileDiff(descendant.getFile()));
         if (copyChildren) {
             this.copyChildNodes(ancestor, descendant);
         }

@@ -152,6 +152,24 @@ public class Hunk {
     }
 
     /**
+     * Creates a new hunk whose source fragment's file is set to the one passed.
+     * @param source The {@link FileInRevision} to use.
+     * @return The resulting hunk.
+     */
+    Hunk adjustSourceFile(final FileInRevision source) {
+        return new Hunk(this.source.setFile(source), this.target);
+    }
+
+    /**
+     * Creates a new hunk whose target fragment's file is set to the one passed.
+     * @param source The {@link FileInRevision} to use.
+     * @return The resulting hunk.
+     */
+    Hunk adjustTargetFile(final FileInRevision target) {
+        return new Hunk(this.source, this.target.setFile(target));
+    }
+
+    /**
      * Returns the negative delta of this hunk if passed position is behind this hunk. This is helpful if some given
      * position has to be adjusted by "counting away" this hunk.
      * @param pos The position in question.

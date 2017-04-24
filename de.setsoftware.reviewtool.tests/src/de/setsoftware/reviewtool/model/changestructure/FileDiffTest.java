@@ -201,7 +201,7 @@ public class FileDiffTest {
         final FileInRevision f2 = file("a.java", 2);
         final FileInRevision f3 = file("a.java", 3);
 
-        final FileDiff diff = new FileDiff().merge(new Hunk(
+        final FileDiff diff = new FileDiff(f1).merge(new Hunk(
                 new Fragment(f2, pos(5, 1), pos(5, 0)),
                 new Fragment(f3, pos(5, 1), pos(6, 0))));
 
@@ -228,7 +228,7 @@ public class FileDiffTest {
         final FileInRevision f2 = file("a.java", 2);
         final FileInRevision f3 = file("a.java", 3);
 
-        final FileDiff diff = new FileDiff().merge(new Hunk(
+        final FileDiff diff = new FileDiff(f1).merge(new Hunk(
                 new Fragment(f2, pos(5, 10), pos(5, 14)),
                 new Fragment(f3, pos(5, 10), pos(5, 14))));
 
@@ -265,7 +265,7 @@ public class FileDiffTest {
         final FileInRevision f3 = file("a.java", 3);
         final FileInRevision f4 = file("a.java", 4);
 
-        final FileDiff diff = new FileDiff()
+        final FileDiff diff = new FileDiff(f1)
                 .merge(new Hunk(
                     new Fragment(f2, pos(5, 7), pos(5, 6)),
                     new Fragment(f3, pos(5, 7), pos(5, 8))))

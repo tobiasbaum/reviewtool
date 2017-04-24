@@ -16,12 +16,25 @@ public class FileDiff {
      * positions of later hunks take the deltas of earlier hunks into consideration.
      */
     private final List<Hunk> hunks;
+    private final FileInRevision fromRevision;
+    private FileInRevision toRevision;
 
     /**
      * Creates an empty FileDiff object.
      */
-    public FileDiff() {
+    public FileDiff(final FileInRevision revision) {
         this.hunks = new ArrayList<>();
+        this.fromRevision = revision;
+        this.toRevision = revision;
+    }
+
+    /**
+     * Creates a FileDiff object that will be filled with hunks.
+     */
+    private FileDiff(final FileInRevision fromRevision, final FileInRevision toRevision) {
+        this.hunks = new ArrayList<>();
+        this.fromRevision = fromRevision;
+        this.toRevision = toRevision;
     }
 
     /**
@@ -30,6 +43,20 @@ public class FileDiff {
      */
     List<Hunk> getHunks() {
         return Collections.unmodifiableList(this.hunks);
+    }
+
+    /**
+     * @return The {@link FileInRevision} this diff starts at.
+     */
+    public FileInRevision getFrom() {
+        return this.fromRevision;
+    }
+
+    /**
+     * @return The {@link FileInRevision} this diff ends at.
+     */
+    public FileInRevision getTo() {
+        return this.toRevision;
     }
 
     /**
@@ -90,24 +117,28 @@ public class FileDiff {
         if (this.containsInLineDiff(hunkToMerge)) {
             return this.merge(this.makeFullLine(hunkToMerge));
         }
-        final FileDiff result = new FileDiff();
-        final List<Hunk> hunks = new ArrayList<Hunk>();
+        final FileDiff result = new FileDiff(this.fromRevision, hunkToMerge.getTarget().getFile());
+        final List<Hunk> stashedHunks = new ArrayList<Hunk>();
         boolean hunkCreated = false;
         for (final Hunk hunk : this.hunks) {
             if (hunk.getTarget().overlaps(hunkToMerge.getSource())) {
-                hunks.add(hunk);
+                stashedHunks.add(hunk);
             } else if (hunk.getTarget().getTo().compareTo(hunkToMerge.getSource().getFrom()) < 0) {
-                result.hunks.add(hunk);
+                result.hunks.add(hunk.adjustTargetFile(result.toRevision));
             } else if (hunkCreated) {
-                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()));
+                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()).adjustTargetFile(result.toRevision));
             } else {
-                result.hunks.add(this.createCombinedHunk(hunks, hunkToMerge));
-                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()));
+                result.hunks.add(this.createCombinedHunk(stashedHunks, hunkToMerge)
+                        .adjustSourceFile(this.fromRevision)
+                        .adjustTargetFile(result.toRevision));
+                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()).adjustTargetFile(result.toRevision));
                 hunkCreated = true;
             }
         }
         if (!hunkCreated) {
-            result.hunks.add(this.createCombinedHunk(hunks, hunkToMerge));
+            result.hunks.add(this.createCombinedHunk(stashedHunks, hunkToMerge)
+                    .adjustSourceFile(this.fromRevision)
+                    .adjustTargetFile(result.toRevision));
         }
         return result;
     }

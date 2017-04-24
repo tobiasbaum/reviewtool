@@ -221,6 +221,15 @@ public class Fragment implements Comparable<Fragment> {
         return this.to.lessThan(this.from);
     }
 
+    /**
+     * Creates a fragment whose file is set to the one passed.
+     * @param newFile The {@link FileInRevision} to use.
+     * @return The resulting fragment.
+     */
+    Fragment setFile(final FileInRevision newFile) {
+        return new Fragment(newFile, this.from, this.to);
+    }
+
     @Override
     public int hashCode() {
         return this.from.hashCode() + 31 * this.file.hashCode();
