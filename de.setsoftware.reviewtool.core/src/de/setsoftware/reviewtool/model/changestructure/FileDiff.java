@@ -64,7 +64,7 @@ public class FileDiff {
      * @param source The source fragment.
      * @return The resulting fragment matching the last known file revision.
      */
-    public Fragment traceFragment(Fragment source) {
+    public Fragment traceFragment(final Fragment source) {
         final List<Hunk> hunks = new ArrayList<Hunk>();
         for (final Hunk hunk : this.hunks) {
             if (hunk.getSource().overlaps(source)) {
@@ -74,7 +74,7 @@ public class FileDiff {
             }
         }
         try {
-            return this.createCombinedFragment(hunks, source);
+            return this.createCombinedFragment(hunks, source).setFile(this.toRevision);
         } catch (final IncompatibleFragmentException e) {
             throw new Error(e);
         }
