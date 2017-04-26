@@ -282,7 +282,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             //for files not in the workspace, we cannot create markers, but let's at least select the text
             if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {
                 final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
-                final int posStart = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getFrom()) - 1;
+                final int posStart = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getFrom());
                 final int posEnd = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getTo());
                 setSelection(part, new TextSelection(posStart, posEnd - posStart));
             }

@@ -181,10 +181,10 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
             } else {
                 final Fragment original = ChangestructureFactory.createFragment(fileOldInfo,
                         ChangestructureFactory.createPositionInText(startOld + 1, 1),
-                        ChangestructureFactory.createPositionInText(endOld + 1, 0));
+                        ChangestructureFactory.createPositionInText(endOld + 1, 1));
                 final Fragment revised = ChangestructureFactory.createFragment(fileNewInfo,
                         ChangestructureFactory.createPositionInText(startNew + 1, 1),
-                        ChangestructureFactory.createPositionInText(endNew + 1, 0));
+                        ChangestructureFactory.createPositionInText(endNew + 1, 1));
                 final Pair<Fragment, Fragment> delta = Pair.create(original, revised);
                 ret.add(delta);
             }
@@ -245,6 +245,6 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
                 ChangestructureFactory.createPositionInText(
                         lineIndex + 1, prefixLength + 1),
                 ChangestructureFactory.createPositionInText(
-                        lineIndex + 1, line.length() - suffixLength));
+                        lineIndex + 1, line.length() - suffixLength + 1));
     }
 }

@@ -316,7 +316,7 @@ public class ToursInReview {
                 final IMarker marker = markerFactory.createStopMarker(resource, tourActive);
                 marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
                 marker.setAttribute(IMarker.CHAR_START,
-                        lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()) - 1);
+                        lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()));
                 marker.setAttribute(IMarker.CHAR_END,
                         lookupTables.get(resource).getCharsSinceFileStart(pos.getTo()));
                 return marker;

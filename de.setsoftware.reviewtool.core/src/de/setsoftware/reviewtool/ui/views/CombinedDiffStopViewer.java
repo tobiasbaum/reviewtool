@@ -70,13 +70,17 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
                     final Fragment targetFragment = hunk.getTarget();
 
                     final int oldStartOffset =
-                            oldContents.getStartPositionOfLine(sourceFragment.getFrom().getLine() - 1);
+                            oldContents.getStartPositionOfLine(sourceFragment.getFrom().getLine() - 1)
+                                    + (sourceFragment.getFrom().getColumn() - 1);
                     final int oldEndOffset =
-                            oldContents.getStartPositionOfLine(sourceFragment.getTo().getLine() - 1);
+                            oldContents.getStartPositionOfLine(sourceFragment.getTo().getLine() - 1)
+                                    + (sourceFragment.getTo().getColumn() - 1);
                     final int newStartOffset =
-                            newContents.getStartPositionOfLine(targetFragment.getFrom().getLine() - 1);
+                            newContents.getStartPositionOfLine(targetFragment.getFrom().getLine() - 1)
+                                    + (targetFragment.getFrom().getColumn() - 1);
                     final int newEndOffset =
-                            newContents.getStartPositionOfLine(targetFragment.getTo().getLine() - 1);
+                            newContents.getStartPositionOfLine(targetFragment.getTo().getLine() - 1)
+                                    + (targetFragment.getTo().getColumn() - 1);
 
                     oldPositions.add(new Position(oldStartOffset, oldEndOffset - oldStartOffset));
                     newPositions.add(new Position(newStartOffset, newEndOffset - newStartOffset));
@@ -94,9 +98,8 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
     private Fragment createFragmentForWholeFile(final FileInRevision revision, final LineSequence contents) {
         final int numLines = contents.getNumberOfLines();
         final Fragment fragment = ChangestructureFactory.createFragment(revision,
-                ChangestructureFactory.createPositionInText(1, 1, 0),
-                ChangestructureFactory.createPositionInText(numLines + 1, 0,
-                        contents.getStartPositionOfLine(numLines)));
+                ChangestructureFactory.createPositionInText(1, 1),
+                ChangestructureFactory.createPositionInText(numLines + 1, 1));
         return fragment;
     }
 

@@ -96,6 +96,20 @@ public final class Fragment implements Comparable<Fragment> {
     }
 
     /**
+     * @return {@code true} if this is an in-line fragment.
+     */
+    public boolean isInline() {
+        return this.from.getLine() == this.to.getLine();
+    }
+
+    /**
+     * Returns the size of this fragment.
+     */
+    public Delta getSize() {
+        return this.to.minus(this.from);
+    }
+
+    /**
      * Returns an unmodifiable set of all original fragments contributing to this fragment.
      */
     public Set<Fragment> getOrigins() {
@@ -138,7 +152,7 @@ public final class Fragment implements Comparable<Fragment> {
                     if (lineNumber < this.to.getLine()) {
                         ret.append(lineContent).append('\n');
                     } else if (lineNumber == this.to.getLine()) {
-                        if (this.to.getColumn() > 0) {
+                        if (this.to.getColumn() > 1) {
                             ret.append(lineContent).append('\n');
                         }
                     }
@@ -187,7 +201,7 @@ public final class Fragment implements Comparable<Fragment> {
      * @return True if overlapping has been detected, else false.
      */
     public boolean overlaps(final Fragment other) {
-        return this.to.compareTo(other.from) >= 0 && this.from.compareTo(other.to) <= 0;
+        return this.to.compareTo(other.from) > 0 && this.from.compareTo(other.to) < 0;
     }
 
     /**
@@ -196,7 +210,7 @@ public final class Fragment implements Comparable<Fragment> {
      * @return True if fragments are adjacent, else false.
      */
     public boolean isAdjacentTo(final Fragment other) {
-        return this.to.nextInLine().equals(other.from) || this.from.equals(other.to.nextInLine());
+        return this.to.equals(other.from) || this.from.equals(other.to);
     }
 
     /**
@@ -217,12 +231,12 @@ public final class Fragment implements Comparable<Fragment> {
     /**
      * Adjoins two adjacent fragments. The associated FileInRevision of the resulting fragment is taken from this
      * fragment.
-     * @param other The other fragment-
+     * @param other The other fragment.
      * @return The adjoint fragment encompassing both original fragments.
      */
     public Fragment adjoin(final Fragment other) {
         assert this.isAdjacentTo(other);
-        if (this.to.nextInLine().equals(other.from)) {
+        if (this.to.equals(other.from)) {
             return new Fragment(this.file, this.from, other.to, this, other);
         } else {
             return new Fragment(this.file, other.from, this.to, this, other);
@@ -241,10 +255,10 @@ public final class Fragment implements Comparable<Fragment> {
             try {
                 final FragmentList fragmentList = new FragmentList();
                 if (this.from.lessThan(other.from)) {
-                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from.prevInLine(), this));
+                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from, this));
                 }
                 if (other.to.lessThan(this.to)) {
-                    fragmentList.addFragment(new Fragment(this.file, other.to.nextInLine(), this.to, this));
+                    fragmentList.addFragment(new Fragment(this.file, other.to, this.to, this));
                 }
                 return fragmentList;
             } catch (final IncompatibleFragmentException e) {
@@ -270,8 +284,7 @@ public final class Fragment implements Comparable<Fragment> {
         if (!this.file.equals(other.file)) {
             return false;
         }
-        return !(this.getTo().nextInLine().lessThan(other.getFrom())
-            || other.getTo().nextInLine().lessThan(this.getFrom()));
+        return this.isAdjacentTo(other) || this.overlaps(other);
     }
 
     /**
@@ -295,7 +308,7 @@ public final class Fragment implements Comparable<Fragment> {
     }
 
     public boolean isDeletion() {
-        return this.to.lessThan(this.from);
+        return this.to.equals(this.from);
     }
 
     /**
@@ -334,22 +347,16 @@ public final class Fragment implements Comparable<Fragment> {
     }
 
     /**
-     * Creates a new fragment whose start and end positions are shifted by the given line offset.
-     * @param offset The line offset to add.
+     * Creates a new fragment whose start and end positions are shifted by the given delta.
+     * Only if this is an in-line fragment, the delta's column offset is applied to this fragment's end position.
+     * @param delta The delta to add.
      * @return The resulting fragment.
      */
-    public Fragment adjust(final int offset) {
-        return new Fragment(this.file, this.from.adjust(offset), this.to.adjust(offset), this);
-    }
-
-    /**
-     * Creates a new fragment whose start and end positions are shifted by the given column offset
-     * if the respective position is in the given targetLine.
-     */
-    public Fragment adjustColumnIfInLine(final int offset, int targetLine) {
-        return new Fragment(this.file,
-                this.from.getLine() == targetLine ? this.from.adjustColumn(offset) : this.from,
-                this.to.getLine() == targetLine ? this.to.adjustColumn(offset) : this.to,
+    public Fragment adjust(final Delta delta) {
+        return new Fragment(
+                this.file,
+                this.from.plus(delta),
+                this.to.plus(this.isInline() ? delta : delta.ignoreColumnOffset()),
                 this);
     }
 

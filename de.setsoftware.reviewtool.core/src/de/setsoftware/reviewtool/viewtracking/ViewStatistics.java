@@ -104,7 +104,7 @@ public class ViewStatistics {
         if (fragment == null) {
             return stats.determineViewRatioWithoutPosition(longEnoughCount);
         } else {
-            final int toCorrection = fragment.getTo().getColumn() == 0 ? -1 : 0;
+            final int toCorrection = fragment.getTo().getColumn() == 1 ? -1 : 0;
             return stats.determineViewRatio(fragment.getFrom().getLine(),
                     fragment.getTo().getLine() + toCorrection, longEnoughCount);
         }

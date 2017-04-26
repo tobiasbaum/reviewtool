@@ -22,7 +22,7 @@ public class ImportChangeFilterTest {
         return Fragment.createWithContent(
                 ChangestructureFactory.createFileInRevision("", null, null),
                 ChangestructureFactory.createPositionInText(1, 1),
-                ChangestructureFactory.createPositionInText(2, 0),
+                ChangestructureFactory.createPositionInText(2, 1),
                 content);
     }
 

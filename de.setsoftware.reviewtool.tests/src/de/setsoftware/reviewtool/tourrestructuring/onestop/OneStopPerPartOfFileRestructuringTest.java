@@ -66,7 +66,7 @@ public class OneStopPerPartOfFileRestructuringTest {
 
     private static Stop stopWithLines(final String file, int revision, int lineFrom, int lineTo) {
         final PositionInText posFrom = ChangestructureFactory.createPositionInText(lineFrom, 1);
-        final PositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 0);
+        final PositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 1);
         return new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),

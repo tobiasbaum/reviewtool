@@ -20,7 +20,7 @@ public final class Hunk implements Comparable<Hunk> {
     /**
      * The hunk delta (number of lines added minus number of lines deleted).
      */
-    private final int delta;
+    private final Delta delta;
 
     /**
      * Creates a Hunk.
@@ -30,7 +30,7 @@ public final class Hunk implements Comparable<Hunk> {
     public Hunk(final Fragment source, final Fragment target) {
         this.source = source;
         this.target = target;
-        this.delta = this.target.getNumberOfLines() - this.source.getNumberOfLines();
+        this.delta = this.target.getSize().minus(this.source.getSize());
     }
 
     /**
@@ -57,23 +57,17 @@ public final class Hunk implements Comparable<Hunk> {
     }
 
     /**
-     * @return The hunk delta, i.e. the number of lines added by this hunk minus number of lines deleted by this hunk.
+     * @return The hunk delta.
      */
-    int getDelta() {
+    Delta getDelta() {
         return this.delta;
     }
 
     /**
-     * @return The delta in columns, when this is a single line change. Otherwise zero is returned.
+     * @return {@code true} if this is an in-line hunk.
      */
-    int getColumnDelta() {
-        if (this.source.getNumberOfLines() == 0 && this.target.getNumberOfLines() == 0) {
-            final int colsTarget = this.target.getTo().getColumn() - this.target.getFrom().getColumn() + 1;
-            final int colsSource = this.source.getTo().getColumn() - this.source.getFrom().getColumn() + 1;
-            return colsTarget - colsSource;
-        } else {
-            return 0;
-        }
+    public boolean isInline() {
+        return this.source.isInline();
     }
 
     /**
@@ -136,21 +130,21 @@ public final class Hunk implements Comparable<Hunk> {
     }
 
     /**
-     * Creates a new hunk whose source fragment's start and end positions are shifted by the given line offset.
-     * @param offset The line offset to add.
+     * Creates a new hunk whose source fragment's start and end positions are shifted by the given delta.
+     * @param delta The delta to add.
      * @return The resulting hunk.
      */
-    Hunk adjustSource(int offset) {
-        return new Hunk(this.getSource().adjust(offset), this.getTarget());
+    Hunk adjustSource(final Delta delta) {
+        return new Hunk(this.getSource().adjust(delta), this.getTarget());
     }
 
     /**
-     * Creates a new hunk whose target fragment's start and end positions are shifted by the given line offset.
-     * @param offset The line offset to add.
+     * Creates a new hunk whose target fragment's start and end positions are shifted by the given delta.
+     * @param delta The delta to add.
      * @return The resulting hunk.
      */
-    Hunk adjustTarget(int offset) {
-        return new Hunk(this.getSource(), this.getTarget().adjust(offset));
+    Hunk adjustTarget(final Delta delta) {
+        return new Hunk(this.getSource(), this.getTarget().adjust(delta));
     }
 
     /**
@@ -169,20 +163,6 @@ public final class Hunk implements Comparable<Hunk> {
      */
     Hunk adjustTargetFile(final FileInRevision target) {
         return new Hunk(this.source, this.target.setFile(target));
-    }
-
-    /**
-     * Returns the negative delta of this hunk if passed position is behind this hunk. This is helpful if some given
-     * position has to be adjusted by "counting away" this hunk.
-     * @param pos The position in question.
-     * @return The line delta to be added to the position's line when this hunk is to be ignored.
-     */
-    int getLineDeltaBack(PositionInText pos) {
-        if (pos.compareTo(this.target.getTo()) > 0) {
-            return -this.getDelta();
-        } else {
-            return 0;
-        }
     }
 
     @Override
