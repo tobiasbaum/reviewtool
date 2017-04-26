@@ -5,7 +5,7 @@ import java.util.List;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
@@ -24,10 +24,10 @@ public class SvnFragmentTracer implements IFragmentTracer {
     @Override
     public List<Fragment> traceFragment(Fragment fragment) {
         final ArrayList<Fragment> result = new ArrayList<>();
-        final FileHistoryNode node = this.fileHistoryGraph.getNodeFor(fragment.getFile());
+        final IFileHistoryNode node = this.fileHistoryGraph.getNodeFor(fragment.getFile());
         if (node != null) {
             for (final FileInRevision leafRevision : this.fileHistoryGraph.getLatestFiles(node.getFile())) {
-                final FileHistoryNode descendant = this.fileHistoryGraph.getNodeFor(leafRevision);
+                final IFileHistoryNode descendant = this.fileHistoryGraph.getNodeFor(leafRevision);
                 final FileDiff fileDiff = descendant.buildHistory(node);
                 final Fragment lastFragment = fileDiff.traceFragment(fragment);
                 result.add(lastFragment);
@@ -40,7 +40,7 @@ public class SvnFragmentTracer implements IFragmentTracer {
     @Override
     public List<FileInRevision> traceFile(FileInRevision file) {
         final ArrayList<FileInRevision> result = new ArrayList<>();
-        final FileHistoryNode node = this.fileHistoryGraph.getNodeFor(file);
+        final IFileHistoryNode node = this.fileHistoryGraph.getNodeFor(file);
         if (node != null) {
             for (final FileInRevision leafRevision : this.fileHistoryGraph.getLatestFiles(file)) {
                 result.add(leafRevision);

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.setsoftware.reviewtool.model.changestructure.Commit;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.IChangeData;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 
@@ -38,7 +38,7 @@ public class SvnChangeData implements IChangeData {
     }
 
     @Override
-    public FileHistoryGraph getHistoryGraph() {
+    public IFileHistoryGraph getHistoryGraph() {
         return this.fileHistoryGraph;
     }
 

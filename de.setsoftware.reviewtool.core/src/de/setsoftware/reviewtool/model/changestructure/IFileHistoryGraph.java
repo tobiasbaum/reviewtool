@@ -5,16 +5,16 @@ import java.util.List;
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
-public interface FileHistoryGraph {
+public interface IFileHistoryGraph {
 
     /**
-     * Returns the {@link FileHistoryNode} for the given {@link FileInRevision <code>file</code>},
+     * Returns the {@link IFileHistoryNode} for the given {@link FileInRevision <code>file</code>},
      * or <code>null</code> if <code>file</code> is not part of the history graph.
      *
      * @param file The {@link FileInRevision} to search for.
-     * @return The corresponding {@link FileHistoryNode} or <code>null</code> if not found.
+     * @return The corresponding {@link IFileHistoryNode} or <code>null</code> if not found.
      */
-    public abstract FileHistoryNode getNodeFor(FileInRevision file);
+    public abstract IFileHistoryNode getNodeFor(FileInRevision file);
 
     /**
      * Returns the latest known versions of the given file. If all versions were deleted, the last known versions

@@ -17,7 +17,7 @@ import de.setsoftware.reviewtool.base.LineSequence;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Hunk;
@@ -41,14 +41,14 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
         final FileInRevision firstRevision = sortedRevs.get(0);
         final FileInRevision lastRevision = changes.get(sortedRevs.get(sortedRevs.size() - 1));
 
-        final FileHistoryNode node = tours.getFileHistoryNode(lastRevision);
+        final IFileHistoryNode node = tours.getFileHistoryNode(lastRevision);
         if (node != null) {
             if (stop.isBinaryChange()) {
                 this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
                         new ArrayList<Fragment>(), new ArrayList<Fragment>(),
                         new ArrayList<Position>(), new ArrayList<Position>());
             } else {
-                final FileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
+                final IFileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
                 final FileDiff diff = node.buildHistory(ancestor);
 
                 final List<Fragment> origins = new ArrayList<>();

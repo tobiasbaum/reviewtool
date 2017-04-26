@@ -72,12 +72,12 @@ public class ToursInReview {
 
     }
 
-    private final FileHistoryGraph historyGraph;
+    private final IFileHistoryGraph historyGraph;
     private final List<Tour> tours;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
-    private ToursInReview(final FileHistoryGraph historyGraph, List<? extends Tour> tours) {
+    private ToursInReview(final IFileHistoryGraph historyGraph, List<? extends Tour> tours) {
         this.historyGraph = historyGraph;
         this.tours = new ArrayList<>(tours);
         this.currentTourIndex = 0;
@@ -364,11 +364,11 @@ public class ToursInReview {
     }
 
     /**
-     * Returns a {@link FileHistoryNode} for passed file.
+     * Returns a {@link IFileHistoryNode} for passed file.
      * @param file The file whose change history to retrieve.
-     * @return The {@link FileHistoryNode} describing changes for passed {@link FileInRevision} or null if not found.
+     * @return The {@link IFileHistoryNode} describing changes for passed {@link FileInRevision} or null if not found.
      */
-    public FileHistoryNode getFileHistoryNode(final FileInRevision file) {
+    public IFileHistoryNode getFileHistoryNode(final FileInRevision file) {
         return this.historyGraph.getNodeFor(file);
     }
 

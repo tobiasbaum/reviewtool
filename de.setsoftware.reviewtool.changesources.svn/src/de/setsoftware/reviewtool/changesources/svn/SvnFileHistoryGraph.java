@@ -14,9 +14,9 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryEdge;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.IncompatibleFragmentException;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
@@ -26,12 +26,12 @@ import de.setsoftware.reviewtool.model.changestructure.Revision;
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
-final class SvnFileHistoryGraph implements FileHistoryGraph {
+final class SvnFileHistoryGraph implements IFileHistoryGraph {
 
     /**
      * An edge in a {@link SvnFileHistoryGraph}. It always goes from a descendant node to an ancestor node.
      */
-    public static final class SvnFileHistoryEdge implements FileHistoryEdge {
+    public static final class SvnFileHistoryEdge implements IFileHistoryEdge {
 
         private final SvnFileHistoryNode target;
         private FileDiff diff;
@@ -68,7 +68,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     /**
      * A node in a {@link SvnFileHistoryGraph}.
      */
-    public abstract static class SvnFileHistoryNode implements FileHistoryNode {
+    public abstract static class SvnFileHistoryNode implements IFileHistoryNode {
 
         private final FileInRevision file;
         private SvnFileHistoryEdge ancestor;
@@ -106,7 +106,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         }
 
         @Override
-        public FileDiff buildHistory(final FileHistoryNode from) {
+        public FileDiff buildHistory(final IFileHistoryNode from) {
             if (from.equals(this)) {
                 return new FileDiff(from.getFile());
             }
@@ -277,7 +277,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
         }
 
         @Override
-        public Set<FileHistoryNode> getDescendants() {
+        public Set<IFileHistoryNode> getDescendants() {
             return Collections.emptySet();
         }
 
@@ -306,7 +306,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
     private final Multimap<Pair<String, Repository>, SvnFileHistoryNode> index = new Multimap<>();
 
     /**
-     * Returns true if passed path is known to this {@link FileHistoryGraph}.
+     * Returns true if passed path is known to this {@link IFileHistoryGraph}.
      * @param path The path to check.
      * @param repo The repository.
      * @return <code>true</code> if the path is known, else <code>false</code>

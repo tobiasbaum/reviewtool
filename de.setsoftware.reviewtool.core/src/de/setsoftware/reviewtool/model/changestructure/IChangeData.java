@@ -19,8 +19,8 @@ public interface IChangeData {
     public abstract IFragmentTracer createTracer();
 
     /**
-     * Returns a {@link FileHistoryGraph} for the change data.
+     * Returns a {@link IFileHistoryGraph} for the change data.
      */
-    public abstract FileHistoryGraph getHistoryGraph();
+    public abstract IFileHistoryGraph getHistoryGraph();
 
 }
