@@ -21,4 +21,11 @@ public interface RevisionVisitor<R> {
      */
     R handleRepoRevision(RepoRevision revision);
 
+    /**
+     * Handles an {@link UnknownRevision}.
+     * @param revision The revision to handle.
+     * @return Some result.
+     */
+    R handleUnknownRevision(UnknownRevision revision);
+
 }

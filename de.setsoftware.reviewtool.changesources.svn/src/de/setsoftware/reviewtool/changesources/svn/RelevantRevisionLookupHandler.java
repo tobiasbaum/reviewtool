@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,9 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.changestructure.Revision;
 
 /**
  * Handler that filters log entries with a given pattern.
@@ -54,7 +57,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
      * Returns all revisions that matched the given pattern and all revisions in between that touched
      * files changed in a matching revision.
      */
-    public List<SvnRevision> determineRelevantRevisions(final SvnFileHistoryGraph historyGraphBuffer,
+    public List<SvnRevision> determineRelevantRevisions(final FileHistoryGraph historyGraphBuffer,
             final IChangeSourceUi ui) {
         final List<SvnRevision> ret = new ArrayList<>();
         for (final TreeMap<Long, SvnRevision> revisionsInRepo : this.groupResultsByRepository().values()) {
@@ -71,7 +74,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
     }
 
     private boolean processRevision(
-            SvnRevision revision, SvnFileHistoryGraph historyGraphBuffer, boolean isVisible) {
+            SvnRevision revision, FileHistoryGraph historyGraphBuffer, boolean isVisible) {
         boolean isRelevant = false;
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String path = e.getKey();
@@ -79,8 +82,9 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                 if (isVisible || historyGraphBuffer.contains(path, revision.getRepository())) {
                     historyGraphBuffer.addDeletion(
                             path,
-                            ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
                             ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                            Collections.<Revision>singleton(
+                                    ChangestructureFactory.createRepoRevision(revision.getRevision() - 1)),
                             revision.getRepository());
                     isRelevant = true;
                 }
@@ -98,16 +102,17 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                 } else if (e.getValue().isFile()
                         && (isVisible || historyGraphBuffer.contains(path, revision.getRepository()))) {
                     if (e.getValue().isNew()) {
-                        historyGraphBuffer.addAddition(
+                        historyGraphBuffer.addAdditionOrChange(
                                 path,
-                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
                                 ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                Collections.<Revision>emptySet(),
                                 revision.getRepository());
                     } else {
-                        historyGraphBuffer.addChange(
+                        historyGraphBuffer.addAdditionOrChange(
                                 path,
-                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
                                 ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                Collections.<Revision>singleton(
+                                        ChangestructureFactory.createRepoRevision(revision.getRevision() - 1)),
                                 revision.getRepository());
                     }
                     isRelevant = true;

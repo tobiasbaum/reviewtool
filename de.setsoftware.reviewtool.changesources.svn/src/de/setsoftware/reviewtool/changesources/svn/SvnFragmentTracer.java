@@ -2,12 +2,14 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
-import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
 
 /**
@@ -15,9 +17,9 @@ import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
  */
 public class SvnFragmentTracer implements IFragmentTracer {
 
-    private final SvnFileHistoryGraph fileHistoryGraph;
+    private final IFileHistoryGraph fileHistoryGraph;
 
-    public SvnFragmentTracer(final SvnFileHistoryGraph fileHistoryGraph) {
+    public SvnFragmentTracer(final IFileHistoryGraph fileHistoryGraph) {
         this.fileHistoryGraph = fileHistoryGraph;
     }
 
@@ -28,9 +30,11 @@ public class SvnFragmentTracer implements IFragmentTracer {
         if (node != null) {
             for (final FileInRevision leafRevision : this.fileHistoryGraph.getLatestFiles(node.getFile())) {
                 final IFileHistoryNode descendant = this.fileHistoryGraph.getNodeFor(leafRevision);
-                final FileDiff fileDiff = descendant.buildHistory(node);
-                final Fragment lastFragment = fileDiff.traceFragment(fragment);
-                result.add(lastFragment);
+                final Set<FileDiff> fileDiffs = descendant.buildHistories(node);
+                for (final FileDiff fileDiff : fileDiffs) {
+                    final Fragment lastFragment = fileDiff.traceFragment(fragment);
+                    result.add(lastFragment);
+                }
             }
         }
 

@@ -20,19 +20,23 @@ public interface IFileHistoryNode {
     public abstract boolean isRoot();
 
     /**
-     * Returns the nearest ancestor {@link IFileHistoryNode}.
-     * Note that the node returned by this operation may change over time when intermediate
+     * Returns the set of outgoing edges pointing to the nearest ancestor {@link IFileHistoryNode}s.
+     * Note that the nodes returned by this operation may change over time when intermediate
      * {@link IFileHistoryNode}s are created due to recorded copy operations.
      */
-    public abstract IFileHistoryEdge getAncestor();
+    public abstract Set<? extends IFileHistoryEdge> getAncestors();
 
     /**
-     * Returns a list of descendant {@link IFileHistoryNode}s this node evolves to.
+     * Returns the set of incoming edges originating from the nearest descendant {@link IFileHistoryNode}s.
+     * Note that the nodes returned by this operation may change over time when intermediate
+     * {@link IFileHistoryNode}s are created due to recorded copy operations.
      */
-    public abstract Set<? extends IFileHistoryNode> getDescendants();
+    public abstract Set<? extends IFileHistoryEdge> getDescendants();
 
     /**
-     * Computes a combined {@link FileDiff} from passed history node to this one.
+     * Computes {@link FileDiff}s from passed history node to this one. There may be none (if {code from} is not an
+     * ancestor), one (if {@code from} is reached by a single path backwards in history), or multiple ones
+     * (if {@code from} can be reached by multiple paths backwards in history).
      */
-    public abstract FileDiff buildHistory(final IFileHistoryNode from);
+    public abstract Set<FileDiff> buildHistories(IFileHistoryNode from);
 }

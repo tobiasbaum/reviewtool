@@ -22,4 +22,11 @@ public interface RevisionVisitorE<R, E extends Throwable> {
      */
     R handleRepoRevision(RepoRevision revision) throws E;
 
+    /**
+     * Handles an {@link UnknownRevision}.
+     * @param revision The revision to handle.
+     * @return Some result.
+     */
+    R handleUnknownRevision(UnknownRevision revision) throws E;
+
 }

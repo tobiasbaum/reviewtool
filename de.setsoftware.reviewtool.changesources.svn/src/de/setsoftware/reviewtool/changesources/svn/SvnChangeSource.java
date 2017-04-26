@@ -28,19 +28,22 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.changesources.svn.SvnFileHistoryGraph.SvnFileHistoryEdge;
-import de.setsoftware.reviewtool.changesources.svn.SvnFileHistoryGraph.SvnFileHistoryNode;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.changestructure.Change;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryEdge;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Hunk;
 import de.setsoftware.reviewtool.model.changestructure.IChangeData;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.IncompatibleFragmentException;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 
@@ -114,7 +117,7 @@ public class SvnChangeSource implements IChangeSource {
     @Override
     public IChangeData getChanges(String key, IChangeSourceUi ui) {
         try {
-            final SvnFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
+            final FileHistoryGraph historyGraph = new SvnFileHistoryGraph();
             ui.subTask("Determining relevant commits...");
             final List<SvnRevision> revisions = this.determineRelevantRevisions(key, historyGraph, ui);
             ui.subTask("Checking state of working copy...");
@@ -164,7 +167,7 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private List<SvnRevision> determineRelevantRevisions(final String key, final SvnFileHistoryGraph historyGraphBuffer,
+    private List<SvnRevision> determineRelevantRevisions(final String key, final FileHistoryGraph historyGraphBuffer,
             final IChangeSourceUi ui) throws SVNException {
         final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
@@ -176,7 +179,7 @@ public class SvnChangeSource implements IChangeSource {
         return handler.determineRelevantRevisions(historyGraphBuffer, ui);
     }
 
-    private List<Commit> convertToChanges(final SvnFileHistoryGraph historyGraph, final List<SvnRevision> revisions,
+    private List<Commit> convertToChanges(final FileHistoryGraph historyGraph, final List<SvnRevision> revisions,
             final IChangeSourceUi ui) throws SVNException {
         final List<Commit> ret = new ArrayList<>();
         for (final SvnRevision e : revisions) {
@@ -188,7 +191,7 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private Commit convertToCommit(final SvnFileHistoryGraph historyGraph, final SvnRevision e,
+    private Commit convertToCommit(final FileHistoryGraph historyGraph, final SvnRevision e,
             final IChangeSourceUi ui)
             throws SVNException {
         return ChangestructureFactory.createCommit(
@@ -227,7 +230,7 @@ public class SvnChangeSource implements IChangeSource {
 
     }
 
-    private List<Change> determineChangesInCommit(final SvnFileHistoryGraph historyGraph, SvnRevision e,
+    private List<Change> determineChangesInCommit(final FileHistoryGraph historyGraph, SvnRevision e,
             final IChangeSourceUi ui) throws SVNException {
 
         final List<Change> ret = new ArrayList<>();
@@ -253,10 +256,10 @@ public class SvnChangeSource implements IChangeSource {
             final FileInRevision fileInfo = ChangestructureFactory.createFileInRevision(path,
                     this.revision(SVNRevision.create(e.getRevision())),
                     e.getRepository());
-            final SvnFileHistoryNode node = historyGraph.getNodeFor(fileInfo);
+            final FileHistoryNode node = historyGraph.getNodeFor(fileInfo);
             if (node != null) {
                 if (this.isBinaryFile(e.getRepository(), value, e.getRevision())) {
-                    ret.add(this.createBinaryChange(e.getRepository(), node, e.isVisible()));
+                    ret.addAll(this.createBinaryChange(e.getRepository(), node, e.isVisible()));
                 } else {
                     ret.addAll(this.determineChangesInFile(e.getRepository(), node, e.isVisible()));
                 }
@@ -265,10 +268,18 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private Change createBinaryChange(final SvnRepo repo, final SvnFileHistoryNode node, final boolean isVisible) {
+    private List<Change> createBinaryChange(final SvnRepo repo, final FileHistoryNode node, final boolean isVisible) {
 
-        final SvnFileHistoryEdge ancestorEdge = node.getAncestor();
-        final SvnFileHistoryNode ancestor = ancestorEdge.getTarget();
+        final List<Change> ret = new ArrayList<>();
+        for (final IFileHistoryEdge ancestorEdge : node.getAncestors()) {
+            ret.add(this.createBinaryChange(repo, node, ancestorEdge.getAncestor(), isVisible));
+        }
+        return ret;
+    }
+
+    private Change createBinaryChange(final SvnRepo repo, final IFileHistoryNode node,
+            final IFileHistoryNode ancestor, final boolean isVisible) {
+
         final FileInRevision oldFileInfo = ChangestructureFactory.createFileInRevision(ancestor.getFile().getPath(),
                         ancestor.getFile().getRevision(), repo);
 
@@ -283,22 +294,8 @@ public class SvnChangeSource implements IChangeSource {
         return ChangestructureFactory.createRepoRevision(revision.getNumber());
     }
 
-    private List<Change> determineChangesInFile(final SvnRepo repo, final SvnFileHistoryNode node,
+    private List<Change> determineChangesInFile(final SvnRepo repo, final FileHistoryNode node,
             final boolean isVisible) {
-
-        final SvnFileHistoryEdge ancestorEdge = node.getAncestor();
-        final SvnFileHistoryNode ancestor = ancestorEdge.getTarget();
-
-        final byte[] oldFileContent;
-        try {
-            oldFileContent = ancestor.getFile().getContents();
-        } catch (final Exception e) {
-            return Collections.emptyList(); // loading old file data failed
-        }
-
-        if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
-            return Collections.singletonList(this.createBinaryChange(repo, node, isVisible));
-        }
 
         final byte[] newFileContent;
         try {
@@ -306,28 +303,46 @@ public class SvnChangeSource implements IChangeSource {
         } catch (final Exception e) {
             return Collections.emptyList(); // loading new file data failed
         }
-        if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
-            return Collections.singletonList(this.createBinaryChange(repo, node, isVisible));
-        }
 
         final List<Change> ret = new ArrayList<>();
-        final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
-        final List<Pair<Fragment, Fragment>> changes = diffAlgorithm.determineDiff(
-                ancestor.getFile(),
-                oldFileContent,
-                node.getFile(),
-                newFileContent,
-                this.guessEncoding(oldFileContent, newFileContent));
-        final List<Hunk> hunks = new ArrayList<>();
-        for (final Pair<Fragment, Fragment> pos : changes) {
-            ret.add(ChangestructureFactory.createTextualChangeHunk(pos.getFirst(), pos.getSecond(), false, isVisible));
-            hunks.add(new Hunk(pos.getFirst(), pos.getSecond()));
-        }
+        for (final FileHistoryEdge ancestorEdge : node.getAncestors()) {
+            final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
 
-        try {
-            ancestorEdge.setDiff(ancestorEdge.getDiff().merge(hunks));
-        } catch (final IncompatibleFragmentException e) {
-            throw new ReviewtoolException(e);
+            final byte[] oldFileContent;
+            try {
+                oldFileContent = ancestor.getFile().getContents();
+            } catch (final Exception e) {
+                continue; // loading old file data failed
+            }
+
+            if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
+                ret.add(this.createBinaryChange(repo, node, ancestor, isVisible));
+                continue;
+            }
+            if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
+                ret.add(this.createBinaryChange(repo, node, ancestor, isVisible));
+                continue;
+            }
+
+            final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
+            final List<Pair<Fragment, Fragment>> changes = diffAlgorithm.determineDiff(
+                    ancestor.getFile(),
+                    oldFileContent,
+                    node.getFile(),
+                    newFileContent,
+                    this.guessEncoding(oldFileContent, newFileContent));
+            final List<Hunk> hunks = new ArrayList<>();
+            for (final Pair<Fragment, Fragment> pos : changes) {
+                ret.add(ChangestructureFactory.createTextualChangeHunk(
+                        pos.getFirst(), pos.getSecond(), false, isVisible));
+                hunks.add(new Hunk(pos.getFirst(), pos.getSecond()));
+            }
+
+            try {
+                ancestorEdge.setDiff(ancestorEdge.getDiff().merge(hunks));
+            } catch (final IncompatibleFragmentException e) {
+                throw new ReviewtoolException(e);
+            }
         }
         return ret;
     }

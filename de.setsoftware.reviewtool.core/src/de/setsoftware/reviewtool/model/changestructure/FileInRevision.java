@@ -73,6 +73,11 @@ public class FileInRevision {
                 return FileInRevision.this.repo.getFileContents(FileInRevision.this.path, revision);
             }
 
+            @Override
+            public byte[] handleUnknownRevision(final UnknownRevision revision) throws Exception {
+                return new byte[0];
+            }
+
         });
     }
 
