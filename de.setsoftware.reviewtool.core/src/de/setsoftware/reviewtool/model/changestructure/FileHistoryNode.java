@@ -11,12 +11,14 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 /**
  * A node in a {@link FileHistoryGraph}.
  */
-public abstract class FileHistoryNode implements IFileHistoryNode {
+public final class FileHistoryNode implements IFileHistoryNode {
 
     private final FileInRevision file;
-    private Set<FileHistoryEdge> ancestors;
+    private final Set<FileHistoryEdge> ancestors;
+    private final Set<FileHistoryEdge> descendants;
     private FileHistoryNode parent;
     private final List<FileHistoryNode> children;
+    private boolean isDeleted;
     private static final ThreadLocal<Boolean> inToString = new ThreadLocal<Boolean>() {
         @Override
         protected Boolean initialValue() {
@@ -28,31 +30,43 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
      * @param file The {@link FileInRevision} to wrap.
      */
-    public FileHistoryNode(final FileInRevision file) {
+    public FileHistoryNode(final FileInRevision file, final boolean isDeleted) {
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
+        this.descendants = new LinkedHashSet<>();
         this.children = new ArrayList<>();
+        this.isDeleted = isDeleted;
     }
 
     @Override
-    public final FileInRevision getFile() {
+    public FileInRevision getFile() {
         return this.file;
     }
 
     @Override
-    public final boolean isRoot() {
+    public boolean isRoot() {
         return this.ancestors.isEmpty();
     }
 
     @Override
-    public final Set<? extends FileHistoryEdge> getAncestors() {
+    public Set<FileHistoryEdge> getAncestors() {
         return this.ancestors;
     }
 
     @Override
-    public final Set<FileDiff> buildHistories(final IFileHistoryNode from) {
+    public Set<FileHistoryEdge> getDescendants() {
+        return this.descendants;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.isDeleted;
+    }
+
+    @Override
+    public Set<FileDiff> buildHistories(final IFileHistoryNode from) {
         if (from.equals(this)) {
-            return Collections.singleton(new FileDiff(from.getFile()));
+            return Collections.singleton(new FileDiff(from.getFile(), from.getFile()));
         }
 
         if (!this.isRoot()) {
@@ -77,7 +91,7 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
      * This operation is called internally when this node starts being a descendant
      * of some other {@link FileHistoryNode}.
      */
-    protected final void addAncestor(final FileHistoryEdge ancestor) {
+    private void addAncestor(final FileHistoryEdge ancestor) {
         this.ancestors.add(ancestor);
     }
 
@@ -86,21 +100,50 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
      * This operation is called internally when this node stops being a descendant
      * of some other {@link FileHistoryNode}.
      */
-    protected final void removeAncestor(final FileHistoryEdge ancestor) {
+    void removeAncestor(final FileHistoryEdge ancestor) {
         this.ancestors.remove(ancestor);
     }
 
     /**
-     * Returns a list of child  s.
+     * Adds a descendant {@link FileHistoryNode} of this node.
      */
-    public final List<FileHistoryNode> getChildren() {
+    public void addDescendant(final FileHistoryNode descendant, final FileDiff diff) {
+        final FileHistoryEdge edge = new FileHistoryEdge(this, descendant, diff);
+        this.descendants.add(edge);
+        descendant.addAncestor(edge);
+    }
+
+    /**
+     * Adds a descendant {@link FileHistoryNode} of this node.
+     */
+    public boolean hasDescendant(final FileHistoryNode descendant) {
+        for (final FileHistoryEdge descendantEdge : this.getDescendants()) {
+            if (descendantEdge.getDescendant().equals(descendant)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Sets whether this node is deleted.
+     * @param newDeleted {@code true} if this node should represent a deleted path, else {@code false}.
+     */
+    void setDeleted(final boolean newDeleted) {
+        this.isDeleted = newDeleted;
+    }
+
+    /**
+     * Returns a list of child {@link FileHistoryNode}s.
+     */
+    public List<FileHistoryNode> getChildren() {
         return this.children;
     }
 
     /**
      * Adds a child {@link FileHistoryNode}.
      */
-    public final void addChild(final FileHistoryNode child) {
+    public void addChild(final FileHistoryNode child) {
         this.children.add(child);
         child.setParent(this);
     }
@@ -108,14 +151,14 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
     /**
      * Returns <code>true</code> if this node has a parent {@link FileHistoryNode}.
      */
-    public final boolean hasParent() {
+    public boolean hasParent() {
         return this.parent != null;
     }
 
     /**
      * Returns the parent {@link FileHistoryNode} or <code>null</code> if no parent has been set.
      */
-    public final FileHistoryNode getParent() {
+    public FileHistoryNode getParent() {
         return this.parent;
     }
 
@@ -131,7 +174,7 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
     /**
      * Returns <code>true</code> if this node results from a copy operation.
      */
-    public final boolean isCopied() {
+    public boolean isCopied() {
         if (this.isRoot()) {
             return false;
         }
@@ -144,17 +187,12 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
     }
 
     /**
-     * Accepts a {@link FileHistoryNodeVisitor}.
-     */
-    public abstract void accept(FileHistoryNodeVisitor v);
-
-    /**
      * {@inheritDoc}
      * <p/>
      * In order to prevent infinite recursion, a thread-local flag <code>inToString</code> is used to detect cycles.
      */
     @Override
-    public final String toString() {
+    public String toString() {
         if (inToString.get()) {
             return this.file.toString();
         }
@@ -177,7 +215,7 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
      * Fills a list of additional attributes used by toString().
      * @param attributes A list containing elements to be included in the output of {@link #toString()}.
      */
-    protected void attributesToString(final List<String> attributes) {
+    private void attributesToString(final List<String> attributes) {
         if (!this.isRoot()) {
             final Set<IFileHistoryNode> nodes = new LinkedHashSet<>();
             for (final IFileHistoryEdge ancestorEdge : this.ancestors) {
@@ -185,8 +223,18 @@ public abstract class FileHistoryNode implements IFileHistoryNode {
             }
             attributes.add("ancestors=" + nodes);
         }
+        if (!this.descendants.isEmpty()) {
+            final Set<IFileHistoryNode> nodes = new LinkedHashSet<>();
+            for (final IFileHistoryEdge descendantEdge : this.descendants) {
+                nodes.add(descendantEdge.getDescendant());
+            }
+            attributes.add("descendants=" + nodes);
+        }
         if (!this.children.isEmpty()) {
             attributes.add("children=" + this.children);
+        }
+        if (this.isDeleted) {
+            attributes.add("deleted");
         }
     }
 }

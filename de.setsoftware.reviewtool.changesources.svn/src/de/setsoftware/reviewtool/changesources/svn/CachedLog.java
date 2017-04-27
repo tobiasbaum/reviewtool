@@ -104,6 +104,7 @@ public class CachedLog {
                     mgr,
                     workingCopyRoot,
                     rootUrl,
+                    relPath,
                     this.determineCheckoutPrefix(mgr, workingCopyRoot, rootUrl)));
             this.repoDataPerWcRoot.put(workingCopyRoot.toString(), c);
         }

@@ -29,6 +29,11 @@ public class SvnFileHistoryGraphTest {
         }
 
         @Override
+        public String fromAbsolutePathInWc(String absolutePathInWc) {
+            return absolutePathInWc;
+        }
+
+        @Override
         public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
             final List<Revision> list = new ArrayList<>(revisions);
             Collections.sort(list, new Comparator<Revision>() {

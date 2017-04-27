@@ -20,12 +20,19 @@ public class SvnRepo extends Repository {
 
     private final File workingCopyRoot;
     private final SVNURL remoteUrl;
+    private final String relPath;
     private final int checkoutPrefix;
     private final SvnFileCache fileCache;
 
-    public SvnRepo(final SVNClientManager mgr, File workingCopyRoot, SVNURL rootUrl, int checkoutPrefix) {
+    public SvnRepo(
+            final SVNClientManager mgr,
+            final File workingCopyRoot,
+            final SVNURL rootUrl,
+            final String relPath,
+            final int checkoutPrefix) {
         this.workingCopyRoot = workingCopyRoot;
         this.remoteUrl = rootUrl;
+        this.relPath = relPath + '/';
         this.checkoutPrefix = checkoutPrefix;
         this.fileCache = new SvnFileCache(mgr, this);
     }
@@ -56,6 +63,16 @@ public class SvnRepo extends Repository {
 
         return probableFile.toString();
 
+    }
+
+    @Override
+    public String fromAbsolutePathInWc(final String absolutePathInWc) {
+        assert absolutePathInWc.startsWith(this.workingCopyRoot.getPath());
+        final String path = new File(
+                this.relPath,
+                absolutePathInWc.toString().substring(this.workingCopyRoot.getPath().length()))
+                    .getPath().replace('\\', '/');
+        return path;
     }
 
     @Override

@@ -32,6 +32,11 @@ public class OneStopPerPartOfFileRestructuringTest {
         }
 
         @Override
+        public String fromAbsolutePathInWc(String absolutePathInWc) {
+            return absolutePathInWc;
+        }
+
+        @Override
         public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
             return this.getSmallestOfComparableRevisions(revisions);
         }

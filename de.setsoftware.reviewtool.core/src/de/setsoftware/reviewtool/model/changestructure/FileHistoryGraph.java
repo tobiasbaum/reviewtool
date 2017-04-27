@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.base.ValueWrapper;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
@@ -40,7 +38,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
 
         final boolean isNew = ancestorRevisions.isEmpty();
         final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
-        final FileHistoryNode node = this.getOrCreateExistingFileHistoryNode(file, true, isNew, !isNew);
+        final FileHistoryNode node = this.getOrCreateFileHistoryNode(file, true, isNew, !isNew);
         if (node.isRoot()) {
             // for each root file within the history graph, we need an artificial ancestor node to record the changes
             final Set<Revision> ancestorRevs;
@@ -54,20 +52,41 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
             for (final Revision ancestorRevision : ancestorRevs) {
                 final FileInRevision prevFile =
                         ChangestructureFactory.createFileInRevision(path, ancestorRevision, repo);
-                final ExistingFileHistoryNode ancestor = this.getOrCreateExistingFileHistoryNode(
+                final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(
                         prevFile,
                         true,   // must not exist
                         false,  // is not known to be a new node
                         false); // don't copy children (they do not exist anyway)
-                ancestor.addDescendant(node, new FileDiff(prevFile, file));
+                this.addDescendants(ancestor, node);
             }
+        }
+    }
+
+    /**
+     * Adds an edge between ancestor and descendant. Child nodes are not copied.
+     * Traverses the hierarchy upwards and adds all missing edges between the parents, if necessary.
+     * @param ancestor The ancestor node.
+     * @param descendant The descendant node.
+     */
+    private void addDescendants(final FileHistoryNode ancestor, final FileHistoryNode descendant) {
+        assert ancestor.getFile().getPath().equals(descendant.getFile().getPath());
+        FileHistoryNode ancestorNode = ancestor;
+        FileHistoryNode descendantNode = descendant;
+        while (!ancestorNode.hasDescendant(descendantNode)) {
+            ancestorNode.addDescendant(descendantNode, new FileDiff(ancestor.getFile(), descendant.getFile()));
+            assert ancestorNode.hasParent() == descendantNode.hasParent();
+            if (!ancestorNode.hasParent()) {
+                return;
+            }
+            ancestorNode = ancestorNode.getParent();
+            descendantNode = descendantNode.getParent();
         }
     }
 
     /**
      * Adds the information that the file with the given path was deleted with the commit of the given revision.
      * If ancestor nodes exist, the deletion node of type {@link NonExistingFileHistoryNode} is linked to them,
-     * possibly creating intermediate {@link ExistingFileHistoryNode}s just before the deletion. This supports
+     * possibly creating intermediate {@link FileHistoryNode}s just before the deletion. This supports
      * finding the last revision of a file before being deleted.
      */
     public final void addDeletion(
@@ -76,28 +95,55 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
             final Set<Revision> ancestorRevisions,
             final Repository repo) {
 
-        final Set<ExistingFileHistoryNode> ancestors = new LinkedHashSet<>();
+        final Set<FileHistoryNode> ancestors = new LinkedHashSet<>();
         for (final Revision ancestorRevision : ancestorRevisions) {
             final FileInRevision ancestorFile =
                     ChangestructureFactory.createFileInRevision(path, ancestorRevision, repo);
-            final ExistingFileHistoryNode ancestor =
-                    this.getOrCreateExistingFileHistoryNode(ancestorFile, false, false, true);
+            final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, false, true);
+            assert !ancestor.isDeleted();
             ancestors.add(ancestor);
         }
 
         final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
-        // a file can have at most one associated node per revision
-        assert this.getNodeFor(file) == null;
+        final FileHistoryNode node = this.getNodeFor(file);
+        revision.accept(new RevisionVisitor<Void>() {
 
-        final FileHistoryNode deletionNode = new NonExistingFileHistoryNode(file);
-        this.addParentNodes(deletionNode, true, false);
-        final Pair<String, Repository> key = this.createKey(file);
-        this.index.put(key, deletionNode);
-        for (final ExistingFileHistoryNode ancestor : ancestors) {
-            ancestor.addDescendant(deletionNode, new FileDiff(ancestor.getFile(), file));
-            for (final FileHistoryNode child : ancestor.getChildren()) {
-                this.addDeletion(child.getFile().getPath(), revision,
-                        Collections.singleton(ancestor.getFile().getRevision()), repo);
+            @Override
+            public Void handleLocalRevision(final LocalRevision revision) {
+                if (node != null) {
+                    assert !node.isDeleted();
+                    node.setDeleted(true);
+                }
+                return null;
+            }
+
+            @Override
+            public Void handleRepoRevision(final RepoRevision revision) {
+                // a file in a non-local revision can have at most one associated node per revision
+                assert node == null;
+                return null;
+            }
+
+            @Override
+            public Void handleUnknownRevision(final UnknownRevision revision) {
+                // it is not allowed to delete artificial nodes
+                assert node == null;
+                return null;
+            }
+
+        });
+
+        if (node == null) {
+            final FileHistoryNode deletionNode = new FileHistoryNode(file, true);
+            this.addParentNodes(deletionNode, false, false);
+            final Pair<String, Repository> key = FileHistoryGraph.this.createKey(file);
+            this.index.put(key, deletionNode);
+            for (final FileHistoryNode ancestor : ancestors) {
+                ancestor.addDescendant(deletionNode, new FileDiff(ancestor.getFile(), file));
+                for (final FileHistoryNode child : ancestor.getChildren()) {
+                    this.addDeletion(child.getFile().getPath(), revision,
+                            Collections.singleton(ancestor.getFile().getRevision()), repo);
+                }
             }
         }
     }
@@ -116,15 +162,12 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
         final FileInRevision fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom, repo);
         final FileInRevision fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo, repo);
 
-        final ExistingFileHistoryNode fromNode = this.getOrCreateExistingFileHistoryNode(fileFrom, false, false, true);
-        final ExistingFileHistoryNode toNode = this.getOrCreateExistingFileHistoryNode(fileTo, true, false, true);
+        final FileHistoryNode fromNode = this.getOrCreateFileHistoryNode(fileFrom, false, false, true);
+        final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true, true);
 
-        for (final FileHistoryEdge descendantEdge : fromNode.getDescendants()) {
-            if (descendantEdge.getDescendant().equals(toNode)) {
-                return;
-            }
+        if (!fromNode.hasDescendant(toNode)) {
+            this.addEdge(fromNode, toNode, true);
         }
-        this.addEdge(fromNode, toNode, true);
     }
 
     /**
@@ -133,7 +176,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
      * @param descendant The descendant.
      * @param copyChildren If <code>true</code>, the children of the ancestor node are copied to the descendant node.
      */
-    private void addEdge(final ExistingFileHistoryNode ancestor, final FileHistoryNode descendant,
+    private void addEdge(final FileHistoryNode ancestor, final FileHistoryNode descendant,
             final boolean copyChildren) {
         ancestor.addDescendant(descendant, new FileDiff(ancestor.getFile(), descendant.getFile()));
         if (copyChildren) {
@@ -161,7 +204,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
                 parent.addChild(node);
 
                 if (!isNew && !node.isCopied() && parent.isCopied()) {
-                    // special case: node begins lifetime with a change in a copied directory
+                    // special case: node begins lifetime with a change or deletion in a copied directory
                     final String name = path.substring(path.lastIndexOf("/") + 1);
                     for (final FileHistoryEdge parentAncestorEdge : parent.getAncestors()) {
                         final FileHistoryNode parentAncestor = parentAncestorEdge.getAncestor();
@@ -170,8 +213,8 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
                                 parentAncestorRev.getPath() + "/" + name,
                                 parentAncestorRev.getRevision(),
                                 parentAncestorRev.getRepository());
-                        final ExistingFileHistoryNode ancestor =
-                                this.getOrCreateExistingFileHistoryNode(ancestorRev, false, false, false);
+                        final FileHistoryNode ancestor =
+                                this.getOrCreateFileHistoryNode(ancestorRev, false, false, false);
                         this.addEdge(ancestor, node, copyChildren);
                     }
                 }
@@ -195,45 +238,20 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
         final Repository repository = oldNode.getFile().getRepository();
 
         for (final FileHistoryNode child : oldNode.getChildren()) {
-            child.accept(new FileHistoryNodeVisitor() {
-                @Override
-                public void handleExistingNode(ExistingFileHistoryNode node) {
-                    final String childPath = child.getFile().getPath();
-                    FileHistoryGraph.this.addCopy(childPath,
-                            crateCopyTargetName(childPath, oldParentPath, newParentPath),
-                            oldRevision, newRevision, repository);
-                }
-
-                @Override
-                public void handleNonExistingNode(NonExistingFileHistoryNode node) {
-                    // don't copy deleted children
-                }
-            });
+            // don't copy deleted children
+            if (!child.isDeleted()) {
+                final String childPath = child.getFile().getPath();
+                FileHistoryGraph.this.addCopy(childPath,
+                        crateCopyTargetName(childPath, oldParentPath, newParentPath),
+                        oldRevision, newRevision, repository);
+            }
         }
     }
 
     /**
-     * Returns or creates an {@link ExistingFileHistoryNode} for a given {@link FileInRevision}.
-     * If a node for that {@link FileInRevision} already exists, it must be of type {@link ExistingFileHistoryNode}.
-     * If a node for that {@link FileInRevision} does not exist, it is created. In addition, it is inserted into a
-     * possibly existing ancestor/descendant chain and/or parent/child of other {@link FileHistoryNode}s.
-     * Finally, child nodes are copied from the ancestor node.
-     *
-     * @param mustNotExist If <code>true</code>, the node may not already exist.
-     * @param isNew If <code>true</code>, the node is known to have been added in passed revision. This makes a
-     *      difference when the node's parent is a copied directory: New nodes remain root nodes, while other nodes
-     *      will be associated to an ancestor in the parent's copy source.
-     */
-    private ExistingFileHistoryNode getOrCreateExistingFileHistoryNode(final FileInRevision file,
-            final boolean mustNotExist, final boolean isNew, final boolean copyChildren) {
-        final FileHistoryNode node = this.getOrCreateFileHistoryNode(file, mustNotExist, isNew, copyChildren);
-        return (ExistingFileHistoryNode) node;
-    }
-
-    /**
-     * Returns or creates an {@link ExistingFileHistoryNode} for a given {@link FileInRevision}.
+     * Returns or creates a {@link FileHistoryNode} for a given {@link FileInRevision}.
      * If a node for that {@link FileInRevision} already exists, it is returned.
-     * If a node for that {@link FileInRevision} does not exist, it is created as a {@link ExistingFileHistoryNode}.
+     * If a node for that {@link FileInRevision} does not exist, it is created.
      * In addition, it is inserted into a possibly existing ancestor/descendant chain and/or parent/child of other
      * {@link FileHistoryNode}s.
      *
@@ -248,12 +266,12 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
             final boolean isNew, final boolean copyChildren) {
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
-            final ExistingFileHistoryNode newNode = new ExistingFileHistoryNode(file);
+            final FileHistoryNode newNode = new FileHistoryNode(file, false);
             this.index.put(this.createKey(file), newNode);
 
             this.addParentNodes(newNode, isNew, copyChildren);
             if (!isNew && newNode.isRoot()) { // addParentNodes() may have already added an ancestor
-                final ExistingFileHistoryNode ancestor = this.findAncestorFor(file);
+                final FileHistoryNode ancestor = this.findAncestorFor(file);
                 if (ancestor != null) {
                     this.injectInteriorNode(ancestor, newNode);
                     this.addEdge(ancestor, newNode, copyChildren);
@@ -274,7 +292,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
      * @param ancestor The ancestor.
      * @param descendant The descendant.
      */
-    private void injectInteriorNode(final ExistingFileHistoryNode ancestor, final ExistingFileHistoryNode descendant) {
+    private void injectInteriorNode(final FileHistoryNode ancestor, final FileHistoryNode descendant) {
         final Iterator<FileHistoryEdge> it = ancestor.getDescendants().iterator();
         while (it.hasNext()) {
             final FileHistoryEdge descendantOfAncestorEdge = it.next();
@@ -343,7 +361,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
         final FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             // unknown file, return a new node for that file without ancestors or descendants
-            return Collections.<FileHistoryNode>singleton(new ExistingFileHistoryNode(file));
+            return Collections.<FileHistoryNode>singleton(new FileHistoryNode(file, false));
         } else {
             // either node for file or descendant node shares history with passed file, follow it
             return this.getLatestFilesHelper(node, returnDeletions);
@@ -358,40 +376,31 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
      *      before deletion are returned. If <code>false</code>, no nodes are returned in this case.
      */
     private Set<FileHistoryNode> getLatestFilesHelper(final FileHistoryNode node, final boolean returnDeletions) {
-        final ValueWrapper<Set<FileHistoryNode>> ret =
-                new ValueWrapper<Set<FileHistoryNode>>(new HashSet<FileHistoryNode>());
-
-        node.accept(new FileHistoryNodeVisitor() {
-
-            @Override
-            public void handleExistingNode(ExistingFileHistoryNode node) {
-                if (node.getDescendants().isEmpty()) {
-                    ret.get().add(node);
-                } else {
-                    // is this node the last known one given its path?
-                    boolean samePathFound = false;
-                    for (final FileHistoryEdge descendantEdge : node.getDescendants()) {
-                        final FileHistoryNode descendant = descendantEdge.getDescendant();
-                        if (node.getFile().getPath().equals(descendant.getFile().getPath())) {
-                            samePathFound = true;
-                        }
-                        ret.get().addAll(FileHistoryGraph.this.getLatestFilesHelper(descendant, returnDeletions));
+        // deletion nodes are never returned
+        if (!node.isDeleted()) {
+            if (node.getDescendants().isEmpty()) {
+                return Collections.singleton(node);
+            } else {
+                // is this node the last known one given its path?
+                final Set<FileHistoryNode> result = new LinkedHashSet<>();
+                boolean samePathFound = false;
+                for (final FileHistoryEdge descendantEdge : node.getDescendants()) {
+                    final FileHistoryNode descendant = descendantEdge.getDescendant();
+                    if (node.getFile().getPath().equals(descendant.getFile().getPath())) {
+                        samePathFound = true;
                     }
-                    if (!samePathFound || (returnDeletions && ret.get().isEmpty())) {
-                        // either this node is the last known one existing for its path, or this node is the last node
-                        // before deletion and we have been advised to return such nodes
-                        ret.get().add(node);
-                    }
+                    result.addAll(FileHistoryGraph.this.getLatestFilesHelper(descendant, returnDeletions));
                 }
+                if (!samePathFound || (returnDeletions && result.isEmpty())) {
+                    // either this node is the last known one existing for its path, or this node is the last node
+                    // before deletion and we have been advised to return such nodes
+                    result.add(node);
+                }
+                return result;
             }
-
-            @Override
-            public void handleNonExistingNode(NonExistingFileHistoryNode node) {
-                // deletion nodes are never returned
-            }
-
-        });
-        return ret.get();
+        } else {
+            return Collections.<FileHistoryNode> emptySet();
+        }
     }
 
     /**
@@ -399,7 +408,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
      * if no suitable node exists. To be suitable, the ancestor node must be an {@link ExistingFileHistoryNode} as
      * a deleted file cannot be an ancestor.
      */
-    public abstract ExistingFileHistoryNode findAncestorFor(FileInRevision file);
+    public abstract FileHistoryNode findAncestorFor(FileInRevision file);
 
     @Override
     public String toString() {

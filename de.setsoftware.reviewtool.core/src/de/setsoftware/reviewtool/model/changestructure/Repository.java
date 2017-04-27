@@ -15,6 +15,12 @@ public abstract class Repository {
     public abstract String toAbsolutePathInWc(String absolutePathInRepo);
 
     /**
+     * Converts a path that is absolute in the file system of the working copy to a path that is absolute
+     * in the repository.
+     */
+    public abstract String fromAbsolutePathInWc(String absolutePathInWc);
+
+    /**
      * Returns one of the smallest revisions from the given collection. When there are multiple,
      * mutually incomparable, smallest elements, the first in iteration order is returned.
      */

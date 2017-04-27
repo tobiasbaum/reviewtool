@@ -3,14 +3,10 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Collections;
 import java.util.List;
 
-import de.setsoftware.reviewtool.base.ValueWrapper;
-import de.setsoftware.reviewtool.model.changestructure.ExistingFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNodeVisitor;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.LocalRevision;
-import de.setsoftware.reviewtool.model.changestructure.NonExistingFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.Repository;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
@@ -58,7 +54,7 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
     }
 
     @Override
-    public ExistingFileHistoryNode findAncestorFor(final FileInRevision file) {
+    public FileHistoryNode findAncestorFor(final FileInRevision file) {
         final List<FileHistoryNode> nodesForKey = this.lookupFile(file);
         final long targetRevision = getRevision(file);
         long nearestRevision = Long.MIN_VALUE;
@@ -71,31 +67,10 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
             }
         }
         if (nearestNode != null) {
-            return toExistingNodeIfPossible(nearestNode);
+            return nearestNode.isDeleted() ? null : nearestNode;
         } else {
             return null;
         }
-    }
-
-    /**
-     * Casts a {@link SvnFileHistoryNode} conditionally to an {@link ExistingFileHistoryNode}.
-     * If the cast is no possible, <code>null</code> is returned.
-     */
-    private static ExistingFileHistoryNode toExistingNodeIfPossible(final FileHistoryNode node) {
-        final ValueWrapper<ExistingFileHistoryNode> result = new ValueWrapper<>();
-        node.accept(new FileHistoryNodeVisitor() {
-
-            @Override
-            public void handleExistingNode(final ExistingFileHistoryNode node) {
-                result.setValue(node);
-            }
-
-            @Override
-            public void handleNonExistingNode(final NonExistingFileHistoryNode node) {
-            }
-
-        });
-        return result.get();
     }
 
     /**

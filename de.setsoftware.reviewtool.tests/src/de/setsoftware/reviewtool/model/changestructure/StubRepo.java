@@ -15,6 +15,11 @@ public final class StubRepo extends Repository {
     }
 
     @Override
+    public String fromAbsolutePathInWc(String absolutePathInWc) {
+        return absolutePathInWc;
+    }
+
+    @Override
     public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
         return this.getSmallestOfComparableRevisions(revisions);
     }

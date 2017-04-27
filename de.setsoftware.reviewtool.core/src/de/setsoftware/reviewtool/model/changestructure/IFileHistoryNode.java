@@ -20,6 +20,12 @@ public interface IFileHistoryNode {
     public abstract boolean isRoot();
 
     /**
+     * Checks whether this {@link IFileHistoryNode} denotes a deleted node.
+     * @return <code>true</code> if this node is deleted, else <code>false</code>
+     */
+    public abstract boolean isDeleted();
+
+    /**
      * Returns the set of outgoing edges pointing to the nearest ancestor {@link IFileHistoryNode}s.
      * Note that the nodes returned by this operation may change over time when intermediate
      * {@link IFileHistoryNode}s are created due to recorded copy operations.
