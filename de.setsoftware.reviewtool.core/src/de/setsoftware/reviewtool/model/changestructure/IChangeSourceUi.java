@@ -1,9 +1,11 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 /**
  * UI-Callbacks for change sources.
  */
-public interface IChangeSourceUi {
+public interface IChangeSourceUi extends IProgressMonitor {
 
     /**
      * Is called when the current local working copy does not contain all needed

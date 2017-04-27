@@ -17,6 +17,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNProperties;
@@ -115,9 +116,12 @@ public class SvnChangeSource implements IChangeSource {
     public IChangeData getChanges(String key, IChangeSourceUi ui) {
         try {
             final SvnFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
-            final List<SvnRevision> revisions = this.determineRelevantRevisions(key, historyGraph);
+            ui.subTask("Determining relevant commits...");
+            final List<SvnRevision> revisions = this.determineRelevantRevisions(key, historyGraph, ui);
+            ui.subTask("Checking state of working copy...");
             this.checkWorkingCopiesUpToDate(revisions, ui);
-            return new SvnChangeData(this.convertToChanges(historyGraph, revisions), historyGraph);
+            ui.subTask("Analyzing commits...");
+            return new SvnChangeData(this.convertToChanges(historyGraph, revisions, ui), historyGraph);
         } catch (final SVNException | IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -129,6 +133,9 @@ public class SvnChangeSource implements IChangeSource {
 
         final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
         for (final Entry<SvnRepo, Long> e : neededRevisionPerRepo.entrySet()) {
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
             final File wc = e.getKey().getLocalRoot();
             final long wcRev = this.mgr.getStatusClient().doStatus(wc, false).getRevision().getNumber();
             if (wcRev < e.getValue()) {
@@ -158,30 +165,37 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private List<SvnRevision> determineRelevantRevisions(
-            final String key, SvnFileHistoryGraph historyGraphBuffer) throws SVNException {
+    private List<SvnRevision> determineRelevantRevisions(final String key, final SvnFileHistoryGraph historyGraphBuffer,
+            final IChangeSourceUi ui) throws SVNException {
         final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
-            CachedLog.getInstance().traverseRecentEntries(this.mgr, workingCopyRoot, handler);
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+            CachedLog.getInstance().traverseRecentEntries(this.mgr, workingCopyRoot, handler, ui);
         }
-        return handler.determineRelevantRevisions(historyGraphBuffer);
+        return handler.determineRelevantRevisions(historyGraphBuffer, ui);
     }
 
-    private List<Commit> convertToChanges(final SvnFileHistoryGraph historyGraph, List<SvnRevision> revisions)
-            throws SVNException, IOException {
+    private List<Commit> convertToChanges(final SvnFileHistoryGraph historyGraph, final List<SvnRevision> revisions,
+            final IChangeSourceUi ui) throws SVNException, IOException {
         final List<Commit> ret = new ArrayList<>();
         for (final SvnRevision e : revisions) {
-            ret.add(this.convertToCommit(historyGraph, e));
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+            ret.add(this.convertToCommit(historyGraph, e, ui));
         }
         return ret;
     }
 
-    private Commit convertToCommit(final SvnFileHistoryGraph historyGraph, SvnRevision e)
+    private Commit convertToCommit(final SvnFileHistoryGraph historyGraph, final SvnRevision e,
+            final IChangeSourceUi ui)
             throws SVNException, IOException {
         return ChangestructureFactory.createCommit(
                 String.format("%s (Rev. %s, %s)" + (e.isVisible() ? "" : " [invisible]"),
                         e.getMessage(), e.getRevision(), e.getAuthor()),
-                        this.determineChangesInCommit(historyGraph, e), e.isVisible());
+                        this.determineChangesInCommit(historyGraph, e, ui), e.isVisible());
     }
 
     /**
@@ -214,8 +228,9 @@ public class SvnChangeSource implements IChangeSource {
 
     }
 
-    private List<Change> determineChangesInCommit(final SvnFileHistoryGraph historyGraph, SvnRevision e)
-            throws SVNException, IOException {
+    private List<Change> determineChangesInCommit(final SvnFileHistoryGraph historyGraph, SvnRevision e,
+            final IChangeSourceUi ui) throws SVNException, IOException {
+
         final List<Change> ret = new ArrayList<>();
         final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();
         final DirectoryCopyInfo dirCopies = new DirectoryCopyInfo(changedPaths.values());
@@ -223,6 +238,10 @@ public class SvnChangeSource implements IChangeSource {
         final List<String> sortedPaths = new ArrayList<>(changedPaths.keySet());
         Collections.sort(sortedPaths);
         for (final String path : sortedPaths) {
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+
             final CachedLogEntryPath value = changedPaths.get(path);
             if (!value.isFile()) {
                 continue;

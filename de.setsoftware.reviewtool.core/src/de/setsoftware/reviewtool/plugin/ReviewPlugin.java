@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,13 +24,16 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchesListener;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.StorageException;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.widgets.Display;
@@ -37,6 +41,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
+import org.eclipse.ui.progress.IProgressService;
+import org.eclipse.ui.statushandlers.StatusManager;
 import org.osgi.framework.Version;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -44,6 +50,7 @@ import org.xml.sax.SAXException;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
 import de.setsoftware.reviewtool.config.IConfigurator;
@@ -130,6 +137,124 @@ public class ReviewPlugin implements IReviewConfigurable {
             return CorrectSyntaxDialog.getCurrentReviewDataParsed(persistence, factory);
         }
 
+    }
+
+    /**
+     * Implementation of {@link IChangeSourceUi}, delegating the {@link IProgressMonitor} parts.
+     */
+    private final class ChangeSourceUi implements IChangeSourceUi {
+
+        private final Display display;
+        private final IProgressMonitor progressMonitor;
+
+        /**
+         * Constructor.
+         *
+         * @param display The display to use.
+         * @param progressMonitor The progress monitor to delegate to.
+         */
+        ChangeSourceUi(final Display display, final IProgressMonitor progressMonitor) {
+            this.display = display;
+            this.progressMonitor = progressMonitor;
+        }
+
+        @Override
+        public boolean handleLocalWorkingCopyOutOfDate(final String detailInfo) {
+            return ReviewPlugin.this.callUiFromBackgroundJob(
+                    null,
+                    this.display,
+                    new Callback<Boolean, Void>() {
+                        @Override
+                        public Boolean run(final Void unused) {
+                            return MessageDialog.openQuestion(
+                                    null, "Working copy out of date",
+                                    "The working copy (" + detailInfo
+                                    + ") does not contain all relevant changes. Perform an update?");
+                        }
+                    });
+        }
+
+        @Override
+        public void beginTask(final String name, final int totalWork) {
+            this.progressMonitor.beginTask(name, totalWork);
+        }
+
+        @Override
+        public void done() {
+            this.progressMonitor.done();
+        }
+
+        @Override
+        public void internalWorked(final double work) {
+            this.progressMonitor.internalWorked(work);
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return this.progressMonitor.isCanceled();
+        }
+
+        @Override
+        public void setCanceled(final boolean value) {
+            this.progressMonitor.setCanceled(value);
+        }
+
+        @Override
+        public void setTaskName(final String name) {
+            this.progressMonitor.setTaskName(name);
+        }
+
+        @Override
+        public void subTask(final String name) {
+            this.progressMonitor.subTask(name);
+        }
+
+        @Override
+        public void worked(final int work) {
+            this.progressMonitor.worked(work);
+        }
+    }
+
+    /**
+     * Represents a simple callback receiving a single value and returning some value.
+     * @param <R> The type of the result returned.
+     * @param <T> The type of the value received.
+     */
+    private interface Callback<R, T> {
+        /**
+         * Lets the client do something at some point in the future with a provided value.
+         */
+        public abstract R run(T t);
+    }
+
+    /**
+     * Represents an asynchronous callback that acquires the UI.
+     * @param <T> The type of value received.
+     */
+    private abstract class UiCallback<T> implements Callback<Void, T> {
+
+        private final Display display;
+
+        UiCallback(final Display display) {
+            this.display = display;
+        }
+
+        @Override
+        public final Void run(final T t) {
+            this.display.asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    UiCallback.this.runInUi(t, UiCallback.this.display);
+                }
+            });
+            return null;
+        }
+
+        /**
+         * Lets the client do something at some point in the future with a provided value and in the context
+         * of the UI thread.
+         */
+        public abstract Void runInUi(T t, Display display);
     }
 
     private static final ReviewPlugin INSTANCE = new ReviewPlugin();
@@ -262,7 +387,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     /**
      * Lets the user select a ticket and starts reviewing for it.
      */
-    public void startReview() throws CoreException {
+    public void startReview() {
         this.checkConfigured();
         if (this.invalidMode(Mode.IDLE)) {
             return;
@@ -278,7 +403,21 @@ public class ReviewPlugin implements IReviewConfigurable {
             }
         }
 
-        this.loadReviewData(Mode.REVIEWING);
+        try {
+            this.loadReviewData(Mode.REVIEWING, new UiCallback<Void>(Display.getCurrent()) {
+                @Override
+                public Void runInUi(final Void unused, final Display display) {
+                    ReviewPlugin.this.startReviewTail();
+                    return null;
+                }
+            }, "starting review");
+        } catch (final CoreException e) {
+            this.logException(e);
+            StatusManager.getManager().handle(e, "CoRT");
+        }
+    }
+
+    private void startReviewTail() {
         if (this.mode == Mode.REVIEWING) {
             this.switchToReviewPerspective();
 
@@ -309,12 +448,27 @@ public class ReviewPlugin implements IReviewConfigurable {
     /**
      * Lets the user select a ticket and starts fixing for it.
      */
-    public void startFixing() throws CoreException {
+    public void startFixing() {
         this.checkConfigured();
         if (this.invalidMode(Mode.IDLE)) {
             return;
         }
-        this.loadReviewData(Mode.FIXING);
+
+        try {
+            this.loadReviewData(Mode.FIXING, new UiCallback<Void>(Display.getCurrent()) {
+                @Override
+                public Void runInUi(final Void unused, final Display display) {
+                    ReviewPlugin.this.startFixingTail();
+                    return null;
+                }
+            }, "starting fixing");
+        } catch (final CoreException e) {
+            this.logException(e);
+            StatusManager.getManager().handle(e, "CoRT");
+        }
+    }
+
+    private void startFixingTail() {
         if (this.mode == Mode.FIXING) {
             Telemetry.event("fixingStarted")
                 .param("round", this.persistence.getCurrentRound())
@@ -330,13 +484,16 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    private void loadReviewData(Mode targetMode) throws CoreException {
+    private void loadReviewData(final Mode targetMode, final Callback<?, Void> tail, final String action)
+            throws CoreException {
+
         this.persistence.resetKey();
         final boolean forReview = targetMode == Mode.REVIEWING;
         final boolean ok = this.persistence.selectTicket(forReview);
         if (!ok) {
             this.setMode(Mode.IDLE);
             this.toursInReview = null;
+            tail.run(null);
             return;
         }
         //The startReview event is sent only after all data is loaded. but some user interaction is possible
@@ -349,14 +506,28 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.clearMarkers();
 
         if (targetMode == Mode.REVIEWING) {
-            final boolean toursOk = this.loadToursAndCreateMarkers();
-            if (!toursOk) {
-                this.setMode(Mode.IDLE);
-                this.toursInReview = null;
-                return;
-            }
+            this.loadToursAndCreateMarkers(
+                    new UiCallback<Boolean>(Display.getCurrent()) {
+                        @Override
+                        public Void runInUi(final Boolean toursOk, final Display display) {
+                            if (!toursOk) {
+                                ReviewPlugin.this.setMode(Mode.IDLE);
+                                ReviewPlugin.this.toursInReview = null;
+                            } else {
+                                ReviewPlugin.this.loadReviewDataTail(targetMode);
+                            }
+                            tail.run(null);
+                            return null;
+                        }
+                    },
+                    action);
+        } else {
+            this.loadReviewDataTail(targetMode);
+            tail.run(null);
         }
+    }
 
+    private void loadReviewDataTail(final Mode targetMode) {
         final ReviewData currentReviewData = CorrectSyntaxDialog.getCurrentReviewDataParsed(
                 this.persistence, new RealMarkerFactory());
         if (currentReviewData == null) {
@@ -364,7 +535,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             this.toursInReview = null;
             return;
         }
-        if (forReview) {
+        if (targetMode == Mode.REVIEWING) {
             this.persistence.startReviewing();
         } else {
             this.persistence.startFixing();
@@ -536,62 +707,117 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
         this.persistence.clearLocalReviewData();
         this.clearMarkers();
-        this.loadToursAndCreateMarkers();
-        RemarkMarkers.loadRemarks(this.persistence);
+        this.loadToursAndCreateMarkers(new UiCallback<Boolean>(Display.getCurrent()) {
+            @Override
+            public Void runInUi(final Boolean toursOk, final Display display) {
+                RemarkMarkers.loadRemarks(ReviewPlugin.this.persistence);
+                return null;
+            }
+        }, "refreshing markers");
     }
 
     /**
      * Saves the local review remarks to the persistence layer.
      */
-    public void flushLocalReviewData() throws CoreException {
+    public void flushLocalReviewData() {
         this.persistence.flushReviewData();
     }
 
-    private boolean loadToursAndCreateMarkers() {
+    private void loadToursAndCreateMarkers(final Callback<?, Boolean> tail, final String action) {
+        IProgressService progressService = PlatformUI.getWorkbench().getProgressService();
+        try {
+            final Display display = Display.getCurrent();
+            progressService.busyCursorWhile(new IRunnableWithProgress() {
+
+                @Override
+                public void run(final IProgressMonitor progressMonitor)
+                        throws InvocationTargetException, InterruptedException {
+                    tail.run(ReviewPlugin.this.doLoadToursAndCreateMarkers(display, progressMonitor, action));
+                }
+            });
+        } catch (final InterruptedException e) {
+            StatusManager.getManager().handle(
+                    new Status(Status.WARNING, "CoRT", "CoRT was interrupted while " + action + ".", e),
+                    StatusManager.LOG);
+        } catch (final InvocationTargetException e) {
+            this.logException(e);
+            StatusManager.getManager().handle(
+                    new Status(Status.ERROR, "CoRT", "An error occurred while " + action + ".", e),
+                    StatusManager.LOG);
+        }
+    }
+
+    private boolean doLoadToursAndCreateMarkers(final Display display, final IProgressMonitor progressMonitor,
+            final String action) {
+
         final String ticketKey = this.persistence.getTicketKey();
         if (ticketKey == null) {
             return false;
         }
-        final IChangeSourceUi sourceUi = new IChangeSourceUi() {
-            @Override
-            public boolean handleLocalWorkingCopyOutOfDate(String detailInfo) {
-                return MessageDialog.openQuestion(
-                        null, "Working copy out of date",
-                        "The working copy (" + detailInfo
-                        + ") does not contain all relevant changes. Perform an update?");
-            }
-        };
+        final IChangeSourceUi sourceUi = new ChangeSourceUi(display, progressMonitor);
         final ICreateToursUi createUi = new ICreateToursUi() {
             @Override
             public List<? extends Tour> selectInitialTours(
-                    List<? extends Pair<String, List<? extends Tour>>> choices) {
+                    final List<? extends Pair<String, List<? extends Tour>>> choices) {
                 if (choices.size() == 1) {
                     return choices.get(0).getSecond();
                 }
-                return SelectTourStructureDialog.selectStructure(choices);
+                return callUiFromBackgroundJob(
+                        choices,
+                        display,
+                        new Callback<List<? extends Tour>, List<? extends Pair<String, List<? extends Tour>>>>() {
+                            @Override
+                            public List<? extends Tour> run(
+                                    List<? extends Pair<String, List<? extends Tour>>> choices) {
+                                return SelectTourStructureDialog.selectStructure(choices);
+                            }
+                        });
             }
 
             @Override
             public List<? extends Pair<String, Set<? extends Change>>> selectIrrelevant(
-                    List<? extends Pair<String, Set<? extends Change>>> choices) {
+                    final List<? extends Pair<String, Set<? extends Change>>> choices) {
                 if (choices.isEmpty()) {
                     return Collections.emptyList();
                 }
-                return SelectIrrelevantDialog.selectIrrelevant(choices);
+                return callUiFromBackgroundJob(
+                        choices,
+                        display,
+                        new Callback<
+                                List<? extends Pair<String, Set<? extends Change>>>,
+                                List<? extends Pair<String, Set<? extends Change>>>>() {
+                            @Override
+                            public List<? extends Pair<String, Set<? extends Change>>> run(
+                                    List<? extends Pair<String, Set<? extends Change>>> choices) {
+                                return SelectIrrelevantDialog.selectIrrelevant(choices);
+                            }
+                        });
             }
         };
-        this.toursInReview = ToursInReview.create(
-                this.changeSource,
-                sourceUi,
-                Arrays.asList(new WhitespaceChangeFilter(), new ImportChangeFilter(), new PackageDeclarationFilter()),
-                Arrays.asList(new OneStopPerPartOfFileRestructuring()),
-                createUi,
-                ticketKey);
-        if (this.toursInReview == null) {
-            return false;
+
+        sourceUi.beginTask(ticketKey + ": Please wait while " + action + "...", IProgressMonitor.UNKNOWN);
+        try {
+            sourceUi.subTask("Creating tours...");
+            this.toursInReview = ToursInReview.create(
+                    this.changeSource,
+                    sourceUi,
+                    Arrays.asList(
+                            new WhitespaceChangeFilter(),
+                            new ImportChangeFilter(),
+                            new PackageDeclarationFilter()),
+                    Arrays.asList(
+                            new OneStopPerPartOfFileRestructuring()),
+                    createUi,
+                    ticketKey);
+            if (this.toursInReview == null) {
+                return false;
+            }
+            sourceUi.subTask("Creating stop markers...");
+            this.toursInReview.createMarkers(new RealMarkerFactory(), sourceUi);
+            return true;
+        } finally {
+            sourceUi.done();
         }
-        this.toursInReview.createMarkers(new RealMarkerFactory());
-        return true;
     }
 
     @Override
@@ -710,5 +936,36 @@ public class ReviewPlugin implements IReviewConfigurable {
         } catch (final Throwable t2) {
             //swallow possible follow-up exceptions
         }
+    }
+
+    private <R, T> R callUiFromBackgroundJob(
+            final T input,
+            final Display display,
+            final Callback<R, T> callback) {
+        final Object condition = new Object();
+        final ValueWrapper<Boolean> resultSet = new ValueWrapper<>(false);
+        final ValueWrapper<R> result = new ValueWrapper<>();
+        display.asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                final R r = callback.run(input);
+                synchronized (condition) {
+                    result.setValue(r);
+                    resultSet.setValue(Boolean.TRUE);
+                    condition.notify();
+                }
+            }
+        });
+        synchronized (condition) {
+            while (!resultSet.get()) {
+                try {
+                    condition.wait();
+                } catch (final InterruptedException e) {
+                    ReviewPlugin.this.logException(e);
+                    break;
+                }
+            }
+        }
+        return result.get();
     }
 }

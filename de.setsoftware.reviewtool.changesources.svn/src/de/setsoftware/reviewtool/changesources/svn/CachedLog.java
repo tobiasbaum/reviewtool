@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
@@ -30,6 +31,7 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 
 /**
  * A local cache of the SVN log(s) to speed up the gathering of relevant entries.
@@ -79,11 +81,15 @@ public class CachedLog {
      * Calls the given handler for all recent log entries of the given working copy root.
      */
     public void traverseRecentEntries(
-            SVNClientManager mgr, File workingCopyRoot, final CachedLogLookupHandler handler) throws SVNException {
+            final SVNClientManager mgr, final File workingCopyRoot, final CachedLogLookupHandler handler,
+            final IChangeSourceUi ui) throws SVNException {
 
         final RepoDataCache repoCache = this.getRepoCache(mgr, workingCopyRoot);
         handler.startNewRepo(repoCache.getRepo());
         for (final CachedLogEntry entry : this.getEntries(mgr, repoCache)) {
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
             handler.handleLogEntry(entry);
         }
     }

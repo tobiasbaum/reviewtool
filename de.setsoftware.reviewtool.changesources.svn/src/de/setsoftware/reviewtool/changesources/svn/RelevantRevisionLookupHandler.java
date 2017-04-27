@@ -8,9 +8,11 @@ import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 
 /**
  * Handler that filters log entries with a given pattern.
@@ -52,10 +54,14 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
      * Returns all revisions that matched the given pattern and all revisions in between that touched
      * files changed in a matching revision.
      */
-    public List<SvnRevision> determineRelevantRevisions(SvnFileHistoryGraph historyGraphBuffer) {
+    public List<SvnRevision> determineRelevantRevisions(final SvnFileHistoryGraph historyGraphBuffer,
+            final IChangeSourceUi ui) {
         final List<SvnRevision> ret = new ArrayList<>();
         for (final TreeMap<Long, SvnRevision> revisionsInRepo : this.groupResultsByRepository().values()) {
             for (final SvnRevision revision : revisionsInRepo.values()) {
+                if (ui.isCanceled()) {
+                    throw new OperationCanceledException();
+                }
                 if (this.processRevision(revision, historyGraphBuffer, revision.isVisible())) {
                     ret.add(revision);
                 }
