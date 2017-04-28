@@ -20,7 +20,7 @@ public class FileDiff {
     private FileInRevision toRevision;
 
     /**
-     * Creates an empty FileDiff object.
+     * Creates an empty FileDiff object that will be filled with hunks.
      */
     public FileDiff(final FileInRevision revision) {
         this.hunks = new ArrayList<>();
@@ -31,8 +31,17 @@ public class FileDiff {
     /**
      * Creates a FileDiff object that will be filled with hunks.
      */
-    private FileDiff(final FileInRevision fromRevision, final FileInRevision toRevision) {
+    public FileDiff(final FileInRevision fromRevision, final FileInRevision toRevision) {
         this.hunks = new ArrayList<>();
+        this.fromRevision = fromRevision;
+        this.toRevision = toRevision;
+    }
+
+    /**
+     * Creates a fully specified FileDiff object.
+     */
+    private FileDiff(final FileInRevision fromRevision, final FileInRevision toRevision, final List<Hunk> hunks) {
+        this.hunks = new ArrayList<>(hunks);
         this.fromRevision = fromRevision;
         this.toRevision = toRevision;
     }
@@ -59,6 +68,16 @@ public class FileDiff {
         return this.toRevision;
     }
 
+    /**
+     * Creates a copy of this object with a new target revision. The list of hunks is copied in such a way that
+     * both lists can be modified separately after the copy.
+     *
+     * @param newTo The new target revision.
+     * @return The requested copy.
+     */
+    public FileDiff setTo(final FileInRevision newTo) {
+        return new FileDiff(this.fromRevision, newTo, this.hunks);
+    }
     /**
      * Traces a source fragment over the recorded hunks to the last known file revision.
      * @param source The source fragment.
@@ -177,7 +196,7 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if some hunk to be merged overlaps with some hunk in the FileDiff object.
      */
     public FileDiff merge(final FileDiff diff) throws IncompatibleFragmentException {
-        return this.merge(diff.hunks);
+        return this.merge(diff.hunks).setTo(diff.toRevision);
     }
 
     private boolean containsInLineDiff(Hunk hunk) {
