@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.ui.views;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -15,6 +14,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.LineSequence;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
@@ -59,8 +59,14 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
                 }
                 final List<Hunk> relevantHunks = diff.getHunksWithTargetChangesInOneOf(origins);
 
-                final LineSequence oldContents = fileToLineSequence(firstRevision);
-                final LineSequence newContents = fileToLineSequence(lastRevision);
+                final LineSequence oldContents;
+                final LineSequence newContents;
+                try {
+                    oldContents = fileToLineSequence(firstRevision);
+                    newContents = fileToLineSequence(lastRevision);
+                } catch (final Exception e) {
+                    throw new ReviewtoolException(e);
+                }
 
                 final List<Position> oldPositions = new ArrayList<>();
                 final List<Position> newPositions = new ArrayList<>();
@@ -103,26 +109,17 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
         return fragment;
     }
 
-    private static LineSequence fileToLineSequence(final FileInRevision file) {
-        final byte[] data;
-        try {
-            data = file.getContents();
-        } catch (final Exception e) {
-            return null;
-        }
+    private static LineSequence fileToLineSequence(final FileInRevision file) throws Exception {
+        final byte[] data = file.getContents();
 
         try {
-            try {
-                StandardCharsets.UTF_8.newDecoder()
-                    .onMalformedInput(CodingErrorAction.REPORT)
-                    .onUnmappableCharacter(CodingErrorAction.REPORT)
-                    .decode(ByteBuffer.wrap(data));
-                return new LineSequence(data, "UTF-8");
-            } catch (final CharacterCodingException e) {
-                return new LineSequence(data, "ISO-8859-1");
-            }
-        } catch (final IOException e) {
-            return null;
+            StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(data));
+            return new LineSequence(data, "UTF-8");
+        } catch (final CharacterCodingException e) {
+            return new LineSequence(data, "ISO-8859-1");
         }
     }
 }
