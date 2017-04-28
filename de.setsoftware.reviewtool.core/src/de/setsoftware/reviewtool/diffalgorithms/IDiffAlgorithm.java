@@ -1,11 +1,10 @@
 package de.setsoftware.reviewtool.diffalgorithms;
 
-import java.io.IOException;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
+import de.setsoftware.reviewtool.model.changestructure.Fragment;
 
 /**
  * Interface for diff algorithms.
@@ -23,6 +22,6 @@ public interface IDiffAlgorithm {
             byte[] fileOldContent,
             FileInRevision fileNewInfo,
             byte[] fileNewContent,
-            String charset) throws IOException;
+            String charset);
 
 }

@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
@@ -20,7 +21,7 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
 
     @Override
     public List<Pair<Fragment, Fragment>> determineDiff(FileInRevision fileOldInfo, byte[] fileOldContent,
-            FileInRevision fileNewInfo, byte[] fileNewContent, String charset) throws IOException {
+            FileInRevision fileNewInfo, byte[] fileNewContent, String charset) {
 
         final FullFileView<String> fileOld = this.toLines(fileOldContent, charset);
         final FullFileView<String> fileNew = this.toLines(fileNewContent, charset);
@@ -196,14 +197,20 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
         return ret;
     }
 
-    private FullFileView<String> toLines(byte[] contents, String charset) throws IOException {
-        final BufferedReader r = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contents), charset));
-        final List<String> lines = new ArrayList<>();
-        String line;
-        while ((line = r.readLine()) != null) {
-            lines.add(line);
+    private FullFileView<String> toLines(byte[] contents, String charset) {
+        try {
+            final BufferedReader r =
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contents), charset));
+            final List<String> lines = new ArrayList<>();
+            String line;
+            while ((line = r.readLine()) != null) {
+                lines.add(line);
+            }
+            return new FullFileView<String>(lines.toArray(new String[lines.size()]));
+        } catch (final IOException e) {
+            // should not happen because reading from a byte buffer should not throw I/O exceptions
+            throw new ReviewtoolException(e);
         }
-        return new FullFileView<String>(lines.toArray(new String[lines.size()]));
     }
 
     private Pair<Fragment, Fragment> createInLineDiffFragment(FileInRevision fileOldInfo, FileInRevision fileNewInfo,
