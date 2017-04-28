@@ -23,4 +23,8 @@ public class LocalRevision extends Revision {
         return visitor.handleLocalRevision(this);
     }
 
+    @Override
+    public <R, E extends Throwable> R accept(RevisionVisitorE<R, E> visitor) throws E {
+        return visitor.handleLocalRevision(this);
+    }
 }

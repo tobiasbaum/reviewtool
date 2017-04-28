@@ -139,10 +139,14 @@ public final class Fragment implements Comparable<Fragment> {
         if (this.isDeletion()) {
             return "";
         }
-        final byte[] contents = this.file.getContents();
-        if (contents == null) {
+
+        final byte[] contents;
+        try {
+            contents = this.file.getContents();
+        } catch (final Exception e) {
             return "?";
         }
+
         try {
             final BufferedReader r = new BufferedReader(new InputStreamReader(
                     new ByteArrayInputStream(contents), "UTF-8"));

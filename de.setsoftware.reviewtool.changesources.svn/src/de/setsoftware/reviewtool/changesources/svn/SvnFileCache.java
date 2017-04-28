@@ -66,18 +66,15 @@ public class SvnFileCache {
      * Returns the contents of some file in the repository.
      * @param path The file path.
      * @param revision The file revision.
-     * @return The file contents as a byte array or null if some error occurs.
+     * @return The file contents as a byte array.
+     * @throws SVNException if some error occurs.
      */
-    public byte[] getFileContents(final String path, final long revision) {
+    public byte[] getFileContents(final String path, final long revision) throws SVNException {
         final CachedFile entry = new CachedFile(path, revision);
         byte[] contents = this.fileContents.get(entry);
         if (contents == null) {
-            try {
-                contents = this.loadFile(this.repoUrl, path, revision);
-                this.fileContents.put(entry, contents);
-            } catch (final SVNException e) {
-                return null;
-            }
+            contents = this.loadFile(this.repoUrl, path, revision);
+            this.fileContents.put(entry, contents);
         }
         return contents;
     }

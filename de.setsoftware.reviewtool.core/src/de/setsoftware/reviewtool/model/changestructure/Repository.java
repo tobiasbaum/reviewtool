@@ -24,9 +24,10 @@ public abstract class Repository {
      * Returns the contents of some revisioned file in the repository.
      * @param path The path to the file.
      * @param revision The revision of the file. This is also used as peg revision of the path passed above.
-     * @return The file contents as a byte array or null if an error occurs.
+     * @return The file contents as a byte array.
+     * @throws Exception if an error occurs.
      */
-    public abstract byte[] getFileContents(String path, RepoRevision revision);
+    public abstract byte[] getFileContents(String path, RepoRevision revision) throws Exception;
 
     /**
      * Simple implementation for {@link #getSmallestRevision} that uses a comparable revision number.

@@ -104,8 +104,10 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
     }
 
     private static LineSequence fileToLineSequence(final FileInRevision file) {
-        final byte[] data = file.getContents();
-        if (data == null) {
+        final byte[] data;
+        try {
+            data = file.getContents();
+        } catch (final Exception e) {
             return null;
         }
 

@@ -289,18 +289,21 @@ public class SvnChangeSource implements IChangeSource {
         final SvnFileHistoryEdge ancestorEdge = node.getAncestor();
         final SvnFileHistoryNode ancestor = ancestorEdge.getTarget();
 
-        final byte[] oldFileContent = repo.getFileContents(ancestor.getFile().getPath(),
-                (RepoRevision) ancestor.getFile().getRevision());
-        if (oldFileContent == null) {
+        final byte[] oldFileContent;
+        try {
+            oldFileContent = ancestor.getFile().getContents();
+        } catch (final Exception e) {
             return Collections.emptyList(); // loading old file data failed
         }
+
         if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(repo, node, isVisible));
         }
 
-        final byte[] newFileContent = repo.getFileContents(node.getFile().getPath(),
-                (RepoRevision) node.getFile().getRevision());
-        if (newFileContent == null) {
+        final byte[] newFileContent;
+        try {
+            newFileContent = node.getFile().getContents();
+        } catch (final Exception e) {
             return Collections.emptyList(); // loading new file data failed
         }
         if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {

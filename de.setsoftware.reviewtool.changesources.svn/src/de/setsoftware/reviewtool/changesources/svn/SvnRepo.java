@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
 
+import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 
@@ -58,7 +59,7 @@ public class SvnRepo extends Repository {
     }
 
     @Override
-    public byte[] getFileContents(final String path, final RepoRevision revision) {
+    public byte[] getFileContents(final String path, final RepoRevision revision) throws SVNException {
         return this.fileCache.getFileContents(path, (Long) revision.getId());
     }
 
