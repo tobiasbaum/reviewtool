@@ -10,6 +10,8 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 /**
  * A fragment is the smallest unit of a change. A fragment is generally checked as a whole by a reviewer,
  * and separately from other fragments. Examples for fragments are methods that are new or changed considerably,
@@ -262,7 +264,7 @@ public final class Fragment implements Comparable<Fragment> {
                 }
                 return fragmentList;
             } catch (final IncompatibleFragmentException e) {
-                throw new Error(e);
+                throw new ReviewtoolException(e);
             }
         }
     }

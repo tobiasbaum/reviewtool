@@ -5,6 +5,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 /**
  * A fragment list is a sorted collection of fragments.
  */
@@ -114,7 +116,7 @@ public class FragmentList {
         try {
             result.addFragment(fragment);
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
 
         final PositionInText posTo = fragment.getTo();
@@ -139,7 +141,7 @@ public class FragmentList {
         try {
             result.addFragmentList(this);
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
 
         return result;
@@ -161,7 +163,7 @@ public class FragmentList {
                 }
             }
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
         return result;
     }

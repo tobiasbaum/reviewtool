@@ -325,7 +325,7 @@ public class SvnChangeSource implements IChangeSource {
         try {
             ancestorEdge.setDiff(ancestorEdge.getDiff().merge(hunks));
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
         return ret;
     }

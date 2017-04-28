@@ -7,6 +7,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 /**
  * Represents a set of difference hunks between different revisions of the same file. A FileDiff object can accumulate
  * hunks of different source/target revisions.
@@ -89,7 +91,7 @@ public final class FileDiff {
         try {
             return this.createCombinedFragment(source).setFile(this.toRevision);
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
     }
 
@@ -206,7 +208,7 @@ public final class FileDiff {
                 sources.addFragment(hunk.getSource());
             }
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
 
         final FragmentList targets = new FragmentList();
@@ -215,7 +217,7 @@ public final class FileDiff {
                 targets.addFragment(hunk.getTarget());
             }
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
 
         return new Hunk(
@@ -347,7 +349,7 @@ public final class FileDiff {
                 }
             }
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
 
         final Fragment newHunkTarget = new Fragment(
