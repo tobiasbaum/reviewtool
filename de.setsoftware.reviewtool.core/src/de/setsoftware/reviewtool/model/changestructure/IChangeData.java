@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -8,15 +9,19 @@ import java.util.List;
 public interface IChangeData {
 
     /**
+     * Returns the {@link IChangeSource} that created this object.
+     */
+    public abstract IChangeSource getSource();
+
+    /**
+     * Returns all repositories that were matching for the given ticket.
+     */
+    public abstract Collection<? extends Repository> getRepositories();
+
+    /**
      * Returns all commits that were matching for the given ticket.
      */
     public abstract List<Commit> getMatchedCommits();
-
-    /**
-     * Creates a fragment tracer for the change source.
-     * The fragment tracer can use data cached when determining the matched commits, but does not have to.
-     */
-    public abstract IFragmentTracer createTracer();
 
     /**
      * Returns a {@link IFileHistoryGraph} for the change data.

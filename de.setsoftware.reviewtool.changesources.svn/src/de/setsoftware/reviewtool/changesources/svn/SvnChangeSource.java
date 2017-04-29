@@ -47,6 +47,7 @@ import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryEdge;
 import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.IncompatibleFragmentException;
+import de.setsoftware.reviewtool.model.changestructure.Repository;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
 
 /**
@@ -122,21 +123,40 @@ public class SvnChangeSource implements IChangeSource {
             final IMutableFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
             ui.subTask("Determining relevant commits...");
             final List<ISvnRevision> revisions = this.determineRelevantRevisions(key, historyGraph, ui);
+            final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
             ui.subTask("Checking state of working copy...");
-            this.checkWorkingCopiesUpToDateAndProcessWorkingCopyChanges(revisions, historyGraph, ui);
+            this.checkWorkingCopiesUpToDate(neededRevisionPerRepo, ui);
             ui.subTask("Analyzing commits...");
-            return new SvnChangeData(this.convertToChanges(historyGraph, revisions, ui), historyGraph);
+            final List<Commit> commits = this.convertToChanges(historyGraph, revisions, ui);
+            return new SvnChangeData(this, neededRevisionPerRepo.keySet(), commits, historyGraph);
         } catch (final SVNException e) {
             throw new ReviewtoolException(e);
         }
     }
 
-    private void checkWorkingCopiesUpToDateAndProcessWorkingCopyChanges(
-            final List<ISvnRevision> revisions,
-            final IMutableFileHistoryGraph historyGraph,
+    @Override
+    public IChangeData getLocalChanges(final IChangeData remoteChanges, final IProgressMonitor ui) {
+        try {
+            final IMutableFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
+            ui.subTask("Collecting local changes...");
+            final List<WorkingCopyRevision> revisions =
+                    this.collectWorkingCopyChanges(remoteChanges.getRepositories(), historyGraph, ui);
+            ui.subTask("Analyzing local changes...");
+            final List<Commit> commits = this.convertToChanges(historyGraph, revisions, ui);
+            return new SvnChangeData(this, remoteChanges.getRepositories(), commits, historyGraph);
+        } catch (final SVNException e) {
+            throw new ReviewtoolException(e);
+        }
+    }
+
+    /**
+     * Checks whether the working copy should be updated in order to incorporate remote changes.
+     * @param revisions The list of revisions.
+     */
+    private void checkWorkingCopiesUpToDate(
+            final Map<SvnRepo, Long> neededRevisionPerRepo,
             final IChangeSourceUi ui) throws SVNException {
 
-        final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
         for (final Entry<SvnRepo, Long> e : neededRevisionPerRepo.entrySet()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
@@ -150,7 +170,28 @@ public class SvnChangeSource implements IChangeSource {
                     this.mgr.getUpdateClient().doUpdate(wc, SVNRevision.HEAD, SVNDepth.INFINITY, true, false);
                 }
             }
+        }
+    }
 
+    /**
+     * Collects all local changes and integrates them into the {@link IMutableFileHistoryGraph}.
+     * @param repositories The list of relevant {@link Repository Repositories}.
+     * @param historyGraph The {@link IMutableFileHistoryGraph}. Local changes will be integrated using a
+     *      {@link WorkingCopyRevision}.
+     * @return A list of {@link WorkingCopyRevision}s. May be empty if no relevant local changes have been found.
+     */
+    private List<WorkingCopyRevision> collectWorkingCopyChanges(
+            final Collection<? extends Repository> repositories,
+            final IMutableFileHistoryGraph historyGraph,
+            final IProgressMonitor ui) throws SVNException {
+
+        final List<WorkingCopyRevision> revisions = new ArrayList<>();
+        for (final Repository repo : repositories) {
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+            final File wc = repo.getLocalRoot();
+            final SvnRepo svnRepo = CachedLog.getInstance().mapWorkingCopyRootToRepository(this.mgr, wc);
             final SortedMap<String, CachedLogEntryPath> paths = new TreeMap<>();
             this.mgr.getStatusClient().doStatus(
                     wc,
@@ -164,18 +205,20 @@ public class SvnChangeSource implements IChangeSource {
                         @Override
                         public void handleStatus(final SVNStatus status) throws SVNException {
                             if (status.isVersioned()) {
-                                final CachedLogEntryPath entry = new CachedLogEntryPath(repo, status);
+                                final CachedLogEntryPath entry = new CachedLogEntryPath(svnRepo, status);
                                 paths.put(entry.getPath(), entry);
                             }
                         }
                     },
                     null); /* no change lists */
 
-            final WorkingCopyRevision wcRevision = new WorkingCopyRevision(repo, paths);
+            final WorkingCopyRevision wcRevision = new WorkingCopyRevision(svnRepo, paths);
             if (RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph)) {
                 revisions.add(wcRevision);
             }
         }
+
+        return revisions;
     }
 
     private Map<SvnRepo, Long> determineMaxRevisionPerRepo(

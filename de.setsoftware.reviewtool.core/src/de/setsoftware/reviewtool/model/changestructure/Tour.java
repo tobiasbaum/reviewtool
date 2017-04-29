@@ -25,15 +25,17 @@ public class Tour implements IReviewElement {
     private final String description;
     private final List<Stop> stops = new ArrayList<>();
     private final boolean isVisible;
+    private final boolean isLocal;
 
     public Tour(String description, List<? extends Stop> list) {
-        this(description, list, true);
+        this(description, list, true, false);
     }
 
-    public Tour(String description, List<? extends Stop> list, final boolean isVisible) {
+    public Tour(String description, List<? extends Stop> list, final boolean isVisible, final boolean isLocal) {
         this.description = description;
         this.stops.addAll(list);
         this.isVisible = isVisible;
+        this.isLocal = isLocal;
     }
 
     @Override
@@ -61,6 +63,10 @@ public class Tour implements IReviewElement {
         return this.isVisible;
     }
 
+    public boolean isLocal() {
+        return this.isLocal;
+    }
+
     public List<Stop> getStops() {
         return Collections.unmodifiableList(this.stops);
     }
@@ -76,6 +82,9 @@ public class Tour implements IReviewElement {
      * from this come before files from the other tour.
      */
     public Tour mergeWith(Tour t2) {
+        assert !this.isLocal();
+        assert !t2.isLocal();
+
         final Multimap<FileInRevision, Stop> stopsInFile = new Multimap<>();
 
         for (final Stop s : this.stops) {
@@ -90,7 +99,7 @@ public class Tour implements IReviewElement {
             mergedStops.addAll(this.sortByLine(this.mergeInSameFile(e.getValue())));
         }
         return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops,
-                this.isVisible() || t2.isVisible());
+                this.isVisible() || t2.isVisible(), false);
     }
 
     private List<Stop> mergeInSameFile(List<Stop> stopsInSameFile) {

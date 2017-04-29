@@ -94,6 +94,17 @@ public class CachedLog {
         }
     }
 
+    /**
+     * Maps the root of a working copy to the corresponding {@link SvnRepo} object.
+     * @param workingCopyRoot The path pointing at the root of some working copy.
+     * @return A suitable {@link SvnRepo} object or {@code null} if the path passed is unknown.
+     */
+    public SvnRepo mapWorkingCopyRootToRepository(final SVNClientManager mgr, final File workingCopyRoot)
+            throws SVNException {
+        final RepoDataCache cache = this.getRepoCache(mgr, workingCopyRoot);
+        return cache == null ? null : cache.getRepo();
+    }
+
     private synchronized RepoDataCache getRepoCache(SVNClientManager mgr, File workingCopyRoot) throws SVNException {
         RepoDataCache c = this.repoDataPerWcRoot.get(workingCopyRoot.toString());
         if (c == null) {

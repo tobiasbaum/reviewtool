@@ -24,6 +24,8 @@ public class Stop implements IReviewElement {
 
     private final FileInRevision mostRecentFile;
     private final Fragment mostRecentFragment;
+    private transient FileInRevision mostRecentFileConsideringLocalChanges;
+    private transient Fragment mostRecentFragmentConsideringLocalChanges;
     //TODO does this flag make sense? visibility is an attribute of a tour (if at all)
     private final boolean isVisible;
 
@@ -42,6 +44,8 @@ public class Stop implements IReviewElement {
 
         this.mostRecentFile = traceFragment.getFile();
         this.mostRecentFragment = traceFragment;
+        this.mostRecentFileConsideringLocalChanges = null;
+        this.mostRecentFragmentConsideringLocalChanges = null;
 
         this.irrelevantForReview = change.isIrrelevantForReview();
         this.isVisible = change.isVisible();
@@ -59,6 +63,8 @@ public class Stop implements IReviewElement {
 
         this.mostRecentFile = traceFile;
         this.mostRecentFragment = null;
+        this.mostRecentFileConsideringLocalChanges = null;
+        this.mostRecentFragmentConsideringLocalChanges = null;
 
         this.irrelevantForReview = change.isIrrelevantForReview();
         this.isVisible = change.isVisible();
@@ -72,12 +78,16 @@ public class Stop implements IReviewElement {
             final Multimap<FileInRevision, Hunk> history,
             final FileInRevision mostRecentFile,
             final Fragment mostRecentFragment,
+            final FileInRevision mostRecentFileConsideringLocalChanges,
+            final Fragment mostRecentFragmentConsideringLocalChanges,
             final boolean irrelevantForReview,
             final boolean isVisible) {
         this.historyOrder = historyOrder;
         this.history = history;
         this.mostRecentFile = mostRecentFile;
         this.mostRecentFragment = mostRecentFragment;
+        this.mostRecentFileConsideringLocalChanges = mostRecentFileConsideringLocalChanges;
+        this.mostRecentFragmentConsideringLocalChanges = mostRecentFragmentConsideringLocalChanges;
         this.irrelevantForReview = irrelevantForReview;
         this.isVisible = isVisible;
     }
@@ -91,12 +101,40 @@ public class Stop implements IReviewElement {
         return this.mostRecentFragment != null;
     }
 
-    public Fragment getMostRecentFragment() {
+    public Fragment getOriginalMostRecentFragment() {
         return this.mostRecentFragment;
     }
 
-    public FileInRevision getMostRecentFile() {
+    public FileInRevision getOriginalMostRecentFile() {
         return this.mostRecentFile;
+    }
+
+    public Fragment getMostRecentFragment() {
+        return this.mostRecentFragmentConsideringLocalChanges != null ? this.mostRecentFragmentConsideringLocalChanges
+                : this.mostRecentFragment;
+    }
+
+    public FileInRevision getMostRecentFile() {
+        return this.mostRecentFileConsideringLocalChanges != null ? this.mostRecentFileConsideringLocalChanges
+                : this.mostRecentFile;
+    }
+
+    /**
+     * Updates the most recent file and fragment given a {@link IFragmentTracer}.
+     * This operation is used to make the stop aware about current local modifications.
+     * The original most recent fragment and file are not forgotten, each update uses them as the basis for tracing.
+     */
+    public void updateMostRecentData(final IFragmentTracer tracer) {
+        if (this.mostRecentFragment != null) {
+            final List<Fragment> fragments = tracer.traceFragment(this.mostRecentFragment);
+            if (!fragments.isEmpty()) {
+                this.mostRecentFragmentConsideringLocalChanges = fragments.get(0);
+            }
+        }
+        final List<FileInRevision> files = tracer.traceFile(this.mostRecentFile);
+        if (!files.isEmpty()) {
+            this.mostRecentFileConsideringLocalChanges = files.get(0);
+        }
     }
 
     public Map<FileInRevision, FileInRevision> getHistory() {
@@ -167,6 +205,10 @@ public class Stop implements IReviewElement {
                 mergedHistory,
                 this.mostRecentFile,
                 this.mostRecentFragment == null ? null : this.mostRecentFragment.merge(other.mostRecentFragment),
+                this.mostRecentFileConsideringLocalChanges,
+                this.mostRecentFragmentConsideringLocalChanges == null ? null
+                        : this.mostRecentFragmentConsideringLocalChanges.merge(
+                                other.mostRecentFragmentConsideringLocalChanges),
                 //the result is only irrelevant if both parts are irrelevant. It would probably be more accurate
                 //  to track which part is relevant and which is not (so that a merge could result in multiple
                 //  stops), but this complicates some algorithms and is only useful for large irrelevant stops,

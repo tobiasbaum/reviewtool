@@ -39,12 +39,14 @@ class MutableTour implements IReviewElement {
     private final Set<String> descriptionParts;
     private final List<Stop> stops;
     private final boolean isVisible;
+    private final boolean isLocal;
 
     public MutableTour(Tour t) {
         this.descriptionParts = new LinkedHashSet<>();
         this.descriptionParts.add(t.getDescription());
         this.stops = new ArrayList<>(t.getStops());
         this.isVisible = t.isVisible();
+        this.isLocal = t.isLocal();
     }
 
     public static List<Tour> toTours(List<MutableTour> mutableTours) {
@@ -53,12 +55,16 @@ class MutableTour implements IReviewElement {
             ret.add(new Tour(
                     Util.implode(t.descriptionParts, " + "),
                     t.stops,
-                    t.isVisible()));
+                    t.isVisible(),
+                    t.isLocal()));
         }
         return ret;
     }
 
     public boolean canBeResolvedCompletely(List<MutableTour> mutableTours, int excludedIndex) {
+        if (this.isLocal()) {
+            return false;
+        }
         for (final Stop s : this.stops) {
             if (!this.canBeMerged(s, mutableTours, excludedIndex)) {
                 return false;
@@ -73,6 +79,9 @@ class MutableTour implements IReviewElement {
     }
 
     public boolean resolve(List<MutableTour> mutableTours, int currentIndex) {
+        if (this.isLocal()) {
+            return false;
+        }
         boolean didSomething = false;
         final Iterator<Stop> iter = this.stops.iterator();
         while (iter.hasNext()) {
@@ -114,6 +123,9 @@ class MutableTour implements IReviewElement {
     }
 
     private StopInTour getStopToMergeWith(Stop s) {
+        if (this.isLocal()) {
+            return null;
+        }
         for (int stopIndex = 0; stopIndex < this.stops.size(); stopIndex++) {
             final Stop stop = this.stops.get(stopIndex);
             if (!s.equals(stop) && stop.canBeMergedWith(s)) {
@@ -123,7 +135,7 @@ class MutableTour implements IReviewElement {
         return null;
     }
 
-    public void mergeStop(int index, Stop s) {
+    private void mergeStop(int index, Stop s) {
         this.stops.set(index, this.stops.get(index).merge(s));
     }
 
@@ -134,5 +146,9 @@ class MutableTour implements IReviewElement {
     @Override
     public boolean isVisible() {
         return this.isVisible;
+    }
+
+    public boolean isLocal() {
+        return this.isLocal;
     }
 }

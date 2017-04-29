@@ -239,7 +239,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     ? -1 : stop.getMostRecentFragment().getFrom().getLine())
                 .param("type", typeForTelemetry)
                 .log();
-            openEditorFor(stop);
+            openEditorFor(tours, stop);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -250,7 +250,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         tv.expandToLevel(activeTour, TreeViewer.ALL_LEVELS);
     }
 
-    private static void openEditorFor(Stop stop) throws CoreException, IOException {
+    private static void openEditorFor(final ToursInReview tours, final Stop stop) throws CoreException, IOException {
         final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 
         //when jumping to a marker, Eclipse selects all the contained text. We don't want that, so
@@ -271,7 +271,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             jumpTarget = stop;
         }
 
-        final IMarker marker = ToursInReview.createMarkerFor(new RealMarkerFactory(), jumpTarget);
+        final IMarker marker = tours.createMarkerFor(new RealMarkerFactory(), jumpTarget);
         if (marker != null) {
             IDE.openEditor(page, marker);
             marker.delete();

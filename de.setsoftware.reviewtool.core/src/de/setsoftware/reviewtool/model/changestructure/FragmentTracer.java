@@ -1,24 +1,17 @@
-package de.setsoftware.reviewtool.changesources.svn;
+package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import de.setsoftware.reviewtool.model.changestructure.FileDiff;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
-import de.setsoftware.reviewtool.model.changestructure.IFileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.changestructure.IFragmentTracer;
-
 /**
- * A SVN based fragment tracer.
+ * A fragment tracer based on a {@link IFileHistoryGraph}.
  */
-public class SvnFragmentTracer implements IFragmentTracer {
+public class FragmentTracer implements IFragmentTracer {
 
     private final IFileHistoryGraph fileHistoryGraph;
 
-    public SvnFragmentTracer(final IFileHistoryGraph fileHistoryGraph) {
+    public FragmentTracer(final IFileHistoryGraph fileHistoryGraph) {
         this.fileHistoryGraph = fileHistoryGraph;
     }
 
