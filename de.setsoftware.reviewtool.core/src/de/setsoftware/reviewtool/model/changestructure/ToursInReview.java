@@ -81,6 +81,7 @@ public class ToursInReview {
     private final VirtualFileHistoryGraph historyGraph;
     private final List<Tour> tours;
     private final IChangeData remoteChanges;
+    private List<File> modifiedFiles;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
@@ -88,6 +89,7 @@ public class ToursInReview {
         this.historyGraph = new VirtualFileHistoryGraph(remoteChanges.getHistoryGraph());
         this.tours = new ArrayList<>(tours);
         this.remoteChanges = remoteChanges;
+        this.modifiedFiles = remoteChanges.getLocalPaths();
         this.currentTourIndex = 0;
     }
 
@@ -95,6 +97,7 @@ public class ToursInReview {
         this.historyGraph = new VirtualFileHistoryGraph();
         this.tours = new ArrayList<>(tours);
         this.remoteChanges = null;
+        this.modifiedFiles = new ArrayList<>();
         this.currentTourIndex = 0;
     }
 
@@ -118,7 +121,7 @@ public class ToursInReview {
             ICreateToursUi createUi,
             String ticketKey) {
         changeSourceUi.subTask("Determining relevant changes...");
-        final IChangeData changes = src.getChanges(ticketKey, changeSourceUi);
+        final IChangeData changes = src.getRepositoryChanges(ticketKey, changeSourceUi);
         changeSourceUi.subTask("Filtering changes...");
         final List<Commit> filteredChanges =
                 filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(),
@@ -141,7 +144,7 @@ public class ToursInReview {
         }
 
         final ToursInReview result = new ToursInReview(userSelection, changes);
-        result.createLocalTour(changeSourceUi, null);
+        result.createLocalTour(null, changeSourceUi, null);
         return result;
     }
 
@@ -152,10 +155,22 @@ public class ToursInReview {
      * @param progressMonitor The progress monitor to use.
      * @param markerFactory The marker factory to use. May be null if initially called while creating the tours.
      */
-    public void createLocalTour(final IProgressMonitor progressMonitor, final IStopMarkerFactory markerFactory) {
+    public void createLocalTour(
+            final List<File> paths,
+            final IProgressMonitor progressMonitor,
+            final IStopMarkerFactory markerFactory) {
+
         progressMonitor.subTask("Collecting local changes...");
-        final IChangeData localChanges =
-                this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, progressMonitor);
+        final IChangeData localChanges;
+        if (paths == null) {
+            localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, null,
+                    progressMonitor);
+        } else {
+            this.modifiedFiles.addAll(paths);
+            localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, this.modifiedFiles,
+                    progressMonitor);
+        }
+        this.modifiedFiles = new ArrayList<>(localChanges.getLocalPaths());
 
         if (this.historyGraph.size() > 1) {
             this.historyGraph.remove(1);

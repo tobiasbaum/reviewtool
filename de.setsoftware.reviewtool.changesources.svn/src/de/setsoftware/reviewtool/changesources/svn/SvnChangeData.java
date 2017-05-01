@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,16 +20,19 @@ public class SvnChangeData implements IChangeData {
     private final IChangeSource source;
     private final Collection<? extends Repository> repositories;
     private final List<Commit> commits;
+    private final List<File> localPaths;
     private final IFileHistoryGraph fileHistoryGraph;
 
     public SvnChangeData(
             final IChangeSource source,
             final Collection<? extends Repository> repositories,
             final List<Commit> commits,
+            final List<File> localPaths,
             final IFileHistoryGraph fileHistoryGraph) {
         this.source = source;
         this.repositories = repositories;
         this.commits = commits;
+        this.localPaths = localPaths;
         this.fileHistoryGraph = fileHistoryGraph;
     }
 
@@ -51,6 +55,11 @@ public class SvnChangeData implements IChangeData {
             }
         }
         return ret;
+    }
+
+    @Override
+    public List<File> getLocalPaths() {
+        return this.localPaths;
     }
 
     @Override

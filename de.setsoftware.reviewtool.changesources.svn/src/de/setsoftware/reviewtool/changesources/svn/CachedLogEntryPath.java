@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
+import java.io.File;
 import java.io.Serializable;
 
 import org.tmatesoft.svn.core.SVNLogEntryPath;
@@ -13,9 +14,10 @@ import org.tmatesoft.svn.core.wc.SVNStatusType;
  */
 public class CachedLogEntryPath implements Serializable {
 
-    private static final long serialVersionUID = -7052753449952234944L;
+    private static final long serialVersionUID = -7052753449952234943L;
 
     private final String path;
+    private final File localPath;
     private final String copyPath;
     private final long prevRevision;
     private final char type;
@@ -23,6 +25,7 @@ public class CachedLogEntryPath implements Serializable {
 
     public CachedLogEntryPath(final SVNLogEntryPath value, final long prevRevision) {
         this.path = value.getPath();
+        this.localPath = null;
         this.copyPath = value.getCopyPath();
         if (this.copyPath == null) {
             this.prevRevision = prevRevision;
@@ -58,6 +61,7 @@ public class CachedLogEntryPath implements Serializable {
                 this.prevRevision = status.getCommittedRevision().getNumber();
             }
         }
+        this.localPath = status.getFile();
         this.type = mapStatusTypeToLogEntryType(status.getNodeStatus());
         this.kind = mapStatusKind(status.getKind());
     }
@@ -78,6 +82,10 @@ public class CachedLogEntryPath implements Serializable {
 
     public String getPath() {
         return this.path;
+    }
+
+    public File getLocalPath() {
+        return this.localPath;
     }
 
     public String getCopyPath() {

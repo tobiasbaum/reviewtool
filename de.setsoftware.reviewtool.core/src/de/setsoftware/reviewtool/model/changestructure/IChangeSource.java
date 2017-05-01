@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
+import java.util.List;
+
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
@@ -8,14 +11,20 @@ import org.eclipse.core.runtime.IProgressMonitor;
 public interface IChangeSource {
 
     /**
-     * Returns all remote changes (that are relevant for the review tool) for the ticket with the given key.
+     * Returns all repository changes (that are relevant for the review tool) for the ticket with the given key.
      */
-    public abstract IChangeData getChanges(String key, IChangeSourceUi ui);
+    public abstract IChangeData getRepositoryChanges(String key, IChangeSourceUi ui);
 
     /**
      * Returns all local changes (that are relevant for the review tool) in a new {@link IChangeData} object,
-     * based on a {@link IChangeData} object returned earlier by {@link #getChanges(String, IChangeSourceUi)}.
+     * based on a {@link IChangeData} object returned earlier by {@link #getRepositoryChanges(String, IChangeSourceUi)}.
+     *
+     * @param changedPaths The files to consider while searching for modifications. If {@code null},
+     *      the whole working copy is considered.
      */
-    public abstract IChangeData getLocalChanges(IChangeData remoteChanges, IProgressMonitor ui);
+    public abstract IChangeData getLocalChanges(
+            IChangeData remoteChanges,
+            List<File> changedPaths,
+            IProgressMonitor ui);
 
 }

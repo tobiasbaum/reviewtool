@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.List;
 
@@ -22,6 +23,12 @@ public interface IChangeData {
      * Returns all commits that were matching for the given ticket.
      */
     public abstract List<Commit> getMatchedCommits();
+
+    /**
+     * Returns the paths for all locally modified files. Only meaningful in results of
+     * {@link IChangeSource#getLocalChanges(IChangeData, List, org.eclipse.core.runtime.IProgressMonitor)}.
+     */
+    public abstract List<File> getLocalPaths();
 
     /**
      * Returns a {@link IFileHistoryGraph} for the change data.
