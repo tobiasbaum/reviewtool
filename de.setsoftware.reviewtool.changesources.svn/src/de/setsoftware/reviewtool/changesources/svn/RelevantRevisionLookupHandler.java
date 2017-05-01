@@ -13,8 +13,8 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNException;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
 
 /**
@@ -57,7 +57,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
      * Returns all revisions that matched the given pattern and all revisions in between that touched
      * files changed in a matching revision.
      */
-    public List<ISvnRevision> determineRelevantRevisions(final FileHistoryGraph historyGraphBuffer,
+    public List<ISvnRevision> determineRelevantRevisions(final IMutableFileHistoryGraph historyGraph,
             final IChangeSourceUi ui) {
         final List<ISvnRevision> ret = new ArrayList<>();
         for (final TreeMap<Long, SvnRevision> revisionsInRepo : this.groupResultsByRepository().values()) {
@@ -65,7 +65,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                 if (ui.isCanceled()) {
                     throw new OperationCanceledException();
                 }
-                if (processRevision(revision, historyGraphBuffer)) {
+                if (processRevision(revision, historyGraph)) {
                     ret.add(revision);
                 }
             }
@@ -81,13 +81,13 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
         }
     }
 
-    public static boolean processRevision(final ISvnRevision revision, final FileHistoryGraph historyGraphBuffer) {
+    public static boolean processRevision(final ISvnRevision revision, final IMutableFileHistoryGraph historyGraph) {
         boolean isRelevant = false;
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String path = e.getKey();
             if (e.getValue().isDeleted()) {
-                if (revision.isVisible() || historyGraphBuffer.contains(path, revision.getRepository())) {
-                    historyGraphBuffer.addDeletion(
+                if (revision.isVisible() || historyGraph.contains(path, revision.getRepository())) {
+                    historyGraph.addDeletion(
                             path,
                             revision.toRevision(),
                             Collections.<Revision>singleton(toRevision(e.getValue().getAncestorRevision())),
@@ -97,8 +97,8 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
             } else {
                 final String copyPath = e.getValue().getCopyPath();
                 if (copyPath != null
-                        && (revision.isVisible() || historyGraphBuffer.contains(copyPath, revision.getRepository()))) {
-                    historyGraphBuffer.addCopy(
+                        && (revision.isVisible() || historyGraph.contains(copyPath, revision.getRepository()))) {
+                    historyGraph.addCopy(
                             copyPath,
                             path,
                             ChangestructureFactory.createRepoRevision(e.getValue().getAncestorRevision()),
@@ -106,15 +106,15 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                             revision.getRepository());
                     isRelevant = true;
                 } else if (e.getValue().isFile()
-                        && (revision.isVisible() || historyGraphBuffer.contains(path, revision.getRepository()))) {
+                        && (revision.isVisible() || historyGraph.contains(path, revision.getRepository()))) {
                     if (e.getValue().isNew()) {
-                        historyGraphBuffer.addAdditionOrChange(
+                        historyGraph.addAdditionOrChange(
                                 path,
                                 revision.toRevision(),
                                 Collections.<Revision>emptySet(),
                                 revision.getRepository());
                     } else {
-                        historyGraphBuffer.addAdditionOrChange(
+                        historyGraph.addAdditionOrChange(
                                 path,
                                 revision.toRevision(),
                                 Collections.<Revision>singleton(toRevision(e.getValue().getAncestorRevision())),

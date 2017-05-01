@@ -1,17 +1,14 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import de.setsoftware.reviewtool.base.ReviewtoolException;
-
 /**
  * A node in a {@link FileHistoryGraph}.
  */
-public final class FileHistoryNode implements IFileHistoryNode {
+public final class FileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 
     private final FileInRevision file;
     private final Set<FileHistoryEdge> ancestors;
@@ -19,12 +16,6 @@ public final class FileHistoryNode implements IFileHistoryNode {
     private FileHistoryNode parent;
     private final List<FileHistoryNode> children;
     private boolean isDeleted;
-    private static final ThreadLocal<Boolean> inToString = new ThreadLocal<Boolean>() {
-        @Override
-        protected Boolean initialValue() {
-            return Boolean.FALSE;
-        }
-    };
 
     /**
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
@@ -61,29 +52,6 @@ public final class FileHistoryNode implements IFileHistoryNode {
     @Override
     public boolean isDeleted() {
         return this.isDeleted;
-    }
-
-    @Override
-    public Set<FileDiff> buildHistories(final IFileHistoryNode from) {
-        if (from.equals(this)) {
-            return Collections.singleton(new FileDiff(from.getFile(), from.getFile()));
-        }
-
-        if (!this.isRoot()) {
-            final Set<FileDiff> result = new LinkedHashSet<>();
-            for (final IFileHistoryEdge ancestorEdge : this.ancestors) {
-                for (final FileDiff diff : ancestorEdge.getAncestor().buildHistories(from)) {
-                    try {
-                        result.add(diff.merge(ancestorEdge.getDiff()));
-                    } catch (final IncompatibleFragmentException e) {
-                        throw new ReviewtoolException(e);
-                    }
-                }
-            }
-            return result;
-        } else {
-            return Collections.emptySet(); // ancestor revision not found
-        }
     }
 
     /**
@@ -187,54 +155,14 @@ public final class FileHistoryNode implements IFileHistoryNode {
     }
 
     /**
-     * {@inheritDoc}
-     * <p/>
-     * In order to prevent infinite recursion, a thread-local flag <code>inToString</code> is used to detect cycles.
-     */
-    @Override
-    public String toString() {
-        if (inToString.get()) {
-            return this.file.toString();
-        }
-
-        inToString.set(true);
-        try {
-            final List<String> attributes = new ArrayList<>();
-            this.attributesToString(attributes);
-            if (attributes.isEmpty()) {
-                return this.file.toString();
-            } else {
-                return this.file.toString() + attributes.toString();
-            }
-        } finally {
-            inToString.set(false);
-        }
-    }
-
-    /**
      * Fills a list of additional attributes used by toString().
      * @param attributes A list containing elements to be included in the output of {@link #toString()}.
      */
-    private void attributesToString(final List<String> attributes) {
-        if (!this.isRoot()) {
-            final Set<IFileHistoryNode> nodes = new LinkedHashSet<>();
-            for (final IFileHistoryEdge ancestorEdge : this.ancestors) {
-                nodes.add(ancestorEdge.getAncestor());
-            }
-            attributes.add("ancestors=" + nodes);
-        }
-        if (!this.descendants.isEmpty()) {
-            final Set<IFileHistoryNode> nodes = new LinkedHashSet<>();
-            for (final IFileHistoryEdge descendantEdge : this.descendants) {
-                nodes.add(descendantEdge.getDescendant());
-            }
-            attributes.add("descendants=" + nodes);
-        }
+    @Override
+    protected void attributesToString(final List<String> attributes) {
+        super.attributesToString(attributes);
         if (!this.children.isEmpty()) {
             attributes.add("children=" + this.children);
-        }
-        if (this.isDeleted) {
-            attributes.add("deleted");
         }
     }
 }

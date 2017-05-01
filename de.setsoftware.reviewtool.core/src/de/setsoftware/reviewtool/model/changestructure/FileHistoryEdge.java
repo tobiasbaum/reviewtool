@@ -3,7 +3,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 /**
  * An edge in a {@link FileHistoryGraph}. It always goes from a descendant node to an ancestor node.
  */
-public final class FileHistoryEdge implements IFileHistoryEdge {
+public final class FileHistoryEdge implements IMutableFileHistoryEdge {
 
     private final FileHistoryNode ancestor;
     private final FileHistoryNode descendant;
@@ -36,9 +36,7 @@ public final class FileHistoryEdge implements IFileHistoryEdge {
         return this.diff;
     }
 
-    /**
-     * Sets the associated {@link FileDiff} object.
-     */
+    @Override
     public void setDiff(final FileDiff diff) {
         this.diff = diff;
     }

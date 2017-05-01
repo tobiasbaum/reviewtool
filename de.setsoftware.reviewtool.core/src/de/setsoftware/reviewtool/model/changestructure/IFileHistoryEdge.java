@@ -1,8 +1,8 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 /**
- * An edge in a {@link IFileHistoryGraph}. It contains a {@link FileDiff}. It points from a descendant node to
- * an ancestor node.
+ * An edge in a {@link IFileHistoryGraph} between an ancestor and a descendant {@link IFileHistoryNode}.
+ * It contains a {@link FileDiff}.
  */
 public interface IFileHistoryEdge {
 
@@ -17,10 +17,7 @@ public interface IFileHistoryEdge {
     public abstract IFileHistoryNode getDescendant();
 
     /**
-     * Returns the {@link FileDiff} bound to this edge.
-     * <p/>
-     * <em>Note:</em> Whether the {@link FileDiff} is to be interpreted in or against the direction of the edge
-     * is determined by the context.
+     * Returns the {@link FileDiff} between ancestor and descendant.
      */
     public abstract FileDiff getDiff();
 

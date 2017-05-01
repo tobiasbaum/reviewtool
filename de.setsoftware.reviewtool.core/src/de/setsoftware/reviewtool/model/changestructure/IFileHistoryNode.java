@@ -4,7 +4,7 @@ import java.util.Set;
 
 /**
  * A node in a {@link IFileHistoryGraph}.
- * It is bound to a {@link FileInRevision} and knows at most one direct ancestor.
+ * It is bound to a {@link FileInRevision} and knows its ancestors and descendants.
  */
 public interface IFileHistoryNode {
 

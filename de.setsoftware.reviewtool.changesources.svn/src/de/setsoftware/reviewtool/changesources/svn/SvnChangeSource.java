@@ -18,6 +18,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
@@ -35,9 +36,6 @@ import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.changestructure.Change;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Commit;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryEdge;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Hunk;
@@ -45,6 +43,9 @@ import de.setsoftware.reviewtool.model.changestructure.IChangeData;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryEdge;
+import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.IncompatibleFragmentException;
 import de.setsoftware.reviewtool.model.changestructure.Revision;
 
@@ -118,7 +119,7 @@ public class SvnChangeSource implements IChangeSource {
     @Override
     public IChangeData getChanges(String key, IChangeSourceUi ui) {
         try {
-            final FileHistoryGraph historyGraph = new SvnFileHistoryGraph();
+            final IMutableFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
             ui.subTask("Determining relevant commits...");
             final List<ISvnRevision> revisions = this.determineRelevantRevisions(key, historyGraph, ui);
             ui.subTask("Checking state of working copy...");
@@ -132,7 +133,7 @@ public class SvnChangeSource implements IChangeSource {
 
     private void checkWorkingCopiesUpToDateAndProcessWorkingCopyChanges(
             final List<ISvnRevision> revisions,
-            final FileHistoryGraph historyGraph,
+            final IMutableFileHistoryGraph historyGraph,
             final IChangeSourceUi ui) throws SVNException {
 
         final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
@@ -195,7 +196,9 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private List<ISvnRevision> determineRelevantRevisions(final String key, final FileHistoryGraph historyGraphBuffer,
+    private List<ISvnRevision> determineRelevantRevisions(
+            final String key,
+            final IMutableFileHistoryGraph historyGraph,
             final IChangeSourceUi ui) throws SVNException {
         final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
         for (final File workingCopyRoot : this.workingCopyRoots) {
@@ -204,13 +207,13 @@ public class SvnChangeSource implements IChangeSource {
             }
             CachedLog.getInstance().traverseRecentEntries(this.mgr, workingCopyRoot, handler, ui);
         }
-        return handler.determineRelevantRevisions(historyGraphBuffer, ui);
+        return handler.determineRelevantRevisions(historyGraph, ui);
     }
 
     private List<Commit> convertToChanges(
-            final FileHistoryGraph historyGraph,
+            final IMutableFileHistoryGraph historyGraph,
             final List<? extends ISvnRevision> revisions,
-            final IChangeSourceUi ui) {
+            final IProgressMonitor ui) {
         final List<Commit> ret = new ArrayList<>();
         for (final ISvnRevision e : revisions) {
             if (ui.isCanceled()) {
@@ -221,8 +224,8 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private void convertToCommitIfPossible(final FileHistoryGraph historyGraph, final ISvnRevision e,
-            final Collection<? super Commit> result, final IChangeSourceUi ui) {
+    private void convertToCommitIfPossible(final IMutableFileHistoryGraph historyGraph, final ISvnRevision e,
+            final Collection<? super Commit> result, final IProgressMonitor ui) {
         final List<Change> changes = this.determineChangesInCommit(historyGraph, e, ui);
         if (!changes.isEmpty()) {
             result.add(ChangestructureFactory.createCommit(e.toPrettyString(), changes, e.isVisible()));
@@ -259,8 +262,8 @@ public class SvnChangeSource implements IChangeSource {
 
     }
 
-    private List<Change> determineChangesInCommit(final FileHistoryGraph historyGraph, final ISvnRevision e,
-            final IChangeSourceUi ui) {
+    private List<Change> determineChangesInCommit(final IMutableFileHistoryGraph historyGraph, final ISvnRevision e,
+            final IProgressMonitor ui) {
 
         final List<Change> ret = new ArrayList<>();
         final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();
@@ -286,7 +289,7 @@ public class SvnChangeSource implements IChangeSource {
                     path,
                     this.revision(e),
                     e.getRepository());
-            final FileHistoryNode node = historyGraph.getNodeFor(fileInfo);
+            final IMutableFileHistoryNode node = historyGraph.getNodeFor(fileInfo);
             if (node != null) {
                 ret.addAll(this.determineChangesInFile(e.getRepository(), node, e.isVisible()));
             }
@@ -324,7 +327,7 @@ public class SvnChangeSource implements IChangeSource {
         return result.get();
     }
 
-    private List<Change> determineChangesInFile(final SvnRepo repo, final FileHistoryNode node,
+    private List<Change> determineChangesInFile(final SvnRepo repo, final IMutableFileHistoryNode node,
             final boolean isVisible) {
 
         final byte[] newFileContent;
@@ -335,7 +338,7 @@ public class SvnChangeSource implements IChangeSource {
         }
 
         final List<Change> ret = new ArrayList<>();
-        for (final FileHistoryEdge ancestorEdge : node.getAncestors()) {
+        for (final IMutableFileHistoryEdge ancestorEdge : node.getAncestors()) {
             final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
 
             final byte[] oldFileContent;

@@ -8,6 +8,14 @@ import java.util.List;
 public interface IFileHistoryGraph {
 
     /**
+     * Returns true if passed path is known to this {@link IFileHistoryGraph}.
+     * @param path The path to check.
+     * @param repo The repository.
+     * @return <code>true</code> if the path is known, else <code>false</code>
+     */
+    public abstract boolean contains(String path, Repository repo);
+
+    /**
      * Returns the {@link IFileHistoryNode} for the given {@link FileInRevision <code>file</code>},
      * or <code>null</code> if <code>file</code> is not part of the history graph.
      *

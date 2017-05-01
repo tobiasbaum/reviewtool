@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -13,23 +12,16 @@ import de.setsoftware.reviewtool.base.Pair;
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
-public abstract class FileHistoryGraph implements IFileHistoryGraph {
+public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implements IMutableFileHistoryGraph {
 
     private final Multimap<Pair<String, Repository>, FileHistoryNode> index = new Multimap<>();
 
-    /**
-     * Returns true if passed path is known to this {@link IFileHistoryGraph}.
-     * @param path The path to check.
-     * @param repo The repository.
-     * @return <code>true</code> if the path is known, else <code>false</code>
-     */
+    @Override
     public final boolean contains(final String path, final Repository repo) {
         return !this.index.get(Pair.create(path, repo)).isEmpty();
     }
 
-    /**
-     * Adds the information that the file with the given path was added or changed at the commit of the given revision.
-     */
+    @Override
     public final void addAdditionOrChange(
             final String path,
             final Revision revision,
@@ -83,12 +75,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
         }
     }
 
-    /**
-     * Adds the information that the file with the given path was deleted with the commit of the given revision.
-     * If ancestor nodes exist, the deletion node of type {@link NonExistingFileHistoryNode} is linked to them,
-     * possibly creating intermediate {@link FileHistoryNode}s just before the deletion. This supports
-     * finding the last revision of a file before being deleted.
-     */
+    @Override
     public final void addDeletion(
             final String path,
             final Revision revision,
@@ -148,10 +135,7 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
         }
     }
 
-    /**
-     * Adds the information that the file with the given "from" path was copied with the commit of the given revision
-     * to the given "to" path.
-     */
+    @Override
     public final void addCopy(
             final String pathFrom,
             final String pathTo,
@@ -330,77 +314,6 @@ public abstract class FileHistoryGraph implements IFileHistoryGraph {
     protected final List<FileHistoryNode> lookupFile(final FileInRevision file) {
         final Pair<String, Repository> key = this.createKey(file);
         return this.index.get(key);
-    }
-
-    @Override
-    public final List<FileInRevision> getLatestFiles(final FileInRevision file) {
-        Set<FileHistoryNode> nodes = this.getLatestFilesHelper(file, false);
-        if (nodes.isEmpty()) {
-            nodes = this.getLatestFilesHelper(file, true);
-        }
-
-        if (nodes.isEmpty()) {
-            return Collections.singletonList(file);
-        } else {
-            final List<FileInRevision> revs = new ArrayList<>();
-            for (final FileHistoryNode node : nodes) {
-                revs.add(node.getFile());
-            }
-            return FileInRevision.sortByRevision(revs);
-        }
-    }
-
-    /**
-     * Returns the latest known nodes of the given file. If the file is unknown, a list with the file itself is
-     * returned.
-     *
-     * @param returnDeletions If <code>true</code> and all versions were deleted, the last known nodes
-     *      before deletion are returned. If <code>false</code>, no nodes are returned in this case.
-     */
-    private Set<FileHistoryNode> getLatestFilesHelper(final FileInRevision file, final boolean returnDeletions) {
-        final FileHistoryNode node = this.getNodeFor(file);
-        if (node == null) {
-            // unknown file, return a new node for that file without ancestors or descendants
-            return Collections.<FileHistoryNode>singleton(new FileHistoryNode(file, false));
-        } else {
-            // either node for file or descendant node shares history with passed file, follow it
-            return this.getLatestFilesHelper(node, returnDeletions);
-        }
-    }
-
-    /**
-     * Returns the latest known successor nodes of the given node. Branching (e.g. because of copy/rename operations)
-     * is handled properly.
-     *
-     * @param returnDeletions If <code>true</code> and all versions were deleted, the last known nodes
-     *      before deletion are returned. If <code>false</code>, no nodes are returned in this case.
-     */
-    private Set<FileHistoryNode> getLatestFilesHelper(final FileHistoryNode node, final boolean returnDeletions) {
-        // deletion nodes are never returned
-        if (!node.isDeleted()) {
-            if (node.getDescendants().isEmpty()) {
-                return Collections.singleton(node);
-            } else {
-                // is this node the last known one given its path?
-                final Set<FileHistoryNode> result = new LinkedHashSet<>();
-                boolean samePathFound = false;
-                for (final FileHistoryEdge descendantEdge : node.getDescendants()) {
-                    final FileHistoryNode descendant = descendantEdge.getDescendant();
-                    if (node.getFile().getPath().equals(descendant.getFile().getPath())) {
-                        samePathFound = true;
-                    }
-                    result.addAll(FileHistoryGraph.this.getLatestFilesHelper(descendant, returnDeletions));
-                }
-                if (!samePathFound || (returnDeletions && result.isEmpty())) {
-                    // either this node is the last known one existing for its path, or this node is the last node
-                    // before deletion and we have been advised to return such nodes
-                    result.add(node);
-                }
-                return result;
-            }
-        } else {
-            return Collections.<FileHistoryNode> emptySet();
-        }
     }
 
     /**
