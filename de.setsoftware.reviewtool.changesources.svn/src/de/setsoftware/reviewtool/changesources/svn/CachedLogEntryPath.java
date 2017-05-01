@@ -55,7 +55,7 @@ public class CachedLogEntryPath implements Serializable {
             if (status.getRevision().equals(SVNRevision.UNDEFINED)) {
                 this.prevRevision = Long.MAX_VALUE;
             } else {
-                this.prevRevision = status.getRevision().getNumber();
+                this.prevRevision = status.getCommittedRevision().getNumber();
             }
         }
         this.type = mapStatusTypeToLogEntryType(status.getNodeStatus());
