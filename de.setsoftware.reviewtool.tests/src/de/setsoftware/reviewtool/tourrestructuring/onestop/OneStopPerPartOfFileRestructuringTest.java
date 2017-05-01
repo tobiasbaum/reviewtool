@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.tourrestructuring.onestop;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +27,11 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
 public class OneStopPerPartOfFileRestructuringTest {
 
     private static final Repository REPO = new Repository() {
+        @Override
+        public File getLocalRoot() {
+            return null;
+        }
+
         @Override
         public String toAbsolutePathInWc(String absolutePathInRepo) {
             return absolutePathInRepo;

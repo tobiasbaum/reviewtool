@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,6 +24,11 @@ import de.setsoftware.reviewtool.model.changestructure.Revision;
 public class SvnFileHistoryGraphTest {
 
     private static final Repository STUB_REPO = new Repository() {
+        @Override
+        public File getLocalRoot() {
+            return null;
+        }
+
         @Override
         public String toAbsolutePathInWc(String absolutePathInRepo) {
             return absolutePathInRepo;

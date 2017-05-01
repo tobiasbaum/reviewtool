@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -7,6 +8,11 @@ import java.util.Collection;
  * Also includes information on a working copy.
  */
 public abstract class Repository {
+
+    /**
+     * @return The root of the working copy.
+     */
+    public abstract File getLocalRoot();
 
     /**
      * Converts a path that is absolute in the repository to a path that is absolute in the file

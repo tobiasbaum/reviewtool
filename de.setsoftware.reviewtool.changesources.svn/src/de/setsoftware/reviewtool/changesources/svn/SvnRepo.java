@@ -89,7 +89,8 @@ public class SvnRepo extends Repository {
         return this.getSmallestOfComparableRevisions(revisions);
     }
 
-    File getLocalRoot() {
+    @Override
+    public File getLocalRoot() {
         return this.workingCopyRoot;
     }
 
