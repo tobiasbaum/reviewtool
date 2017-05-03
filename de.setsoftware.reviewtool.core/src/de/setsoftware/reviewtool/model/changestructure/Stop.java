@@ -3,9 +3,11 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.io.File;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Util;
@@ -247,9 +249,11 @@ public class Stop implements IReviewElement {
 
     /**
      * Returns the total number of fragments belonging to this stop.
+     * The returned number includes both the old and the new fragment, i.e. the return
+     * value for a simple stop is 2.
      */
     public int getNumberOfFragments() {
-        int ret = 0;
+        int ret = 1;
         for (final Entry<FileInRevision, List<Hunk>> e : this.history.entrySet()) {
             ret += e.getValue().size();
         }
@@ -269,11 +273,18 @@ public class Stop implements IReviewElement {
      * A change is counted as both remove and add.
      */
     public int getNumberOfRemovedLines() {
-        final FileInRevision oldestFile = this.historyOrder.get(0);
         int ret = 0;
-        for (final Hunk hunk : this.getContentFor(oldestFile)) {
-            ret += hunk.getSource().getNumberOfLines();
+        for (final FileInRevision oldestFile : this.getHistoryRoots()) {
+            for (final Hunk hunk : this.getContentFor(oldestFile)) {
+                ret += hunk.getSource().getNumberOfLines();
+            }
         }
+        return ret;
+    }
+
+    private Set<FileInRevision> getHistoryRoots() {
+        final Set<FileInRevision> ret = new LinkedHashSet<>(this.historyOrder.keySet());
+        ret.removeAll(this.historyOrder.values());
         return ret;
     }
 

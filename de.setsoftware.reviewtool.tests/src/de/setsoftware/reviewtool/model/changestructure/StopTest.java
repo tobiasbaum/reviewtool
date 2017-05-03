@@ -16,6 +16,10 @@ public class StopTest {
         return new FileInRevision(name, new RepoRevision(revision), StubRepo.INSTANCE);
     }
 
+    private static PositionInText line(int line) {
+        return ChangestructureFactory.createPositionInText(line, 1);
+    }
+
     @Test
     public void testRevisionsInHistoryAreSortedAfterMerge() {
         final Stop s1 = new Stop(
@@ -34,4 +38,61 @@ public class StopTest {
         assertEquals(merged, merged2);
     }
 
+    @Test
+    public void testNumberOfRemovedAndAddedLinesSimple() {
+        final Stop s = new Stop(
+                ChangestructureFactory.createTextualChangeHunk(
+                        ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
+                        ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
+                        false,
+                        true),
+                ChangestructureFactory.createFragment(file("a.java", 4), line(8), line(13)));
+        assertEquals(2, s.getNumberOfFragments());
+        assertEquals(5, s.getNumberOfAddedLines());
+        assertEquals(3, s.getNumberOfRemovedLines());
+    }
+
+    @Test
+    public void testNumberOfRemovedAndAddedLinesComplex1() {
+        final Stop s1 = new Stop(
+                ChangestructureFactory.createTextualChangeHunk(
+                        ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
+                        ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
+                        false,
+                        true),
+                ChangestructureFactory.createFragment(file("a.java", 4), line(8), line(13)));
+        final Stop s2 = new Stop(
+                ChangestructureFactory.createTextualChangeHunk(
+                        ChangestructureFactory.createFragment(file("a.java", 1), line(23), line(26)),
+                        ChangestructureFactory.createFragment(file("a.java", 3), line(13), line(17)),
+                        false,
+                        true),
+                ChangestructureFactory.createFragment(file("a.java", 4), line(13), line(17)));
+        final Stop merged = s1.merge(s2);
+        assertEquals(3, merged.getNumberOfFragments());
+        assertEquals(9, merged.getNumberOfAddedLines());
+        assertEquals(6, merged.getNumberOfRemovedLines());
+    }
+
+    @Test
+    public void testNumberOfRemovedAndAddedLinesComplex2() {
+        final Stop s1 = new Stop(
+                ChangestructureFactory.createTextualChangeHunk(
+                        ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
+                        ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
+                        false,
+                        true),
+                ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)));
+        final Stop s2 = new Stop(
+                ChangestructureFactory.createTextualChangeHunk(
+                        ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
+                        ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)),
+                        false,
+                        true),
+                ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)));
+        final Stop merged = s1.merge(s2);
+        assertEquals(3, merged.getNumberOfFragments());
+        assertEquals(5, merged.getNumberOfAddedLines());
+        assertEquals(3, merged.getNumberOfRemovedLines());
+    }
 }

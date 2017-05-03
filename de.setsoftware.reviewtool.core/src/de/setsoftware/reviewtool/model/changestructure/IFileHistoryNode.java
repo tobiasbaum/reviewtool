@@ -40,7 +40,7 @@ public interface IFileHistoryNode {
     public abstract Set<? extends IFileHistoryEdge> getDescendants();
 
     /**
-     * Computes {@link FileDiff}s from passed history node to this one. There may be none (if {code from} is not an
+     * Computes {@link FileDiff}s from passed history node to this one. There may be none (if {@code from} is not an
      * ancestor), one (if {@code from} is reached by a single path backwards in history), or multiple ones
      * (if {@code from} can be reached by multiple paths backwards in history).
      */
