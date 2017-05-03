@@ -51,26 +51,26 @@ public class FileInRevision {
 
     /**
      * Returns this revisioned file's contents.
-     * @return The file contents or null if an error occurs.
+     * @return The file contents or null if unknown.
+     * @throws IOException if an error occurrs.
      */
-    public byte[] getContents() {
-        return this.revision.accept(new RevisionVisitor<byte[]>() {
+    public byte[] getContents() throws Exception {
+        return this.revision.accept(new RevisionVisitorE<byte[], Exception>() {
 
             @Override
-            public byte[] handleLocalRevision(LocalRevision revision) {
+            public byte[] handleLocalRevision(final LocalRevision revision) throws IOException {
                 final IPath localPath = FileInRevision.this.toLocalPath();
                 final File file = localPath.toFile();
-                try {
+                if (!file.exists()) {
+                    return new byte[0];
+                } else {
                     return Files.readAllBytes(file.toPath());
-                } catch (final IOException e) {
-                    return null;
                 }
             }
 
             @Override
-            public byte[] handleRepoRevision(RepoRevision revision) {
-                return FileInRevision.this.repo.getFileContents(FileInRevision.this.path,
-                            (RepoRevision) FileInRevision.this.revision);
+            public byte[] handleRepoRevision(final RepoRevision revision) throws Exception {
+                return FileInRevision.this.repo.getFileContents(FileInRevision.this.path, revision);
             }
 
         });

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
@@ -90,7 +91,7 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
             byte[] fileOld,
             FileInRevision fileNewInfo,
             byte[] fileNew,
-            String charset) throws IOException {
+            String charset) {
 
         final FullFileView<String> lines1 = this.toLines(fileOld, charset);
         final FullFileView<String> lines2 = this.toLines(fileNew, charset);
@@ -207,14 +208,20 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
                         fragmentData.toIndexInWholeFile(fragmentData.getItemCount() - 1) + 2, 1));
     }
 
-    private FullFileView<String> toLines(byte[] contents, String charset) throws IOException {
-        final BufferedReader r = new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contents), charset));
-        final List<String> lines = new ArrayList<>();
-        String line;
-        while ((line = r.readLine()) != null) {
-            lines.add(line);
+    private FullFileView<String> toLines(byte[] contents, String charset) {
+        try {
+            final BufferedReader r =
+                    new BufferedReader(new InputStreamReader(new ByteArrayInputStream(contents), charset));
+            final List<String> lines = new ArrayList<>();
+            String line;
+            while ((line = r.readLine()) != null) {
+                lines.add(line);
+            }
+            return new FullFileView<String>(lines.toArray(new String[lines.size()]));
+        } catch (final IOException e) {
+            // should not happen because reading from a byte buffer should not throw I/O exceptions
+            throw new ReviewtoolException(e);
         }
-        return new FullFileView<String>(lines.toArray(new String[lines.size()]));
     }
 
 }

@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.Collection;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 /**
  * Encapsulates a single difference between two revisions of a file, i.e. a pair (source fragment, target fragment).
  * <p/>
@@ -81,7 +83,7 @@ public final class Hunk implements Comparable<Hunk> {
             try {
                 result.addFragment(hunk.getSource());
             } catch (final IncompatibleFragmentException e) {
-                throw new Error(e);
+                throw new ReviewtoolException(e);
             }
         }
         result.coalesce();
@@ -99,7 +101,7 @@ public final class Hunk implements Comparable<Hunk> {
             try {
                 result.addFragment(hunk.getTarget());
             } catch (final IncompatibleFragmentException e) {
-                throw new Error(e);
+                throw new ReviewtoolException(e);
             }
         }
         result.coalesce();

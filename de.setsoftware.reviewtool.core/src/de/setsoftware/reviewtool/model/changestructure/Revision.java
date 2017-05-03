@@ -12,4 +12,11 @@ public abstract class Revision {
      */
     public abstract <R> R accept(final RevisionVisitor<R> visitor);
 
+    /**
+     * Accepts a {@link RevisionVisitorE}.
+     * @param visitor The visitor.
+     * @return Some result.
+     */
+    public abstract <R, E extends Throwable> R accept(final RevisionVisitorE<R, E> visitor) throws E;
+
 }

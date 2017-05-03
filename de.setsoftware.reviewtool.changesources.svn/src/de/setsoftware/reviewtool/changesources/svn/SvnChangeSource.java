@@ -1,7 +1,6 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -122,7 +121,7 @@ public class SvnChangeSource implements IChangeSource {
             this.checkWorkingCopiesUpToDate(revisions, ui);
             ui.subTask("Analyzing commits...");
             return new SvnChangeData(this.convertToChanges(historyGraph, revisions, ui), historyGraph);
-        } catch (final SVNException | IOException e) {
+        } catch (final SVNException e) {
             throw new ReviewtoolException(e);
         }
     }
@@ -178,7 +177,7 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private List<Commit> convertToChanges(final SvnFileHistoryGraph historyGraph, final List<SvnRevision> revisions,
-            final IChangeSourceUi ui) throws SVNException, IOException {
+            final IChangeSourceUi ui) throws SVNException {
         final List<Commit> ret = new ArrayList<>();
         for (final SvnRevision e : revisions) {
             if (ui.isCanceled()) {
@@ -191,7 +190,7 @@ public class SvnChangeSource implements IChangeSource {
 
     private Commit convertToCommit(final SvnFileHistoryGraph historyGraph, final SvnRevision e,
             final IChangeSourceUi ui)
-            throws SVNException, IOException {
+            throws SVNException {
         return ChangestructureFactory.createCommit(
                 String.format("%s (Rev. %s, %s)" + (e.isVisible() ? "" : " [invisible]"),
                         e.getMessage(), e.getRevision(), e.getAuthor()),
@@ -229,7 +228,7 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private List<Change> determineChangesInCommit(final SvnFileHistoryGraph historyGraph, SvnRevision e,
-            final IChangeSourceUi ui) throws SVNException, IOException {
+            final IChangeSourceUi ui) throws SVNException {
 
         final List<Change> ret = new ArrayList<>();
         final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();
@@ -285,23 +284,26 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private List<Change> determineChangesInFile(final SvnRepo repo, final SvnFileHistoryNode node,
-            final boolean isVisible) throws IOException {
+            final boolean isVisible) {
 
         final SvnFileHistoryEdge ancestorEdge = node.getAncestor();
         final SvnFileHistoryNode ancestor = ancestorEdge.getTarget();
 
-        final byte[] oldFileContent = repo.getFileContents(ancestor.getFile().getPath(),
-                (RepoRevision) ancestor.getFile().getRevision());
-        if (oldFileContent == null) {
+        final byte[] oldFileContent;
+        try {
+            oldFileContent = ancestor.getFile().getContents();
+        } catch (final Exception e) {
             return Collections.emptyList(); // loading old file data failed
         }
+
         if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
             return Collections.singletonList(this.createBinaryChange(repo, node, isVisible));
         }
 
-        final byte[] newFileContent = repo.getFileContents(node.getFile().getPath(),
-                (RepoRevision) node.getFile().getRevision());
-        if (newFileContent == null) {
+        final byte[] newFileContent;
+        try {
+            newFileContent = node.getFile().getContents();
+        } catch (final Exception e) {
             return Collections.emptyList(); // loading new file data failed
         }
         if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
@@ -325,7 +327,7 @@ public class SvnChangeSource implements IChangeSource {
         try {
             ancestorEdge.setDiff(ancestorEdge.getDiff().merge(hunks));
         } catch (final IncompatibleFragmentException e) {
-            throw new Error(e);
+            throw new ReviewtoolException(e);
         }
         return ret;
     }

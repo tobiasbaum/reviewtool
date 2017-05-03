@@ -35,6 +35,11 @@ public class RepoRevision extends Revision {
         return visitor.handleRepoRevision(this);
     }
 
+    @Override
+    public <R, E extends Throwable> R accept(RevisionVisitorE<R, E> visitor) throws E {
+        return visitor.handleRepoRevision(this);
+    }
+
     public Object getId() {
         return this.id;
     }

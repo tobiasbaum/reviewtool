@@ -10,6 +10,7 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
@@ -118,7 +119,7 @@ final class SvnFileHistoryGraph implements FileHistoryGraph {
                     try {
                         return diff.merge(this.ancestor.getDiff());
                     } catch (final IncompatibleFragmentException e) {
-                        throw new Error(e);
+                        throw new ReviewtoolException(e);
                     }
                 }
             }
