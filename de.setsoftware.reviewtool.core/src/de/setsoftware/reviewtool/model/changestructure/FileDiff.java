@@ -16,12 +16,34 @@ public class FileDiff {
      * positions of later hunks take the deltas of earlier hunks into consideration.
      */
     private final List<Hunk> hunks;
+    private final FileInRevision fromRevision;
+    private FileInRevision toRevision;
 
     /**
-     * Creates an empty FileDiff object.
+     * Creates an empty FileDiff object that will be filled with hunks.
      */
-    public FileDiff() {
+    public FileDiff(final FileInRevision revision) {
         this.hunks = new ArrayList<>();
+        this.fromRevision = revision;
+        this.toRevision = revision;
+    }
+
+    /**
+     * Creates a FileDiff object that will be filled with hunks.
+     */
+    public FileDiff(final FileInRevision fromRevision, final FileInRevision toRevision) {
+        this.hunks = new ArrayList<>();
+        this.fromRevision = fromRevision;
+        this.toRevision = toRevision;
+    }
+
+    /**
+     * Creates a fully specified FileDiff object.
+     */
+    private FileDiff(final FileInRevision fromRevision, final FileInRevision toRevision, final List<Hunk> hunks) {
+        this.hunks = new ArrayList<>(hunks);
+        this.fromRevision = fromRevision;
+        this.toRevision = toRevision;
     }
 
     /**
@@ -33,11 +55,35 @@ public class FileDiff {
     }
 
     /**
+     * @return The {@link FileInRevision} this diff starts at.
+     */
+    public FileInRevision getFrom() {
+        return this.fromRevision;
+    }
+
+    /**
+     * @return The {@link FileInRevision} this diff ends at.
+     */
+    public FileInRevision getTo() {
+        return this.toRevision;
+    }
+
+    /**
+     * Creates a copy of this object with a new target revision. The list of hunks is copied in such a way that
+     * both lists can be modified separately after the copy.
+     *
+     * @param newTo The new target revision.
+     * @return The requested copy.
+     */
+    public FileDiff setTo(final FileInRevision newTo) {
+        return new FileDiff(this.fromRevision, newTo, this.hunks);
+    }
+    /**
      * Traces a source fragment over the recorded hunks to the last known file revision.
      * @param source The source fragment.
      * @return The resulting fragment matching the last known file revision.
      */
-    public Fragment traceFragment(Fragment source) {
+    public Fragment traceFragment(final Fragment source) {
         final List<Hunk> hunks = new ArrayList<Hunk>();
         for (final Hunk hunk : this.hunks) {
             if (hunk.getSource().overlaps(source)) {
@@ -47,7 +93,7 @@ public class FileDiff {
             }
         }
         try {
-            return this.createCombinedFragment(hunks, source);
+            return this.createCombinedFragment(hunks, source).setFile(this.toRevision);
         } catch (final IncompatibleFragmentException e) {
             throw new Error(e);
         }
@@ -90,24 +136,28 @@ public class FileDiff {
         if (this.containsInLineDiff(hunkToMerge)) {
             return this.merge(this.makeFullLine(hunkToMerge));
         }
-        final FileDiff result = new FileDiff();
-        final List<Hunk> hunks = new ArrayList<Hunk>();
+        final FileDiff result = new FileDiff(this.fromRevision, hunkToMerge.getTarget().getFile());
+        final List<Hunk> stashedHunks = new ArrayList<Hunk>();
         boolean hunkCreated = false;
         for (final Hunk hunk : this.hunks) {
             if (hunk.getTarget().overlaps(hunkToMerge.getSource())) {
-                hunks.add(hunk);
+                stashedHunks.add(hunk);
             } else if (hunk.getTarget().getTo().compareTo(hunkToMerge.getSource().getFrom()) < 0) {
-                result.hunks.add(hunk);
+                result.hunks.add(hunk.adjustTargetFile(result.toRevision));
             } else if (hunkCreated) {
-                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()));
+                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()).adjustTargetFile(result.toRevision));
             } else {
-                result.hunks.add(this.createCombinedHunk(hunks, hunkToMerge));
-                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()));
+                result.hunks.add(this.createCombinedHunk(stashedHunks, hunkToMerge)
+                        .adjustSourceFile(this.fromRevision)
+                        .adjustTargetFile(result.toRevision));
+                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()).adjustTargetFile(result.toRevision));
                 hunkCreated = true;
             }
         }
         if (!hunkCreated) {
-            result.hunks.add(this.createCombinedHunk(hunks, hunkToMerge));
+            result.hunks.add(this.createCombinedHunk(stashedHunks, hunkToMerge)
+                    .adjustSourceFile(this.fromRevision)
+                    .adjustTargetFile(result.toRevision));
         }
         return result;
     }
@@ -146,7 +196,7 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if some hunk to be merged overlaps with some hunk in the FileDiff object.
      */
     public FileDiff merge(final FileDiff diff) throws IncompatibleFragmentException {
-        return this.merge(diff.hunks);
+        return this.merge(diff.hunks).setTo(diff.toRevision);
     }
 
     private boolean containsInLineDiff(Hunk hunk) {

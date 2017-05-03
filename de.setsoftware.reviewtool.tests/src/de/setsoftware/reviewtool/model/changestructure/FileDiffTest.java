@@ -201,24 +201,23 @@ public class FileDiffTest {
         final FileInRevision f2 = file("a.java", 2);
         final FileInRevision f3 = file("a.java", 3);
 
-        final FileDiff diff = new FileDiff().merge(new Hunk(
+        final FileDiff diff = new FileDiff(f1).merge(new Hunk(
                 new Fragment(f2, pos(5, 1), pos(5, 0)),
                 new Fragment(f3, pos(5, 1), pos(6, 0))));
 
         final Fragment actual1 = diff.traceFragment(new Fragment(f1, pos(1, 1), pos(2, 0)));
-        //TODO shouldn't the resulting fragment have file revision 3 (and not 1)? applies to other tests, too.
         assertEquals(
-                new Fragment(f1, pos(1, 1), pos(2, 0)),
+                new Fragment(f3, pos(1, 1), pos(2, 0)),
                 actual1);
 
         final Fragment actual2 = diff.traceFragment(new Fragment(f1, pos(7, 1), pos(9, 0)));
         assertEquals(
-                new Fragment(f1, pos(8, 1), pos(10, 0)),
+                new Fragment(f3, pos(8, 1), pos(10, 0)),
                 actual2);
 
         final Fragment actual3 = diff.traceFragment(new Fragment(f1, pos(2, 1), pos(7, 0)));
         assertEquals(
-                new Fragment(f1, pos(2, 1), pos(8, 0)),
+                new Fragment(f3, pos(2, 1), pos(8, 0)),
                 actual3);
     }
 
@@ -228,26 +227,26 @@ public class FileDiffTest {
         final FileInRevision f2 = file("a.java", 2);
         final FileInRevision f3 = file("a.java", 3);
 
-        final FileDiff diff = new FileDiff().merge(new Hunk(
+        final FileDiff diff = new FileDiff(f1).merge(new Hunk(
                 new Fragment(f2, pos(5, 10), pos(5, 14)),
                 new Fragment(f3, pos(5, 10), pos(5, 14))));
 
         final Fragment actual1 = diff.traceFragment(
                 new Fragment(f1, pos(1, 1), pos(2, 0)));
         assertEquals(
-                new Fragment(f1, pos(1, 1), pos(2, 0)),
+                new Fragment(f3, pos(1, 1), pos(2, 0)),
                 actual1);
 
         final Fragment actual2 = diff.traceFragment(
                 new Fragment(f1, pos(7, 1), pos(9, 0)));
         assertEquals(
-                new Fragment(f1, pos(7, 1), pos(9, 0)),
+                new Fragment(f3, pos(7, 1), pos(9, 0)),
                 actual2);
 
         final Fragment actual3 = diff.traceFragment(
                 new Fragment(f1, pos(2, 1), pos(7, 0)));
         assertEquals(
-                new Fragment(f1, pos(2, 1), pos(7, 0)),
+                new Fragment(f3, pos(2, 1), pos(7, 0)),
                 actual3);
 
         final Fragment actual4 = diff.traceFragment(
@@ -265,7 +264,7 @@ public class FileDiffTest {
         final FileInRevision f3 = file("a.java", 3);
         final FileInRevision f4 = file("a.java", 4);
 
-        final FileDiff diff = new FileDiff()
+        final FileDiff diff = new FileDiff(f1)
                 .merge(new Hunk(
                     new Fragment(f2, pos(5, 7), pos(5, 6)),
                     new Fragment(f3, pos(5, 7), pos(5, 8))))
