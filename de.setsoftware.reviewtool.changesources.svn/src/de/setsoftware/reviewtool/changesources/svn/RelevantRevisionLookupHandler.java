@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,8 @@ import org.tmatesoft.svn.core.SVNException;
 
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.Revision;
 
 /**
  * Handler that filters log entries with a given pattern.
@@ -54,15 +57,15 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
      * Returns all revisions that matched the given pattern and all revisions in between that touched
      * files changed in a matching revision.
      */
-    public List<SvnRevision> determineRelevantRevisions(final SvnFileHistoryGraph historyGraphBuffer,
+    public List<ISvnRevision> determineRelevantRevisions(final IMutableFileHistoryGraph historyGraph,
             final IChangeSourceUi ui) {
-        final List<SvnRevision> ret = new ArrayList<>();
+        final List<ISvnRevision> ret = new ArrayList<>();
         for (final TreeMap<Long, SvnRevision> revisionsInRepo : this.groupResultsByRepository().values()) {
             for (final SvnRevision revision : revisionsInRepo.values()) {
                 if (ui.isCanceled()) {
                     throw new OperationCanceledException();
                 }
-                if (this.processRevision(revision, historyGraphBuffer, revision.isVisible())) {
+                if (processRevision(revision, historyGraph)) {
                     ret.add(revision);
                 }
             }
@@ -70,44 +73,51 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
         return ret;
     }
 
-    private boolean processRevision(
-            SvnRevision revision, SvnFileHistoryGraph historyGraphBuffer, boolean isVisible) {
+    private static Revision toRevision(final long revision) {
+        if (revision == Long.MAX_VALUE) {
+            return ChangestructureFactory.createLocalRevision();
+        } else {
+            return ChangestructureFactory.createRepoRevision(revision);
+        }
+    }
+
+    public static boolean processRevision(final ISvnRevision revision, final IMutableFileHistoryGraph historyGraph) {
         boolean isRelevant = false;
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String path = e.getKey();
             if (e.getValue().isDeleted()) {
-                if (isVisible || historyGraphBuffer.contains(path, revision.getRepository())) {
-                    historyGraphBuffer.addDeletion(
+                if (revision.isVisible() || historyGraph.contains(path, revision.getRepository())) {
+                    historyGraph.addDeletion(
                             path,
-                            ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
-                            ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                            revision.toRevision(),
+                            Collections.<Revision>singleton(toRevision(e.getValue().getAncestorRevision())),
                             revision.getRepository());
                     isRelevant = true;
                 }
             } else {
                 final String copyPath = e.getValue().getCopyPath();
                 if (copyPath != null
-                        && (isVisible || historyGraphBuffer.contains(copyPath, revision.getRepository()))) {
-                    historyGraphBuffer.addCopy(
+                        && (revision.isVisible() || historyGraph.contains(copyPath, revision.getRepository()))) {
+                    historyGraph.addCopy(
                             copyPath,
                             path,
-                            ChangestructureFactory.createRepoRevision(e.getValue().getCopyRevision()),
-                            ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                            ChangestructureFactory.createRepoRevision(e.getValue().getAncestorRevision()),
+                            revision.toRevision(),
                             revision.getRepository());
                     isRelevant = true;
                 } else if (e.getValue().isFile()
-                        && (isVisible || historyGraphBuffer.contains(path, revision.getRepository()))) {
+                        && (revision.isVisible() || historyGraph.contains(path, revision.getRepository()))) {
                     if (e.getValue().isNew()) {
-                        historyGraphBuffer.addAddition(
+                        historyGraph.addAdditionOrChange(
                                 path,
-                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
-                                ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                revision.toRevision(),
+                                Collections.<Revision>emptySet(),
                                 revision.getRepository());
                     } else {
-                        historyGraphBuffer.addChange(
+                        historyGraph.addAdditionOrChange(
                                 path,
-                                ChangestructureFactory.createRepoRevision(revision.getRevision() - 1),
-                                ChangestructureFactory.createRepoRevision(revision.getRevision()),
+                                revision.toRevision(),
+                                Collections.<Revision>singleton(toRevision(e.getValue().getAncestorRevision())),
                                 revision.getRepository());
                     }
                     isRelevant = true;
@@ -125,7 +135,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                 revsForRepo = new TreeMap<>();
                 result.put(revision.getRepository(), revsForRepo);
             }
-            revsForRepo.put(revision.getRevision(), revision);
+            revsForRepo.put(revision.getRevisionNumber(), revision);
         }
         return result;
     }

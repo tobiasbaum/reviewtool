@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jface.text.Position;
 import org.eclipse.swt.widgets.Composite;
@@ -17,10 +18,10 @@ import de.setsoftware.reviewtool.base.LineSequence;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileDiff;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Hunk;
+import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 
@@ -41,15 +42,17 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
         final FileInRevision firstRevision = sortedRevs.get(0);
         final FileInRevision lastRevision = changes.get(sortedRevs.get(sortedRevs.size() - 1));
 
-        final FileHistoryNode node = tours.getFileHistoryNode(lastRevision);
+        final IFileHistoryNode node = tours.getFileHistoryNode(lastRevision);
         if (node != null) {
             if (stop.isBinaryChange()) {
                 this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
                         new ArrayList<Fragment>(), new ArrayList<Fragment>(),
                         new ArrayList<Position>(), new ArrayList<Position>());
             } else {
-                final FileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
-                final FileDiff diff = node.buildHistory(ancestor);
+                final IFileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
+                final Set<FileDiff> diffs = node.buildHistories(ancestor);
+                // TODO: we currently cowardly refuse to display any history beyond the first merge parent
+                final FileDiff diff = diffs.iterator().next();
 
                 final List<Fragment> origins = new ArrayList<>();
                 for (final FileInRevision file : changes.keySet()) {

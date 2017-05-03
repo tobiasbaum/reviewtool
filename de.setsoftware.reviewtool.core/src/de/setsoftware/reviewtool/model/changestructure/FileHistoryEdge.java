@@ -1,21 +1,43 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 /**
- * An edge in a {@link FileHistoryGraph}. It contains a {@link FileDiff} and a target node.
+ * An edge in a {@link FileHistoryGraph}. It always goes from a descendant node to an ancestor node.
  */
-public interface FileHistoryEdge {
+public final class FileHistoryEdge implements IMutableFileHistoryEdge {
+
+    private final FileHistoryNode ancestor;
+    private final FileHistoryNode descendant;
+    private FileDiff diff;
 
     /**
-     * Returns the target {@link FileHistoryNode} of this edge.
+     * Constructor.
+     * @param ancestor The ancestor node of the edge.
+     * @param descendant The descendant node of the edge.
+     * @param diff The associated {@link FileDiff} object. It can be changed later using {@link #setDiff(FileDiff)}.
      */
-    public abstract FileHistoryNode getTarget();
+    public FileHistoryEdge(final FileHistoryNode ancestor, final FileHistoryNode descendant, final FileDiff diff) {
+        this.ancestor = ancestor;
+        this.descendant = descendant;
+        this.diff = diff;
+    }
 
-    /**
-     * Returns the {@link FileDiff} bound to this edge.
-     * <p/>
-     * <em>Note:</em> Whether the {@link FileDiff} is to be interpreted in or against the direction of the edge
-     * is determined by the context.
-     */
-    public abstract FileDiff getDiff();
+    @Override
+    public FileHistoryNode getAncestor() {
+        return this.ancestor;
+    }
 
+    @Override
+    public FileHistoryNode getDescendant() {
+        return this.descendant;
+    }
+
+    @Override
+    public FileDiff getDiff() {
+        return this.diff;
+    }
+
+    @Override
+    public void setDiff(final FileDiff diff) {
+        this.diff = diff;
+    }
 }

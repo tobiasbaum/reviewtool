@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -8,19 +10,29 @@ import java.util.List;
 public interface IChangeData {
 
     /**
+     * Returns the {@link IChangeSource} that created this object.
+     */
+    public abstract IChangeSource getSource();
+
+    /**
+     * Returns all repositories that were matching for the given ticket.
+     */
+    public abstract Collection<? extends Repository> getRepositories();
+
+    /**
      * Returns all commits that were matching for the given ticket.
      */
     public abstract List<Commit> getMatchedCommits();
 
     /**
-     * Creates a fragment tracer for the change source.
-     * The fragment tracer can use data cached when determining the matched commits, but does not have to.
+     * Returns the paths for all locally modified files. Only meaningful in results of
+     * {@link IChangeSource#getLocalChanges(IChangeData, List, org.eclipse.core.runtime.IProgressMonitor)}.
      */
-    public abstract IFragmentTracer createTracer();
+    public abstract List<File> getLocalPaths();
 
     /**
-     * Returns a {@link FileHistoryGraph} for the change data.
+     * Returns a {@link IFileHistoryGraph} for the change data.
      */
-    public abstract FileHistoryGraph getHistoryGraph();
+    public abstract IFileHistoryGraph getHistoryGraph();
 
 }

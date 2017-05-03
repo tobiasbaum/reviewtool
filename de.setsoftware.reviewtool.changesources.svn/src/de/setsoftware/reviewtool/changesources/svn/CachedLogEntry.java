@@ -31,7 +31,7 @@ public class CachedLogEntry implements Serializable {
 
         this.paths = new TreeMap<>();
         for (final Entry<String, SVNLogEntryPath> e : logEntry.getChangedPaths().entrySet()) {
-            this.paths.put(e.getKey(), new CachedLogEntryPath(e.getValue()));
+            this.paths.put(e.getKey(), new CachedLogEntryPath(e.getValue(), this.revision - 1));
         }
     }
 

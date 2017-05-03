@@ -14,7 +14,6 @@ import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -216,6 +215,92 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     /**
+     * Handles resource changes.
+     */
+    private final class ResourceChangeListener implements IResourceChangeListener {
+        private boolean logged;
+
+        @Override
+        public void resourceChanged(IResourceChangeEvent event) {
+            this.logged = false;
+            final List<File> paths = new ArrayList<>();
+
+            try {
+                this.handleResourceDelta(event.getDelta(), paths);
+                if (!paths.isEmpty()) {
+                    ReviewPlugin.this.updateLocalChanges(paths);
+                }
+            } catch (final Exception e) {
+                Logger.error("error while sending telemetry events", e);
+            }
+        }
+
+        private void handleResourceDelta(final IResourceDelta delta, final List<File> paths) {
+            if (delta.getResource().isDerived()) {
+                return;
+            }
+            if (delta.getResource().getType() == IResource.FILE) {
+                if (!this.logged && (delta.getFlags() & IResourceDelta.CONTENT) != 0) {
+                    Telemetry.event("fileChanged")
+                        .param("path", delta.getFullPath())
+                        .param("kind", delta.getKind())
+                        .log();
+                    this.logged = true;
+                }
+
+                if (delta.getKind() != IResourceDelta.CHANGED
+                        || (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.REPLACED)) != 0) {
+                    final File filePath = delta.getResource().getLocation().toFile();
+                    paths.add(filePath);
+                }
+            } else {
+                for (final IResourceDelta d : delta.getAffectedChildren()) {
+                    this.handleResourceDelta(d, paths);
+                }
+            }
+        }
+    }
+
+    /**
+     * A {@link IProgressMonitor} implementation doing nothing.
+     */
+    private static final class DummyProgressMonitor implements IProgressMonitor {
+
+        @Override
+        public void beginTask(final String name, final int totalWork) {
+        }
+
+        @Override
+        public void done() {
+        }
+
+        @Override
+        public void internalWorked(final double work) {
+        }
+
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public void setCanceled(final boolean value) {
+        }
+
+        @Override
+        public void setTaskName(final String name) {
+        }
+
+        @Override
+        public void subTask(final String name) {
+        }
+
+        @Override
+        public void worked(final int work) {
+        }
+    }
+
+    /**
      * Represents a simple callback receiving a single value and returning some value.
      * @param <R> The type of the result returned.
      * @param <T> The type of the value received.
@@ -235,6 +320,10 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         private final Display display;
 
+        /**
+         * Constructor.
+         * @param display The display to use.
+         */
         UiCallback(final Display display) {
             this.display = display;
         }
@@ -860,41 +949,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         };
         DebugPlugin.getDefault().getLaunchManager().addLaunchListener(this.launchesListener);
 
-        this.changeListener = new IResourceChangeListener() {
-            @Override
-            public void resourceChanged(IResourceChangeEvent event) {
-                try {
-                    this.logFirstAffectedFile(event.getDelta());
-                } catch (final Exception e) {
-                    Logger.error("error while sending telemetry events", e);
-                }
-            }
-
-            private boolean logFirstAffectedFile(IResourceDelta delta) {
-                if (delta.getResource().isDerived()) {
-                    return false;
-                }
-                if (delta.getResource() instanceof IFile) {
-                    if ((delta.getFlags() & IResourceDelta.CONTENT) == 0) {
-                        return false;
-                    }
-                    Telemetry.event("fileChanged")
-                        .param("path", delta.getFullPath())
-                        .param("kind", delta.getKind())
-                        .log();
-                    return true;
-                } else {
-                    final int kindMask = IResourceDelta.ADDED | IResourceDelta.CHANGED | IResourceDelta.REMOVED;
-                    for (final IResourceDelta d : delta.getAffectedChildren(kindMask, IResource.FILE)) {
-                        final boolean alreadyLogged = this.logFirstAffectedFile(d);
-                        if (alreadyLogged) {
-                            return true;
-                        }
-                    }
-                    return false;
-                }
-            }
-        };
+        this.changeListener = new ResourceChangeListener();
         ResourcesPlugin.getWorkspace().addResourceChangeListener(this.changeListener, IResourceChangeEvent.POST_CHANGE);
     }
 
@@ -920,6 +975,14 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     public IStopViewer getStopViewer() {
         return this.stopViewer;
+    }
+
+    private void updateLocalChanges(final List<File> paths) {
+        if (this.toursInReview == null) {
+            return;
+        }
+
+        ReviewPlugin.this.toursInReview.createLocalTour(paths, new DummyProgressMonitor(), new RealMarkerFactory());
     }
 
     /**

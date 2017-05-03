@@ -43,6 +43,8 @@ public final class FileDiff {
 
     /**
      * Creates a fully specified FileDiff object.
+     * The hunks are transferred into a newly created list, such that the original list can be modified independently
+     * later on.
      */
     private FileDiff(final FileInRevision fromRevision, final FileInRevision toRevision, final List<Hunk> hunks) {
         this.hunks = new ArrayList<>(hunks);

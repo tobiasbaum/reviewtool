@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
 import java.util.Collection;
 
 /**
@@ -10,8 +11,18 @@ public final class StubRepo extends Repository {
     public static StubRepo INSTANCE = new StubRepo();
 
     @Override
+    public File getLocalRoot() {
+        return null;
+    }
+
+    @Override
     public String toAbsolutePathInWc(String absolutePathInRepo) {
         return absolutePathInRepo;
+    }
+
+    @Override
+    public String fromAbsolutePathInWc(String absolutePathInWc) {
+        return absolutePathInWc;
     }
 
     @Override
