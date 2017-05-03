@@ -144,7 +144,7 @@ public class FileInRevision {
     /**
      * Sorts the given files topologically by their revisions. Per revision, the files are sorted by path.
      * This makes most sense when they all denote different versions of the same file.
-     * For non-comparable revisions, the sort is stable.
+     * For non-comparable revisions, the sort is stable. The earliest revisions come first.
      * Does NOT sort in-place.
      */
     public static List<FileInRevision> sortByRevision(Collection<? extends FileInRevision> toSort) {

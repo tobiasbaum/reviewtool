@@ -139,6 +139,10 @@ public class Stop implements IReviewElement {
         }
     }
 
+    /**
+     * Returns the revisions relevant for this stop, as a map with entries
+     * in the form (from revision, to revision).
+     */
     public Map<FileInRevision, FileInRevision> getHistory() {
         return Collections.unmodifiableMap(this.historyOrder);
     }
