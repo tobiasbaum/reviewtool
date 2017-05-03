@@ -4,6 +4,11 @@ import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * A fragment is the smallest unit of a change. A fragment is generally checked as a whole by a reviewer,
@@ -13,20 +18,51 @@ import java.io.InputStreamReader;
  * a pure deletion, so that there is no code to point to left in that revision of the file, this is denoted
  * specially.
  */
-public class Fragment implements Comparable<Fragment> {
+public final class Fragment implements Comparable<Fragment> {
 
     private final FileInRevision file;
     private final PositionInText from;
     private final PositionInText to;
+    private final Set<Fragment> origins;
     private String content;
 
-    Fragment(FileInRevision file, PositionInText from, PositionInText to) {
+    Fragment(final FileInRevision file, final PositionInText from, final PositionInText to,
+            final Fragment... origins) {
+        this(file, from, to, Arrays.asList(origins));
+    }
+
+    Fragment(final FileInRevision file, final PositionInText from, final PositionInText to,
+            final Collection<Fragment> origins) {
+        this(file, from, to, combineOrigins(origins));
+    }
+
+    private Fragment(final FileInRevision file, final PositionInText from, final PositionInText to,
+            final Set<Fragment> origins) {
         assert file != null;
         assert from != null;
         assert to != null;
         this.file = file;
         this.from = from;
         this.to = to;
+
+        // if the set of origins contains only one Fragment equal to this one, we omit it
+        this.origins = new LinkedHashSet<>();
+        if (origins.size() != 1 || !origins.iterator().next().equals(this)) {
+            this.origins.addAll(origins);
+        }
+    }
+
+    /**
+     * Combines the origins into a single set.
+     * @param origins A collection of fragments.
+     * @return The resulting set.
+     */
+    private static Set<Fragment> combineOrigins(final Collection<Fragment> origins) {
+        final Set<Fragment> newOrigins = new LinkedHashSet<>();
+        for (final Fragment origin : origins) {
+            newOrigins.addAll(origin.getOrigins());
+        }
+        return newOrigins;
     }
 
     /**
@@ -60,6 +96,33 @@ public class Fragment implements Comparable<Fragment> {
     }
 
     /**
+     * @return {@code true} if this is an in-line fragment.
+     */
+    public boolean isInline() {
+        return this.from.getLine() == this.to.getLine();
+    }
+
+    /**
+     * Returns the size of this fragment.
+     */
+    public Delta getSize() {
+        return this.to.minus(this.from);
+    }
+
+    /**
+     * Returns an unmodifiable set of all original fragments contributing to this fragment.
+     */
+    public Set<Fragment> getOrigins() {
+        if (this.isOrigin()) {
+            final Set<Fragment> result = new LinkedHashSet<>();
+            result.add(this);
+            return Collections.unmodifiableSet(result);
+        } else {
+            return Collections.unmodifiableSet(this.origins);
+        }
+    }
+
+    /**
      * Returns the content lines underlying this fragment.
      * Full lines are returned, even if the fragment spans only part of the line(s).
      */
@@ -89,7 +152,7 @@ public class Fragment implements Comparable<Fragment> {
                     if (lineNumber < this.to.getLine()) {
                         ret.append(lineContent).append('\n');
                     } else if (lineNumber == this.to.getLine()) {
-                        if (this.to.getColumn() > 0) {
+                        if (this.to.getColumn() > 1) {
                             ret.append(lineContent).append('\n');
                         }
                     }
@@ -104,11 +167,24 @@ public class Fragment implements Comparable<Fragment> {
 
     @Override
     public String toString() {
-        return this.from + " - " + this.to + " in " + this.file;
+        final StringBuilder result = new StringBuilder(this.from.toString());
+        result.append(" - ");
+        result.append(this.to.toString());
+        result.append(" in ");
+        result.append(this.file.toString());
+        result.append(this.origins.toString());
+        return result.toString();
     }
 
     /**
-     * Returns true iff this fragments is a direct neighbor of the given other fragment, but
+     * @return {@code true} if this fragment is an original one, i.e. if it has no other origin(s).
+     */
+    public boolean isOrigin() {
+        return this.origins.isEmpty();
+    }
+
+    /**
+     * Returns true iff this fragment is a direct neighbor of the given other fragment, but
      * does not overlap with it.
      */
     public boolean isNeighboring(Fragment other) {
@@ -125,7 +201,7 @@ public class Fragment implements Comparable<Fragment> {
      * @return True if overlapping has been detected, else false.
      */
     public boolean overlaps(final Fragment other) {
-        return this.to.compareTo(other.from) >= 0 && this.from.compareTo(other.to) <= 0;
+        return this.to.compareTo(other.from) > 0 && this.from.compareTo(other.to) < 0;
     }
 
     /**
@@ -134,21 +210,36 @@ public class Fragment implements Comparable<Fragment> {
      * @return True if fragments are adjacent, else false.
      */
     public boolean isAdjacentTo(final Fragment other) {
-        return this.to.nextInLine().equals(other.from) || this.from.equals(other.to.nextInLine());
+        return this.to.equals(other.from) || this.from.equals(other.to);
+    }
+
+    /**
+     * Returns {@code true} if this fragment originates from some fragment which overlaps or is adjacent to
+     * at least one of the fragments passed.
+     */
+    public boolean containsChangeInOneOf(final Collection<Fragment> fragments) {
+        for (final Fragment origin : this.getOrigins()) {
+            for (final Fragment fragment : fragments) {
+                if (origin.overlaps(fragment) || origin.isAdjacentTo(fragment)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**
      * Adjoins two adjacent fragments. The associated FileInRevision of the resulting fragment is taken from this
      * fragment.
-     * @param other The other fragment-
+     * @param other The other fragment.
      * @return The adjoint fragment encompassing both original fragments.
      */
     public Fragment adjoin(final Fragment other) {
         assert this.isAdjacentTo(other);
-        if (this.to.nextInLine().equals(other.from)) {
-            return new Fragment(this.file, this.from, other.to);
+        if (this.to.equals(other.from)) {
+            return new Fragment(this.file, this.from, other.to, this, other);
         } else {
-            return new Fragment(this.file, other.from, this.to);
+            return new Fragment(this.file, other.from, this.to, this, other);
         }
     }
 
@@ -161,18 +252,18 @@ public class Fragment implements Comparable<Fragment> {
         if (!this.overlaps(other)) {
             return new FragmentList(this);
         } else {
-            final FragmentList fragmentList = new FragmentList();
             try {
+                final FragmentList fragmentList = new FragmentList();
                 if (this.from.lessThan(other.from)) {
-                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from.prevInLine()));
+                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from, this));
                 }
                 if (other.to.lessThan(this.to)) {
-                    fragmentList.addFragment(new Fragment(this.file, other.to.nextInLine(), this.to));
+                    fragmentList.addFragment(new Fragment(this.file, other.to, this.to, this));
                 }
+                return fragmentList;
             } catch (final IncompatibleFragmentException e) {
                 throw new Error(e);
             }
-            return fragmentList;
         }
     }
 
@@ -193,8 +284,7 @@ public class Fragment implements Comparable<Fragment> {
         if (!this.file.equals(other.file)) {
             return false;
         }
-        return !(this.to.nextInLine().lessThan(other.from)
-            || other.to.nextInLine().lessThan(this.from));
+        return this.isAdjacentTo(other) || this.overlaps(other);
     }
 
     /**
@@ -202,23 +292,23 @@ public class Fragment implements Comparable<Fragment> {
      * and the given other fragment.
      */
     public Fragment merge(Fragment other) {
-        if (other.from.lessThan(this.from)) {
+        if (other.getFrom().lessThan(this.getFrom())) {
             return other.merge(this);
         }
 
         assert this.canBeMergedWith(other);
-        final PositionInText minFrom = this.from;
+        final PositionInText minFrom = this.getFrom();
         final PositionInText maxTo;
         if (this.to.lessThan(other.to)) {
             maxTo = other.to;
         } else {
             maxTo = this.to;
         }
-        return new Fragment(this.file, minFrom, maxTo);
+        return new Fragment(this.file, minFrom, maxTo, this, other);
     }
 
     public boolean isDeletion() {
-        return this.to.lessThan(this.from);
+        return this.to.equals(this.from);
     }
 
     /**
@@ -227,7 +317,7 @@ public class Fragment implements Comparable<Fragment> {
      * @return The resulting fragment.
      */
     Fragment setFile(final FileInRevision newFile) {
-        return new Fragment(newFile, this.from, this.to);
+        return new Fragment(newFile, this.from, this.to, this);
     }
 
     @Override
@@ -243,7 +333,8 @@ public class Fragment implements Comparable<Fragment> {
         final Fragment other = (Fragment) obj;
         return this.file.equals(other.file)
             && this.from.equals(other.from)
-            && this.to.equals(other.to);
+            && this.to.equals(other.to)
+            && this.origins.equals(other.origins);
     }
 
     /**
@@ -256,22 +347,17 @@ public class Fragment implements Comparable<Fragment> {
     }
 
     /**
-     * Creates a new fragment whose start and end positions are shifted by the given line offset.
-     * @param offset The line offset to add.
+     * Creates a new fragment whose start and end positions are shifted by the given delta.
+     * Only if this is an in-line fragment, the delta's column offset is applied to this fragment's end position.
+     * @param delta The delta to add.
      * @return The resulting fragment.
      */
-    public Fragment adjust(final int offset) {
-        return new Fragment(this.file, this.from.adjust(offset), this.to.adjust(offset));
-    }
-
-    /**
-     * Creates a new fragment whose start and end positions are shifted by the given column offset
-     * if the respective position is in the given targetLine.
-     */
-    public Fragment adjustColumnIfInLine(final int offset, int targetLine) {
-        return new Fragment(this.file,
-                this.from.getLine() == targetLine ? this.from.adjustColumn(offset) : this.from,
-                this.to.getLine() == targetLine ? this.to.adjustColumn(offset) : this.to);
+    public Fragment adjust(final Delta delta) {
+        return new Fragment(
+                this.file,
+                this.from.plus(delta),
+                this.to.plus(this.isInline() ? delta : delta.ignoreColumnOffset()),
+                this);
     }
 
     @Override

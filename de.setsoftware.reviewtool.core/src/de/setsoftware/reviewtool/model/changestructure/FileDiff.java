@@ -3,13 +3,15 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Represents a set of difference hunks between different revisions of the same file. A FileDiff object can accumulate
  * hunks of different source/target revisions.
  */
-public class FileDiff {
+public final class FileDiff {
 
     /**
      * The hunks this FileDiff object is made of. Later hunks depend on earlier hunks, i.e. the source/target fragment
@@ -84,39 +86,22 @@ public class FileDiff {
      * @return The resulting fragment matching the last known file revision.
      */
     public Fragment traceFragment(final Fragment source) {
-        final List<Hunk> hunks = new ArrayList<Hunk>();
-        for (final Hunk hunk : this.hunks) {
-            if (hunk.getSource().overlaps(source)) {
-                hunks.add(hunk);
-            } else if (source.getTo().lessThan(hunk.getSource().getFrom())) {
-                break;
-            }
-        }
         try {
-            return this.createCombinedFragment(hunks, source).setFile(this.toRevision);
+            return this.createCombinedFragment(source).setFile(this.toRevision);
         } catch (final IncompatibleFragmentException e) {
             throw new Error(e);
         }
     }
 
     /**
-     * Returns a list of hunks related to a collection of target fragments. "Related to" means that their target
-     * fragments either overlap a given target fragment or that their target fragments are adjacent to a given target
-     * fragment.
-     *
-     * @param fragments The target fragments to "reach".
-     * @return A list of hunks whose target fragments overlap or are adjacent to a collection of given target
-     *          fragments.
+     * Returns a list of hunks related to a collection of target {@link Fragment}s. A hunk is related if its target
+     * fragment originates from some fragment that overlaps or is adjacent to at least one of the fragments passed.
      */
-    public List<Hunk> getHunksForTargets(final Collection<? extends Fragment> fragments) {
+    public List<Hunk> getHunksWithTargetChangesInOneOf(final Collection<Fragment> fragments) {
         final List<Hunk> result = new ArrayList<>();
         for (final Hunk hunk : this.hunks) {
-            final Fragment target = hunk.getTarget();
-            for (final Fragment selector : fragments) {
-                if (target.equals(selector) || target.overlaps(selector) || target.isAdjacentTo(selector)) {
-                    result.add(hunk);
-                    break;
-                }
+            if (hunk.getTarget().containsChangeInOneOf(fragments)) {
+                result.add(hunk);
             }
         }
         return result;
@@ -133,24 +118,29 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object.
      */
     public FileDiff merge(final Hunk hunkToMerge) throws IncompatibleFragmentException {
-        if (this.containsInLineDiff(hunkToMerge)) {
-            return this.merge(this.makeFullLine(hunkToMerge));
-        }
         final FileDiff result = new FileDiff(this.fromRevision, hunkToMerge.getTarget().getFile());
         final List<Hunk> stashedHunks = new ArrayList<Hunk>();
+        final Delta hunkDelta = hunkToMerge.getDelta();
+        final int hunkStartLine = hunkToMerge.getSource().getFrom().getLine();
         boolean hunkCreated = false;
         for (final Hunk hunk : this.hunks) {
             if (hunk.getTarget().overlaps(hunkToMerge.getSource())) {
                 stashedHunks.add(hunk);
-            } else if (hunk.getTarget().getTo().compareTo(hunkToMerge.getSource().getFrom()) < 0) {
+            } else if (hunk.getTarget().getTo().compareTo(hunkToMerge.getSource().getFrom()) <= 0) {
                 result.hunks.add(hunk.adjustTargetFile(result.toRevision));
             } else if (hunkCreated) {
-                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()).adjustTargetFile(result.toRevision));
+                result.hunks.add(
+                        hunk.adjustTarget(hunkDelta.ignoreColumnOffset(
+                                hunk.getTarget().getFrom().getLine() != hunkStartLine))
+                        .adjustTargetFile(result.toRevision));
             } else {
                 result.hunks.add(this.createCombinedHunk(stashedHunks, hunkToMerge)
                         .adjustSourceFile(this.fromRevision)
                         .adjustTargetFile(result.toRevision));
-                result.hunks.add(hunk.adjustTarget(hunkToMerge.getDelta()).adjustTargetFile(result.toRevision));
+                result.hunks.add(
+                        hunk.adjustTarget(hunkDelta.ignoreColumnOffset(
+                                hunk.getTarget().getFrom().getLine() != hunkStartLine))
+                        .adjustTargetFile(result.toRevision));
                 hunkCreated = true;
             }
         }
@@ -174,14 +164,14 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if some hunk to be merged overlaps with some hunk in the FileDiff object.
      */
     public FileDiff merge(final Collection<? extends Hunk> hunksToMerge) throws IncompatibleFragmentException {
-        final List<Hunk> fullLineHunks = this.makeFullLine(hunksToMerge);
-
         FileDiff result = this;
-        int delta = 0;
-        for (Hunk hunk : fullLineHunks) {
-            hunk = hunk.adjustSource(delta);
-            result = result.merge(hunk);
-            delta += hunk.getDelta();
+        Delta delta = new Delta();
+        int lastLine = 0;
+        for (Hunk hunk : hunksToMerge) {
+            delta = delta.ignoreColumnOffset(hunk.getSource().getFrom().getLine() != lastLine);
+            result = result.merge(hunk.adjustSource(delta));
+            delta = delta.plus(hunk.getDelta());
+            lastLine = hunk.getSource().getTo().getLine();
         }
         return result;
     }
@@ -197,33 +187,6 @@ public class FileDiff {
      */
     public FileDiff merge(final FileDiff diff) throws IncompatibleFragmentException {
         return this.merge(diff.hunks).setTo(diff.toRevision);
-    }
-
-    private boolean containsInLineDiff(Hunk hunk) {
-        return hunk.getSource().getFrom().getColumn() != 1
-            || hunk.getSource().getTo().getColumn() != 0
-            || hunk.getTarget().getFrom().getColumn() != 1
-            || hunk.getTarget().getTo().getColumn() != 0;
-    }
-
-    private List<Hunk> makeFullLine(Collection<? extends Hunk> hunks) {
-        final List<Hunk> ret = new ArrayList<>();
-        for (final Hunk hunk : hunks) {
-            if (this.containsInLineDiff(hunk)) {
-                ret.add(this.makeFullLine(hunk));
-            } else {
-                ret.add(hunk);
-            }
-        }
-        return ret;
-    }
-
-    private Hunk makeFullLine(Hunk hunk) {
-        return new Hunk(this.makeFullLine(hunk.getSource()), this.makeFullLine(hunk.getTarget()));
-    }
-
-    private Fragment makeFullLine(Fragment target) {
-        return new Fragment(target.getFile(), target.getFrom().startOfLine(), target.getTo().endOfLine());
     }
 
     /**
@@ -269,27 +232,51 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the hunk list
      *      or if the resulting parts cannot be combined into one fragment.
      */
-    private Fragment createCombinedFragment(final Collection<? extends Hunk> hunks, final Fragment fragment)
+    private Fragment createCombinedFragment(final Fragment fragment)
             throws IncompatibleFragmentException {
 
-        final int targetDelta = this.computeDeltaViaSourceFragmentUpTo(fragment.getFrom());
-        int sourceDelta = 0;
+        final FragmentList result = new FragmentList();
+        Fragment fragmentRest = fragment;
+        Delta delta = new Delta();
+        int lastLine = 0;
 
-        FragmentList result = new FragmentList(fragment);
-        for (final Hunk hunk : hunks) {
-            final Fragment source = hunk.getSource().adjust(sourceDelta);
-            result = result.subtract(source)
-                    .move(source.getTo(), hunk.getDelta())
-                    .moveInLine(source.getTo(), hunk.getColumnDelta());
-            result.addFragment(hunk.getTarget().adjust(-targetDelta));
-            sourceDelta += hunk.getDelta();
+        for (final Hunk hunk : this.hunks) {
+            final Fragment source = hunk.getSource();
+            if (source.overlaps(fragment)) {
+                final Fragment target = hunk.getTarget();
+                result.addFragment(target);
+
+                if (fragmentRest != null) {
+                    final FragmentList pieces = fragmentRest.subtract(source);
+                    fragmentRest = null;
+                    for (final Fragment piece : pieces.getFragments()) {
+                        if (piece.getTo().compareTo(source.getFrom()) <= 0) {
+                            delta = delta.ignoreColumnOffset(piece.getFrom().getLine() != lastLine);
+                            result.addFragment(piece.adjust(delta));
+                        } else {
+                            fragmentRest = piece;
+                        }
+                    }
+                }
+            } else if (fragment.getTo().compareTo(source.getFrom()) <= 0) {
+                break;
+            }
+
+            delta = delta.ignoreColumnOffset(hunk.getSource().getFrom().getLine() != lastLine);
+            delta = delta.plus(hunk.getDelta());
+            lastLine = hunk.getSource().getTo().getLine();
+        }
+
+        if (fragmentRest != null) {
+            delta = delta.ignoreColumnOffset(fragmentRest.getFrom().getLine() != lastLine);
+            result.addFragment(fragmentRest.adjust(delta));
         }
 
         result.coalesce();
         if (result.getFragments().size() != 1) {
             throw new IncompatibleFragmentException();
         }
-        return result.getFragments().get(0).adjust(targetDelta);
+        return result.getFragments().get(0);
     }
 
     /**
@@ -303,14 +290,18 @@ public class FileDiff {
      * @throws IncompatibleFragmentException if the hunk to be merged overlaps with some hunk in the FileDiff object
      *              or if the resulting source parts cannot be combined into one fragment.
      */
-    private Fragment combineSources(final Hunk hunkToMerge, final FragmentList sources, final FragmentList targets)
-            throws IncompatibleFragmentException {
+    private Fragment combineSources(
+            final Hunk hunkToMerge,
+            final FragmentList sources,
+            final FragmentList targets) throws IncompatibleFragmentException {
         final FragmentList combinedSources = new FragmentList();
+        combinedSources.addFragmentList(sources);
+
         for (final Fragment fragment : hunkToMerge.getSource().subtract(targets).getFragments()) {
-            combinedSources.addFragment(fragment.adjust(-this.computeDeltaViaTargetFragmentUpTo(fragment.getFrom())));
+            combinedSources.addFragment(fragment.adjust(
+                    this.computeDeltaViaTargetFragmentUpTo(fragment.getFrom()).negate()));
         }
 
-        combinedSources.addFragmentList(sources);
         combinedSources.coalesce();
         if (combinedSources.getFragments().size() != 1) {
             throw new IncompatibleFragmentException();
@@ -330,22 +321,26 @@ public class FileDiff {
      */
     private Fragment combineTargets(final Hunk hunkToMerge, final FragmentList targets)
             throws Error, IncompatibleFragmentException {
+
         final FragmentList adjustedTargets = new FragmentList();
-        final int hunkDelta = hunkToMerge.getDelta();
+        final Delta hunkDelta = hunkToMerge.getDelta();
         final Fragment hunkTarget = hunkToMerge.getTarget();
         final PositionInText hunkTargetStart = hunkTarget.getFrom();
+        final Set<Fragment> hunkOrigins = new LinkedHashSet<>();
+        hunkOrigins.add(hunkTarget);
         try {
             for (final Fragment curTarget : targets.getFragments()) {
                 if (curTarget.overlaps(hunkToMerge.getSource())) {
+                    hunkOrigins.add(curTarget);
                     final FragmentList pieces = curTarget.subtract(hunkToMerge.getSource());
                     for (final Fragment piece : pieces.getFragments()) {
-                        if (piece.getTo().lessThan(hunkTargetStart)) {
+                        if (piece.getTo().compareTo(hunkTargetStart) <= 0) {
                             adjustedTargets.addFragment(piece);
                         } else {
                             adjustedTargets.addFragment(piece.adjust(hunkDelta));
                         }
                     }
-                } else if (curTarget.getTo().lessThan(hunkTargetStart)) {
+                } else if (curTarget.getTo().compareTo(hunkTargetStart) <= 0) {
                     adjustedTargets.addFragment(curTarget);
                 } else {
                     adjustedTargets.addFragment(curTarget.adjust(hunkDelta));
@@ -355,7 +350,13 @@ public class FileDiff {
             throw new Error(e);
         }
 
-        final FragmentList combinedTargets = adjustedTargets.overlayBy(hunkTarget);
+        final Fragment newHunkTarget = new Fragment(
+                hunkTarget.getFile(),
+                hunkTarget.getFrom(),
+                hunkTarget.getTo(),
+                hunkOrigins);
+        final FragmentList combinedTargets = adjustedTargets.overlayBy(newHunkTarget);
+
         combinedTargets.coalesce();
         if (combinedTargets.getFragments().size() != 1) {
             throw new IncompatibleFragmentException();
@@ -371,36 +372,18 @@ public class FileDiff {
      * @param pos The position in the target file.
      * @return The line delta.
      */
-    private int computeDeltaViaTargetFragmentUpTo(final PositionInText pos) {
-        int result = 0;
+    private Delta computeDeltaViaTargetFragmentUpTo(final PositionInText pos) {
+        Delta delta = new Delta();
+        int lastLine = 0;
         for (final Hunk hunk : this.hunks) {
-            if (hunk.getTarget().getTo().lessThan(pos)) {
-                result += hunk.getDelta();
-            } else if (!hunk.getTarget().getFrom().lessThan(pos)) {
+            if (hunk.getTarget().getTo().compareTo(pos) <= 0) {
+                delta = delta.ignoreColumnOffset(hunk.getTarget().getFrom().getLine() != lastLine);
+                delta = delta.plus(hunk.getDelta());
+                lastLine = hunk.getTarget().getTo().getLine();
+            } else {
                 break;
             }
         }
-        return result;
+        return delta.ignoreColumnOffset(pos.getLine() != lastLine);
     }
-
-    /**
-     * Returns the target line delta to be added given a source {@link PositionInText} because of hunks applied
-     * before this line. It is computed as the number of lines earlier hunks added minus the number of lines
-     * earlier hunks deleted.
-     *
-     * @param pos The position in the source file.
-     * @return The line delta.
-     */
-    private int computeDeltaViaSourceFragmentUpTo(final PositionInText pos) {
-        int result = 0;
-        for (final Hunk hunk : this.hunks) {
-            if (hunk.getSource().getTo().lessThan(pos)) {
-                result += hunk.getDelta();
-            } else if (!hunk.getSource().getFrom().lessThan(pos)) {
-                break;
-            }
-        }
-        return result;
-    }
-
 }

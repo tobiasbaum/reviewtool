@@ -34,8 +34,15 @@ public class FragmentList {
     /**
      * @return A read-only view on the fragments in this fragment list.
      */
-    public List<Fragment> getFragments() {
+    public List<? extends Fragment> getFragments() {
         return Collections.unmodifiableList(this.fragments);
+    }
+
+    /**
+     * @return {@code true} if this fragment list is empty.
+     */
+    public boolean isEmpty() {
+        return this.fragments.isEmpty();
     }
 
     /**
@@ -50,7 +57,7 @@ public class FragmentList {
             final Fragment oldFragment = it.next();
             if (oldFragment.overlaps(fragment)) {
                 throw new IncompatibleFragmentException();
-            } else if (posTo.compareTo(oldFragment.getFrom()) < 0) {
+            } else if (posTo.compareTo(oldFragment.getFrom()) <= 0) {
                 it.previous();
                 it.add(fragment);
                 return;
@@ -97,8 +104,8 @@ public class FragmentList {
     }
 
     /**
-     * Overlays this fragment list by some {@link Fragment}. That means that parts that overlap are taken from the
-     * fragment passed.
+     * Overlays this fragment list by some {@link Fragment}. That means that parts that overlap are taken
+     * from the fragment passed.
      * @param fragment The fragment.
      * @return A fragment list storing the overlay result.
      */
@@ -114,7 +121,7 @@ public class FragmentList {
         final ListIterator<Fragment> it = this.fragments.listIterator();
         while (it.hasNext()) {
             final Fragment oldFragment = it.next();
-            if (posTo.lessThan(oldFragment.getFrom())) {
+            if (posTo.compareTo(oldFragment.getFrom()) <= 0) {
                 break;
             }
 
@@ -175,36 +182,15 @@ public class FragmentList {
     /**
      * Moves fragments starting at a given position.
      * @param pos The start position.
-     * @param offset The line offset to apply.
+     * @param delta The delta to apply.
      */
-    public FragmentList move(final PositionInText pos, final int offset) {
+    public FragmentList move(final PositionInText pos, final Delta delta) {
         final FragmentList result = new FragmentList();
         for (final Fragment fragment : this.fragments) {
-            if (fragment.getFrom().lessThan(pos)) {
+            if (fragment.getFrom().compareTo(pos) <= 0) {
                 result.fragments.add(fragment);
             } else {
-                result.fragments.add(fragment.adjust(offset));
-            }
-        }
-        return result;
-    }
-
-    /**
-     * Moves fragments that occur in the same line as pos after pos' column
-     * @param pos The start position.
-     * @param offsetInColumns The column offset to apply.
-     */
-    public FragmentList moveInLine(final PositionInText pos, final int offsetInColumns) {
-        if (offsetInColumns == 0) {
-            return this;
-        }
-
-        final FragmentList result = new FragmentList();
-        for (final Fragment fragment : this.fragments) {
-            if (fragment.getFrom().getLine() != pos.getLine() || fragment.getFrom().lessThan(pos)) {
-                result.fragments.add(fragment);
-            } else {
-                result.fragments.add(fragment.adjustColumnIfInLine(offsetInColumns, pos.getLine()));
+                result.fragments.add(fragment.adjust(delta));
             }
         }
         return result;

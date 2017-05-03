@@ -51,11 +51,9 @@ public class OneStopPerPartOfFileRestructuringTest {
 
     private static Stop stop(final String file, int revision) {
         return new Stop(
-                fileInRevision(file, revision - 1),
-                fileInRevision(file, revision),
-                fileInRevision(file, 100),
-                false,
-                true);
+                ChangestructureFactory.createBinaryChange(
+                        fileInRevision(file, revision - 1), fileInRevision(file, revision), false, true),
+                fileInRevision(file, 100));
     }
 
     private static Stop stop(final String file, int... revisions) {
@@ -68,13 +66,14 @@ public class OneStopPerPartOfFileRestructuringTest {
 
     private static Stop stopWithLines(final String file, int revision, int lineFrom, int lineTo) {
         final PositionInText posFrom = ChangestructureFactory.createPositionInText(lineFrom, 1);
-        final PositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 0);
+        final PositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 1);
         return new Stop(
-                ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),
-                ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo),
-                ChangestructureFactory.createFragment(fileInRevision(file, 100), posFrom, posTo),
-                false,
-                true);
+                ChangestructureFactory.createTextualChangeHunk(
+                        ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),
+                        ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo),
+                        false,
+                        true),
+                ChangestructureFactory.createFragment(fileInRevision(file, 100), posFrom, posTo));
     }
 
     private static Tour tour(String description, int revision, String... filesWithStops) {

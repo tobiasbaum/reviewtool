@@ -36,99 +36,99 @@ public class FragmentTest {
 
     @Test
     public void testCanBeMerged1() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(3, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(3, 1));
         assertTrue(f1.canBeMergedWith(f2));
     }
 
     @Test
     public void testCanBeMerged2() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(3, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(3, 1));
         assertTrue(f1.canBeMergedWith(f2));
     }
 
     @Test
     public void testCanBeMerged3() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 5));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 6));
         assertTrue(f1.canBeMergedWith(f2));
     }
 
     @Test
     public void testCanBeMerged4() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 1));
         assertTrue(f1.canBeMergedWith(f2));
     }
 
     @Test
     public void testCanBeMerged5() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(7, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(7, 1));
         assertTrue(f1.canBeMergedWith(f2));
         assertTrue(f2.canBeMergedWith(f1));
     }
 
     @Test
     public void testCanBeMerged6() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 1));
         assertFalse(f1.canBeMergedWith(f2));
         assertFalse(f2.canBeMergedWith(f1));
     }
 
     @Test
     public void testCanBeMerged7() {
-        final Fragment f1 = new Fragment(file(), pos(3, 1), pos(5, 0));
-        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 0));
+        final Fragment f1 = new Fragment(file(), pos(3, 1), pos(5, 1));
+        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 1));
         assertTrue(f1.canBeMergedWith(f2));
         assertTrue(f2.canBeMergedWith(f1));
     }
 
     @Test
     public void testCanBeMerged8() {
-        final Fragment f1 = new Fragment(file(), pos(1, 10), pos(1, 13));
-        final Fragment f2 = new Fragment(file(), pos(1, 20), pos(1, 23));
+        final Fragment f1 = new Fragment(file(), pos(1, 10), pos(1, 14));
+        final Fragment f2 = new Fragment(file(), pos(1, 20), pos(1, 24));
         assertFalse(f1.canBeMergedWith(f2));
         assertFalse(f2.canBeMergedWith(f1));
     }
 
     @Test
     public void testCanBeMergedWithDeletionFragment1() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 1));
         assertTrue(f1.canBeMergedWith(f2));
     }
 
     @Test
     public void testCanBeMergedWithDeletionFragment2() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(2, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 1));
+        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(2, 1));
         assertFalse(f1.canBeMergedWith(f2));
         assertFalse(f2.canBeMergedWith(f1));
     }
 
     @Test
     public void testCanBeMergedWithDeletionFragment3() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(3, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 1));
+        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(3, 1));
         assertFalse(f1.canBeMergedWith(f2));
         assertFalse(f2.canBeMergedWith(f1));
     }
 
     @Test
     public void testCanBeMergedWithDeletionFragment4() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 0));
-        final Fragment f2 = new Fragment(file(), pos(5, 1), pos(5, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 1));
+        final Fragment f2 = new Fragment(file(), pos(5, 1), pos(5, 1));
         assertTrue(f1.canBeMergedWith(f2));
         assertTrue(f2.canBeMergedWith(f1));
     }
 
     @Test
     public void testCanBeMergedWithDeletionFragment5() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 1));
         assertTrue(f1.canBeMergedWith(f2));
         assertTrue(f2.canBeMergedWith(f1));
     }
@@ -141,217 +141,217 @@ public class FragmentTest {
 
     @Test
     public void testMerge1() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 1)));
     }
 
     @Test
     public void testMerge2() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(3, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(3, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 1), f1, f2));
     }
 
     @Test
     public void testMerge3() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 5));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 6));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(3, 1), f1, f2));
     }
 
     @Test
     public void testMerge4() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 1), f1, f2));
     }
 
     @Test
     public void testMerge5() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(7, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(7, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(7, 1), f1, f2));
     }
 
     @Test
     public void testMerge7() {
-        final Fragment f1 = new Fragment(file(), pos(3, 1), pos(5, 0));
-        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(2, 1), pos(7, 0)));
+        final Fragment f1 = new Fragment(file(), pos(3, 1), pos(5, 1));
+        final Fragment f2 = new Fragment(file(), pos(2, 1), pos(7, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(2, 1), pos(7, 1), f1, f2));
     }
 
     @Test
     public void testMerge8() {
-        final Fragment f1 = new Fragment(file(), pos(3, 1), pos(4, 6));
-        final Fragment f2 = new Fragment(file(), pos(4, 3), pos(5, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(3, 1), pos(5, 0)));
+        final Fragment f1 = new Fragment(file(), pos(3, 1), pos(4, 7));
+        final Fragment f2 = new Fragment(file(), pos(4, 3), pos(5, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(3, 1), pos(5, 1), f1, f2));
     }
 
     @Test
     public void testMergeWithDeletionFragment1() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(1, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(1, 1)));
     }
 
     @Test
     public void testMergeWithDeletionFragment4() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 0));
-        final Fragment f2 = new Fragment(file(), pos(5, 1), pos(5, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 1));
+        final Fragment f2 = new Fragment(file(), pos(5, 1), pos(5, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 1), f1, f2));
     }
 
     @Test
     public void testMergeWithDeletionFragment5() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 0));
-        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 0)));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(5, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(1, 1));
+        testMergeSymmetric(f1, f2, new Fragment(file(), pos(1, 1), pos(5, 1), f1, f2));
     }
 
     @Test
     public void testIsNeighboring1() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(3, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(1, 1), pos(3, 1));
         assertFalse(f1.isNeighboring(f2));
     }
 
     @Test
     public void testIsNeighboring2() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(6, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(6, 1));
         assertTrue(f1.isNeighboring(f2));
     }
 
     @Test
     public void testIsNeighboring3() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(6, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(3, 1), pos(6, 1));
         assertTrue(f2.isNeighboring(f1));
     }
 
     @Test
     public void testIsNeighboring4() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 1));
         assertFalse(f1.isNeighboring(f2));
     }
 
     @Test
     public void testIsNeighboring5() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
-        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
+        final Fragment f2 = new Fragment(file(), pos(4, 1), pos(7, 1));
         assertFalse(f2.isNeighboring(f1));
     }
 
     @Test
     public void testIsNeighboring6() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3));
-        final Fragment f2 = new Fragment(file(), pos(1, 4), pos(1, 6));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 4));
+        final Fragment f2 = new Fragment(file(), pos(1, 4), pos(1, 7));
         assertTrue(f2.isNeighboring(f1));
     }
 
     @Test
     public void testIsNeighboring7() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3));
-        final Fragment f2 = new Fragment(file(), pos(1, 4), pos(1, 6));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 4));
+        final Fragment f2 = new Fragment(file(), pos(1, 4), pos(1, 7));
         assertTrue(f1.isNeighboring(f2));
     }
 
     @Test
     public void testIsNeighboring8() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3));
-        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 5));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 4));
+        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 6));
         assertFalse(f2.isNeighboring(f1));
     }
 
     @Test
     public void testIsNeighboring9() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3));
-        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 5));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 4));
+        final Fragment f2 = new Fragment(file(), pos(1, 3), pos(1, 6));
         assertFalse(f1.isNeighboring(f2));
     }
 
     @Test
     public void testIsNeighboring10() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3));
-        final Fragment f2 = new Fragment(file(), pos(1, 5), pos(1, 7));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 4));
+        final Fragment f2 = new Fragment(file(), pos(1, 5), pos(1, 8));
         assertFalse(f2.isNeighboring(f1));
     }
 
     @Test
     public void testIsNeighboring11() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 3));
-        final Fragment f2 = new Fragment(file(), pos(1, 5), pos(1, 7));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 4));
+        final Fragment f2 = new Fragment(file(), pos(1, 5), pos(1, 8));
         assertFalse(f1.isNeighboring(f2));
     }
 
     @Test
     public void testGetNumberOfLines1() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(2, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(2, 1));
         assertEquals(1, f1.getNumberOfLines());
     }
 
     @Test
     public void testGetNumberOfLines2() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(3, 1));
         assertEquals(2, f1.getNumberOfLines());
     }
 
     @Test
     public void testGetNumberOfLines3() {
-        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(6, 0));
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(6, 1));
         assertEquals(2, f1.getNumberOfLines());
     }
 
     @Test
     public void testGetNumberOfLines4() {
-        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 0));
-        assertEquals(0, f1.getNumberOfLines());
-    }
-
-    @Test
-    public void testGetNumberOfLines5() {
         final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 1));
         assertEquals(0, f1.getNumberOfLines());
     }
 
     @Test
+    public void testGetNumberOfLines5() {
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 2));
+        assertEquals(0, f1.getNumberOfLines());
+    }
+
+    @Test
     public void testGetNumberOfLines6() {
-        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(5, 1));
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(5, 2));
         assertEquals(1, f1.getNumberOfLines());
     }
 
     @Test
     public void testGetNumberOfLines7() {
-        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 3));
+        final Fragment f1 = new Fragment(file(), pos(4, 1), pos(4, 4));
         assertEquals(0, f1.getNumberOfLines());
     }
 
     @Test
     public void testGetContent1() {
-        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 0));
+        final Fragment f1 = new Fragment(file(), pos(1, 1), pos(1, 1));
         assertEquals("", f1.getContentFullLines());
     }
 
     @Test
     public void testGetContent2() {
         final String content = "abcdef";
-        final Fragment f1 = new Fragment(fileWithContent(content), pos(1, 2), pos(1, 3));
+        final Fragment f1 = new Fragment(fileWithContent(content), pos(1, 2), pos(1, 4));
         assertEquals("abcdef\n", f1.getContentFullLines());
     }
 
     @Test
     public void testGetContent3() {
         final String content = "a\nb\nc\nd\ne\nf\n";
-        final Fragment f1 = new Fragment(fileWithContent(content), pos(2, 1), pos(5, 0));
+        final Fragment f1 = new Fragment(fileWithContent(content), pos(2, 1), pos(5, 1));
         assertEquals("b\nc\nd\n", f1.getContentFullLines());
     }
 
     @Test
     public void testGetContent4() {
         final String content = "a\nb\nc\nd\ne\nf\n";
-        final Fragment f1 = new Fragment(fileWithContent(content), pos(2, 2), pos(5, 1));
+        final Fragment f1 = new Fragment(fileWithContent(content), pos(2, 2), pos(5, 2));
         assertEquals("b\nc\nd\ne\n", f1.getContentFullLines());
     }
 }

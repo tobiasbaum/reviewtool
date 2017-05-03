@@ -82,7 +82,7 @@ public class PositionLookupTable {
             return this.charCountAtEndOfLine.get(this.charCountAtEndOfLine.size() - 1);
         }
 
-        return this.charCountAtEndOfLine.get(pos.getLine() - 1) + pos.getColumn();
+        return this.charCountAtEndOfLine.get(pos.getLine() - 1) + pos.getColumn() - 1;
     }
 
 }

@@ -52,13 +52,13 @@ public class SimpleTextDiffAlgorithmTest {
     private static Pair<PositionInText, PositionInText> changeIn(int startIncl, int endIncl) {
         return Pair.create(
                 ChangestructureFactory.createPositionInText(startIncl, 1),
-                ChangestructureFactory.createPositionInText(endIncl + 1, 0));
+                ChangestructureFactory.createPositionInText(endIncl + 1, 1));
     }
 
     private static Pair<PositionInText, PositionInText> inLineChange(int line, int startCharIncl, int endCharExcl) {
         return Pair.create(
                 ChangestructureFactory.createPositionInText(line, startCharIncl),
-                ChangestructureFactory.createPositionInText(line, endCharExcl - 1));
+                ChangestructureFactory.createPositionInText(line, endCharExcl));
     }
 
     private static Pair<PositionInText, PositionInText> deletionAt(int line) {

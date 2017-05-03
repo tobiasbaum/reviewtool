@@ -23,11 +23,11 @@ public class PositionLookupTableTest {
                         + "zeile laenger\r\n"
                         + "letzte zeile"));
 
-        assertEquals(1, t.getCharsSinceFileStart(pos(1, 1)));
-        assertEquals(3, t.getCharsSinceFileStart(pos(1, 3)));
-        assertEquals(10, t.getCharsSinceFileStart(pos(2, 1)));
-        assertEquals(19, t.getCharsSinceFileStart(pos(3, 1)));
-        assertEquals(34, t.getCharsSinceFileStart(pos(4, 1)));
+        assertEquals(0, t.getCharsSinceFileStart(pos(1, 1)));
+        assertEquals(2, t.getCharsSinceFileStart(pos(1, 3)));
+        assertEquals(9, t.getCharsSinceFileStart(pos(2, 1)));
+        assertEquals(18, t.getCharsSinceFileStart(pos(3, 1)));
+        assertEquals(33, t.getCharsSinceFileStart(pos(4, 1)));
     }
 
     @Test

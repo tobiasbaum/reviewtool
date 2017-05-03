@@ -1,7 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 /**
- * A position in a text file, denoted by line and column number.
+ * A position in a text file, denoted by character index.
  */
 public class PositionInText implements Comparable<PositionInText> {
 
@@ -11,10 +11,7 @@ public class PositionInText implements Comparable<PositionInText> {
     private final int column;
 
     PositionInText(int line, int column) {
-        this(line, column, -1);
-    }
-
-    PositionInText(final int line, final int column, final int absoluteOffset) {
+        assert column > 0 || column == 0 && line == 0;
         this.line = line;
         this.column = column;
     }
@@ -46,21 +43,6 @@ public class PositionInText implements Comparable<PositionInText> {
         return this.column;
     }
 
-    public PositionInText nextInLine() {
-        return new PositionInText(this.line, this.column + 1);
-    }
-
-    /**
-     * @return A new PositionInText object with the same line but decremented column.
-     */
-    public PositionInText prevInLine() {
-        return new PositionInText(this.line, this.column - 1);
-    }
-
-    public PositionInText toPrevLine() {
-        return new PositionInText(this.line - 1, this.column);
-    }
-
     public boolean lessThan(PositionInText other) {
         return this.compareTo(other) < 0;
     }
@@ -84,12 +66,22 @@ public class PositionInText implements Comparable<PositionInText> {
     }
 
     /**
-     * Adjusts the position giving a column offset.
-     * @param columnOffset The column offset to add to current column.
-     * @return A new PositionInText object with the same line but adjusted column.
+     * Adds a delta to this position.
+     * @param delta The delta to add to position.
+     * @return A new PositionInText object.
      */
-    public PositionInText adjustColumn(int columnOffset) {
-        return new PositionInText(this.line, this.column + columnOffset);
+    public PositionInText plus(final Delta delta) {
+        return new PositionInText(this.line + delta.getLineOffset(), this.column + delta.getColumnOffset());
+    }
+
+    /**
+     * Returns the difference between this PositionInText and another one.
+     * @param other The other PositionInText.
+     * @return The delta between this PositionInText and the passed one.
+     * @post {@code other.plus(result).equals(this)}
+     */
+    public Delta minus(final PositionInText other) {
+        return new Delta(this.line - other.line, this.column - other.column);
     }
 
     /**

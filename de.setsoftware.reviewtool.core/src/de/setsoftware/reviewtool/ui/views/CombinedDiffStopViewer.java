@@ -5,8 +5,10 @@ import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jface.text.Position;
 import org.eclipse.swt.widgets.Composite;
@@ -33,56 +35,72 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
         if (tours == null) {
             return;
         }
-        final FileHistoryNode node = tours.getFileHistoryNode(stop.getLastFileRevision());
-        if (node != null) {
-            final List<FileInRevision> history = stop.getHistory();
-            final FileInRevision firstRevision = history.get(0);
-            final FileInRevision lastRevision = history.get(history.size() - 1);
 
-            final List<Fragment> fragmentsFirst = stop.getContentFor(firstRevision);
-            final List<Fragment> fragmentsLast = stop.getContentFor(lastRevision);
-            if (fragmentsFirst.isEmpty() || fragmentsLast.isEmpty()) { // binary change
-                this.createDiffViewer(view, scrollContent, firstRevision, lastRevision, fragmentsFirst, fragmentsLast,
-                        null, null);
-            } else { // textual change
+        final Map<FileInRevision, FileInRevision> changes = stop.getHistory();
+        final List<FileInRevision> sortedRevs = FileInRevision.sortByRevision(changes.keySet());
+        final FileInRevision firstRevision = sortedRevs.get(0);
+        final FileInRevision lastRevision = changes.get(sortedRevs.get(sortedRevs.size() - 1));
+
+        final FileHistoryNode node = tours.getFileHistoryNode(lastRevision);
+        if (node != null) {
+            if (stop.isBinaryChange()) {
+                this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
+                        new ArrayList<Fragment>(), new ArrayList<Fragment>(),
+                        new ArrayList<Position>(), new ArrayList<Position>());
+            } else {
                 final FileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
                 final FileDiff diff = node.buildHistory(ancestor);
-                final List<Hunk> hunks = diff.getHunksForTargets(fragmentsLast);
 
-                final Fragment firstSourceFragment = Hunk.getSources(hunks).getFragments().get(0);
-                final Fragment firstTargetFragment = Hunk.getTargets(hunks).getFragments().get(0);
+                final List<Fragment> origins = new ArrayList<>();
+                for (final FileInRevision file : changes.keySet()) {
+                    for (final Hunk hunk : stop.getContentFor(file)) {
+                        origins.addAll(hunk.getTarget().getOrigins());
+                    }
+                }
+                final List<Hunk> relevantHunks = diff.getHunksWithTargetChangesInOneOf(origins);
 
                 final LineSequence oldContents = fileToLineSequence(firstRevision);
                 final LineSequence newContents = fileToLineSequence(lastRevision);
 
-                final int oldStartOffset =
-                        oldContents.getStartPositionOfLine(firstSourceFragment.getFrom().getLine() - 1);
-                final int oldEndOffset =
-                        oldContents.getStartPositionOfLine(firstSourceFragment.getTo().getLine() - 1);
-                final int newStartOffset =
-                        newContents.getStartPositionOfLine(firstTargetFragment.getFrom().getLine() - 1);
-                final int newEndOffset =
-                        newContents.getStartPositionOfLine(firstTargetFragment.getTo().getLine() - 1);
+                final List<Position> oldPositions = new ArrayList<>();
+                final List<Position> newPositions = new ArrayList<>();
 
-                final int oldNumLines = oldContents.getNumberOfLines();
-                final Fragment oldFragment = ChangestructureFactory.createFragment(firstRevision,
-                        ChangestructureFactory.createPositionInText(1, 1, 0),
-                        ChangestructureFactory.createPositionInText(oldNumLines + 1, 0,
-                                oldContents.getStartPositionOfLine(oldNumLines)));
+                for (final Hunk hunk : relevantHunks) {
+                    final Fragment sourceFragment = hunk.getSource();
+                    final Fragment targetFragment = hunk.getTarget();
 
-                final int newNumLines = newContents.getNumberOfLines();
-                final Fragment newFragment = ChangestructureFactory.createFragment(lastRevision,
-                        ChangestructureFactory.createPositionInText(1, 1, 0),
-                        ChangestructureFactory.createPositionInText(newNumLines + 1, 0,
-                                newContents.getStartPositionOfLine(newNumLines)));
+                    final int oldStartOffset =
+                            oldContents.getStartPositionOfLine(sourceFragment.getFrom().getLine() - 1)
+                                    + (sourceFragment.getFrom().getColumn() - 1);
+                    final int oldEndOffset =
+                            oldContents.getStartPositionOfLine(sourceFragment.getTo().getLine() - 1)
+                                    + (sourceFragment.getTo().getColumn() - 1);
+                    final int newStartOffset =
+                            newContents.getStartPositionOfLine(targetFragment.getFrom().getLine() - 1)
+                                    + (targetFragment.getFrom().getColumn() - 1);
+                    final int newEndOffset =
+                            newContents.getStartPositionOfLine(targetFragment.getTo().getLine() - 1)
+                                    + (targetFragment.getTo().getColumn() - 1);
+
+                    oldPositions.add(new Position(oldStartOffset, oldEndOffset - oldStartOffset));
+                    newPositions.add(new Position(newStartOffset, newEndOffset - newStartOffset));
+                }
 
                 this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
-                        Arrays.asList(new Fragment[] { oldFragment }),
-                        Arrays.asList(new Fragment[] { newFragment }),
-                        new Position(oldStartOffset, oldEndOffset - oldStartOffset),
-                        new Position(newStartOffset, newEndOffset - newStartOffset));
+                        Arrays.asList(createFragmentForWholeFile(firstRevision, oldContents)),
+                        Arrays.asList(createFragmentForWholeFile(lastRevision, newContents)),
+                        oldPositions,
+                        newPositions);
             }
         }
+    }
+
+    private Fragment createFragmentForWholeFile(final FileInRevision revision, final LineSequence contents) {
+        final int numLines = contents.getNumberOfLines();
+        final Fragment fragment = ChangestructureFactory.createFragment(revision,
+                ChangestructureFactory.createPositionInText(1, 1),
+                ChangestructureFactory.createPositionInText(numLines + 1, 1));
+        return fragment;
     }
 
     private static LineSequence fileToLineSequence(final FileInRevision file) {

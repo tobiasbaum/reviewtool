@@ -30,10 +30,7 @@ public class SvnFragmentTracer implements IFragmentTracer {
                 final FileHistoryNode descendant = this.fileHistoryGraph.getNodeFor(leafRevision);
                 final FileDiff fileDiff = descendant.buildHistory(node);
                 final Fragment lastFragment = fileDiff.traceFragment(fragment);
-                result.add(ChangestructureFactory.createFragment(
-                        descendant.getFile(),
-                        lastFragment.getFrom(),
-                        lastFragment.getTo()));
+                result.add(lastFragment);
             }
         }
 
