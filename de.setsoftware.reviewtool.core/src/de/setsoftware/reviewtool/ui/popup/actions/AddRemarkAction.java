@@ -9,7 +9,6 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.text.ITextSelection;
 import org.eclipse.jface.text.TextSelection;
@@ -49,12 +48,7 @@ public class AddRemarkAction extends AbstractHandler {
     public Object execute(ExecutionEvent event) throws ExecutionException {
         PositionTransformer.initializeCacheInBackground();
         if (ReviewPlugin.getInstance().getMode() == Mode.IDLE) {
-            try {
-                ReviewPlugin.getInstance().startReview();
-            } catch (final CoreException e) {
-                ReviewPlugin.getInstance().logException(e);
-                throw new ExecutionException("exception while starting review", e);
-            }
+            ReviewPlugin.getInstance().startReview();
         }
 
         final IEditorPart activeEditor = HandlerUtil.getActiveEditor(event);

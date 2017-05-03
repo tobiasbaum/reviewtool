@@ -16,6 +16,8 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.OperationCanceledException;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
@@ -100,16 +102,20 @@ public class ToursInReview {
             List<? extends ITourRestructuring> tourRestructuringStrategies,
             ICreateToursUi createUi,
             String ticketKey) {
+        changeSourceUi.subTask("Determining relevant changes...");
         final IChangeData changes = src.getChanges(ticketKey, changeSourceUi);
+        changeSourceUi.subTask("Filtering changes...");
         final List<Commit> filteredChanges =
-                filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(), createUi);
+                filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(),
+                        createUi, changeSourceUi);
         if (filteredChanges == null) {
             return null;
         }
 
-        final List<Tour> tours = toTours(filteredChanges, changes.createTracer());
+        changeSourceUi.subTask("Creating tours from changes...");
+        final List<Tour> tours = toTours(filteredChanges, changes.createTracer(), changeSourceUi);
         final List<? extends Tour> userSelection =
-                determinePossibleRestructurings(tourRestructuringStrategies, tours, createUi);
+                determinePossibleRestructurings(tourRestructuringStrategies, tours, createUi, changeSourceUi);
         if (userSelection == null) {
             return null;
         }
@@ -118,9 +124,10 @@ public class ToursInReview {
     }
 
     private static List<Commit> filterChanges(
-            List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
-            List<? extends Commit> changes,
-            ICreateToursUi createUi) {
+            final List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
+            final List<? extends Commit> changes,
+            final ICreateToursUi createUi,
+            final IProgressMonitor progressMonitor) {
 
         Telemetry.event("originalChanges")
             .param("count", countChanges(changes, false))
@@ -130,6 +137,10 @@ public class ToursInReview {
         final List<Pair<String, Set<? extends Change>>> strategyResuls = new ArrayList<>();
         for (final IIrrelevanceDetermination strategy : irrelevanceDeterminationStrategies) {
             try {
+                if (progressMonitor.isCanceled()) {
+                    throw new OperationCanceledException();
+                }
+
                 final Set<? extends Change> irrelevantChanges = determineIrrelevantChanges(changes, strategy);
                 Telemetry.event("relevanceFilterResult")
                     .param("description", strategy.getDescription())
@@ -207,9 +218,10 @@ public class ToursInReview {
     }
 
     private static List<? extends Tour> determinePossibleRestructurings(
-            List<? extends ITourRestructuring> tourRestructuringStrategies,
-            List<Tour> originalTours,
-            ICreateToursUi createUi) {
+            final List<? extends ITourRestructuring> tourRestructuringStrategies,
+            final List<Tour> originalTours,
+            final ICreateToursUi createUi,
+            final IProgressMonitor progressMonitor) {
 
         final List<Pair<String, List<? extends Tour>>> possibleRestructurings = new ArrayList<>();
 
@@ -220,6 +232,10 @@ public class ToursInReview {
 
 
         for (final ITourRestructuring restructuringStrategy : tourRestructuringStrategies) {
+            if (progressMonitor.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+
             try {
                 final List<? extends Tour> restructuredTour =
                         restructuringStrategy.restructure(new ArrayList<>(originalTours));
@@ -242,9 +258,13 @@ public class ToursInReview {
         return createUi.selectInitialTours(possibleRestructurings);
     }
 
-    private static List<Tour> toTours(List<Commit> changes, IFragmentTracer tracer) {
+    private static List<Tour> toTours(final List<Commit> changes, final IFragmentTracer tracer,
+            final IProgressMonitor progressMonitor) {
         final List<Tour> ret = new ArrayList<>();
         for (final Commit c : changes) {
+            if (progressMonitor.isCanceled()) {
+                throw new OperationCanceledException();
+            }
             ret.add(new Tour(
                     c.getMessage(),
                     toSliceFragments(c.getChanges(), tracer),
@@ -287,11 +307,14 @@ public class ToursInReview {
     /**
      * Creates markers for the tour stops.
      */
-    public void createMarkers(IStopMarkerFactory markerFactory) {
+    public void createMarkers(final IStopMarkerFactory markerFactory, final IProgressMonitor progressMonitor) {
         final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
         for (int i = 0; i < this.tours.size(); i++) {
             final Tour s = this.tours.get(i);
             for (final Stop f : s.getStops()) {
+                if (progressMonitor != null && progressMonitor.isCanceled()) {
+                    throw new OperationCanceledException();
+                }
                 createMarkerFor(markerFactory, lookupTables, f, i == this.currentTourIndex);
             }
         }
@@ -373,7 +396,7 @@ public class ToursInReview {
             this.clearMarkers();
             final Tour oldActive = this.getActiveTour();
             this.currentTourIndex = index;
-            this.createMarkers(markerFactory);
+            this.createMarkers(markerFactory, null);
             if (notify) {
                 for (final IToursInReviewChangeListener l : this.listeners) {
                     l.activeTourChanged(oldActive, this.getActiveTour());

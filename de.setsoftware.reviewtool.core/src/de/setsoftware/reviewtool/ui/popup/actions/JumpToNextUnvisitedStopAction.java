@@ -70,17 +70,12 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
         return null;
     }
 
-    private ToursInReview getToursAndStartReviewIfNecessary() throws ExecutionException {
+    private ToursInReview getToursAndStartReviewIfNecessary() {
         final ToursInReview tours = ViewDataSource.get().getToursInReview();
         if (tours != null) {
             return tours;
         }
-        try {
-            ReviewPlugin.getInstance().startReview();
-        } catch (final CoreException e) {
-            ReviewPlugin.getInstance().logException(e);
-            throw new ExecutionException("error while selecting ticket", e);
-        }
+        ReviewPlugin.getInstance().startReview();
         return ViewDataSource.get().getToursInReview();
     }
 
