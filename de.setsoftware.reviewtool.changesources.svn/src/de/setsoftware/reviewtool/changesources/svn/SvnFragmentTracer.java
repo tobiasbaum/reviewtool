@@ -46,10 +46,7 @@ public class SvnFragmentTracer implements IFragmentTracer {
         final FileHistoryNode node = this.fileHistoryGraph.getNodeFor(file);
         if (node != null) {
             for (final FileInRevision leafRevision : this.fileHistoryGraph.getLatestFiles(file)) {
-                result.add(ChangestructureFactory.createFileInRevision(
-                        leafRevision.getPath(),
-                        ChangestructureFactory.createLocalRevision(),
-                        leafRevision.getRepository()));
+                result.add(leafRevision);
             }
         }
 
