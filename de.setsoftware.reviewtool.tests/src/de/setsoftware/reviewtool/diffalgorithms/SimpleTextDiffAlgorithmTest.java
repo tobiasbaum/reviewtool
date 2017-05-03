@@ -776,4 +776,55 @@ public class SimpleTextDiffAlgorithmTest {
         assertEquals(Arrays.asList(insertedLines(2, 4)), diff);
     }
 
+    @Test
+    public void testInsertIf() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "public class Test {\r\n"
+                + "\r\n"
+                + "    public static function test() {\r\n"
+                + "        byte[] triplet = doInitStuff();\r\n"
+                + "\r\n"
+                + "        if (format == ImageFormat.JPG) {\r\n"
+                + "            doJpgStuff();\r\n"
+                + "            return triplet;\r\n"
+                + "        }\r\n"
+                + "\r\n"
+                + "        if (format == ImageFormat.TIF) {\r\n"
+                + "            doTifStuff();\r\n"
+                + "            return triplet;\r\n"
+                + "        }\r\n"
+                + "\r\n"
+                + "        throw new NotYetSupportedException();\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "}\r\n",
+
+                "public class Test {\r\n"
+                + "\r\n"
+                + "    public static function test() {\r\n"
+                + "        byte[] triplet = doInitStuff();\r\n"
+                + "\r\n"
+                + "        if (format == ImageFormat.JPG) {\r\n"
+                + "            doJpgStuff();\r\n"
+                + "            return triplet;\r\n"
+                + "        }\r\n"
+                + "\r\n"
+                + "        if (format == ImageFormat.TIF) {\r\n"
+                + "            doTifStuff();\r\n"
+                + "            return triplet;\r\n"
+                + "        }\r\n"
+                + "\r\n"
+                + "        if (format == ImageFormat.PNG) {\r\n"
+                + "            doPngStuff();\r\n"
+                + "            return triplet;\r\n"
+                + "        }\r\n"
+                + "\r\n"
+                + "        throw new NotYetSupportedException();\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "}\r\n"
+        );
+        assertEquals(Arrays.asList(insertedLines(16, 20)), diff);
+    }
+
 }

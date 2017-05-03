@@ -58,21 +58,28 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
             return;
         }
         int best = 0;
+        StartLineSuitability suitabilityOfBest;
+        if (lastDiff.getLengthNew() > 0) {
+            suitabilityOfBest = StartLineSuitability.determineFor(
+                    fileNew.getItem(lastDiff.getStartPosNew() + best));
+        } else {
+            suitabilityOfBest = StartLineSuitability.determineFor(
+                    fileOld.getItem(lastDiff.getStartPosOld() + best));
+        }
         for (int move = 1;
                 move <= commonSuffixLength && this.canMoveDownwards(lastDiff, move, fileOld, fileNew);
                 move++) {
-            boolean isBetterStart;
+            final StartLineSuitability currentSuitability;
             if (lastDiff.getLengthNew() > 0) {
-                isBetterStart = this.isBetterStart(
-                        fileNew.getItem(lastDiff.getStartPosNew() + best),
+                currentSuitability = StartLineSuitability.determineFor(
                         fileNew.getItem(lastDiff.getStartPosNew() + move));
             } else {
-                isBetterStart = this.isBetterStart(
-                        fileOld.getItem(lastDiff.getStartPosOld() + best),
+                currentSuitability = StartLineSuitability.determineFor(
                         fileOld.getItem(lastDiff.getStartPosOld() + move));
             }
-            if (isBetterStart) {
+            if (currentSuitability.compareTo(suitabilityOfBest) > 0) {
                 best = move;
+                suitabilityOfBest = currentSuitability;
             }
         }
 
@@ -136,19 +143,11 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
     }
 
     private boolean isBetterStart(PathNode cur, int move, int best, FullFileView<String> fileNew) {
-        final String lineBest = fileNew.getItem(cur.getPosNew() - best);
-        final String lineMove = fileNew.getItem(cur.getPosNew() - move);
-        return this.isBetterStart(lineBest, lineMove);
-    }
-
-    private boolean isBetterStart(final String lineBest, final String lineMove) {
-        final String lineBestTrim = lineBest.trim();
-        final String lineMoveTrim = lineMove.trim();
-        final boolean syntacticBetter =
-                (lineMoveTrim.startsWith("/*") && !lineBestTrim.startsWith("/*"))
-                || (!lineMoveTrim.startsWith("}") && lineBestTrim.startsWith("}"))
-                || (!lineMoveTrim.startsWith("</") && lineBestTrim.startsWith("</"));
-        return syntacticBetter;
+        final StartLineSuitability suitabilityBest = StartLineSuitability.determineFor(
+                fileNew.getItem(cur.getPosNew() - best));
+        final StartLineSuitability suitabilityMove = StartLineSuitability.determineFor(
+                fileNew.getItem(cur.getPosNew() - move));
+        return suitabilityMove.compareTo(suitabilityBest) > 0;
     }
 
     private List<Pair<Fragment, Fragment>> createFragmentsFromPath(PathNode pathEnd,
