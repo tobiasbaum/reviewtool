@@ -21,7 +21,7 @@ public class WhitespaceChangeFilterTest {
 
     private static IFragment fragment(String content) {
         return Fragment.createWithContent(
-                ChangestructureFactory.createFileInRevision("", null, null),
+                ChangestructureFactory.createFileInRevision("", null),
                 ChangestructureFactory.createPositionInText(1, 1),
                 ChangestructureFactory.createPositionInText(2, 1),
                 content);

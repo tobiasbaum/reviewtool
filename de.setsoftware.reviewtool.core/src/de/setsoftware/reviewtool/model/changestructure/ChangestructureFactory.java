@@ -34,8 +34,8 @@ public class ChangestructureFactory {
         return new TextualChangeHunk(from, to, irrelevantForReview, isVisible);
     }
 
-    public static IRevisionedFile createFileInRevision(String path, IRevision revision, IRepository repository) {
-        return new FileInRevision(path, revision, repository);
+    public static IRevisionedFile createFileInRevision(final String path, final IRevision revision) {
+        return new FileInRevision(path, revision);
     }
 
     public static IFragment createFragment(IRevisionedFile file, IPositionInText from, IPositionInText to) {
@@ -46,12 +46,12 @@ public class ChangestructureFactory {
         return new Hunk(from, to);
     }
 
-    public static ILocalRevision createLocalRevision() {
-        return new LocalRevision();
+    public static ILocalRevision createLocalRevision(final IRepository repo) {
+        return new LocalRevision(repo);
     }
 
-    public static IRepoRevision createRepoRevision(Object id) {
-        return new RepoRevision(id);
+    public static IRepoRevision createRepoRevision(final Object id, final IRepository repo) {
+        return new RepoRevision(id, repo);
     }
 
     public static IPositionInText createPositionInText(int line, int column) {

@@ -21,7 +21,7 @@ public class PathFilterTest {
 
     private static IFragment fragment(String path) {
         return Fragment.createWithContent(
-                ChangestructureFactory.createFileInRevision(path, null, null),
+                ChangestructureFactory.createFileInRevision(path, null),
                 ChangestructureFactory.createPositionInText(1, 1),
                 ChangestructureFactory.createPositionInText(2, 1),
                 "some content");

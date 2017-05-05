@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
 
@@ -9,10 +10,17 @@ import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
  */
 public final class RepoRevision implements IRepoRevision {
 
+    private final IRepository repo;
     private final Object id;
 
-    RepoRevision(Object id) {
+    RepoRevision(final Object id, final IRepository repo) {
         this.id = id;
+        this.repo = repo;
+    }
+
+    @Override
+    public IRepository getRepository() {
+        return this.repo;
     }
 
     @Override
@@ -22,7 +30,7 @@ public final class RepoRevision implements IRepoRevision {
 
     @Override
     public int hashCode() {
-        return this.id.hashCode();
+        return this.repo.hashCode() ^ this.id.hashCode();
     }
 
     @Override
@@ -31,7 +39,7 @@ public final class RepoRevision implements IRepoRevision {
             return false;
         }
         final RepoRevision r = (RepoRevision) o;
-        return this.id.equals(r.id);
+        return this.repo.equals(r.repo) && this.id.equals(r.id);
     }
 
     @Override

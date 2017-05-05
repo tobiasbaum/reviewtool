@@ -20,7 +20,7 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 public class FileDiffTest {
 
     private static FileInRevision file(String name, int revision) {
-        return new FileInRevision(name, new RepoRevision(revision), StubRepo.INSTANCE);
+        return new FileInRevision(name, new RepoRevision(revision, StubRepo.INSTANCE));
     }
 
     private static PositionInText pos(int line, int col) {

@@ -62,8 +62,7 @@ public class OneStopPerPartOfFileRestructuringTest {
     private static IRevisionedFile fileInRevision(String file, int i) {
         return ChangestructureFactory.createFileInRevision(
                 file,
-                ChangestructureFactory.createRepoRevision(i),
-                REPO);
+                ChangestructureFactory.createRepoRevision(i, REPO));
     }
 
     private static Stop stop(final String file, int revision) {

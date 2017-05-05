@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
@@ -8,6 +9,17 @@ import de.setsoftware.reviewtool.model.api.IUnknownRevision;
  * Default implementation of {@link IUnknownRevision}.
  */
 public final class UnknownRevision implements IUnknownRevision {
+
+    private final IRepository repo;
+
+    UnknownRevision(final IRepository repo) {
+        this.repo = repo;
+    }
+
+    @Override
+    public IRepository getRepository() {
+        return this.repo;
+    }
 
     @Override
     public String toString() {

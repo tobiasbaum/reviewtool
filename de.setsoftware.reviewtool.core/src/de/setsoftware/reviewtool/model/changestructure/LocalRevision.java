@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
 
@@ -9,7 +10,15 @@ import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
  */
 public final class LocalRevision implements ILocalRevision {
 
-    LocalRevision() {
+    private final IRepository repo;
+
+    LocalRevision(final IRepository repo) {
+        this.repo = repo;
+    }
+
+    @Override
+    public IRepository getRepository() {
+        return this.repo;
     }
 
     @Override
@@ -19,12 +28,16 @@ public final class LocalRevision implements ILocalRevision {
 
     @Override
     public int hashCode() {
-        return 1234987;
+        return this.repo.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof LocalRevision;
+        if (!(o instanceof LocalRevision)) {
+            return false;
+        }
+        final LocalRevision r = (LocalRevision) o;
+        return this.repo.equals(r.repo);
     }
 
     @Override
