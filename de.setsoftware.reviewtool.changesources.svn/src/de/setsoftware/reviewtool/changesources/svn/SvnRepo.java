@@ -18,6 +18,7 @@ import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
  */
 public class SvnRepo extends AbstractRepository {
 
+    private final String id;
     private final File workingCopyRoot;
     private final SVNURL remoteUrl;
     private final String relPath;
@@ -26,10 +27,12 @@ public class SvnRepo extends AbstractRepository {
 
     public SvnRepo(
             final SVNClientManager mgr,
+            final String id,
             final File workingCopyRoot,
             final SVNURL rootUrl,
             final String relPath,
             final int checkoutPrefix) {
+        this.id = id;
         this.workingCopyRoot = workingCopyRoot;
         this.remoteUrl = rootUrl;
         this.relPath = relPath + '/';
@@ -39,6 +42,11 @@ public class SvnRepo extends AbstractRepository {
 
     public SVNURL getRemoteUrl() {
         return this.remoteUrl;
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
     }
 
     @Override

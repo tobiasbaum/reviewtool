@@ -14,6 +14,11 @@ public final class StubRepo extends AbstractRepository {
     public static StubRepo INSTANCE = new StubRepo();
 
     @Override
+    public String getId() {
+        return "stub";
+    }
+
+    @Override
     public File getLocalRoot() {
         return null;
     }

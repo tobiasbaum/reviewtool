@@ -26,6 +26,11 @@ public class SvnFileHistoryGraphTest {
 
     private static final IRepository STUB_REPO = new AbstractRepository() {
         @Override
+        public String getId() {
+            return "stub";
+        }
+
+        @Override
         public File getLocalRoot() {
             return null;
         }

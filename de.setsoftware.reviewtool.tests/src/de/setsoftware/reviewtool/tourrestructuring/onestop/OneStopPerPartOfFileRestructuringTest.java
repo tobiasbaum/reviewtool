@@ -29,6 +29,11 @@ public class OneStopPerPartOfFileRestructuringTest {
 
     private static final IRepository REPO = new AbstractRepository() {
         @Override
+        public String getId() {
+            return "stub";
+        }
+
+        @Override
         public File getLocalRoot() {
             return null;
         }

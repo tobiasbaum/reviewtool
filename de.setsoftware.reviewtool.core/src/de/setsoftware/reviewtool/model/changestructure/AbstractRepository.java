@@ -11,6 +11,20 @@ import de.setsoftware.reviewtool.model.api.IRevision;
  */
 public abstract class AbstractRepository implements IRepository {
 
+    @Override
+    public final boolean equals(final Object o) {
+        if (o instanceof IRepository) {
+            final IRepository other = (IRepository) o;
+            return this.getId().equals(other.getId());
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return this.getId().hashCode();
+    }
+
     /**
      * Simple implementation for {@link #getSmallestRevision} that uses a comparable revision number.
      */

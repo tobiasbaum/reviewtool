@@ -124,6 +124,7 @@ public class CachedLog {
             final String relPath = wcUrl.toString().substring(rootUrl.toString().length());
             c = new RepoDataCache(relPath, new SvnRepo(
                     mgr,
+                    mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.HEAD).getRepositoryUUID(),
                     workingCopyRoot,
                     rootUrl,
                     relPath,
