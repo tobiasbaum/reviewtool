@@ -33,6 +33,9 @@ class StartLineSuitability implements Comparable<StartLineSuitability> {
         final int markerGoodness;
         if (lineTrim.startsWith("/*")) {
             type = Type.LINE_WITH_START_MARKER;
+            markerGoodness = 3;
+        } else if (lineTrim.startsWith("@")) {
+            type = Type.LINE_WITH_START_MARKER;
             markerGoodness = 2;
         } else if (lineTrim.endsWith("{")) {
             type = Type.LINE_WITH_START_MARKER;
@@ -40,6 +43,15 @@ class StartLineSuitability implements Comparable<StartLineSuitability> {
         } else if (lineTrim.startsWith("</")) {
             type = Type.LINE_WITH_END_MARKER;
             markerGoodness = 1;
+        } else if (lineTrim.startsWith("}")) {
+            type = Type.LINE_WITH_END_MARKER;
+            markerGoodness = 1;
+        } else if (lineTrim.startsWith(")")) {
+            type = Type.LINE_WITH_END_MARKER;
+            markerGoodness = 2;
+        } else if (lineTrim.startsWith("]")) {
+            type = Type.LINE_WITH_END_MARKER;
+            markerGoodness = 3;
         } else if (lineTrim.isEmpty()) {
             type = Type.EMPTY_LINE;
             markerGoodness = 0;

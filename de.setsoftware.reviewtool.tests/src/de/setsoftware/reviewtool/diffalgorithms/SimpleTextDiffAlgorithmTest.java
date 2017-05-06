@@ -827,4 +827,29 @@ public class SimpleTextDiffAlgorithmTest {
         assertEquals(Arrays.asList(insertedLines(16, 20)), diff);
     }
 
+
+    @Test
+    public void testInsertWhereEmptyLineIsBestStart() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "public class Test {\r\n"
+                + "\r\n"
+                + "    public static function test1() {\r\n"
+                + "        doStuff();\r\n"
+                + "    }\r\n"
+                + "}\r\n",
+
+                "public class Test {\r\n"
+                + "\r\n"
+                + "    public static function test1() {\r\n"
+                + "        doStuff();\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "    public static function test2() {\r\n"
+                + "        doOtherStuff();\r\n"
+                + "    }\r\n"
+                + "}\r\n"
+        );
+        assertEquals(Arrays.asList(insertedLines(6, 9)), diff);
+    }
+
 }
