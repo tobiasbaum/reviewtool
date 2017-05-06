@@ -162,13 +162,19 @@ public class ToursInReview {
 
         progressMonitor.subTask("Collecting local changes...");
         final IChangeData localChanges;
-        if (paths == null) {
-            localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, null,
-                    progressMonitor);
-        } else {
-            this.modifiedFiles.addAll(paths);
-            localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, this.modifiedFiles,
-                    progressMonitor);
+        try {
+            if (paths == null) {
+                localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, null,
+                        progressMonitor);
+            } else {
+                this.modifiedFiles.addAll(paths);
+                localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, this.modifiedFiles,
+                        progressMonitor);
+            }
+        } catch (final ReviewtoolException e) {
+            //if there is a problem while determining the local changes, ignore them
+            Logger.warn("problem while determining local changes", e);
+            return;
         }
         this.modifiedFiles = new ArrayList<>(localChanges.getLocalPaths());
 

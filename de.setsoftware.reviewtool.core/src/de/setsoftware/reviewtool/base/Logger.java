@@ -13,6 +13,10 @@ public abstract class Logger {
         instance.log(IStatus.ERROR, message, exception);
     }
 
+    public static void warn(String message, Throwable exception) {
+        instance.log(IStatus.WARNING, message, exception);
+    }
+
     public static void info(String message) {
         instance.log(IStatus.INFO, message);
     }
