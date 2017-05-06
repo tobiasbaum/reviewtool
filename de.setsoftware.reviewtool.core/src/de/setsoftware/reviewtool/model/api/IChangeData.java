@@ -1,7 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
 import java.io.File;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -13,11 +12,6 @@ public interface IChangeData {
      * Returns the {@link IChangeSource} that created this object.
      */
     public abstract IChangeSource getSource();
-
-    /**
-     * Returns all repositories that were matching for the given ticket.
-     */
-    public abstract Collection<? extends IRepository> getRepositories();
 
     /**
      * Returns all {@link ICommit}s that were matching for the given ticket.

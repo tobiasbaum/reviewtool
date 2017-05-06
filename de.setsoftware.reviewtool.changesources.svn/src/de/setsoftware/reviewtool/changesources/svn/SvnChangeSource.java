@@ -124,6 +124,21 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     @Override
+    public Collection<SvnRepo> getRepositories() {
+        return Collections.unmodifiableCollection(CachedLog.getInstance().getRepositories());
+    }
+
+    @Override
+    public SvnRepo getRepositoryById(final String id) {
+        for (final SvnRepo repo : CachedLog.getInstance().getRepositories()) {
+            if (repo.getId().equals(id)) {
+                return repo;
+            }
+        }
+        return null;
+    }
+
+    @Override
     public IChangeData getRepositoryChanges(String key, IChangeSourceUi ui) {
         try {
             final IMutableFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
@@ -136,7 +151,6 @@ public class SvnChangeSource implements IChangeSource {
             final List<ICommit> commits = this.convertToChanges(historyGraph, revisions, ui);
             return new SvnChangeData(
                     this,
-                    neededRevisionPerRepo.keySet(),
                     commits,
                     new ArrayList<File>(),
                     historyGraph);
@@ -154,11 +168,11 @@ public class SvnChangeSource implements IChangeSource {
             final IMutableFileHistoryGraph historyGraph = new SvnFileHistoryGraph();
             ui.subTask("Collecting local changes...");
             final List<WorkingCopyRevision> revisions =
-                    this.collectWorkingCopyChanges(remoteChanges.getRepositories(), changedPaths, historyGraph, ui);
+                    this.collectWorkingCopyChanges(changedPaths, historyGraph, ui);
             ui.subTask("Analyzing local changes...");
             final List<ICommit> commits = this.convertToChanges(historyGraph, revisions, ui);
             final List<File> localPaths = this.extractLocalPaths(revisions);
-            return new SvnChangeData(this, remoteChanges.getRepositories(), commits, localPaths, historyGraph);
+            return new SvnChangeData(this, commits, localPaths, historyGraph);
         } catch (final SVNException e) {
             throw new ReviewtoolException(e);
         }
@@ -199,7 +213,6 @@ public class SvnChangeSource implements IChangeSource {
      * @return A list of {@link WorkingCopyRevision}s. May be empty if no relevant local changes have been found.
      */
     private List<WorkingCopyRevision> collectWorkingCopyChanges(
-            final Collection<? extends IRepository> repositories,
             final List<File> changedPaths,
             final IMutableFileHistoryGraph historyGraph,
             final IProgressMonitor ui) throws SVNException {
@@ -207,22 +220,20 @@ public class SvnChangeSource implements IChangeSource {
         if (changedPaths != null) {
             return this.collectWorkingCopyChangesByPath(changedPaths, historyGraph, ui);
         } else {
-            return this.collectWorkingCopyChangesByRepository(repositories, historyGraph, ui);
+            return this.collectWorkingCopyChangesByRepository(historyGraph, ui);
         }
     }
 
     private List<WorkingCopyRevision> collectWorkingCopyChangesByRepository(
-            final Collection<? extends IRepository> repositories,
             final IMutableFileHistoryGraph historyGraph,
             final IProgressMonitor ui) throws SVNException {
 
         final List<WorkingCopyRevision> revisions = new ArrayList<>();
-        for (final IRepository repo : repositories) {
+        for (final SvnRepo repo : this.getRepositories()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
             final File wc = repo.getLocalRoot();
-            final SvnRepo svnRepo = CachedLog.getInstance().mapWorkingCopyRootToRepository(this.mgr, wc);
             final SortedMap<String, CachedLogEntryPath> paths = new TreeMap<>();
             this.mgr.getStatusClient().doStatus(
                     wc,
@@ -236,14 +247,14 @@ public class SvnChangeSource implements IChangeSource {
                         @Override
                         public void handleStatus(final SVNStatus status) throws SVNException {
                             if (status.isVersioned()) {
-                                final CachedLogEntryPath entry = new CachedLogEntryPath(svnRepo, status);
+                                final CachedLogEntryPath entry = new CachedLogEntryPath(repo, status);
                                 paths.put(entry.getPath(), entry);
                             }
                         }
                     },
                     null); /* no change lists */
 
-            final WorkingCopyRevision wcRevision = new WorkingCopyRevision(svnRepo, paths);
+            final WorkingCopyRevision wcRevision = new WorkingCopyRevision(repo, paths);
             if (RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph)) {
                 revisions.add(wcRevision);
             }
