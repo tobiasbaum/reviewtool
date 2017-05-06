@@ -40,7 +40,7 @@ public final class StubRepo extends AbstractRepository {
 
     @Override
     public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
-        return this.getSmallestOfComparableRevisions(revisions);
+        return getSmallestOfComparableRevisions(revisions);
     }
 
     @Override

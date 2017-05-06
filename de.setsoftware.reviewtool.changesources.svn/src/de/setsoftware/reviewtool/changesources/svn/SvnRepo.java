@@ -95,7 +95,7 @@ public class SvnRepo extends AbstractRepository {
 
     @Override
     public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
-        return this.getSmallestOfComparableRevisions(revisions);
+        return getSmallestOfComparableRevisions(revisions);
     }
 
     @Override
