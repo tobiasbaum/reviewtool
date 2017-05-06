@@ -365,7 +365,11 @@ public class SvnChangeSource implements IChangeSource {
             final Collection<? super ICommit> result, final IProgressMonitor ui) {
         final List<? extends IChange> changes = this.determineChangesInCommit(historyGraph, e, ui);
         if (!changes.isEmpty()) {
-            result.add(ChangestructureFactory.createCommit(e.toPrettyString(), changes, e.isVisible()));
+            result.add(ChangestructureFactory.createCommit(
+                    e.toPrettyString(),
+                    changes,
+                    e.isVisible(),
+                    this.revision(e)));
         }
     }
 

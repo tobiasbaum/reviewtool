@@ -7,6 +7,7 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.IRevision;
 
 /**
  * Default implementation of @{link ICommit}.
@@ -16,16 +17,27 @@ public class Commit implements ICommit {
     private final String message;
     private final List<IChange> changes;
     private final boolean isVisible;
+    private final IRevision revision;
 
-    Commit(String message, List<? extends IChange> changes, final boolean isVisible) {
+    Commit(
+            final String message,
+            final List<? extends IChange> changes,
+            final boolean isVisible,
+            final IRevision revision) {
         this.message = message;
         this.changes = new ArrayList<>(changes);
         this.isVisible = isVisible;
+        this.revision = revision;
     }
 
     @Override
     public String getMessage() {
         return this.message;
+    }
+
+    @Override
+    public IRevision getRevision() {
+        return this.revision;
     }
 
     @Override
@@ -45,7 +57,7 @@ public class Commit implements ICommit {
             }
             isVisible = isVisible || change.isVisible();
         }
-        return new Commit(this.message, adjustedChanges, isVisible);
+        return new Commit(this.message, adjustedChanges, isVisible, this.revision);
     }
 
     @Override

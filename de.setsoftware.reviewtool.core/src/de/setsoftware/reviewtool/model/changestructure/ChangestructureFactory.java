@@ -20,8 +20,12 @@ import de.setsoftware.reviewtool.model.api.ITextualChange;
  */
 public class ChangestructureFactory {
 
-    public static Commit createCommit(String message, List<? extends IChange> changes, final boolean isVisible) {
-        return new Commit(message, changes, isVisible);
+    public static Commit createCommit(
+            final String message,
+            final List<? extends IChange> changes,
+            final boolean isVisible,
+            final IRevision revision) {
+        return new Commit(message, changes, isVisible, revision);
     }
 
     public static IBinaryChange createBinaryChange(
