@@ -24,17 +24,15 @@ public class Tour implements IReviewElement {
 
     private final String description;
     private final List<Stop> stops = new ArrayList<>();
-    private final boolean isVisible;
     private final boolean isLocal;
 
     public Tour(String description, List<? extends Stop> list) {
-        this(description, list, true, false);
+        this(description, list, false);
     }
 
-    public Tour(String description, List<? extends Stop> list, final boolean isVisible, final boolean isLocal) {
+    public Tour(String description, List<? extends Stop> list, final boolean isLocal) {
         this.description = description;
         this.stops.addAll(list);
-        this.isVisible = isVisible;
         this.isLocal = isLocal;
     }
 
@@ -58,9 +56,12 @@ public class Tour implements IReviewElement {
             && this.stops.equals(t.stops);
     }
 
+    /**
+     * A tour is always visible, as its reason for being is to be visible for review.
+     */
     @Override
     public boolean isVisible() {
-        return this.isVisible;
+        return true;
     }
 
     public boolean isLocal() {
@@ -98,8 +99,7 @@ public class Tour implements IReviewElement {
         for (final Entry<FileInRevision, List<Stop>> e : stopsInFile.entrySet()) {
             mergedStops.addAll(this.sortByLine(this.mergeInSameFile(e.getValue())));
         }
-        return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops,
-                this.isVisible() || t2.isVisible(), false);
+        return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops, false);
     }
 
     private List<Stop> mergeInSameFile(List<Stop> stopsInSameFile) {

@@ -38,14 +38,12 @@ class MutableTour implements IReviewElement {
 
     private final Set<String> descriptionParts;
     private final List<Stop> stops;
-    private final boolean isVisible;
     private final boolean isLocal;
 
     public MutableTour(Tour t) {
         this.descriptionParts = new LinkedHashSet<>();
         this.descriptionParts.add(t.getDescription());
         this.stops = new ArrayList<>(t.getStops());
-        this.isVisible = t.isVisible();
         this.isLocal = t.isLocal();
     }
 
@@ -55,7 +53,6 @@ class MutableTour implements IReviewElement {
             ret.add(new Tour(
                     Util.implode(t.descriptionParts, " + "),
                     t.stops,
-                    t.isVisible(),
                     t.isLocal()));
         }
         return ret;
@@ -145,7 +142,7 @@ class MutableTour implements IReviewElement {
 
     @Override
     public boolean isVisible() {
-        return this.isVisible;
+        return true;
     }
 
     public boolean isLocal() {
