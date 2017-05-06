@@ -12,6 +12,7 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
  * Wraps the information needed on a SVN repository and corresponding working copy.
@@ -100,6 +101,15 @@ public class SvnRepo extends AbstractRepository {
     @Override
     public File getLocalRoot() {
         return this.workingCopyRoot;
+    }
+
+    @Override
+    public IRepoRevision toRevision(final String revisionId) {
+        try {
+            return ChangestructureFactory.createRepoRevision(Long.valueOf(revisionId), this);
+        } catch (final NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override

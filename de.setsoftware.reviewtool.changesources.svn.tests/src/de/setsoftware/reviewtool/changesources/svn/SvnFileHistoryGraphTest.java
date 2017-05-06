@@ -36,6 +36,11 @@ public class SvnFileHistoryGraphTest {
         }
 
         @Override
+        public IRepoRevision toRevision(final String revisionId) {
+            return ChangestructureFactory.createRepoRevision(revisionId, this);
+        }
+
+        @Override
         public String toAbsolutePathInWc(String absolutePathInRepo) {
             return absolutePathInRepo;
         }
