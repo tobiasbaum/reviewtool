@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.LabelProvider;
@@ -45,6 +46,7 @@ import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.part.ViewPart;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
@@ -296,7 +298,12 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 setSelection(subPart, textSelection);
             }
         } else {
-            part.getEditorSite().getSelectionProvider().setSelection(textSelection);
+            final ISelectionProvider sp = part.getEditorSite().getSelectionProvider();
+            if (sp == null) {
+                Logger.debug("cannot select, selection provider is null");
+                return;
+            }
+            sp.setSelection(textSelection);
         }
     }
 
