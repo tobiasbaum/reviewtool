@@ -24,16 +24,10 @@ public class Tour implements IReviewElement {
 
     private final String description;
     private final List<Stop> stops = new ArrayList<>();
-    private final boolean isLocal;
 
     public Tour(String description, List<? extends Stop> list) {
-        this(description, list, false);
-    }
-
-    public Tour(String description, List<? extends Stop> list, final boolean isLocal) {
         this.description = description;
         this.stops.addAll(list);
-        this.isLocal = isLocal;
     }
 
     @Override
@@ -64,10 +58,6 @@ public class Tour implements IReviewElement {
         return true;
     }
 
-    public boolean isLocal() {
-        return this.isLocal;
-    }
-
     public List<Stop> getStops() {
         return Collections.unmodifiableList(this.stops);
     }
@@ -83,9 +73,6 @@ public class Tour implements IReviewElement {
      * from this come before files from the other tour.
      */
     public Tour mergeWith(Tour t2) {
-        assert !this.isLocal();
-        assert !t2.isLocal();
-
         final Multimap<FileInRevision, Stop> stopsInFile = new Multimap<>();
 
         for (final Stop s : this.stops) {
@@ -99,7 +86,7 @@ public class Tour implements IReviewElement {
         for (final Entry<FileInRevision, List<Stop>> e : stopsInFile.entrySet()) {
             mergedStops.addAll(this.sortByLine(this.mergeInSameFile(e.getValue())));
         }
-        return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops, false);
+        return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops);
     }
 
     private List<Stop> mergeInSameFile(List<Stop> stopsInSameFile) {

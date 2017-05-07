@@ -13,7 +13,6 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
@@ -23,7 +22,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.statushandlers.StatusManager;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
@@ -133,7 +131,6 @@ public class ToursInReview {
         changeSourceUi.subTask("Creating tours from changes...");
         final List<Tour> tours = toTours(
                 filteredChanges,
-                false,
                 new FragmentTracer(changes.getHistoryGraph()),
                 changeSourceUi);
 
@@ -183,31 +180,14 @@ public class ToursInReview {
         }
         this.historyGraph.add(localChanges.getHistoryGraph());
 
-        final List<Tour> tours = toTours(
-                localChanges.getMatchedCommits(),
-                true,
-                new FragmentTracer(localChanges.getHistoryGraph()),
-                progressMonitor);
+        this.updateMostRecentFragmentsWithLocalChanges();
 
-        boolean listenersCalled = false;
-        if (tours.isEmpty()) {
-            listenersCalled = this.removeLocalTour(markerFactory);
-        } else {
-            this.addOrReplaceLocalTour(tours.get(0));
-        }
-        this.updateMostRecentFragmentsOfNonLocalTours();
-
-        if (!listenersCalled) {
-            this.notifyListenersAboutTourStructureChange(markerFactory);
-        }
+        this.notifyListenersAboutTourStructureChange(markerFactory);
     }
 
-    private void updateMostRecentFragmentsOfNonLocalTours() {
+    private void updateMostRecentFragmentsWithLocalChanges() {
         final IFragmentTracer tracer = new FragmentTracer(this.historyGraph);
         for (final Tour tour : this.tours) {
-            if (tour.isLocal()) {
-                continue;
-            }
             for (final Stop stop : tour.getStops()) {
                 stop.updateMostRecentData(tracer);
             }
@@ -349,7 +329,7 @@ public class ToursInReview {
         return createUi.selectInitialTours(possibleRestructurings);
     }
 
-    private static List<Tour> toTours(final List<Commit> changes, final boolean isLocal, final IFragmentTracer tracer,
+    private static List<Tour> toTours(final List<Commit> changes, final IFragmentTracer tracer,
             final IProgressMonitor progressMonitor) {
         final List<Tour> ret = new ArrayList<>();
         for (final Commit c : changes) {
@@ -359,8 +339,7 @@ public class ToursInReview {
             assert c.isVisible();
             ret.add(new Tour(
                     c.getMessage(),
-                    toSliceFragments(c.getChanges(), tracer),
-                    isLocal));
+                    toSliceFragments(c.getChanges(), tracer)));
         }
         return ret;
     }
@@ -527,9 +506,7 @@ public class ToursInReview {
     public void mergeTours(List<Tour> toursToMerge, IStopMarkerFactory markerFactory) throws CoreException {
         final List<Tour> mergeableToursToMerge = new ArrayList<>();
         for (final Tour t : toursToMerge) {
-            if (!t.isLocal()) {
-                mergeableToursToMerge.add(t);
-            }
+            mergeableToursToMerge.add(t);
         }
 
         if (mergeableToursToMerge.size() <= 1) {
@@ -572,52 +549,6 @@ public class ToursInReview {
                 .log();
     }
 
-    /**
-     * Adds a new local tour or replaces the old one.
-     * @param newLocalTour The new local tour.
-     */
-    private void addOrReplaceLocalTour(final Tour newLocalTour) {
-        this.removeLocalTour();
-        this.tours.add(newLocalTour);
-    }
-
-    /**
-     * Removes the local tour. If this tour is currently active, another tour is selected if available.
-     * @param markerFactory The marker factory to use. May be null if initially called while creating the tours.
-     *
-     * @return {@code true} if updating markers and calling listeners have been scheduled, else {@code false}.
-     */
-    private boolean removeLocalTour(final IStopMarkerFactory markerFactory) {
-        final boolean wasLocalTourActive = this.removeLocalTour();
-        if (wasLocalTourActive) {
-            if (!this.tours.isEmpty()) {
-                assert markerFactory != null;
-                final Tour tourToSelect = this.tours.get(this.tours.size() - 1);
-                this.changeTourAfterActiveTourRemoval(tourToSelect, markerFactory);
-                return true;
-            } else {
-                this.currentTourIndex = 0;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Removes the local tour if available.
-     * @return {@code true} if the local tour was active before removal, {@code false} if it was inactive
-     *      or if no local tour was removed.
-     */
-    private boolean removeLocalTour() {
-        if (!this.tours.isEmpty()) {
-            final Tour lastTour = this.tours.get(this.tours.size() - 1);
-            if (lastTour.isLocal()) {
-                this.tours.remove(this.tours.size() - 1);
-                return this.currentTourIndex == this.tours.size();
-            }
-        }
-        return false;
-    }
-
     private void notifyListenersAboutTourStructureChange(final IStopMarkerFactory markerFactory) {
         // markerFactors is null only if called from ToursInReview.create(), and in this case ensureTourActive()
         // is called later on which recreates the markers
@@ -637,30 +568,6 @@ public class ToursInReview {
             public void run() {
                 for (final IToursInReviewChangeListener l : ToursInReview.this.listeners) {
                     l.toursChanged();
-                }
-            }
-        });
-    }
-
-    /**
-     * Changes the active tour and notifies listeners about a change in the tour structure. This is necessary
-     * when the local tour was active before being removed. We use {@link Display#asyncExec(Runnable)} because
-     * we could be called in a context where resources are locked (i.e. from within a {@link IResourceChangeListener}).
-     *
-     * @param nextTour The new tour to be selected.
-     * @param markerFactory The marker factory to use.
-     */
-    private void changeTourAfterActiveTourRemoval(final Tour nextTour, final IStopMarkerFactory markerFactory) {
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ToursInReview.this.ensureTourActive(nextTour, markerFactory, false);
-                    for (final IToursInReviewChangeListener l : ToursInReview.this.listeners) {
-                        l.toursChanged();
-                    }
-                } catch (final CoreException e) {
-                    StatusManager.getManager().handle(e, "CoRT");
                 }
             }
         });
