@@ -29,6 +29,11 @@ public class Reminder implements Runnable {
     @Override
     public void run() {
         Logger.debug("reminder check runs");
+        if (!ReviewUi.isIdle()) {
+            Logger.debug("reminder check skipped because not idle");
+            Display.getCurrent().timerExec(CHECK_DELAY, this);
+            return;
+        }
         final List<TicketInfo> tickets = ReviewUi.getReviewStateManager().getTicketsForFilter(
                 ReviewUi.getLastUsedReviewFilter(), true);
         final int maxDaysWaiting = this.determineMaxDaysWaiting(tickets);

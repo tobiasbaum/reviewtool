@@ -4,6 +4,7 @@ import org.eclipse.core.commands.ExecutionException;
 
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
+import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction;
@@ -26,6 +27,13 @@ public class ReviewUi {
      */
     public static ReviewStateManager getReviewStateManager() {
         return ReviewPlugin.getPersistence();
+    }
+
+    /**
+     * Return true if the plugin is in idle mode, i.e. neither review nor fixing is active.
+     */
+    public static boolean isIdle() {
+        return ReviewPlugin.getInstance().getMode() == Mode.IDLE;
     }
 
     /**
