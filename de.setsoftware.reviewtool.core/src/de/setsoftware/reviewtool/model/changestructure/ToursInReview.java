@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +93,7 @@ public class ToursInReview {
     private final VirtualFileHistoryGraph historyGraph;
     private final List<Tour> tours;
     private final IChangeData remoteChanges;
-    private List<File> modifiedFiles;
+    private Map<File, IRevisionedFile> modifiedFiles;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
@@ -100,7 +101,7 @@ public class ToursInReview {
         this.historyGraph = new VirtualFileHistoryGraph(remoteChanges.getHistoryGraph());
         this.tours = new ArrayList<>(tours);
         this.remoteChanges = remoteChanges;
-        this.modifiedFiles = remoteChanges.getLocalPaths();
+        this.modifiedFiles = remoteChanges.getLocalPathMap();
         this.currentTourIndex = 0;
     }
 
@@ -108,7 +109,7 @@ public class ToursInReview {
         this.historyGraph = new VirtualFileHistoryGraph();
         this.tours = new ArrayList<>(tours);
         this.remoteChanges = null;
-        this.modifiedFiles = new ArrayList<>();
+        this.modifiedFiles = new LinkedHashMap<>();
         this.currentTourIndex = 0;
     }
 
@@ -177,8 +178,9 @@ public class ToursInReview {
                 localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, null,
                         progressMonitor);
             } else {
-                this.modifiedFiles.addAll(paths);
-                localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, this.modifiedFiles,
+                final List<File> allFilesToAnalyze = new ArrayList<>(this.modifiedFiles.keySet());
+                allFilesToAnalyze.addAll(paths);
+                localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, allFilesToAnalyze,
                         progressMonitor);
             }
         } catch (final ReviewtoolException e) {
@@ -186,7 +188,7 @@ public class ToursInReview {
             Logger.warn("problem while determining local changes", e);
             return;
         }
-        this.modifiedFiles = new ArrayList<>(localChanges.getLocalPaths());
+        this.modifiedFiles = new LinkedHashMap<>(localChanges.getLocalPathMap());
 
         if (this.historyGraph.size() > 1) {
             this.historyGraph.remove(1);

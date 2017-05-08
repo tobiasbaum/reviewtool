@@ -33,12 +33,12 @@ public interface IChangeSource {
      * Returns all local changes (that are relevant for the review tool) in a new {@link IChangeData} object,
      * based on a {@link IChangeData} object returned earlier by {@link #getRepositoryChanges(String, IChangeSourceUi)}.
      *
-     * @param changedPaths The files to consider while searching for modifications. If {@code null},
+     * @param relevantPaths The files to consider while searching for modifications. If {@code null},
      *      the whole working copy is considered.
      */
     public abstract IChangeData getLocalChanges(
             IChangeData remoteChanges,
-            List<File> changedPaths,
+            List<File> relevantPaths,
             IProgressMonitor ui);
 
 }
