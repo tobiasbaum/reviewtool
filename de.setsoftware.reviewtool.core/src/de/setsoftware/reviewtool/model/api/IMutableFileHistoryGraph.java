@@ -1,6 +1,8 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 import java.util.Set;
+
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
 
 /**
  * Represents a mutable file history graph.
@@ -8,16 +10,16 @@ import java.util.Set;
 public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
 
     @Override
-    public abstract IMutableFileHistoryNode getNodeFor(FileInRevision file);
+    public abstract IMutableFileHistoryNode getNodeFor(IRevisionedFile file);
 
     /**
      * Adds the information that the file with the given path was added or changed at the commit of the given revision.
      */
     public abstract void addAdditionOrChange(
             String path,
-            Revision revision,
-            Set<Revision> ancestorRevisions,
-            Repository repo);
+            IRevision revision,
+            Set<IRevision> ancestorRevisions,
+            IRepository repo);
 
     /**
      * Adds the information that the file with the given path was deleted with the commit of the given revision.
@@ -27,9 +29,9 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
      */
     public abstract void addDeletion(
             String path,
-            Revision revision,
-            Set<Revision> ancestorRevisions,
-            Repository repo);
+            IRevision revision,
+            Set<IRevision> ancestorRevisions,
+            IRepository repo);
 
     /**
      * Adds the information that the file with the given "from" path was copied with the commit of the given revision
@@ -38,8 +40,8 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
     public abstract void addCopy(
             String pathFrom,
             String pathTo,
-            Revision revisionFrom,
-            Revision revisionTo,
-            Repository repo);
+            IRevision revisionFrom,
+            IRevision revisionTo,
+            IRepository repo);
 
 }

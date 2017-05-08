@@ -29,6 +29,7 @@ Export-Package: de.setsoftware.reviewtool.base,
  de.setsoftware.reviewtool.config,
  de.setsoftware.reviewtool.diffalgorithms,
  de.setsoftware.reviewtool.model,
+ de.setsoftware.reviewtool.model.api,
  de.setsoftware.reviewtool.model.changestructure,
  de.setsoftware.reviewtool.telemetry,
  de.setsoftware.reviewtool.ui.api

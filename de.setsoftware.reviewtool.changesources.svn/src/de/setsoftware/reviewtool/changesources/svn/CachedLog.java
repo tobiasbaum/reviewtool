@@ -31,7 +31,7 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Logger;
-import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 
 /**
  * A local cache of the SVN log(s) to speed up the gathering of relevant entries.

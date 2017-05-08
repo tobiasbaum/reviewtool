@@ -10,9 +10,9 @@ import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
 
 /**
  * Performs a standard line-based Myers diff and postprocesses the result to get better results for source files.
@@ -20,8 +20,8 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
 
     @Override
-    public List<Pair<Fragment, Fragment>> determineDiff(FileInRevision fileOldInfo, byte[] fileOldContent,
-            FileInRevision fileNewInfo, byte[] fileNewContent, String charset) {
+    public List<Pair<IFragment, IFragment>> determineDiff(IRevisionedFile fileOldInfo, byte[] fileOldContent,
+            IRevisionedFile fileNewInfo, byte[] fileNewContent, String charset) {
 
         final FullFileView<String> fileOld = this.toLines(fileOldContent, charset);
         final FullFileView<String> fileNew = this.toLines(fileNewContent, charset);
@@ -29,7 +29,7 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
 
         this.postprocessPath(path, fileOld, fileNew);
 
-        final List<Pair<Fragment, Fragment>> fragments =
+        final List<Pair<IFragment, IFragment>> fragments =
                 this.createFragmentsFromPath(path, fileOldInfo, fileOld, fileNewInfo, fileNew);
         Collections.reverse(fragments);
         return fragments;
@@ -151,11 +151,11 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
         return suitabilityMove.compareTo(suitabilityBest) > 0;
     }
 
-    private List<Pair<Fragment, Fragment>> createFragmentsFromPath(PathNode pathEnd,
-            FileInRevision fileOldInfo, OneFileView<String> fileOld,
-            FileInRevision fileNewInfo, OneFileView<String> fileNew) {
+    private List<Pair<IFragment, IFragment>> createFragmentsFromPath(PathNode pathEnd,
+            IRevisionedFile fileOldInfo, OneFileView<String> fileOld,
+            IRevisionedFile fileNewInfo, OneFileView<String> fileNew) {
 
-        final List<Pair<Fragment, Fragment>> ret = new ArrayList<>();
+        final List<Pair<IFragment, IFragment>> ret = new ArrayList<>();
         PathNode cur = pathEnd;
         if (cur.isSnake()) {
             cur = cur.getPrev();
@@ -180,13 +180,13 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
                         startNew,
                         fileNew.getItem(startNew)));
             } else {
-                final Fragment original = ChangestructureFactory.createFragment(fileOldInfo,
+                final IFragment original = ChangestructureFactory.createFragment(fileOldInfo,
                         ChangestructureFactory.createPositionInText(startOld + 1, 1),
                         ChangestructureFactory.createPositionInText(endOld + 1, 1));
-                final Fragment revised = ChangestructureFactory.createFragment(fileNewInfo,
+                final IFragment revised = ChangestructureFactory.createFragment(fileNewInfo,
                         ChangestructureFactory.createPositionInText(startNew + 1, 1),
                         ChangestructureFactory.createPositionInText(endNew + 1, 1));
-                final Pair<Fragment, Fragment> delta = Pair.create(original, revised);
+                final Pair<IFragment, IFragment> delta = Pair.create(original, revised);
                 ret.add(delta);
             }
 
@@ -213,7 +213,8 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
         }
     }
 
-    private Pair<Fragment, Fragment> createInLineDiffFragment(FileInRevision fileOldInfo, FileInRevision fileNewInfo,
+    private Pair<IFragment, IFragment> createInLineDiffFragment(
+            IRevisionedFile fileOldInfo, IRevisionedFile fileNewInfo,
             int lineIndexOld, String content1,
             int lineIndexNew, String content2) {
         assert !content1.equals(content2);
@@ -246,7 +247,7 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
         return max;
     }
 
-    private Fragment toInLineFileFragment(FileInRevision fileInfo, String line,
+    private IFragment toInLineFileFragment(IRevisionedFile fileInfo, String line,
             int lineIndex, int prefixLength, int suffixLength) {
         return ChangestructureFactory.createFragment(fileInfo,
                 ChangestructureFactory.createPositionInText(

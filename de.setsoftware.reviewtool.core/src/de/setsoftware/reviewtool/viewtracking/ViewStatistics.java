@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -93,7 +93,7 @@ public class ViewStatistics {
         if (stats == null) {
             return ViewStatDataForStop.NO_VIEWS;
         }
-        final Fragment fragment = f.getMostRecentFragment();
+        final IFragment fragment = f.getMostRecentFragment();
         if (fragment == null) {
             return stats.determineViewRatioWithoutPosition(longEnoughCount);
         } else {

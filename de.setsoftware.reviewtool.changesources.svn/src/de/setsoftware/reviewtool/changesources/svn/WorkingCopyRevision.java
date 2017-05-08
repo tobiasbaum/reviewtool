@@ -4,8 +4,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.SortedMap;
 
+import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.LocalRevision;
 
 /**
  * Encapsulates the "revision" of a working copy.
@@ -43,7 +43,7 @@ final class WorkingCopyRevision implements ISvnRevision {
     }
 
     @Override
-    public LocalRevision toRevision() {
+    public ILocalRevision toRevision() {
         return ChangestructureFactory.createLocalRevision();
     }
 

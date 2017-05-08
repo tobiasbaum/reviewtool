@@ -67,9 +67,9 @@ import de.setsoftware.reviewtool.model.ISyntaxFixer;
 import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
-import de.setsoftware.reviewtool.model.changestructure.Change;
-import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
-import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -911,8 +911,8 @@ public class ReviewPlugin implements IReviewConfigurable {
             }
 
             @Override
-            public List<? extends Pair<String, Set<? extends Change>>> selectIrrelevant(
-                    final List<? extends Pair<String, Set<? extends Change>>> choices) {
+            public List<? extends Pair<String, Set<? extends IChange>>> selectIrrelevant(
+                    final List<? extends Pair<String, Set<? extends IChange>>> choices) {
                 if (choices.isEmpty()) {
                     return Collections.emptyList();
                 }
@@ -920,11 +920,11 @@ public class ReviewPlugin implements IReviewConfigurable {
                         choices,
                         display,
                         new Callback<
-                                List<? extends Pair<String, Set<? extends Change>>>,
-                                List<? extends Pair<String, Set<? extends Change>>>>() {
+                                List<? extends Pair<String, Set<? extends IChange>>>,
+                                List<? extends Pair<String, Set<? extends IChange>>>>() {
                             @Override
-                            public List<? extends Pair<String, Set<? extends Change>>> run(
-                                    List<? extends Pair<String, Set<? extends Change>>> choices) {
+                            public List<? extends Pair<String, Set<? extends IChange>>> run(
+                                    List<? extends Pair<String, Set<? extends IChange>>> choices) {
                                 return SelectIrrelevantDialog.selectIrrelevant(choices);
                             }
                         });

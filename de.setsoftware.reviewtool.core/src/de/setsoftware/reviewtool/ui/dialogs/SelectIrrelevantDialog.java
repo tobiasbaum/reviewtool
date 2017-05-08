@@ -16,20 +16,20 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.changestructure.Change;
+import de.setsoftware.reviewtool.model.api.IChange;
 
 /**
  * A dialog that let's the user choose which of several filters that mark changes as irrelevant to apply.
  */
 public class SelectIrrelevantDialog extends Dialog {
 
-    private final List<? extends Pair<String, Set<? extends Change>>> choices;
+    private final List<? extends Pair<String, Set<? extends IChange>>> choices;
     private List<Button> checkboxes;
-    private List<Pair<String, Set<? extends Change>>> chosenSubset;
+    private List<Pair<String, Set<? extends IChange>>> chosenSubset;
 
     protected SelectIrrelevantDialog(
             Shell parentShell,
-            List<? extends Pair<String, Set<? extends Change>>> choices) {
+            List<? extends Pair<String, Set<? extends IChange>>> choices) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.choices = choices;
@@ -57,7 +57,7 @@ public class SelectIrrelevantDialog extends Dialog {
         buttonGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
         this.checkboxes = new ArrayList<>();
-        for (final Pair<String, Set<? extends Change>> choice : this.choices) {
+        for (final Pair<String, Set<? extends IChange>> choice : this.choices) {
             final Button b = new Button(buttonGroup, SWT.CHECK);
             b.setText(this.createText(choice));
             b.setData(choice);
@@ -69,7 +69,7 @@ public class SelectIrrelevantDialog extends Dialog {
         return comp;
     }
 
-    private String createText(Pair<String, Set<? extends Change>> choice) {
+    private String createText(Pair<String, Set<? extends IChange>> choice) {
         return String.format("%s (applies to %d changes)",
                 choice.getFirst(),
                 choice.getSecond().size());
@@ -77,7 +77,7 @@ public class SelectIrrelevantDialog extends Dialog {
 
     private void restoreSavedSelection() {
         for (final Button b : this.checkboxes) {
-            b.setSelection(this.getSavedSelectionState((Pair<String, Set<? extends Change>>) b.getData()));
+            b.setSelection(this.getSavedSelectionState((Pair<String, Set<? extends IChange>>) b.getData()));
         }
     }
 
@@ -85,7 +85,7 @@ public class SelectIrrelevantDialog extends Dialog {
     protected void okPressed() {
         this.chosenSubset = new ArrayList<>();
         for (final Button b : this.checkboxes) {
-            final Pair<String, Set<? extends Change>> data = (Pair<String, Set<? extends Change>>) b.getData();
+            final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
             if (b.getSelection()) {
                 this.chosenSubset.add(data);
             }
@@ -95,15 +95,15 @@ public class SelectIrrelevantDialog extends Dialog {
         super.okPressed();
     }
 
-    private boolean getSavedSelectionState(Pair<String, Set<? extends Change>> data) {
+    private boolean getSavedSelectionState(Pair<String, Set<? extends IChange>> data) {
         return Boolean.parseBoolean(DialogHelper.getSetting(this.makeSettingId(data)));
     }
 
-    private void saveSelectionState(Pair<String, Set<? extends Change>> data, boolean selection) {
+    private void saveSelectionState(Pair<String, Set<? extends IChange>> data, boolean selection) {
         DialogHelper.saveSetting(this.makeSettingId(data), Boolean.toString(selection));
     }
 
-    private String makeSettingId(Pair<String, Set<? extends Change>> data) {
+    private String makeSettingId(Pair<String, Set<? extends IChange>> data) {
         return data.getFirst().replaceAll("[^a-zA-Z0-9]", "");
     }
 
@@ -117,8 +117,8 @@ public class SelectIrrelevantDialog extends Dialog {
      * Lets the user select the filters he wants to apply.
      * When the user cancels, null is returned.
      */
-    public static List<? extends Pair<String, Set<? extends Change>>> selectIrrelevant(
-            List<? extends Pair<String, Set<? extends Change>>> choices) {
+    public static List<? extends Pair<String, Set<? extends IChange>>> selectIrrelevant(
+            List<? extends Pair<String, Set<? extends IChange>>> choices) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
         final SelectIrrelevantDialog dialog =

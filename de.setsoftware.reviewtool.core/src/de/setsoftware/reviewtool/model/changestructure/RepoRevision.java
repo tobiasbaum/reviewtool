@@ -1,9 +1,13 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
+
 /**
- * A real revision in the SCM repository.
+ * Default implementation of {@link IRepoRevision}.
  */
-public class RepoRevision extends Revision {
+public final class RepoRevision implements IRepoRevision {
 
     private final Object id;
 
@@ -31,15 +35,16 @@ public class RepoRevision extends Revision {
     }
 
     @Override
-    public <R> R accept(RevisionVisitor<R> visitor) {
+    public <R> R accept(IRevisionVisitor<R> visitor) {
         return visitor.handleRepoRevision(this);
     }
 
     @Override
-    public <R, E extends Throwable> R accept(RevisionVisitorE<R, E> visitor) throws E {
+    public <R, E extends Throwable> R accept(IRevisionVisitorE<R, E> visitor) throws E {
         return visitor.handleRepoRevision(this);
     }
 
+    @Override
     public Object getId() {
         return this.id;
     }

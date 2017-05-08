@@ -9,14 +9,14 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 
-import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.Repository;
-import de.setsoftware.reviewtool.model.changestructure.Revision;
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 
 /**
  * Wraps the information needed on a SVN repository and corresponding working copy.
  */
-public class SvnRepo extends Repository {
+public class SvnRepo extends AbstractRepository {
 
     private final File workingCopyRoot;
     private final SVNURL remoteUrl;
@@ -76,7 +76,7 @@ public class SvnRepo extends Repository {
     }
 
     @Override
-    public byte[] getFileContents(final String path, final RepoRevision revision) throws SVNException {
+    public byte[] getFileContents(final String path, final IRepoRevision revision) throws SVNException {
         return this.fileCache.getFileContents(path, (Long) revision.getId());
     }
 
@@ -85,7 +85,7 @@ public class SvnRepo extends Repository {
     }
 
     @Override
-    public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
+    public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
         return this.getSmallestOfComparableRevisions(revisions);
     }
 

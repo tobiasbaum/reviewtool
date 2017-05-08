@@ -6,12 +6,14 @@ import java.io.StringReader;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.IPositionInText;
+
 /**
  * Tests for {@link PositionLookupTable}.
  */
 public class PositionLookupTableTest {
 
-    private static PositionInText pos(int line, int column) {
+    private static IPositionInText pos(int line, int column) {
         return new PositionInText(line, column);
     }
 

@@ -1,9 +1,11 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import de.setsoftware.reviewtool.model.api.IDelta;
+
 /**
- * A delta in a text file, denoted by line and column offset.
+ * Default implementation of {@link IDelta}.
  */
-public final class Delta {
+public final class Delta implements IDelta {
 
     private final int lineOffset;
     private final int columnOffset;
@@ -44,64 +46,43 @@ public final class Delta {
         return "(" + this.lineOffset + "," + this.columnOffset + ")";
     }
 
-    /**
-     * Returns the line offset.
-     */
+    @Override
     public int getLineOffset() {
         return this.lineOffset;
     }
 
-    /**
-     * Returns the column offset.
-     */
+    @Override
     public int getColumnOffset() {
         return this.columnOffset;
     }
 
-    /**
-     * @return {@code true} if this is an in-line delta, i.e. if the line offset is zero.
-     */
+    @Override
     public boolean isInline() {
         return this.lineOffset == 0;
     }
 
-    /**
-     * Returns the sum of this Delta and another one.
-     * @param other The other Delta.
-     * @return The sum of this Delta and the passed one.
-     */
-    public Delta plus(final Delta other) {
-        return new Delta(this.lineOffset + other.lineOffset, this.columnOffset + other.columnOffset);
+    @Override
+    public IDelta plus(final IDelta other) {
+        return new Delta(this.lineOffset + other.getLineOffset(), this.columnOffset + other.getColumnOffset());
     }
 
-    /**
-     * Returns the difference between this Delta and another one.
-     * @param other The other Delta.
-     * @return The difference between this Delta and the passed one.
-     */
-    public Delta minus(final Delta other) {
-        return new Delta(this.lineOffset - other.lineOffset, this.columnOffset - other.columnOffset);
+    @Override
+    public Delta minus(final IDelta other) {
+        return new Delta(this.lineOffset - other.getLineOffset(), this.columnOffset - other.getColumnOffset());
     }
 
-    /**
-     * @return This delta with negated line and column offsets.
-     */
-    public Delta negate() {
+    @Override
+    public IDelta negate() {
         return new Delta(-this.lineOffset, -this.columnOffset);
     }
 
-    /**
-     * @return A copy of {@code this} with the column offset set to zero.
-     */
-    public Delta ignoreColumnOffset() {
+    @Override
+    public IDelta ignoreColumnOffset() {
         return this.ignoreColumnOffset(true);
     }
 
-    /**
-     * @return If {@code ignore} is set to true, a copy of {@code this} with the column offset set to zero,
-     *      {@code this} otherwise.
-     */
-    public Delta ignoreColumnOffset(final boolean ignore) {
+    @Override
+    public IDelta ignoreColumnOffset(final boolean ignore) {
         return new Delta(this.lineOffset, ignore ? 0 : this.columnOffset);
     }
 }

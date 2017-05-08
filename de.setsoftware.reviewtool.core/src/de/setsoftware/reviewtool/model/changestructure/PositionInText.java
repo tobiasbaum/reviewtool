@@ -1,11 +1,14 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-/**
- * A position in a text file, denoted by character index.
- */
-public class PositionInText implements Comparable<PositionInText> {
+import de.setsoftware.reviewtool.model.api.IDelta;
+import de.setsoftware.reviewtool.model.api.IPositionInText;
 
-    public static final PositionInText UNKNOWN = new PositionInText(0, 0);
+/**
+ * Default implementation of {@link PositionInText}.
+ */
+public class PositionInText implements IPositionInText {
+
+    public static final IPositionInText UNKNOWN = new PositionInText(0, 0);
 
     private final int line;
     private final int column;
@@ -35,20 +38,23 @@ public class PositionInText implements Comparable<PositionInText> {
         return this.line + ":" + this.column;
     }
 
+    @Override
     public int getLine() {
         return this.line;
     }
 
+    @Override
     public int getColumn() {
         return this.column;
     }
 
-    public boolean lessThan(PositionInText other) {
+    @Override
+    public boolean lessThan(IPositionInText other) {
         return this.compareTo(other) < 0;
     }
 
     @Override
-    public int compareTo(PositionInText o) {
+    public int compareTo(IPositionInText o) {
         if (this.getLine() == o.getLine()) {
             return this.getColumn() - o.getColumn();
         } else {
@@ -56,45 +62,28 @@ public class PositionInText implements Comparable<PositionInText> {
         }
     }
 
-    /**
-     * Adjusts the position giving a line offset.
-     * @param lineOffset The line offset to add to current line.
-     * @return A new PositionInText object with the same column but adjusted line.
-     */
-    public PositionInText adjust(int lineOffset) {
+    @Override
+    public IPositionInText adjust(int lineOffset) {
         return new PositionInText(this.line + lineOffset, this.column);
     }
 
-    /**
-     * Adds a delta to this position.
-     * @param delta The delta to add to position.
-     * @return A new PositionInText object.
-     */
-    public PositionInText plus(final Delta delta) {
+    @Override
+    public PositionInText plus(final IDelta delta) {
         return new PositionInText(this.line + delta.getLineOffset(), this.column + delta.getColumnOffset());
     }
 
-    /**
-     * Returns the difference between this PositionInText and another one.
-     * @param other The other PositionInText.
-     * @return The delta between this PositionInText and the passed one.
-     * @post {@code other.plus(result).equals(this)}
-     */
-    public Delta minus(final PositionInText other) {
-        return new Delta(this.line - other.line, this.column - other.column);
+    @Override
+    public Delta minus(final IPositionInText other) {
+        return new Delta(this.line - other.getLine(), this.column - other.getColumn());
     }
 
-    /**
-     * Returns the position at the start of the line.
-     */
-    public PositionInText startOfLine() {
+    @Override
+    public IPositionInText startOfLine() {
         return new PositionInText(this.line, 1);
     }
 
-    /**
-     * Returns the position at the end of the line.
-     */
-    public PositionInText endOfLine() {
+    @Override
+    public IPositionInText endOfLine() {
         if (this.column == 0) {
             return this;
         }

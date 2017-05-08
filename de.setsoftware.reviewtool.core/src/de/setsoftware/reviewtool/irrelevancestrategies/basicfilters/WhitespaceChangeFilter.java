@@ -1,7 +1,8 @@
 package de.setsoftware.reviewtool.irrelevancestrategies.basicfilters;
 
-import de.setsoftware.reviewtool.model.changestructure.Change;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 
@@ -16,16 +17,16 @@ public class WhitespaceChangeFilter implements IIrrelevanceDetermination {
     }
 
     @Override
-    public boolean isIrrelevant(Change change) {
+    public boolean isIrrelevant(IChange change) {
         if (change instanceof TextualChangeHunk) {
-            final TextualChangeHunk hunk = (TextualChangeHunk) change;
+            final ITextualChange hunk = (ITextualChange) change;
             return this.normalizeWhitespace(hunk.getFromFragment()).equals(
                     this.normalizeWhitespace(hunk.getToFragment()));
         }
         return false;
     }
 
-    private String normalizeWhitespace(Fragment fragment) {
+    private String normalizeWhitespace(IFragment fragment) {
         return fragment.getContentFullLines().replaceAll("[ \r\n\t]+", "");
     }
 

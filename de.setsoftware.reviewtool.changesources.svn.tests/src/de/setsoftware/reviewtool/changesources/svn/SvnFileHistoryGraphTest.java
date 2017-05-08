@@ -12,18 +12,19 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.Repository;
-import de.setsoftware.reviewtool.model.changestructure.Revision;
 
 /**
  * Tests for {@link SvnFileHistoryGraph}.
  */
 public class SvnFileHistoryGraphTest {
 
-    private static final Repository STUB_REPO = new Repository() {
+    private static final IRepository STUB_REPO = new AbstractRepository() {
         @Override
         public File getLocalRoot() {
             return null;
@@ -40,13 +41,13 @@ public class SvnFileHistoryGraphTest {
         }
 
         @Override
-        public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
-            final List<Revision> list = new ArrayList<>(revisions);
-            Collections.sort(list, new Comparator<Revision>() {
+        public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
+            final List<IRevision> list = new ArrayList<>(revisions);
+            Collections.sort(list, new Comparator<IRevision>() {
                 @Override
-                public int compare(Revision o1, Revision o2) {
-                    final Long rev1 = (Long) ((RepoRevision) o1).getId();
-                    final Long rev2 = (Long) ((RepoRevision) o2).getId();
+                public int compare(IRevision o1, IRevision o2) {
+                    final Long rev1 = (Long) ((IRepoRevision) o1).getId();
+                    final Long rev2 = (Long) ((IRepoRevision) o2).getId();
                     return Long.compare(rev1, rev2);
                 }
             });
@@ -54,19 +55,19 @@ public class SvnFileHistoryGraphTest {
         }
 
         @Override
-        public byte[] getFileContents(String path, RepoRevision revision) {
+        public byte[] getFileContents(String path, IRepoRevision revision) {
             return new byte[0];
         }
     };
 
-    private static FileInRevision file(String path, long revision) {
+    private static IRevisionedFile file(String path, long revision) {
         return ChangestructureFactory.createFileInRevision(
                 path,
                 rev(revision),
                 STUB_REPO);
     }
 
-    private static RepoRevision rev(long revision) {
+    private static IRepoRevision rev(long revision) {
         return ChangestructureFactory.createRepoRevision(revision);
     }
 

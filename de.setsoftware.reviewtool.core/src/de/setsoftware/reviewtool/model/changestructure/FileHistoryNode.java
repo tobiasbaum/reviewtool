@@ -5,12 +5,17 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.model.api.IFileDiff;
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+
 /**
  * A node in a {@link FileHistoryGraph}.
  */
 public final class FileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 
-    private final FileInRevision file;
+    private final IRevisionedFile file;
     private final Set<FileHistoryEdge> ancestors;
     private final Set<FileHistoryEdge> descendants;
     private FileHistoryNode parent;
@@ -19,9 +24,9 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
 
     /**
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
-     * @param file The {@link FileInRevision} to wrap.
+     * @param file The {@link IRevisionedFile} to wrap.
      */
-    public FileHistoryNode(final FileInRevision file, final boolean isDeleted) {
+    public FileHistoryNode(final IRevisionedFile file, final boolean isDeleted) {
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
@@ -30,7 +35,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     @Override
-    public FileInRevision getFile() {
+    public IRevisionedFile getFile() {
         return this.file;
     }
 
@@ -75,7 +80,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     /**
      * Adds a descendant {@link FileHistoryNode} of this node.
      */
-    public void addDescendant(final FileHistoryNode descendant, final FileDiff diff) {
+    public void addDescendant(final FileHistoryNode descendant, final IFileDiff diff) {
         final FileHistoryEdge edge = new FileHistoryEdge(this, descendant, diff);
         this.descendants.add(edge);
         descendant.addAncestor(edge);

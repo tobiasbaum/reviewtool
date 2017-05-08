@@ -4,8 +4,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 
-import de.setsoftware.reviewtool.model.changestructure.Change;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 
@@ -20,16 +21,16 @@ public class ImportChangeFilter implements IIrrelevanceDetermination {
     }
 
     @Override
-    public boolean isIrrelevant(Change change) {
+    public boolean isIrrelevant(IChange change) {
         if (change instanceof TextualChangeHunk) {
-            final TextualChangeHunk hunk = (TextualChangeHunk) change;
+            final ITextualChange hunk = (ITextualChange) change;
             return this.isOnlyImports(hunk.getFromFragment()) && this.isOnlyImports(hunk.getToFragment())
                 && !(this.isOnlyWhitespace(hunk.getFromFragment()) && this.isOnlyWhitespace(hunk.getToFragment()));
         }
         return false;
     }
 
-    private boolean isOnlyImports(Fragment fragment) {
+    private boolean isOnlyImports(IFragment fragment) {
         final BufferedReader r = new BufferedReader(new StringReader(fragment.getContentFullLines()));
         String line;
         try {
@@ -45,7 +46,7 @@ public class ImportChangeFilter implements IIrrelevanceDetermination {
         return true;
     }
 
-    private boolean isOnlyWhitespace(Fragment fragment) {
+    private boolean isOnlyWhitespace(IFragment fragment) {
         return fragment.getContentFullLines().trim().isEmpty();
     }
 

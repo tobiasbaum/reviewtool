@@ -1,4 +1,6 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
+
+import de.setsoftware.reviewtool.model.changestructure.FileDiff;
 
 /**
  * An edge in a {@link IMutableFileHistoryGraph} between an ancestor and a descendant {@link IMutableFileHistoryNode}.
@@ -13,8 +15,8 @@ public interface IMutableFileHistoryEdge extends IFileHistoryEdge {
     public abstract IMutableFileHistoryNode getDescendant();
 
     /**
-     * Sets the associated {@link FileDiff} object.
+     * Sets the associated {@link IFileDiff} object.
      */
-    public abstract void setDiff(FileDiff diff);
+    public abstract void setDiff(IFileDiff diff);
 
 }

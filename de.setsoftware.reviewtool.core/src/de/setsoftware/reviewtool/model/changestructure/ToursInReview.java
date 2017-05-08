@@ -28,6 +28,18 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
+import de.setsoftware.reviewtool.model.api.IBinaryChange;
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IChangeData;
+import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IChangeVisitor;
+import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IFragmentTracer;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
@@ -72,8 +84,8 @@ public class ToursInReview {
          * pairs with a description of the filter strategy and the resulting filter candidates.
          * When the user cancels, null is returned.
          */
-        public abstract List<? extends Pair<String, Set<? extends Change>>> selectIrrelevant(
-                List<? extends Pair<String, Set<? extends Change>>> strategyResuls);
+        public abstract List<? extends Pair<String, Set<? extends IChange>>> selectIrrelevant(
+                List<? extends Pair<String, Set<? extends IChange>>> strategyResuls);
 
     }
 
@@ -122,7 +134,7 @@ public class ToursInReview {
         changeSourceUi.subTask("Determining relevant changes...");
         final IChangeData changes = src.getRepositoryChanges(ticketKey, changeSourceUi);
         changeSourceUi.subTask("Filtering changes...");
-        final List<Commit> filteredChanges =
+        final List<? extends ICommit> filteredChanges =
                 filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(),
                         createUi, changeSourceUi);
         if (filteredChanges == null) {
@@ -195,9 +207,9 @@ public class ToursInReview {
         }
     }
 
-    private static List<Commit> filterChanges(
+    private static List<? extends ICommit> filterChanges(
             final List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
-            final List<? extends Commit> changes,
+            final List<? extends ICommit> changes,
             final ICreateToursUi createUi,
             final IProgressMonitor progressMonitor) {
 
@@ -206,14 +218,14 @@ public class ToursInReview {
             .param("relevant", countChanges(changes, true))
             .log();
 
-        final List<Pair<String, Set<? extends Change>>> strategyResuls = new ArrayList<>();
+        final List<Pair<String, Set<? extends IChange>>> strategyResuls = new ArrayList<>();
         for (final IIrrelevanceDetermination strategy : irrelevanceDeterminationStrategies) {
             try {
                 if (progressMonitor.isCanceled()) {
                     throw new OperationCanceledException();
                 }
 
-                final Set<? extends Change> irrelevantChanges = determineIrrelevantChanges(changes, strategy);
+                final Set<? extends IChange> irrelevantChanges = determineIrrelevantChanges(changes, strategy);
                 Telemetry.event("relevanceFilterResult")
                     .param("description", strategy.getDescription())
                     .param("size", irrelevantChanges.size())
@@ -223,7 +235,7 @@ public class ToursInReview {
                     //skip strategies that won't result in further changes to irrelevant
                     continue;
                 }
-                strategyResuls.add(Pair.<String, Set<? extends Change>>create(
+                strategyResuls.add(Pair.<String, Set<? extends IChange>>create(
                         strategy.getDescription(),
                         irrelevantChanges));
             } catch (final Exception e) {
@@ -232,13 +244,13 @@ public class ToursInReview {
             }
         }
 
-        final List<? extends Pair<String, Set<? extends Change>>> selected = createUi.selectIrrelevant(strategyResuls);
+        final List<? extends Pair<String, Set<? extends IChange>>> selected = createUi.selectIrrelevant(strategyResuls);
         if (selected == null) {
             return null;
         }
-        final Set<Change> toMakeIrrelevant = new HashSet<>();
+        final Set<IChange> toMakeIrrelevant = new HashSet<>();
         final Set<String> selectedDescriptions = new LinkedHashSet<>();
-        for (final Pair<String, Set<? extends Change>> set : selected) {
+        for (final Pair<String, Set<? extends IChange>> set : selected) {
             toMakeIrrelevant.addAll(set.getSecond());
             selectedDescriptions.add(set.getFirst());
         }
@@ -246,17 +258,17 @@ public class ToursInReview {
             .param("descriptions", selectedDescriptions)
             .log();
 
-        final List<Commit> ret = new ArrayList<>();
-        for (final Commit c : changes) {
+        final List<ICommit> ret = new ArrayList<>();
+        for (final ICommit c : changes) {
             ret.add(c.makeChangesIrrelevant(toMakeIrrelevant));
         }
         return ret;
     }
 
-    private static int countChanges(List<? extends Commit> changes, boolean onlyRelevant) {
+    private static int countChanges(List<? extends ICommit> changes, boolean onlyRelevant) {
         int ret = 0;
-        for (final Commit commit : changes) {
-            for (final Change change : commit.getChanges()) {
+        for (final ICommit commit : changes) {
+            for (final IChange change : commit.getChanges()) {
                 if (!(onlyRelevant && change.isIrrelevantForReview())) {
                     ret++;
                 }
@@ -265,13 +277,13 @@ public class ToursInReview {
         return ret;
     }
 
-    private static Set<? extends Change> determineIrrelevantChanges(
-            List<? extends Commit> changes,
+    private static Set<? extends IChange> determineIrrelevantChanges(
+            List<? extends ICommit> changes,
             IIrrelevanceDetermination strategy) {
 
-        final Set<Change> ret = new HashSet<>();
-        for (final Commit commit : changes) {
-            for (final Change change : commit.getChanges()) {
+        final Set<IChange> ret = new HashSet<>();
+        for (final ICommit commit : changes) {
+            for (final IChange change : commit.getChanges()) {
                 if (strategy.isIrrelevant(change)) {
                     ret.add(change);
                 }
@@ -280,8 +292,8 @@ public class ToursInReview {
         return ret;
     }
 
-    private static boolean areAllIrrelevant(Set<? extends Change> changes) {
-        for (final Change change : changes) {
+    private static boolean areAllIrrelevant(Set<? extends IChange> changes) {
+        for (final IChange change : changes) {
             if (!change.isIrrelevantForReview()) {
                 return false;
             }
@@ -330,10 +342,10 @@ public class ToursInReview {
         return createUi.selectInitialTours(possibleRestructurings);
     }
 
-    private static List<Tour> toTours(final List<Commit> changes, final IFragmentTracer tracer,
+    private static List<Tour> toTours(final List<? extends ICommit> changes, final IFragmentTracer tracer,
             final IProgressMonitor progressMonitor) {
         final List<Tour> ret = new ArrayList<>();
-        for (final Commit c : changes) {
+        for (final ICommit c : changes) {
             if (progressMonitor.isCanceled()) {
                 throw new OperationCanceledException();
             }
@@ -345,29 +357,29 @@ public class ToursInReview {
         return ret;
     }
 
-    private static List<Stop> toSliceFragments(List<Change> changes, IFragmentTracer tracer) {
+    private static List<Stop> toSliceFragments(List<? extends IChange> changes, IFragmentTracer tracer) {
         final List<Stop> ret = new ArrayList<>();
-        for (final Change c : changes) {
+        for (final IChange c : changes) {
             ret.addAll(toSliceFragment(c, tracer));
         }
         return ret;
     }
 
-    private static List<Stop> toSliceFragment(Change c, final IFragmentTracer tracer) {
+    private static List<Stop> toSliceFragment(IChange c, final IFragmentTracer tracer) {
         final List<Stop> ret = new ArrayList<>();
-        c.accept(new ChangeVisitor() {
+        c.accept(new IChangeVisitor() {
 
             @Override
-            public void handle(TextualChangeHunk visitee) {
-                final List<Fragment> mostRecentFragments = tracer.traceFragment(visitee.getToFragment());
-                for (final Fragment fragment : mostRecentFragments) {
+            public void handle(ITextualChange visitee) {
+                final List<? extends IFragment> mostRecentFragments = tracer.traceFragment(visitee.getToFragment());
+                for (final IFragment fragment : mostRecentFragments) {
                     ret.add(new Stop(visitee, fragment));
                 }
             }
 
             @Override
-            public void handle(BinaryChange visitee) {
-                for (final FileInRevision fileInRevision : tracer.traceFile(visitee.getFrom())) {
+            public void handle(IBinaryChange visitee) {
+                for (final IRevisionedFile fileInRevision : tracer.traceFile(visitee.getFrom())) {
                     ret.add(new Stop(visitee, fileInRevision));
                 }
             }
@@ -407,7 +419,7 @@ public class ToursInReview {
                 if (!lookupTables.containsKey(resource)) {
                     lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
                 }
-                final Fragment pos = f.getMostRecentFragment();
+                final IFragment pos = f.getMostRecentFragment();
                 final IMarker marker = markerFactory.createStopMarker(resource, tourActive);
                 marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
                 marker.setAttribute(IMarker.CHAR_START,
@@ -440,7 +452,7 @@ public class ToursInReview {
      * @param file The file whose change history to retrieve.
      * @return The {@link IFileHistoryNode} describing changes for passed {@link FileInRevision} or null if not found.
      */
-    public IFileHistoryNode getFileHistoryNode(final FileInRevision file) {
+    public IFileHistoryNode getFileHistoryNode(final IRevisionedFile file) {
         return this.historyGraph.getNodeFor(file);
     }
 
@@ -651,7 +663,7 @@ public class ToursInReview {
             return Integer.MAX_VALUE;
         }
 
-        final Fragment fragment = stop.getMostRecentFragment();
+        final IFragment fragment = stop.getMostRecentFragment();
         if (fragment == null) {
             return Integer.MAX_VALUE - 1;
         }

@@ -6,6 +6,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.model.api.IFileDiff;
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+
 /**
  * Merges multiple file history graphs into one virtual file history graph.
  */
@@ -16,16 +23,16 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
      */
     private final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
 
-        private final FileInRevision file;
+        private final IRevisionedFile file;
         private final Set<IFileHistoryNode> nodes;
 
-        VirtualFileHistoryNode(final FileInRevision file, final Set<IFileHistoryNode> nodes) {
+        VirtualFileHistoryNode(final IRevisionedFile file, final Set<IFileHistoryNode> nodes) {
             this.file = file;
             this.nodes = nodes;
         }
 
         @Override
-        public FileInRevision getFile() {
+        public IRevisionedFile getFile() {
             return this.file;
         }
 
@@ -94,18 +101,18 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
 
         private final IFileHistoryNode ancestor;
         private final IFileHistoryNode descendant;
-        private FileDiff diff;
+        private IFileDiff diff;
 
         /**
          * Constructor.
          * @param ancestor The ancestor node of the edge.
          * @param descendant The descendant node of the edge.
-         * @param diff The associated {@link FileDiff} object. It can be changed later using {@link #setDiff(FileDiff)}.
+         * @param diff The associated {@link IFileDiff}.
          */
         public VirtualFileHistoryEdge(
                 final IFileHistoryNode ancestor,
                 final IFileHistoryNode descendant,
-                final FileDiff diff) {
+                final IFileDiff diff) {
             this.ancestor = ancestor;
             this.descendant = descendant;
             this.diff = diff;
@@ -122,7 +129,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         }
 
         @Override
-        public FileDiff getDiff() {
+        public IFileDiff getDiff() {
             return this.diff;
         }
 
@@ -161,7 +168,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public boolean contains(final String path, final Repository repo) {
+    public boolean contains(final String path, final IRepository repo) {
         for (final IFileHistoryGraph graph : this.graphs) {
             if (graph.contains(path, repo)) {
                 return true;
@@ -171,7 +178,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public IFileHistoryNode getNodeFor(final FileInRevision file) {
+    public IFileHistoryNode getNodeFor(final IRevisionedFile file) {
         final Set<IFileHistoryNode> nodes = new LinkedHashSet<>();
         for (final IFileHistoryGraph graph : this.graphs) {
             final IFileHistoryNode node = graph.getNodeFor(file);

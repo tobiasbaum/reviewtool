@@ -1,7 +1,8 @@
 package de.setsoftware.reviewtool.irrelevancestrategies.basicfilters;
 
-import de.setsoftware.reviewtool.model.changestructure.Change;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 
@@ -16,15 +17,15 @@ public class PackageDeclarationFilter implements IIrrelevanceDetermination {
     }
 
     @Override
-    public boolean isIrrelevant(Change change) {
+    public boolean isIrrelevant(IChange change) {
         if (change instanceof TextualChangeHunk) {
-            final TextualChangeHunk hunk = (TextualChangeHunk) change;
+            final ITextualChange hunk = (ITextualChange) change;
             return this.isPackageDeclaration(hunk.getFromFragment()) && this.isPackageDeclaration(hunk.getToFragment());
         }
         return false;
     }
 
-    private boolean isPackageDeclaration(Fragment fragment) {
+    private boolean isPackageDeclaration(IFragment fragment) {
         return fragment.getContentFullLines().trim().matches("package [^;\n]+;");
     }
 

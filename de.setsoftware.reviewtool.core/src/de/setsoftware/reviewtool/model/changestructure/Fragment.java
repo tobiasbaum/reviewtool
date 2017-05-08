@@ -11,35 +11,36 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IDelta;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IFragmentList;
+import de.setsoftware.reviewtool.model.api.IPositionInText;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 
 /**
- * A fragment is the smallest unit of a change. A fragment is generally checked as a whole by a reviewer,
- * and separately from other fragments. Examples for fragments are methods that are new or changed considerably,
- * but also single lines or even parts of expressions, if there was only a small change in that area of the code.
- * A fragment denotes a continuous portion of a file in a specific revision. If the change for this fragment was
- * a pure deletion, so that there is no code to point to left in that revision of the file, this is denoted
- * specially.
+ * Default implementation of {@link IFragment}.
  */
-public final class Fragment implements Comparable<Fragment> {
+public final class Fragment implements IFragment {
 
-    private final FileInRevision file;
-    private final PositionInText from;
-    private final PositionInText to;
-    private final Set<Fragment> origins;
+    private final IRevisionedFile file;
+    private final IPositionInText from;
+    private final IPositionInText to;
+    private final Set<IFragment> origins;
     private String content;
 
-    Fragment(final FileInRevision file, final PositionInText from, final PositionInText to,
-            final Fragment... origins) {
+    Fragment(final IRevisionedFile file, final IPositionInText from, final IPositionInText to,
+            final IFragment... origins) {
         this(file, from, to, Arrays.asList(origins));
     }
 
-    Fragment(final FileInRevision file, final PositionInText from, final PositionInText to,
-            final Collection<Fragment> origins) {
+    Fragment(final IRevisionedFile file, final IPositionInText from, final IPositionInText to,
+            final Collection<? extends IFragment> origins) {
         this(file, from, to, combineOrigins(origins));
     }
 
-    private Fragment(final FileInRevision file, final PositionInText from, final PositionInText to,
-            final Set<Fragment> origins) {
+    private Fragment(final IRevisionedFile file, final IPositionInText from, final IPositionInText to,
+            final Set<? extends IFragment> origins) {
         assert file != null;
         assert from != null;
         assert to != null;
@@ -59,9 +60,9 @@ public final class Fragment implements Comparable<Fragment> {
      * @param origins A collection of fragments.
      * @return The resulting set.
      */
-    private static Set<Fragment> combineOrigins(final Collection<Fragment> origins) {
-        final Set<Fragment> newOrigins = new LinkedHashSet<>();
-        for (final Fragment origin : origins) {
+    private static Set<? extends IFragment> combineOrigins(final Collection<? extends IFragment> origins) {
+        final Set<IFragment> newOrigins = new LinkedHashSet<>();
+        for (final IFragment origin : origins) {
             newOrigins.addAll(origin.getOrigins());
         }
         return newOrigins;
@@ -72,51 +73,42 @@ public final class Fragment implements Comparable<Fragment> {
      * Mainly for unit tests. Normally, fragments should be created using
      * the {@link ChangestructureFactory}.
      */
-    public static Fragment createWithContent(
-            FileInRevision file, PositionInText from, PositionInText to, String content) {
+    public static IFragment createWithContent(
+            IRevisionedFile file, IPositionInText from, IPositionInText to, String content) {
         final Fragment ret = new Fragment(file, from, to);
         ret.content = content;
         return ret;
     }
 
-    public FileInRevision getFile() {
+    @Override
+    public IRevisionedFile getFile() {
         return this.file;
     }
 
-    /**
-     * The start position of the fragment (inclusive).
-     */
-    public PositionInText getFrom() {
+    @Override
+    public IPositionInText getFrom() {
         return this.from;
     }
 
-    /**
-     * The end position of the fragment (inclusive).
-     */
-    public PositionInText getTo() {
+    @Override
+    public IPositionInText getTo() {
         return this.to;
     }
 
-    /**
-     * @return {@code true} if this is an in-line fragment.
-     */
+    @Override
     public boolean isInline() {
         return this.from.getLine() == this.to.getLine();
     }
 
-    /**
-     * Returns the size of this fragment.
-     */
-    public Delta getSize() {
+    @Override
+    public IDelta getSize() {
         return this.to.minus(this.from);
     }
 
-    /**
-     * Returns an unmodifiable set of all original fragments contributing to this fragment.
-     */
-    public Set<Fragment> getOrigins() {
+    @Override
+    public Set<IFragment> getOrigins() {
         if (this.isOrigin()) {
-            final Set<Fragment> result = new LinkedHashSet<>();
+            final Set<IFragment> result = new LinkedHashSet<>();
             result.add(this);
             return Collections.unmodifiableSet(result);
         } else {
@@ -124,10 +116,7 @@ public final class Fragment implements Comparable<Fragment> {
         }
     }
 
-    /**
-     * Returns the content lines underlying this fragment.
-     * Full lines are returned, even if the fragment spans only part of the line(s).
-     */
+    @Override
     public String getContentFullLines() {
         if (this.content == null) {
             this.content = this.extractContent();
@@ -188,50 +177,33 @@ public final class Fragment implements Comparable<Fragment> {
         return result.toString();
     }
 
-    /**
-     * @return {@code true} if this fragment is an original one, i.e. if it has no other origin(s).
-     */
+    @Override
     public boolean isOrigin() {
         return this.origins.isEmpty();
     }
 
-    /**
-     * Returns true iff this fragment is a direct neighbor of the given other fragment, but
-     * does not overlap with it.
-     */
-    public boolean isNeighboring(Fragment other) {
-        if (!this.file.equals(other.file)) {
+    @Override
+    public boolean isNeighboring(final IFragment other) {
+        if (!this.file.equals(other.getFile())) {
             return false;
         }
         return this.isAdjacentTo(other);
     }
 
-    /**
-     * Returns true if this fragment overlaps the passed one. Adjacent fragments do not overlap. Because of this,
-     * deletion fragments starting at the same line do not overlap either as they are taken to be adjacent.
-     * @param other The other fragment.
-     * @return True if overlapping has been detected, else false.
-     */
-    public boolean overlaps(final Fragment other) {
-        return this.to.compareTo(other.from) > 0 && this.from.compareTo(other.to) < 0;
+    @Override
+    public boolean overlaps(final IFragment other) {
+        return this.to.compareTo(other.getFrom()) > 0 && this.from.compareTo(other.getTo()) < 0;
     }
 
-    /**
-     * Returns true if this fragment is adjacent to the passed one. Adjacent fragments do not overlap.
-     * @param other The other fragment.
-     * @return True if fragments are adjacent, else false.
-     */
-    public boolean isAdjacentTo(final Fragment other) {
-        return this.to.equals(other.from) || this.from.equals(other.to);
+    @Override
+    public boolean isAdjacentTo(final IFragment other) {
+        return this.to.equals(other.getFrom()) || this.from.equals(other.getTo());
     }
 
-    /**
-     * Returns {@code true} if this fragment originates from some fragment which overlaps or is adjacent to
-     * at least one of the fragments passed.
-     */
-    public boolean containsChangeInOneOf(final Collection<Fragment> fragments) {
-        for (final Fragment origin : this.getOrigins()) {
-            for (final Fragment fragment : fragments) {
+    @Override
+    public boolean containsChangeInOneOf(final Collection<? extends IFragment> fragments) {
+        for (final IFragment origin : this.getOrigins()) {
+            for (final IFragment fragment : fragments) {
                 if (origin.overlaps(fragment) || origin.isAdjacentTo(fragment)) {
                     return true;
                 }
@@ -240,37 +212,28 @@ public final class Fragment implements Comparable<Fragment> {
         return false;
     }
 
-    /**
-     * Adjoins two adjacent fragments. The associated FileInRevision of the resulting fragment is taken from this
-     * fragment.
-     * @param other The other fragment.
-     * @return The adjoint fragment encompassing both original fragments.
-     */
-    public Fragment adjoin(final Fragment other) {
+    @Override
+    public IFragment adjoin(final IFragment other) {
         assert this.isAdjacentTo(other);
-        if (this.to.equals(other.from)) {
-            return new Fragment(this.file, this.from, other.to, this, other);
+        if (this.to.equals(other.getFrom())) {
+            return new Fragment(this.file, this.from, other.getTo(), this, other);
         } else {
-            return new Fragment(this.file, other.from, this.to, this, other);
+            return new Fragment(this.file, other.getFrom(), this.to, this, other);
         }
     }
 
-    /**
-     * Subtracts some fragment from this fragment.
-     * @param other The other fragment.
-     * @return A list of remaining fragments. It may be empty or contain one or two fragments.
-     */
-    public FragmentList subtract(final Fragment other) {
+    @Override
+    public FragmentList subtract(final IFragment other) {
         if (!this.overlaps(other)) {
             return new FragmentList(this);
         } else {
             try {
                 final FragmentList fragmentList = new FragmentList();
-                if (this.from.lessThan(other.from)) {
-                    fragmentList.addFragment(new Fragment(this.file, this.from, other.from, this));
+                if (this.from.lessThan(other.getFrom())) {
+                    fragmentList.addFragment(new Fragment(this.file, this.from, other.getFrom(), this));
                 }
-                if (other.to.lessThan(this.to)) {
-                    fragmentList.addFragment(new Fragment(this.file, other.to, this.to, this));
+                if (other.getTo().lessThan(this.to)) {
+                    fragmentList.addFragment(new Fragment(this.file, other.getTo(), this.to, this));
                 }
                 return fragmentList;
             } catch (final IncompatibleFragmentException e) {
@@ -279,56 +242,43 @@ public final class Fragment implements Comparable<Fragment> {
         }
     }
 
-    /**
-     * Subtracts some fragment from this fragment.
-     * @param other The other fragment.
-     * @return A list of remaining fragments. It may be empty or contain one or two fragments.
-     */
-    public FragmentList subtract(final FragmentList other) {
+    @Override
+    public IFragmentList subtract(final IFragmentList other) {
         return new FragmentList(this).subtract(other);
     }
 
-    /**
-     * Returns true iff this fragment can be merged with the given fragment
-     * into a (potentially larger) continuous fragment.
-     */
-    public boolean canBeMergedWith(Fragment other) {
-        if (!this.file.equals(other.file)) {
+    @Override
+    public boolean canBeMergedWith(final IFragment other) {
+        if (!this.file.equals(other.getFile())) {
             return false;
         }
         return this.isAdjacentTo(other) || this.overlaps(other);
     }
 
-    /**
-     * Creates a new fragment combining the area in the file spanned by this
-     * and the given other fragment.
-     */
-    public Fragment merge(Fragment other) {
+    @Override
+    public IFragment merge(final IFragment other) {
         if (other.getFrom().lessThan(this.getFrom())) {
             return other.merge(this);
         }
 
         assert this.canBeMergedWith(other);
-        final PositionInText minFrom = this.getFrom();
-        final PositionInText maxTo;
-        if (this.to.lessThan(other.to)) {
-            maxTo = other.to;
+        final IPositionInText minFrom = this.getFrom();
+        final IPositionInText maxTo;
+        if (this.to.lessThan(other.getTo())) {
+            maxTo = other.getTo();
         } else {
             maxTo = this.to;
         }
         return new Fragment(this.file, minFrom, maxTo, this, other);
     }
 
+    @Override
     public boolean isDeletion() {
         return this.to.equals(this.from);
     }
 
-    /**
-     * Creates a fragment whose file is set to the one passed.
-     * @param newFile The {@link FileInRevision} to use.
-     * @return The resulting fragment.
-     */
-    Fragment setFile(final FileInRevision newFile) {
+    @Override
+    public IFragment setFile(final IRevisionedFile newFile) {
         return new Fragment(newFile, this.from, this.to, this);
     }
 
@@ -349,22 +299,13 @@ public final class Fragment implements Comparable<Fragment> {
             && this.origins.equals(other.origins);
     }
 
-    /**
-     * Returns the number of lines in this fragment. For deletion fragments, zero is returned.
-     * A line that is not contained up to its end is not counted. As a special case, this means
-     * that for changes inside a single line, zero is returned.
-     */
+    @Override
     public int getNumberOfLines() {
         return this.to.getLine() - this.from.getLine();
     }
 
-    /**
-     * Creates a new fragment whose start and end positions are shifted by the given delta.
-     * Only if this is an in-line fragment, the delta's column offset is applied to this fragment's end position.
-     * @param delta The delta to add.
-     * @return The resulting fragment.
-     */
-    public Fragment adjust(final Delta delta) {
+    @Override
+    public IFragment adjust(final IDelta delta) {
         return new Fragment(
                 this.file,
                 this.from.plus(delta),
@@ -373,7 +314,7 @@ public final class Fragment implements Comparable<Fragment> {
     }
 
     @Override
-    public int compareTo(final Fragment o) {
+    public int compareTo(final IFragment o) {
         final int from = this.getFrom().compareTo(o.getFrom());
         return from != 0 ? from : this.getTo().compareTo(o.getTo());
     }

@@ -9,9 +9,9 @@ import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
 
 /**
  * A simple line-based diff algorithm that uses some knowledge about programming languages to provide
@@ -86,10 +86,10 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
     }
 
     @Override
-    public List<Pair<Fragment, Fragment>> determineDiff(
-            FileInRevision fileOldInfo,
+    public List<Pair<IFragment, IFragment>> determineDiff(
+            IRevisionedFile fileOldInfo,
             byte[] fileOld,
-            FileInRevision fileNewInfo,
+            IRevisionedFile fileNewInfo,
             byte[] fileNew,
             String charset) {
 
@@ -137,9 +137,9 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
         return line.contains("}") || line.contains("</");
     }
 
-    private List<Pair<Fragment, Fragment>> toFragments(
-            FileInRevision fileOldInfo, FileInRevision fileNewInfo, List<ContentView<String>> changedFragments) {
-        final List<Pair<Fragment, Fragment>> ret = new ArrayList<>();
+    private List<Pair<IFragment, IFragment>> toFragments(
+            IRevisionedFile fileOldInfo, IRevisionedFile fileNewInfo, List<ContentView<String>> changedFragments) {
+        final List<Pair<IFragment, IFragment>> ret = new ArrayList<>();
         for (final ContentView<String> v : changedFragments) {
             if (this.isSingleLineChange(v)) {
                 ret.add(this.createInLineDiffFragment(fileOldInfo, fileNewInfo, v));
@@ -156,7 +156,8 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
         return v.getFile1().getItemCount() == 1 && v.getFile2().getItemCount() == 1;
     }
 
-    private Pair<Fragment, Fragment> createInLineDiffFragment(FileInRevision fileOldInfo, FileInRevision fileNewInfo,
+    private Pair<IFragment, IFragment> createInLineDiffFragment(
+            IRevisionedFile fileOldInfo, IRevisionedFile fileNewInfo,
             ContentView<String> v) {
         final String content1 = v.getFile1().getItem(0);
         final String content2 = v.getFile2().getItem(0);
@@ -190,7 +191,7 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
         return max;
     }
 
-    private Fragment toInLineFileFragment(FileInRevision fileInfo, OneFileView<String> fragmentData,
+    private IFragment toInLineFileFragment(IRevisionedFile fileInfo, OneFileView<String> fragmentData,
             int prefixLength, int suffixLength) {
         final String line = fragmentData.getItem(0);
         return ChangestructureFactory.createFragment(fileInfo,
@@ -200,7 +201,7 @@ class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
                         fragmentData.toIndexInWholeFile(0) + 1, line.length() - suffixLength + 1));
     }
 
-    private Fragment toFileFragment(FileInRevision fileInfo, OneFileView<String> fragmentData) {
+    private IFragment toFileFragment(IRevisionedFile fileInfo, OneFileView<String> fragmentData) {
         return ChangestructureFactory.createFragment(fileInfo,
                 ChangestructureFactory.createPositionInText(
                         fragmentData.toIndexInWholeFile(0) + 1, 1),

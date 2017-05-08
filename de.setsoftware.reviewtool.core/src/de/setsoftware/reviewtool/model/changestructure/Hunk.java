@@ -3,33 +3,40 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.util.Collection;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IDelta;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IFragmentList;
+import de.setsoftware.reviewtool.model.api.IHunk;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
+import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 
 /**
  * Encapsulates a single difference between two revisions of a file, i.e. a pair (source fragment, target fragment).
  * <p/>
  * Hunks can be ordered according to their source fragment.
  */
-public final class Hunk implements Comparable<Hunk> {
+public final class Hunk implements IHunk {
 
     /**
      * The source fragment.
      */
-    private final Fragment source;
+    private final IFragment source;
     /**
      * The target fragment.
      */
-    private final Fragment target;
+    private final IFragment target;
     /**
      * The hunk delta (number of lines added minus number of lines deleted).
      */
-    private final Delta delta;
+    private final IDelta delta;
 
     /**
      * Creates a Hunk.
      * @param source The source fragment.
      * @param target The target fragment.
      */
-    public Hunk(final Fragment source, final Fragment target) {
+    public Hunk(final IFragment source, final IFragment target) {
         this.source = source;
         this.target = target;
         this.delta = this.target.getSize().minus(this.source.getSize());
@@ -40,34 +47,26 @@ public final class Hunk implements Comparable<Hunk> {
      * @param source The source fragment.
      * @param target The target fragment.
      */
-    public Hunk(final TextualChangeHunk hunk) {
+    public Hunk(final ITextualChange hunk) {
         this(hunk.getFromFragment(), hunk.getToFragment());
     }
 
-    /**
-     * @return The source fragment.
-     */
-    public Fragment getSource() {
+    @Override
+    public IFragment getSource() {
         return this.source;
     }
 
-    /**
-     * @return The target fragment.
-     */
-    public Fragment getTarget() {
+    @Override
+    public IFragment getTarget() {
         return this.target;
     }
 
-    /**
-     * @return The hunk delta.
-     */
-    Delta getDelta() {
+    @Override
+    public IDelta getDelta() {
         return this.delta;
     }
 
-    /**
-     * @return {@code true} if this is an in-line hunk.
-     */
+    @Override
     public boolean isInline() {
         return this.source.isInline();
     }
@@ -77,9 +76,9 @@ public final class Hunk implements Comparable<Hunk> {
      * @param hunks The collection of hunks.
      * @return A FragmentList containing all source fragments of the hunks in order. Adjacent fragments are merged.
      */
-    public static FragmentList getSources(final Collection<? extends Hunk> hunks) {
-        final FragmentList result = new FragmentList();
-        for (final Hunk hunk : hunks) {
+    public static IFragmentList getSources(final Collection<? extends Hunk> hunks) {
+        final IFragmentList result = new FragmentList();
+        for (final IHunk hunk : hunks) {
             try {
                 result.addFragment(hunk.getSource());
             } catch (final IncompatibleFragmentException e) {
@@ -95,9 +94,9 @@ public final class Hunk implements Comparable<Hunk> {
      * @param hunks The collection of hunks.
      * @return A FragmentList containing all target fragments of the hunks in order. Adjacent fragments are merged.
      */
-    public static FragmentList getTargets(final Collection<? extends Hunk> hunks) {
-        final FragmentList result = new FragmentList();
-        for (final Hunk hunk : hunks) {
+    public static IFragmentList getTargets(final Collection<? extends Hunk> hunks) {
+        final IFragmentList result = new FragmentList();
+        for (final IHunk hunk : hunks) {
             try {
                 result.addFragment(hunk.getTarget());
             } catch (final IncompatibleFragmentException e) {
@@ -111,7 +110,7 @@ public final class Hunk implements Comparable<Hunk> {
     @Override
     public boolean equals(final Object other) {
         if (other instanceof Hunk) {
-            final Hunk hunk = (Hunk) other;
+            final IHunk hunk = (IHunk) other;
             return this.getClass() == other.getClass()
                 && this.source.equals(hunk.getSource())
                 && this.target.equals(hunk.getTarget());
@@ -131,44 +130,28 @@ public final class Hunk implements Comparable<Hunk> {
                 + this.target + "(" + this.target.getContentFullLines() + ")";
     }
 
-    /**
-     * Creates a new hunk whose source fragment's start and end positions are shifted by the given delta.
-     * @param delta The delta to add.
-     * @return The resulting hunk.
-     */
-    Hunk adjustSource(final Delta delta) {
+    @Override
+    public IHunk adjustSource(final IDelta delta) {
         return new Hunk(this.getSource().adjust(delta), this.getTarget());
     }
 
-    /**
-     * Creates a new hunk whose target fragment's start and end positions are shifted by the given delta.
-     * @param delta The delta to add.
-     * @return The resulting hunk.
-     */
-    Hunk adjustTarget(final Delta delta) {
+    @Override
+    public IHunk adjustTarget(final IDelta delta) {
         return new Hunk(this.getSource(), this.getTarget().adjust(delta));
     }
 
-    /**
-     * Creates a new hunk whose source fragment's file is set to the one passed.
-     * @param source The {@link FileInRevision} to use.
-     * @return The resulting hunk.
-     */
-    Hunk adjustSourceFile(final FileInRevision source) {
+    @Override
+    public IHunk adjustSourceFile(final IRevisionedFile source) {
         return new Hunk(this.source.setFile(source), this.target);
     }
 
-    /**
-     * Creates a new hunk whose target fragment's file is set to the one passed.
-     * @param source The {@link FileInRevision} to use.
-     * @return The resulting hunk.
-     */
-    Hunk adjustTargetFile(final FileInRevision target) {
+    @Override
+    public Hunk adjustTargetFile(final IRevisionedFile target) {
         return new Hunk(this.source, this.target.setFile(target));
     }
 
     @Override
-    public int compareTo(final Hunk o) {
+    public int compareTo(final IHunk o) {
         return this.source.compareTo(o.getSource());
     }
 

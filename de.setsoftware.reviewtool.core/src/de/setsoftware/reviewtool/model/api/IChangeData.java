@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 import java.io.File;
 import java.util.Collection;
@@ -17,12 +17,12 @@ public interface IChangeData {
     /**
      * Returns all repositories that were matching for the given ticket.
      */
-    public abstract Collection<? extends Repository> getRepositories();
+    public abstract Collection<? extends IRepository> getRepositories();
 
     /**
-     * Returns all commits that were matching for the given ticket.
+     * Returns all {@link ICommit}s that were matching for the given ticket.
      */
-    public abstract List<Commit> getMatchedCommits();
+    public abstract List<? extends ICommit> getMatchedCommits();
 
     /**
      * Returns the paths for all locally modified files. Only meaningful in results of

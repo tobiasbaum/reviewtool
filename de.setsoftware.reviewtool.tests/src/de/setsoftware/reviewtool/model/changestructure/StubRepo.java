@@ -3,10 +3,13 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.io.File;
 import java.util.Collection;
 
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRevision;
+
 /**
- * A stub implementation of {@link Repository} for use by tests.
+ * A stub implementation of {@link AbstractRepository} for use by tests.
  */
-public final class StubRepo extends Repository {
+public final class StubRepo extends AbstractRepository {
 
     public static StubRepo INSTANCE = new StubRepo();
 
@@ -26,12 +29,12 @@ public final class StubRepo extends Repository {
     }
 
     @Override
-    public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
+    public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
         return this.getSmallestOfComparableRevisions(revisions);
     }
 
     @Override
-    public byte[] getFileContents(final String path, final RepoRevision revision) {
+    public byte[] getFileContents(final String path, final IRepoRevision revision) {
         return new byte[0];
     }
 }

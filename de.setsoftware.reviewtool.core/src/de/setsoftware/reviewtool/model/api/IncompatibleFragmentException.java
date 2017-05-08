@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 /**
  * Thrown if working with fragments produces an erroneous situation.
@@ -10,14 +10,14 @@ public class IncompatibleFragmentException extends Exception {
     /**
      * Default constructor.
      */
-    IncompatibleFragmentException() {
+    public IncompatibleFragmentException() {
     }
 
     /**
      * Constructor taking a message.
      * @param message The message.
      */
-    IncompatibleFragmentException(final String message) {
+    public IncompatibleFragmentException(final String message) {
         super(message);
     }
 
@@ -25,7 +25,7 @@ public class IncompatibleFragmentException extends Exception {
      * Constructor taking a cause.
      * @param cause The cause.
      */
-    IncompatibleFragmentException(final Throwable cause) {
+    public IncompatibleFragmentException(final Throwable cause) {
         super(cause);
     }
 
@@ -34,7 +34,7 @@ public class IncompatibleFragmentException extends Exception {
      * @param message The message.
      * @param cause The cause.
      */
-    IncompatibleFragmentException(final String message, final Throwable cause) {
+    public IncompatibleFragmentException(final String message, final Throwable cause) {
         super(message, cause);
     }
 }
