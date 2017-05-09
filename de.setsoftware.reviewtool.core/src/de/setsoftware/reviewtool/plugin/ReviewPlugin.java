@@ -68,9 +68,11 @@ import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -288,45 +290,6 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     /**
-     * A {@link IProgressMonitor} implementation doing nothing.
-     */
-    private static final class DummyProgressMonitor implements IProgressMonitor {
-
-        @Override
-        public void beginTask(final String name, final int totalWork) {
-        }
-
-        @Override
-        public void done() {
-        }
-
-        @Override
-        public void internalWorked(final double work) {
-        }
-
-        @Override
-        public boolean isCanceled() {
-            return false;
-        }
-
-        @Override
-        public void setCanceled(final boolean value) {
-        }
-
-        @Override
-        public void setTaskName(final String name) {
-        }
-
-        @Override
-        public void subTask(final String name) {
-        }
-
-        @Override
-        public void worked(final int work) {
-        }
-    }
-
-    /**
      * Represents a simple callback receiving a single value and returning some value.
      * @param <R> The type of the result returned.
      * @param <T> The type of the value received.
@@ -376,6 +339,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final ReviewStateManager persistence;
     private IChangeSource changeSource;
     private ToursInReview toursInReview;
+    private ChangeManager changeManager;
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
@@ -627,7 +591,6 @@ public class ReviewPlugin implements IReviewConfigurable {
         final boolean ok = this.persistence.selectTicket(forReview);
         if (!ok) {
             this.setMode(Mode.IDLE);
-            this.toursInReview = null;
             tail.run(null);
             return;
         }
@@ -647,7 +610,6 @@ public class ReviewPlugin implements IReviewConfigurable {
                         public Void runInUi(final Boolean toursOk, final Display display) {
                             if (!toursOk) {
                                 ReviewPlugin.this.setMode(Mode.IDLE);
-                                ReviewPlugin.this.toursInReview = null;
                             } else {
                                 ReviewPlugin.this.loadReviewDataTail(targetMode);
                             }
@@ -667,7 +629,6 @@ public class ReviewPlugin implements IReviewConfigurable {
                 this.persistence, new RealMarkerFactory());
         if (currentReviewData == null) {
             this.setMode(Mode.IDLE);
-            this.toursInReview = null;
             return;
         }
         if (targetMode == Mode.REVIEWING) {
@@ -689,6 +650,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (mode != this.mode) {
             this.mode = mode;
             this.notifyModeListeners();
+        }
+        if (mode == Mode.IDLE) {
+            this.toursInReview = null;
+            this.changeManager = null;
         }
     }
 
@@ -793,7 +758,6 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.persistence.flushReviewData();
         this.clearMarkers();
         this.setMode(Mode.IDLE);
-        this.toursInReview = null;
         CurrentStop.unsetCurrentStop();
         this.unregisterGlobalTelemetryListeners();
     }
@@ -942,20 +906,29 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         sourceUi.beginTask(ticketKey + ": Please wait while " + action + "...", IProgressMonitor.UNKNOWN);
         try {
+            sourceUi.subTask("Determining relevant changes...");
+            final IChangeData changes = this.changeSource.getRepositoryChanges(ticketKey, sourceUi);
+            this.changeManager = new ChangeManager(changes);
+
             sourceUi.subTask("Creating tours...");
             this.toursInReview = ToursInReview.create(
-                    this.changeSource,
+                    this.changeManager,
                     sourceUi,
                     this.relevanceFilters,
                     Arrays.asList(
                             new OneStopPerPartOfFileRestructuring()),
                     new StopOrdering(this.relationTypes),
                     createUi,
-                    ticketKey,
+                    changes,
                     this.getReviewRounds(this.persistence.getCurrentTicketData()));
             if (this.toursInReview == null) {
+                this.changeManager = null;
                 return false;
             }
+
+            sourceUi.subTask("Collecting local changes...");
+            this.collectLocalChanges(sourceUi);
+
             sourceUi.subTask("Creating stop markers...");
             this.toursInReview.createMarkers(new RealMarkerFactory(), sourceUi);
             return true;
@@ -1048,12 +1021,21 @@ public class ReviewPlugin implements IReviewConfigurable {
         return this.stopViewer;
     }
 
+    private void collectLocalChanges(final IChangeSourceUi sourceUi) {
+        try {
+            this.changeManager.analyzeLocalChanges(null, sourceUi);
+        } catch (final ReviewtoolException e) {
+            //if there is a problem while determining the local changes, ignore them
+            Logger.warn("problem while determining local changes", e);
+        }
+    }
+
     private void updateLocalChanges(final List<File> paths) {
-        if (this.toursInReview == null) {
+        if (this.changeManager == null) {
             return;
         }
 
-        ReviewPlugin.this.toursInReview.createLocalTour(paths, new DummyProgressMonitor(), new RealMarkerFactory());
+        this.changeManager.analyzeLocalChanges(paths, new DummyProgressMonitor());
     }
 
     /**
