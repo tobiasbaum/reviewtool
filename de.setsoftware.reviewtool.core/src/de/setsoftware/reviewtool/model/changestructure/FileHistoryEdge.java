@@ -43,4 +43,24 @@ public final class FileHistoryEdge implements IMutableFileHistoryEdge {
     public void setDiff(final IFileDiff diff) {
         this.diff = diff;
     }
+
+    @Override
+    public boolean equals(final Object o) {
+        if (o instanceof FileHistoryEdge) {
+            final FileHistoryEdge other = (FileHistoryEdge) o;
+            return this.ancestor.equals(other.ancestor)
+                    && this.descendant.equals(other.descendant);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.ancestor.hashCode() ^ this.descendant.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return this.ancestor.toString() + "==>" + this.descendant.toString();
+    }
 }

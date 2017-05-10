@@ -59,6 +59,21 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
         return this.isDeleted;
     }
 
+    @Override
+    public boolean equals(final Object o) {
+        if (o instanceof FileHistoryNode) {
+            final FileHistoryNode other = (FileHistoryNode) o;
+            return this.file.equals(other.file)
+                    && this.isDeleted == other.isDeleted;
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.file.hashCode() ^ Boolean.valueOf(this.isDeleted).hashCode();
+    }
+
     /**
      * Adds some nearest ancestor {@link FileHistoryNode}.
      * This operation is called internally when this node starts being a descendant
