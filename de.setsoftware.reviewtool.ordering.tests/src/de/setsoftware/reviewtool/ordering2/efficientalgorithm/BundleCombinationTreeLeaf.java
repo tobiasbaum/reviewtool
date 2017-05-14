@@ -42,4 +42,9 @@ class BundleCombinationTreeLeaf<T> extends BundleCombinationTreeElement<T> {
         return this;
     }
 
+    @Override
+    public PositionTreeLeaf<T> toPositionTree() {
+        return new PositionTreeLeaf<T>(this.value);
+    }
+
 }

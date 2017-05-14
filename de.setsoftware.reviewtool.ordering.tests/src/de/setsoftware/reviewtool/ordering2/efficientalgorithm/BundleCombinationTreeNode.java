@@ -397,4 +397,17 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         return new BundleCombinationTreeNode<>(copy, this.reorderingAllowed);
     }
 
+    @Override
+    public PositionTreeNode<T> toPositionTree() {
+        final PositionTreeElement<T>[] positionChildren = new PositionTreeElement[this.children.length];
+        for (int i = 0; i < this.children.length; i++) {
+            positionChildren[i] = this.children[i].toPositionTree();
+        }
+        if (this.reorderingAllowed) {
+            return new PositionTreeNodeReorderable<>(positionChildren);
+        } else {
+            return new PositionTreeNodeFixedOrder<>(positionChildren);
+        }
+    }
+
 }

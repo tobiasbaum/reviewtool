@@ -193,4 +193,6 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
         return 42;
     }
 
+    public abstract PositionTreeElement<T> toPositionTree();
+
 }
