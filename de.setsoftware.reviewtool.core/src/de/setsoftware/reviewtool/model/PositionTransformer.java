@@ -411,12 +411,15 @@ public class PositionTransformer {
     }
 
     private static IPath findFittingPath(String[] segments, List<IPath> paths) {
+        IPath result = null;
         for (final IPath path : paths) {
-            if (sameSuffix(segments, path.segments(), segments.length)) {
-                return path;
+            final String[] pathSegments = path.segments();
+            if (sameSuffix(segments, pathSegments, segments.length)
+                    && (result == null || pathSegments.length < result.segments().length)) {
+                result = path;
             }
         }
-        return null;
+        return result;
     }
 
     private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, IPath fittingPath) {
