@@ -24,13 +24,13 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     private final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
 
         private final IRevisionedFile file;
-        private final Set<IFileHistoryNode> nodes;
+        private final List<IFileHistoryNode> nodes;
         private final Type type;
 
-        VirtualFileHistoryNode(final IRevisionedFile file, final Set<IFileHistoryNode> nodes) {
+        VirtualFileHistoryNode(final IRevisionedFile file, final List<IFileHistoryNode> nodes) {
             this.file = file;
             this.nodes = nodes;
-            this.type = nodes.iterator().next().getType();
+            this.type = nodes.get(0).getType();
         }
 
         @Override
@@ -196,7 +196,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
 
     @Override
     public IFileHistoryNode getNodeFor(final IRevisionedFile file) {
-        final Set<IFileHistoryNode> nodes = new LinkedHashSet<>();
+        final List<IFileHistoryNode> nodes = new ArrayList<>();
         for (final IFileHistoryGraph graph : this.graphs) {
             final IFileHistoryNode node = graph.getNodeFor(file);
             if (node != null) {
