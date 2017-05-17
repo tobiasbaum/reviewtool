@@ -25,9 +25,10 @@ public class FragmentTracer implements IFragmentTracer {
     @Override
     public List<IFragment> traceFragment(final IFragment fragment) {
         final ArrayList<IFragment> result = new ArrayList<>();
-        final IFileHistoryNode node = this.fileHistoryGraph.getNodeFor(fragment.getFile());
+        final IRevisionedFile file = fragment.getFile();
+        final IFileHistoryNode node = this.fileHistoryGraph.getNodeFor(file);
         if (node != null) {
-            for (final IRevisionedFile leafRevision : this.fileHistoryGraph.getLatestFiles(node.getFile())) {
+            for (final IRevisionedFile leafRevision : this.fileHistoryGraph.getLatestFiles(file)) {
                 final IFileHistoryNode descendant = this.fileHistoryGraph.getNodeFor(leafRevision);
                 final Set<? extends IFileDiff> fileDiffs = descendant.buildHistories(node);
                 for (final IFileDiff fileDiff : fileDiffs) {
