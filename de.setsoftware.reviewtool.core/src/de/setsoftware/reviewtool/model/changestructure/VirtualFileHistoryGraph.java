@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
@@ -15,6 +16,8 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
  * Merges multiple file history graphs into one virtual file history graph.
+ * Note that the nodes returned are snapshots and do not change over time if underlying file history graphs
+ * are added or removed.
  */
 public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
 
@@ -27,10 +30,42 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         private final List<IFileHistoryNode> nodes;
         private final Type type;
 
+        /**
+         * Creates a virtual node from a non-empty list of underlying nodes.
+         *
+         * @param file The underlying {@link IRevisionedFile}.
+         * @param nodes The underlying {@link IFileHistoryNode}s, all referrring to {@code file} above.
+         * @throws ReviewtoolException if the underlying node types are incompatible.
+         */
         VirtualFileHistoryNode(final IRevisionedFile file, final List<IFileHistoryNode> nodes) {
+            assert !nodes.isEmpty();
             this.file = file;
             this.nodes = nodes;
-            this.type = nodes.get(0).getType();
+            this.type = this.determineNodeType();
+        }
+
+        /**
+         * Determines the type of this node from the types of the underlying nodes.
+         * All underlying nodes types must conincide, with the exception of {@link Type#NORMAL} which may be overriden
+         * by more specific types.
+         *
+         * @return The resulting node type.
+         * @throws ReviewtoolException if the underlying node types are incompatible.
+         */
+        private Type determineNodeType() {
+            Type resultingType = Type.NORMAL;
+            for (final IFileHistoryNode node : this.nodes) {
+                final Type nodeType = node.getType();
+                if (!nodeType.equals(Type.NORMAL)) {
+                    if (resultingType.equals(Type.NORMAL) || resultingType.equals(nodeType)) {
+                        resultingType = nodeType;
+                    } else {
+                        throw new ReviewtoolException("Incompatible types for " + this.file + ": "
+                                + resultingType + " # " + nodeType);
+                    }
+                }
+            }
+            return resultingType;
         }
 
         @Override
@@ -114,9 +149,14 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         private final IFileDiff diff;
 
         /**
-         * Constructor.
+         * Creates an edge in a {@link VirtualFileHistoryGraph}. Unlike nodes, a {@link VirtualFileHistoryEdge}
+         * does not know the underlying edge. This makes it possible to create virtual edges that do not have any
+         * representation in the underlying file history graphs (e.g. edges between nodes of different underlying
+         * file history graphs).
+         *
          * @param ancestor The ancestor node of the edge.
          * @param descendant The descendant node of the edge.
+         * @param type The type of the edge.
          * @param diff The associated {@link IFileDiff}.
          */
         public VirtualFileHistoryEdge(
