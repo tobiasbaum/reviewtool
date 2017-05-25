@@ -11,8 +11,12 @@ import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.ILocalRevision;
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 
 /**
  * Merges multiple file history graphs into one virtual file history graph.
@@ -96,16 +100,40 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         @Override
         public Set<? extends IFileHistoryEdge> getAncestors() {
             final Set<IFileHistoryEdge> edges = new LinkedHashSet<>();
+            final Set<IFileHistoryEdge> alphaEdges = new LinkedHashSet<>();
             for (final IFileHistoryNode node : this.nodes) {
                 for (final IFileHistoryEdge ancestorEdge : node.getAncestors()) {
-                    edges.add(new VirtualFileHistoryEdge(
-                            VirtualFileHistoryGraph.this.getNodeFor(ancestorEdge.getAncestor().getFile()),
+                    final IRevisionedFile ancestorFile = ancestorEdge.getAncestor().getFile();
+                    final VirtualFileHistoryEdge edge = new VirtualFileHistoryEdge(
+                            VirtualFileHistoryGraph.this.getNodeFor(ancestorFile),
                             VirtualFileHistoryGraph.this.getNodeFor(ancestorEdge.getDescendant().getFile()),
                             ancestorEdge.getType(),
-                            ancestorEdge.getDiff()));
+                            ancestorEdge.getDiff());
+
+                    ancestorFile.getRevision().accept(new IRevisionVisitor<Void>() {
+
+                        @Override
+                        public Void handleLocalRevision(ILocalRevision revision) {
+                            edges.add(edge);
+                            return null;
+                        }
+
+                        @Override
+                        public Void handleRepoRevision(IRepoRevision revision) {
+                            edges.add(edge);
+                            return null;
+                        }
+
+                        @Override
+                        public Void handleUnknownRevision(IUnknownRevision revision) {
+                            alphaEdges.add(edge);
+                            return null;
+                        }
+                    });
                 }
             }
-            return edges;
+
+            return edges.isEmpty() ? alphaEdges : edges;
         }
 
         @Override
