@@ -346,7 +346,9 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
                 it.remove();
                 descendantOfAncestor.removeAncestor(descendantOfAncestorEdge);
-                interiorNode.addDescendant(descendantOfAncestor, IFileHistoryEdge.Type.NORMAL,
+                interiorNode.addDescendant(
+                        descendantOfAncestor,
+                        descendantOfAncestorEdge.getType(),
                         descendantOfAncestorEdge.getDiff());
             }
         }
