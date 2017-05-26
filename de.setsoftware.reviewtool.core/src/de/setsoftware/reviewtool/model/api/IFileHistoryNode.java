@@ -26,7 +26,12 @@ public interface IFileHistoryNode {
          * A node denoting a replacement, i.e. the termination of an existing and the start of a new or continuation
          * of an existing flow (the latter happens when the node is replaced by a copy of some other node).
          */
-        REPLACED
+        REPLACED,
+        /**
+         * A node denoting an unconfirmed copy source. "Unconfirmed" means that it is not clear which flow the node
+         * belongs to.
+         */
+        UNCONFIRMED
     }
 
     /**
@@ -44,6 +49,11 @@ public interface IFileHistoryNode {
      * Returns the type of this node.
      */
     public abstract Type getType();
+
+    /**
+     * Returns {@code true} if this is a confirmed node, i.e. iff {@code this.getType() != Type.UNCONFIRMED}.
+     */
+    public abstract boolean isConfirmed();
 
     /**
      * Checks whether this {@link IFileHistoryNode} denotes a copy target.

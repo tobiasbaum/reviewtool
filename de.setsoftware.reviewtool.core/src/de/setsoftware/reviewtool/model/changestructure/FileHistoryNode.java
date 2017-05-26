@@ -65,6 +65,11 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     @Override
+    public boolean isConfirmed() {
+        return !this.type.equals(Type.UNCONFIRMED);
+    }
+
+    @Override
     public boolean isCopyTarget() {
         for (final FileHistoryEdge ancestorEdge : this.ancestors) {
             if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY)) {
@@ -147,6 +152,14 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     void makeReplaced() {
         assert this.type.equals(Type.DELETED);
         this.type = Type.REPLACED;
+    }
+
+    /**
+     * Makes this node a confirmed node. Requires that the node is a {@link Type#UNCONFIRMED} node.
+     */
+    void makeConfirmed() {
+        assert this.type.equals(Type.UNCONFIRMED);
+        this.type = Type.NORMAL;
     }
 
     /**

@@ -88,6 +88,11 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         }
 
         @Override
+        public boolean isConfirmed() {
+            return !this.type.equals(Type.UNCONFIRMED);
+        }
+
+        @Override
         public boolean isCopyTarget() {
             for (final IFileHistoryNode node : this.nodes) {
                 if (node.isCopyTarget()) {

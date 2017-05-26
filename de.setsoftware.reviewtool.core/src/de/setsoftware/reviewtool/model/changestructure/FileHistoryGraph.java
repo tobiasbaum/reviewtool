@@ -104,8 +104,8 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         final IRevisionedFile fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom);
         final IRevisionedFile fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo);
 
-        final FileHistoryNode fromNode = this.getOrCreateFileHistoryNode(fileFrom, false, true);
-        final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true, false);
+        final FileHistoryNode fromNode = this.getOrCreateCopySourceNode(fileFrom);
+        final FileHistoryNode toNode = this.getOrCreateCopyTargetNode(fileTo);
         if (toNode.getType().equals(IFileHistoryNode.Type.DELETED)) {
             toNode.makeReplaced();
         }
@@ -167,11 +167,12 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                         parentPath,
                         file.getRevision());
                 // don't copy child nodes when traversing upwards the tree as they already exist
-                final FileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false);
+                final FileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false, true,
+                        node.isConfirmed());
                 parent.addChild(node);
 
-                if (!isNew && parent.isCopyTarget()) {
-                    // special case: node begins lifetime with a change or deletion in a copied directory
+                if (!isNew) {
+                    // node begins lifetime with a change or deletion
                     final String name = path.substring(path.lastIndexOf("/") + 1);
                     for (final FileHistoryEdge parentAncestorEdge : parent.getAncestors()) {
                         final FileHistoryNode parentAncestor = parentAncestorEdge.getAncestor();
@@ -179,12 +180,27 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                         final IRevisionedFile ancestorRev = ChangestructureFactory.createFileInRevision(
                                 parentAncestorRev.getPath() + "/" + name,
                                 parentAncestorRev.getRevision());
-                        final FileHistoryNode ancestor =
-                                this.getOrCreateFileHistoryNode(ancestorRev, false, false);
-                        this.addEdge(ancestor, node,
-                                node.getType().equals(IFileHistoryNode.Type.DELETED)
-                                        ? IFileHistoryEdge.Type.COPY_DELETED : IFileHistoryEdge.Type.COPY,
-                                copyChildren);
+                        final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(
+                                ancestorRev,
+                                false,
+                                false,
+                                true,
+                                parentAncestor.isConfirmed());
+                        if (ancestor.isConfirmed() && !node.isConfirmed()) {
+                            node.makeConfirmed();
+                        }
+
+                        final IFileHistoryEdge.Type edgeType;
+                        if (parent.isCopyTarget()) {
+                            assert !node.getType().equals(IFileHistoryNode.Type.DELETED);
+                            edgeType = IFileHistoryEdge.Type.COPY;
+                        } else {
+                            if (node.isConfirmed()) {
+                                this.injectInteriorNode(ancestor, node);
+                            }
+                            edgeType = FileHistoryEdge.Type.NORMAL;
+                        }
+                        this.addEdge(ancestor, node, edgeType, copyChildren);
                     }
                 }
             }
@@ -217,6 +233,26 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     }
 
     /**
+     * Returns or creates a copy source {@link FileHistoryNode} for a given {@link IRevisionedFile}.
+     * If a node for that {@link IRevisionedFile} already exists, it is returned.
+     * If a node for that {@link IRevisionedFile} does not exist, it is created.
+     * If necessary, an artificial ancestor is created for a root node.
+     */
+    private FileHistoryNode getOrCreateCopySourceNode(final IRevisionedFile file) {
+        return this.getOrCreateFileHistoryNode(file, false, true, true, false);
+    }
+
+    /**
+     * Returns or creates a copy target {@link FileHistoryNode} for a given {@link IRevisionedFile}.
+     * If a node for that {@link IRevisionedFile} already exists, it is returned.
+     * If a node for that {@link IRevisionedFile} does not exist, it is created.
+     * If necessary, an artificial ancestor is created for a root node.
+     */
+    private FileHistoryNode getOrCreateCopyTargetNode(final IRevisionedFile file) {
+        return this.getOrCreateFileHistoryNode(file, true, true, false, true);
+    }
+
+    /**
      * Returns or creates a {@link FileHistoryNode} for a given {@link IRevisionedFile}.
      * If a node for that {@link IRevisionedFile} already exists, it is returned.
      * If a node for that {@link IRevisionedFile} does not exist, it is created.
@@ -234,7 +270,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final IRevisionedFile file,
             final boolean isNew,
             final boolean copyChildren) {
-        return this.getOrCreateFileHistoryNode(file, isNew, copyChildren, true);
+        return this.getOrCreateFileHistoryNode(file, isNew, copyChildren, true, true);
     }
 
     /**
@@ -250,35 +286,45 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * @param copyChildren If <code>true</code> and a new node is created, child nodes are copied from the ancestor
      *      (if it exists) to the new node.
      * @param createArtificialAncestor If {@code true}, an artificial ancestor node is created for a root node.
+     * @param confirmed If {@code true}, and the node does not exist yet, it is created as a confirmed node with type
+     *      {@link IFileHistoryNode.Type#NORMAL}, and the node is injected into an existing flow if possible.
+     *      If {@code false}, this is not done, and the new node is marked as {@link IFileHistoryNode.Type#UNCONFIRMED}.
      */
     private FileHistoryNode getOrCreateFileHistoryNode(
             final IRevisionedFile file,
             final boolean isNew,
             final boolean copyChildren,
-            final boolean createArtificialAncestor) {
+            final boolean createArtificialAncestor,
+            final boolean confirmed) {
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
-            final FileHistoryNode newNode = new FileHistoryNode(file, IFileHistoryNode.Type.NORMAL);
-            this.index.put(this.createKey(file), newNode);
+            node = new FileHistoryNode(file,
+                    confirmed ? IFileHistoryNode.Type.NORMAL : IFileHistoryNode.Type.UNCONFIRMED);
+            this.index.put(this.createKey(file), node);
 
-            this.addParentNodes(newNode, isNew, copyChildren);
-            if (newNode.isRoot()) { // addParentNodes() may have already added ancestors
+            this.addParentNodes(node, isNew, copyChildren);
+            if (node.isRoot()) { // addParentNodes() may have already added ancestors
                 FileHistoryNode ancestor = this.findAncestorFor(file);
                 if (ancestor == null && createArtificialAncestor) {
                     final IRevisionedFile alphaFile = ChangestructureFactory.createFileInRevision(
                             file.getPath(), ChangestructureFactory.createUnknownRevision(file.getRepository()));
                     if (!alphaFile.equals(file)) {
-                        ancestor = this.getOrCreateFileHistoryNode(alphaFile, false, false);
+                        ancestor = this.getOrCreateFileHistoryNode(alphaFile, false, false, false, false);
                     }
                 }
 
                 if (ancestor != null) {
-                    this.injectInteriorNode(ancestor, newNode);
-                    this.addEdge(ancestor, newNode, IFileHistoryEdge.Type.NORMAL, copyChildren);
+                    if (ancestor.isConfirmed() && !node.isConfirmed()) {
+                        node.makeConfirmed();
+                    }
+                    if (node.isConfirmed()) {
+                        this.injectInteriorNode(ancestor, node);
+                    }
+                    this.addEdge(ancestor, node, IFileHistoryEdge.Type.NORMAL, copyChildren);
                 }
             }
 
-            return newNode;
+            return node;
         } else {
             assert !isNew || node.getType().equals(IFileHistoryNode.Type.DELETED);
             return node;
