@@ -7,194 +7,21 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.api.ILocalRevision;
-import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
-import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
-import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 
 /**
  * Tests for {@link FileHistoryGraph}.
  */
 public final class FileHistoryGraphTest {
-
-    /**
-     * Implements {@link IRepoRevision} for this test case.
-     */
-    private static final class MyRepoRevision implements IRepoRevision {
-
-        private final IRepository repo;
-        private final Long id;
-
-        MyRepoRevision(final IRepository repo, final Long id) {
-            this.repo = repo;
-            this.id = id;
-        }
-
-        @Override
-        public IRepository getRepository() {
-            return this.repo;
-        }
-
-        @Override
-        public <R> R accept(final IRevisionVisitor<R> visitor) {
-            return visitor.handleRepoRevision(this);
-        }
-
-        @Override
-        public <R, E extends Throwable> R accept(final IRevisionVisitorE<R, E> visitor) throws E {
-            return visitor.handleRepoRevision(this);
-        }
-
-        @Override
-        public Object getId() {
-            return this.id;
-        }
-
-        @Override
-        public boolean equals(final Object o) {
-            if (o instanceof MyRepoRevision) {
-                final MyRepoRevision other = (MyRepoRevision) o;
-                return this.id.equals(other.id);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return this.id.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            return this.id.toString();
-        }
-
-    }
-
-    /**
-     * Implements {@link IRepository} for this test case.
-     */
-    private static final class MyRepository extends AbstractRepository {
-
-        private final String id;
-        private final File localRoot;
-
-        MyRepository(final String id, final File localRoot) {
-            this.id = id;
-            this.localRoot = localRoot;
-        }
-
-        @Override
-        public String getId() {
-            return this.id;
-        }
-
-        @Override
-        public File getLocalRoot() {
-            return this.localRoot;
-        }
-
-        @Override
-        public IRepoRevision toRevision(final String revisionId) {
-            try {
-                return new MyRepoRevision(this, Long.parseLong(revisionId));
-            } catch (final NumberFormatException e) {
-                return null;
-            }
-        }
-
-        @Override
-        public String toAbsolutePathInWc(final String absolutePathInRepo) {
-            return new File(this.localRoot, absolutePathInRepo).getAbsolutePath();
-        }
-
-        @Override
-        public String fromAbsolutePathInWc(final String absolutePathInWc) {
-            if (absolutePathInWc.startsWith(this.localRoot.getAbsolutePath())) {
-                return absolutePathInWc.substring(this.localRoot.getAbsolutePath().length());
-            } else {
-                return null;
-            }
-        }
-
-        @Override
-        public IRevision getSmallestRevision(final Collection<? extends IRevision> revisions) {
-            return getSmallestOfComparableRevisions(revisions);
-        }
-
-        @Override
-        public byte[] getFileContents(final String path, final IRepoRevision revision) throws Exception {
-            return new byte[0];
-        }
-
-    }
-
-    /**
-     * Implements {@link IFileHistoryGraph} for this test case. (Code borrowed from the SVN change source code.)
-     */
-    private static final class MyFileHistoryGraph extends FileHistoryGraph {
-
-        @Override
-        public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
-            final List<FileHistoryNode> nodesForKey = this.lookupFile(file);
-            final long targetRevision = getRevision(file);
-            long nearestRevision = Long.MIN_VALUE;
-            FileHistoryNode nearestNode = null;
-            for (final FileHistoryNode node : nodesForKey) {
-                final long nodeRevision = getRevision(node.getFile());
-                if (nodeRevision < targetRevision && nodeRevision > nearestRevision) {
-                    nearestNode = node;
-                    nearestRevision = nodeRevision;
-                }
-            }
-            if (nearestNode != null) {
-                return nearestNode.getType().equals(IFileHistoryNode.Type.DELETED) ? null : nearestNode;
-            } else {
-                return null;
-            }
-        }
-
-        /**
-         * Returns the underlying revision number.
-         *
-         * @param revision The revision.
-         * @return The revision number.
-         */
-        private static long getRevision(final IRevisionedFile revision) {
-            return revision.getRevision().accept(new IRevisionVisitor<Long>() {
-
-                @Override
-                public Long handleLocalRevision(final ILocalRevision revision) {
-                    return Long.MAX_VALUE;
-                }
-
-                @Override
-                public Long handleRepoRevision(final IRepoRevision revision) {
-                    return (Long) revision.getId();
-                }
-
-                @Override
-                public Long handleUnknownRevision(final IUnknownRevision revision) {
-                    return 0L;
-                }
-
-            });
-        }
-
-    }
 
     private static FileHistoryEdge createAlphaNode(
             final IRepository repo,
@@ -210,18 +37,18 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(trunkRev.getPath(), trunkRev.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(aRev.getPath(), aRev.getRevision(), Collections.<IRevision> emptySet());
 
@@ -259,16 +86,16 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
 
-        g.addAdditionOrChange("/trunk/a", new MyRepoRevision(repo, 1L), Collections.<IRevision> emptySet());
+        g.addAdditionOrChange("/trunk/a", new TestRepoRevision(repo, 1L), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
 
         final FileHistoryNode aNode = g.getNodeFor(aRev);
 
@@ -292,13 +119,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInNewDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(trunkRev.getPath(), trunkRev.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(aRev.getPath(), aRev.getRevision(), Collections.<IRevision> emptySet());
@@ -325,13 +152,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInSubsequentRevisions() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile a1Rev =
-                ChangestructureFactory.createFileInRevision("/trunk/a1", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a1", new TestRepoRevision(repo, 1L));
         final IRevisionedFile a2Rev =
-                ChangestructureFactory.createFileInRevision("/trunk/a2", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a2", new TestRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(a1Rev.getPath(), a1Rev.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(a2Rev.getPath(), a2Rev.getRevision(), Collections.<IRevision> emptySet());
@@ -376,21 +203,21 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownNode() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevPrev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(trunkRev.getPath(), trunkRev.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(aRevPrev.getPath(), aRevPrev.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevDel =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
@@ -435,14 +262,14 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfUnknownNode() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevPrev =
                 ChangestructureFactory.createFileInRevision("/trunk/a",
                         ChangestructureFactory.createUnknownRevision(repo));
         final IRevisionedFile aRevDel =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
@@ -466,11 +293,11 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevPrev =
                 ChangestructureFactory.createFileInRevision("/trunk/a", trunkRev.getRevision());
         final IRevisionedFile xRevPrev =
@@ -481,7 +308,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(xRevPrev.getPath(), xRevPrev.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision(aRevPrev.getPath(), trunk2Rev.getRevision());
         final IRevisionedFile xRevDel =
@@ -553,11 +380,11 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownDirectoryWithKnownDeletedNode() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/a", trunkRev.getRevision());
         final IRevisionedFile xRevOrig =
@@ -568,7 +395,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(xRevOrig.getPath(), xRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevPrev =
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), trunk2Rev.getRevision());
         final IRevisionedFile xRevDel =
@@ -577,7 +404,7 @@ public final class FileHistoryGraphTest {
         g.addDeletion(xRevDel.getPath(), xRevDel.getRevision());
 
         final IRevisionedFile trunk3Rev =
-                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new TestRepoRevision(repo, 3L));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision(aRevPrev.getPath(), trunk3Rev.getRevision());
 
@@ -669,11 +496,11 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownDirectoryWithKnownDeletedNode2() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/a", trunkRev.getRevision());
         final IRevisionedFile xRevOrig =
@@ -687,7 +514,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(yRevOrig.getPath(), yRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRev2 =
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), trunk2Rev.getRevision());
         final IRevisionedFile xRevDel =
@@ -698,7 +525,7 @@ public final class FileHistoryGraphTest {
         g.addDeletion(xRevDel.getPath(), xRevDel.getRevision());
 
         final IRevisionedFile trunk3Rev =
-                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new TestRepoRevision(repo, 3L));
         final IRevisionedFile aRev3 =
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), trunk3Rev.getRevision());
         final IRevisionedFile yRevChange =
@@ -708,7 +535,7 @@ public final class FileHistoryGraphTest {
                 Collections.singleton(yRevOrig.getRevision()));
 
         final IRevisionedFile trunk4Rev =
-                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 4L));
+                ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new TestRepoRevision(repo, 4L));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), trunk4Rev.getRevision());
         final IRevisionedFile yRevDel =
@@ -872,21 +699,21 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfKnownFile() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevPrev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(trunkRev.getPath(), trunkRev.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(aRevPrev.getPath(), aRevPrev.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevReplaced =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
         g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
@@ -931,14 +758,14 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfUnknownFile() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevPrev =
                 ChangestructureFactory.createFileInRevision("/trunk/a",
                         ChangestructureFactory.createUnknownRevision(repo));
         final IRevisionedFile aRevReplaced =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
         g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
@@ -962,26 +789,26 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile xRevPrev =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevPrev =
-                ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(trunkRev.getPath(), trunkRev.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(xRevPrev.getPath(), xRevPrev.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(aRevPrev.getPath(), aRevPrev.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final IRevisionedFile xRevReplaced =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevReplaced =
-                ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 2L));
 
         g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAdditionOrChange(aRevReplaced.getPath(), aRevReplaced.getRevision(), Collections.<IRevision> emptySet());
@@ -1048,8 +875,8 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
                 ChangestructureFactory.createFileInRevision("/trunk",
@@ -1062,11 +889,11 @@ public final class FileHistoryGraphTest {
                         ChangestructureFactory.createUnknownRevision(repo));
 
         final IRevisionedFile trunk2Rev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final IRevisionedFile xRevReplaced =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevReplaced =
-                ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 2L));
 
         g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAdditionOrChange(aRevReplaced.getPath(), aRevReplaced.getRevision(), Collections.<IRevision> emptySet());
@@ -1124,13 +951,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionAndDeletionOfSameFileInSubsequentRevisions() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevNew =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevDel =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(aRevNew.getPath(), aRevNew.getRevision(), Collections.<IRevision> emptySet());
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
@@ -1155,21 +982,21 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionAndDeletionOfSameDirectoryInSubsequentRevisions() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevNew =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevNew =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(trunkRevNew.getPath(), trunkRevNew.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(aRevNew.getPath(), aRevNew.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile trunkRevDel =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevDel =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
         g.addDeletion(trunkRevDel.getPath(), trunkRevDel.getRevision());
 
@@ -1214,19 +1041,19 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeOfKnownFile() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(trunkRevOrig.getPath(), trunkRevOrig.getRevision(), Collections.<IRevision> emptySet());
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile aRevChanged =
-                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new TestRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(aRevChanged.getPath(), aRevChanged.getRevision(),
                 Collections.singleton(aRevOrig.getRevision()));
@@ -1275,19 +1102,19 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeOfUnknownFile() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevChanged =
-                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new TestRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(aRevChanged.getPath(), aRevChanged.getRevision(),
                 Collections.singleton(aRevOrig.getRevision()));
 
         final IRevisionedFile trunkRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final IRevisionedFile trunkRevChanged =
                 ChangestructureFactory.createFileInRevision(trunkRevOrig.getPath(), aRevChanged.getRevision());
 
@@ -1332,20 +1159,20 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeOfUnknownFileInKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(xRevOrig.getPath(), xRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevChanged =
-                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new TestRepoRevision(repo, 3L));
 
         g.addAdditionOrChange(aRevChanged.getPath(), aRevChanged.getRevision(),
                 Collections.singleton(aRevOrig.getRevision()));
@@ -1400,13 +1227,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfFile() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevCopy =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
         g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
 
@@ -1451,13 +1278,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyAndChangeOfFile() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevCopy =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
         g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
         g.addAdditionOrChange(aRevCopy.getPath(), aRevCopy.getRevision(),
@@ -1504,26 +1331,26 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfFileWithSourceFromIntermediateRevisions() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile aRevChanged =
-                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new TestRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(aRevChanged.getPath(), aRevChanged.getRevision(),
                 Collections.singleton(aRevOrig.getRevision()));
 
         final IRevisionedFile aRevCopy =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 4L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 4L));
         final IRevisionedFile aRevSource2 =
-                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), new TestRepoRevision(repo, 3L));
         final IRevisionedFile aRevCopy2 =
-                ChangestructureFactory.createFileInRevision("/trunk/c", new MyRepoRevision(repo, 5L));
+                ChangestructureFactory.createFileInRevision("/trunk/c", new TestRepoRevision(repo, 5L));
 
         g.addCopy(aRevChanged.getPath(), aRevCopy.getPath(), aRevChanged.getRevision(), aRevCopy.getRevision());
         g.addCopy(aRevSource2.getPath(), aRevCopy2.getPath(), aRevSource2.getRevision(), aRevCopy2.getRevision());
@@ -1580,15 +1407,15 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfFile() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevDel =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevCopy =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
         g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
@@ -1620,10 +1447,10 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aEdgeDel), aDelNode.getAncestors());
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final FileHistoryNode trunkNode = g.getNodeFor(trunkRev);
         final IRevisionedFile trunkRev2 =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final FileHistoryNode trunkNode2 = g.getNodeFor(trunkRev2);
 
         assertEquals(Collections.singletonList(aOrigNode), trunkNode.getChildren());
@@ -1641,15 +1468,15 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfFile2() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevDel =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevCopy =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
         g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
@@ -1679,10 +1506,10 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(createAlphaNode(repo, g, aDelNode)), aDelNode.getAncestors());
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         final FileHistoryNode trunkNode = g.getNodeFor(trunkRev);
         final IRevisionedFile trunkRev2 =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
         final FileHistoryNode trunkNode2 = g.getNodeFor(trunkRev2);
 
         assertEquals(Collections.singletonList(aOrigNode), trunkNode.getChildren());
@@ -1698,18 +1525,18 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile xRev =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
@@ -1753,25 +1580,25 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfDirectoryWithDeletedNodes() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile xRev =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), xRev.getRevision());
 
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 3L));
 
         g.addCopy(xRev.getPath(), yRev.getPath(), xRev.getRevision(), yRev.getRevision());
 
@@ -1817,16 +1644,16 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInCopiedKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(xRevOrig.getPath(), xRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
 
@@ -1864,13 +1691,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInCopiedUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
 
@@ -1907,11 +1734,11 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionInCopiedKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
@@ -1919,7 +1746,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
@@ -1964,16 +1791,16 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionInCopiedUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
@@ -2018,11 +1845,11 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementInCopiedKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
         final IRevisionedFile bRevOrig =
@@ -2033,7 +1860,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(bRevOrig.getPath(), bRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
         final IRevisionedFile bRevReplaced =
@@ -2104,18 +1931,18 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementInCopiedUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
         final IRevisionedFile bRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/b", xRevOrig.getRevision());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
         final IRevisionedFile bRevReplaced =
@@ -2186,11 +2013,11 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeInCopiedKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
@@ -2198,7 +2025,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevChanged =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
@@ -2244,16 +2071,16 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeInCopiedUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevChanged =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
@@ -2299,21 +2126,21 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeInCopiedUnknownDirectory2() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRevPrevChange =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
         final IRevisionedFile yRevChanged =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 3L));
         final IRevisionedFile aRevChanged =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRevChanged.getRevision());
 
@@ -2376,13 +2203,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyInCopiedKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile bRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
@@ -2391,7 +2218,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(bRevOrig.getPath(), bRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
         final IRevisionedFile bRev =
@@ -2457,16 +2284,16 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyInCopiedUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile bRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 1L));
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile bRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
@@ -2511,21 +2338,21 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyInCopiedUnknownDirectory2() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile bRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 1L));
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
 
         final IRevisionedFile yRev2 =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 3L));
         final IRevisionedFile bRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y/b", new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision("/trunk/y/b", new TestRepoRevision(repo, 3L));
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
         g.addCopy(bRevOrig.getPath(), bRev.getPath(), bRevOrig.getRevision(), bRev.getRevision());
@@ -2574,13 +2401,13 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyAndChangeInCopiedKnownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile bRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 1L));
         final IRevisionedFile aRevOrig =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", xRevOrig.getRevision());
 
@@ -2589,7 +2416,7 @@ public final class FileHistoryGraphTest {
         g.addAdditionOrChange(bRevOrig.getPath(), bRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile aRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
         final IRevisionedFile bRev =
@@ -2656,16 +2483,16 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyAndChangeInCopiedUnknownDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile bRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 1L));
 
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile bRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
@@ -2711,18 +2538,18 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfDirectory() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile xRev =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile xRevDel =
                 ChangestructureFactory.createFileInRevision(xRev.getPath(), yRev.getRevision());
         final IRevisionedFile aRevDel =
@@ -2792,18 +2619,18 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfDirectory2() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
-                ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 1L));
 
         g.addAdditionOrChange(aRevOrig.getPath(), aRevOrig.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile xRev =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x", new TestRepoRevision(repo, 1L));
         final IRevisionedFile yRev =
-                ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
         final IRevisionedFile xRevDel =
                 ChangestructureFactory.createFileInRevision(xRev.getPath(), yRev.getRevision());
         final IRevisionedFile aRevDel =
@@ -2873,19 +2700,19 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testContains() {
-        final IRepository repo = new MyRepository("123", new File("/some/repo"));
-        final FileHistoryGraph g = new MyFileHistoryGraph();
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
         g.addAdditionOrChange(trunkRev.getPath(), trunkRev.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile aRev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
         g.addAdditionOrChange(aRev.getPath(), aRev.getRevision(), Collections.<IRevision> emptySet());
 
         final IRevisionedFile bRev =
-                ChangestructureFactory.createFileInRevision("/trunk/x/b", new MyRepoRevision(repo, 3L));
+                ChangestructureFactory.createFileInRevision("/trunk/x/b", new TestRepoRevision(repo, 3L));
         g.addAdditionOrChange(bRev.getPath(), bRev.getRevision(), Collections.<IRevision> emptySet());
 
         assertTrue(g.contains("/trunk", repo));
@@ -2898,6 +2725,6 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testToString() {
-        assertEquals("{}", new MyFileHistoryGraph().toString());
+        assertEquals("{}", new TestFileHistoryGraph().toString());
     }
 }
