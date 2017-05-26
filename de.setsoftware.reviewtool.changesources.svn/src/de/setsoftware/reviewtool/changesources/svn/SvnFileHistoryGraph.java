@@ -37,19 +37,6 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
         this.addAdditionOrChange(path, revision, Collections.<IRevision>singleton(prevRevision));
     }
 
-    /**
-     * Adds the information that the file with the given path was deleted with the commit of the given revision.
-     * If an ancestor node exists, the deletion node of type {@link NonExistingFileHistoryNode} is linked to it,
-     * possibly creating an intermediate {@link ExistingFileHistoryNode} just before the deletion. This supports
-     * finding the last revision of a file before being deleted.
-     */
-    public void addDeletion(
-            final String path,
-            final IRevision prevRevision,
-            final IRevision revision) {
-        this.addDeletion(path, revision, Collections.<IRevision>singleton(prevRevision));
-    }
-
     @Override
     public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
         final List<FileHistoryNode> nodesForKey = this.lookupFile(file);

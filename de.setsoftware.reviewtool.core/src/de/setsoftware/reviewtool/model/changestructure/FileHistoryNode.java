@@ -126,18 +126,6 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     /**
-     * Checks whether passed node is a descendant {@link FileHistoryNode} of this node.
-     */
-    public boolean hasDescendant(final FileHistoryNode descendant) {
-        for (final FileHistoryEdge descendantEdge : this.descendants) {
-            if (descendantEdge.getDescendant().equals(descendant)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
      * Makes this node a deleted node. Requires that the node is a {@link Type#NORMAL} node.
      */
     void makeDeleted() {
@@ -174,13 +162,6 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     public void addChild(final FileHistoryNode child) {
         this.children.add(child);
         child.setParent(this);
-    }
-
-    /**
-     * Returns <code>true</code> if this node has a parent {@link FileHistoryNode}.
-     */
-    public boolean hasParent() {
-        return this.parent != null;
     }
 
     /**

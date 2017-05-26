@@ -88,11 +88,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
             final String path = e.getKey();
             if (e.getValue().isDeleted()) {
                 if (revision.isVisible() || historyGraph.contains(path, revision.getRepository())) {
-                    historyGraph.addDeletion(
-                            path,
-                            revision.toRevision(),
-                            Collections.<IRevision>singleton(toRevision(e.getValue().getAncestorRevision(),
-                                    revision.getRepository())));
+                    historyGraph.addDeletion(path, revision.toRevision());
                     isRelevant = true;
                 }
             } else {

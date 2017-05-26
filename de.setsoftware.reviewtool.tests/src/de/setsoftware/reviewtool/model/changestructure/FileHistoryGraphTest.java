@@ -392,7 +392,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
 
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevPrev.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aNode = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNode.getFile());
@@ -439,11 +439,12 @@ public final class FileHistoryGraphTest {
         final FileHistoryGraph g = new MyFileHistoryGraph();
 
         final IRevisionedFile aRevPrev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a",
+                        ChangestructureFactory.createUnknownRevision(repo));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
 
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevPrev.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aNodeDel = g.getNodeFor(aRevDel);
         assertEquals(aRevDel, aNodeDel.getFile());
@@ -455,7 +456,7 @@ public final class FileHistoryGraphTest {
         assertEquals(aRevPrev, aNodePrev.getFile());
         assertEquals(IFileHistoryNode.Type.NORMAL, aNodePrev.getType());
         assertEquals(false, aNodePrev.isCopyTarget());
-        assertEquals(Collections.singleton(createAlphaNode(repo, g, aNodePrev)), aNodePrev.getAncestors());
+        assertEquals(Collections.emptySet(), aNodePrev.getAncestors());
 
         final FileHistoryEdge aEdge = new FileHistoryEdge(aNodePrev, aNodeDel, IFileHistoryEdge.Type.NORMAL,
                 new FileDiff(aRevPrev, aRevDel));
@@ -486,7 +487,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile xRevDel =
                 ChangestructureFactory.createFileInRevision(xRevPrev.getPath(), trunk2Rev.getRevision());
 
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevPrev.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aNode = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNode.getFile());
@@ -573,14 +574,14 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile xRevDel =
                 ChangestructureFactory.createFileInRevision(xRevOrig.getPath(), trunk2Rev.getRevision());
 
-        g.addDeletion(xRevDel.getPath(), xRevDel.getRevision(), Collections.singleton(xRevOrig.getRevision()));
+        g.addDeletion(xRevDel.getPath(), xRevDel.getRevision());
 
         final IRevisionedFile trunk3Rev =
                 ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 3L));
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision(aRevPrev.getPath(), trunk3Rev.getRevision());
 
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevPrev.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aNode.getFile());
@@ -692,7 +693,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile xRevDel =
                 ChangestructureFactory.createFileInRevision(xRevOrig.getPath(), trunk2Rev.getRevision());
 
-        g.addDeletion(xRevDel.getPath(), xRevDel.getRevision(), Collections.singleton(xRevOrig.getRevision()));
+        g.addDeletion(xRevDel.getPath(), xRevDel.getRevision());
 
         final IRevisionedFile trunk3Rev =
                 ChangestructureFactory.createFileInRevision(trunkRev.getPath(), new MyRepoRevision(repo, 3L));
@@ -711,7 +712,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile yRevDel =
                 ChangestructureFactory.createFileInRevision(yRevOrig.getPath(), trunk4Rev.getRevision());
 
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRev3.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         // revision 1
         final FileHistoryNode aNode = g.getNodeFor(aRevOrig);
@@ -874,8 +875,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
 
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision(),
-                Collections.singleton(aRevPrev.getRevision()));
+        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final FileHistoryNode aNode = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNode.getFile());
@@ -922,18 +922,18 @@ public final class FileHistoryGraphTest {
         final FileHistoryGraph g = new MyFileHistoryGraph();
 
         final IRevisionedFile aRevPrev =
-                ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/a",
+                        ChangestructureFactory.createUnknownRevision(repo));
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
 
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision(),
-                Collections.singleton(aRevPrev.getRevision()));
+        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final FileHistoryNode aNodePrev = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNodePrev.getFile());
         assertEquals(IFileHistoryNode.Type.NORMAL, aNodePrev.getType());
         assertEquals(false, aNodePrev.isCopyTarget());
-        assertEquals(Collections.singleton(createAlphaNode(repo, g, aNodePrev)), aNodePrev.getAncestors());
+        assertEquals(Collections.emptySet(), aNodePrev.getAncestors());
 
         final FileHistoryNode aNodeReplaced = g.getNodeFor(aRevReplaced);
         assertEquals(aRevReplaced, aNodeReplaced.getFile());
@@ -970,8 +970,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 2L));
 
-        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision(),
-                Collections.singleton(xRevPrev.getRevision()));
+        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAdditionOrChange(aRevReplaced.getPath(), aRevReplaced.getRevision(), Collections.<IRevision> emptySet());
 
         final FileHistoryNode aNode = g.getNodeFor(aRevPrev);
@@ -1040,9 +1039,14 @@ public final class FileHistoryGraphTest {
         final FileHistoryGraph g = new MyFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
-                ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk",
+                        ChangestructureFactory.createUnknownRevision(repo));
         final IRevisionedFile xRevPrev =
-                ChangestructureFactory.createFileInRevision("/trunk/x", new MyRepoRevision(repo, 1L));
+                ChangestructureFactory.createFileInRevision("/trunk/x",
+                        ChangestructureFactory.createUnknownRevision(repo));
+        final IRevisionedFile aRevPrev =
+                ChangestructureFactory.createFileInRevision("/trunk/x/a",
+                        ChangestructureFactory.createUnknownRevision(repo));
 
         final IRevisionedFile trunk2Rev =
                 ChangestructureFactory.createFileInRevision("/trunk", new MyRepoRevision(repo, 2L));
@@ -1051,8 +1055,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", new MyRepoRevision(repo, 2L));
 
-        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision(),
-                Collections.singleton(xRevPrev.getRevision()));
+        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAdditionOrChange(aRevReplaced.getPath(), aRevReplaced.getRevision(), Collections.<IRevision> emptySet());
 
         final FileHistoryNode aNodeReplaced = g.getNodeFor(aRevReplaced);
@@ -1062,12 +1065,19 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeReplaced.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeReplaced.getDescendants());
 
+        final FileHistoryNode aOldNode = g.getNodeFor(aRevPrev);
+        assertEquals(aRevPrev, aOldNode.getFile());
+        assertEquals(IFileHistoryNode.Type.NORMAL, aOldNode.getType());
+        assertEquals(false, aOldNode.isCopyTarget());
+        assertEquals(Collections.emptySet(), aOldNode.getAncestors());
+        assertEquals(Collections.emptyList(), aOldNode.getChildren());
+
         final FileHistoryNode xOldNode = g.getNodeFor(xRevPrev);
         assertEquals(xRevPrev, xOldNode.getFile());
         assertEquals(IFileHistoryNode.Type.NORMAL, xOldNode.getType());
         assertEquals(false, xOldNode.isCopyTarget());
-        assertEquals(Collections.singleton(createAlphaNode(repo, g, xOldNode)), xOldNode.getAncestors());
-        assertEquals(Collections.emptyList(), xOldNode.getChildren());
+        assertEquals(Collections.emptySet(), xOldNode.getAncestors());
+        assertEquals(Collections.singletonList(aOldNode), xOldNode.getChildren());
 
         final FileHistoryNode xNewNode = g.getNodeFor(xRevReplaced);
         assertEquals(xRevReplaced, xNewNode.getFile());
@@ -1081,7 +1091,7 @@ public final class FileHistoryGraphTest {
         assertEquals(trunkRev, trunkNode.getFile());
         assertEquals(IFileHistoryNode.Type.NORMAL, trunkNode.getType());
         assertEquals(false, trunkNode.isCopyTarget());
-        assertEquals(Collections.singleton(createAlphaNode(repo, g, trunkNode)), trunkNode.getAncestors());
+        assertEquals(Collections.emptySet(), trunkNode.getAncestors());
         assertEquals(Collections.singletonList(xOldNode), trunkNode.getChildren());
         assertEquals(trunkNode, xOldNode.getParent());
 
@@ -1110,7 +1120,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
 
         g.addAdditionOrChange(aRevNew.getPath(), aRevNew.getRevision(), Collections.<IRevision> emptySet());
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevNew.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aNode = g.getNodeFor(aRevNew);
         assertEquals(aRevNew, aNode.getFile());
@@ -1148,8 +1158,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new MyRepoRevision(repo, 2L));
 
-        g.addDeletion(trunkRevDel.getPath(), trunkRevDel.getRevision(),
-                Collections.singleton(trunkRevNew.getRevision()));
+        g.addDeletion(trunkRevDel.getPath(), trunkRevDel.getRevision());
 
         final FileHistoryNode aNode = g.getNodeFor(aRevNew);
         assertEquals(aRevNew, aNode.getFile());
@@ -1574,7 +1583,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/b", new MyRepoRevision(repo, 2L));
 
         g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevOrig.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1694,7 +1703,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), xRev.getRevision());
 
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevOrig.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final IRevisionedFile yRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y", new MyRepoRevision(repo, 3L));
@@ -1850,7 +1859,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevOrig.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1904,7 +1913,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision(), Collections.singleton(aRevOrig.getRevision()));
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final FileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1966,10 +1975,8 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision(),
-                Collections.singleton(aRevOrig.getRevision()));
+        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
         g.addReplacement(bRevReplaced.getPath(), bRevReplaced.getRevision(),
-                Collections.singleton(bRevOrig.getRevision()),
                 bRevOrig.getPath(), bRevOrig.getRevision());
 
         final FileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2050,10 +2057,8 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision(),
-                Collections.singleton(aRevOrig.getRevision()));
+        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
         g.addReplacement(bRevReplaced.getPath(), bRevReplaced.getRevision(),
-                Collections.singleton(bRevOrig.getRevision()),
                 bRevOrig.getPath(), bRevOrig.getRevision());
 
         final FileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2521,7 +2526,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
         g.addCopy(xRev.getPath(), yRev.getPath(), xRev.getRevision(), yRev.getRevision());
-        g.addDeletion(xRevDel.getPath(), xRevDel.getRevision(), Collections.singleton(xRev.getRevision()));
+        g.addDeletion(xRevDel.getPath(), xRevDel.getRevision());
 
         final FileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());

@@ -114,16 +114,16 @@ public class SvnFileHistoryGraphTest {
     public void testDeletion() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
-        g.addDeletion("a", rev(11), rev(12));
+        g.addDeletion("a", rev(12));
         assertEquals(
-                Arrays.asList(file("a", 11)),
+                Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1)));
     }
 
     @Test
     public void testDeletionOfUnknown() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addDeletion("a", rev(11), rev(12));
+        g.addDeletion("a", rev(12));
         assertEquals(
                 Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1)));
@@ -134,7 +134,7 @@ public class SvnFileHistoryGraphTest {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
         g.addCopy("a", "b", rev(5), rev(6));
-        g.addDeletion("a", rev(5), rev(6));
+        g.addDeletion("a", rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
                 g.getLatestFiles(file("a", 1)));
@@ -150,7 +150,7 @@ public class SvnFileHistoryGraphTest {
     public void testMoveOtherWay() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
-        g.addDeletion("a", rev(5), rev(6));
+        g.addDeletion("a", rev(6));
         g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
@@ -168,7 +168,7 @@ public class SvnFileHistoryGraphTest {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
         g.addCopy("a", "b", rev(5), rev(6));
-        g.addDeletion("a", rev(5), rev(6));
+        g.addDeletion("a", rev(6));
         g.addCopy("a", "c", rev(5), rev(6));
         g.addCopy("a", "d", rev(5), rev(6));
         assertEquals(
@@ -192,11 +192,11 @@ public class SvnFileHistoryGraphTest {
     public void testMoveMultipleTimes() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
-        g.addDeletion("a", rev(10), rev(11));
+        g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
-        g.addDeletion("b", rev(20), rev(21));
+        g.addDeletion("b", rev(21));
         g.addCopy("b", "c", rev(20), rev(21));
-        g.addDeletion("c", rev(30), rev(31));
+        g.addDeletion("c", rev(31));
         g.addCopy("c", "d", rev(30), rev(31));
 
         assertEquals(
@@ -214,30 +214,30 @@ public class SvnFileHistoryGraphTest {
     public void testMoveAndDeleteAfterwards() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
-        g.addDeletion("a", rev(10), rev(11));
+        g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
-        g.addDeletion("b", rev(20), rev(21));
+        g.addDeletion("b", rev(21));
 
         assertEquals(
-                Arrays.asList(file("b", 20)),
+                Arrays.asList(file("b", 11)),
                 g.getLatestFiles(file("a", 1)));
         assertEquals(
-                Arrays.asList(file("b", 20)),
+                Arrays.asList(file("b", 11)),
                 g.getLatestFiles(file("a", 10)));
     }
 
     @Test
     public void testMoveAndDeleteAfterwardsStartWithDeletion() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addDeletion("a", rev(10), rev(11));
+        g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
-        g.addDeletion("b", rev(20), rev(21));
+        g.addDeletion("b", rev(21));
 
         assertEquals(
                 Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1)));
         assertEquals(
-                Arrays.asList(file("b", 20)),
+                Arrays.asList(file("b", 11)),
                 g.getLatestFiles(file("a", 10)));
     }
 
@@ -246,13 +246,13 @@ public class SvnFileHistoryGraphTest {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
         g.addChange("a", rev(5), rev(6));
-        g.addDeletion("a", rev(19), rev(20));
+        g.addDeletion("a", rev(20));
         g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
                 Arrays.asList(file("b", 23)),
                 g.getLatestFiles(file("a", 1)));
         assertEquals(
-                Arrays.asList(file("a", 19)),
+                Arrays.asList(file("a", 6)),
                 g.getLatestFiles(file("a", 6)));
         assertEquals(
                 Arrays.asList(file("b", 23)),
@@ -265,7 +265,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopyWithRevisionSkipStartWithDeletion() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addDeletion("a", rev(19), rev(20));
+        g.addDeletion("a", rev(20));
         g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
                 Arrays.asList(file("a", 1)),
@@ -289,14 +289,14 @@ public class SvnFileHistoryGraphTest {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         g.addChange("a", rev(0), rev(1));
         g.addChange("a", rev(5), rev(6));
-        g.addDeletion("a", rev(19), rev(20));
+        g.addDeletion("a", rev(20));
         g.addCopy("a", "b", rev(5), rev(23));
         g.addCopy("b", "c", rev(23), rev(24));
         assertEquals(
                 Arrays.asList(file("b", 23), file("c", 24)),
                 g.getLatestFiles(file("a", 1)));
         assertEquals(
-                Arrays.asList(file("a", 19)),
+                Arrays.asList(file("a", 6)),
                 g.getLatestFiles(file("a", 6)));
         assertEquals(
                 Arrays.asList(file("b", 23), file("c", 24)),
@@ -313,17 +313,17 @@ public class SvnFileHistoryGraphTest {
         g.addChange("a/x", rev(1), rev(2));
         g.addCopy("a", "b", rev(10), rev(11));
         g.addChange("a/x", rev(10), rev(11));
-        g.addDeletion("a", rev(12), rev(13));
-        g.addDeletion("b/x", rev(20), rev(21));
+        g.addDeletion("a", rev(13));
+        g.addDeletion("b/x", rev(21));
 
         assertEquals(
-                Arrays.asList(file("a/x", 12)),
+                Arrays.asList(file("a/x", 11)),
                 g.getLatestFiles(file("a/x", 11)));
         assertEquals(
                 Arrays.asList(file("a/x", 13)),
                 g.getLatestFiles(file("a/x", 13))); // a/x@13 does not exist
         assertEquals(
-                Arrays.asList(file("a/x", 12), file("b/x", 20)),
+                Arrays.asList(file("a/x", 11), file("b/x", 11)),
                 g.getLatestFiles(file("a/x", 2)));
     }
 }
