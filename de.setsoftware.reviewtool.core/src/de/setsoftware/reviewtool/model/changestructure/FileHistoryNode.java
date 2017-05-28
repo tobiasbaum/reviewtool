@@ -19,6 +19,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
  */
 public final class FileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 
+    private final FileHistoryGraph graph;
     private final IRevisionedFile file;
     private final Set<FileHistoryEdge> ancestors;
     private final Set<FileHistoryEdge> descendants;
@@ -31,12 +32,18 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
      *
      * @param file The {@link IRevisionedFile} to wrap.
      */
-    public FileHistoryNode(final IRevisionedFile file, final Type type) {
+    public FileHistoryNode(final FileHistoryGraph graph, final IRevisionedFile file, final Type type) {
+        this.graph = graph;
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
         this.children = new ArrayList<>();
         this.type = type;
+    }
+
+    @Override
+    public FileHistoryGraph getGraph() {
+        return this.graph;
     }
 
     @Override
@@ -125,7 +132,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
      * Adds a descendant {@link FileHistoryNode} of this node.
      */
     void addDescendant(final FileHistoryNode descendant, final IFileHistoryEdge.Type type, final IFileDiff diff) {
-        final FileHistoryEdge edge = new FileHistoryEdge(this, descendant, type, diff);
+        final FileHistoryEdge edge = new FileHistoryEdge(this.graph, this, descendant, type, diff);
         this.descendants.add(edge);
         descendant.addAncestor(edge);
     }

@@ -298,7 +298,8 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final boolean confirmed) {
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
-            node = new FileHistoryNode(file,
+            node = new FileHistoryNode(this,
+                    file,
                     confirmed ? IFileHistoryNode.Type.NORMAL : IFileHistoryNode.Type.UNCONFIRMED);
             this.index.put(this.createKey(file), node);
 

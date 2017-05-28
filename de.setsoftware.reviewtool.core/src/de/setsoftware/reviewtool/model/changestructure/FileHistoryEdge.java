@@ -8,6 +8,7 @@ import de.setsoftware.reviewtool.model.api.IMutableFileHistoryEdge;
  */
 public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IMutableFileHistoryEdge {
 
+    private final FileHistoryGraph graph;
     private final FileHistoryNode ancestor;
     private final FileHistoryNode descendant;
     private Type type;
@@ -21,14 +22,21 @@ public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IM
      * @param diff The associated {@link IFileDiff}. It can be changed later using {@link #setDiff(IFileDiff)}.
      */
     public FileHistoryEdge(
+            final FileHistoryGraph graph,
             final FileHistoryNode ancestor,
             final FileHistoryNode descendant,
             final Type type,
             final IFileDiff diff) {
+        this.graph = graph;
         this.ancestor = ancestor;
         this.descendant = descendant;
         this.type = type;
         this.diff = diff;
+    }
+
+    @Override
+    public FileHistoryGraph getGraph() {
+        return this.graph;
     }
 
     @Override

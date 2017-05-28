@@ -35,6 +35,11 @@ public interface IFileHistoryNode {
     }
 
     /**
+     * Returns the {@link IFileHistoryGraph} this node belongs to.
+     */
+    public abstract IFileHistoryGraph getGraph();
+
+    /**
      * Returns the {@link IRevisionedFile} wrapped by this node.
      */
     public abstract IRevisionedFile getFile();
@@ -64,14 +69,14 @@ public interface IFileHistoryNode {
     public abstract boolean isCopyTarget();
 
     /**
-     * Returns the set of outgoing edges pointing to the nearest ancestor {@link IFileHistoryNode}s.
+     * Returns the set of incoming edges originating from the nearest ancestor {@link IFileHistoryNode}s.
      * Note that the nodes returned by this operation may change over time when intermediate
      * {@link IFileHistoryNode}s are created due to recorded copy operations.
      */
     public abstract Set<? extends IFileHistoryEdge> getAncestors();
 
     /**
-     * Returns the set of incoming edges originating from the nearest descendant {@link IFileHistoryNode}s.
+     * Returns the set of outgoing edges pointing to the the nearest descendant {@link IFileHistoryNode}s.
      * Note that the nodes returned by this operation may change over time when intermediate
      * {@link IFileHistoryNode}s are created due to recorded copy operations.
      */

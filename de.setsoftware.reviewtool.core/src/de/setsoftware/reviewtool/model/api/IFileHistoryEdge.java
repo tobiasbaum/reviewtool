@@ -26,6 +26,11 @@ public interface IFileHistoryEdge {
     }
 
     /**
+     * Returns the {@link IFileHistoryGraph} this edge belongs to.
+     */
+    public abstract IFileHistoryGraph getGraph();
+
+    /**
      * Returns the ancestor {@link IFileHistoryNode} of this edge.
      */
     public abstract IFileHistoryNode getAncestor();

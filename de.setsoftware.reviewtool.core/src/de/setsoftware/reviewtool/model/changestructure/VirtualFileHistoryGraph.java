@@ -73,6 +73,11 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         }
 
         @Override
+        public VirtualFileHistoryGraph getGraph() {
+            return VirtualFileHistoryGraph.this;
+        }
+
+        @Override
         public IRevisionedFile getFile() {
             return this.file;
         }
@@ -201,6 +206,11 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
             this.descendant = descendant;
             this.type = type;
             this.diff = diff;
+        }
+
+        @Override
+        public VirtualFileHistoryGraph getGraph() {
+            return VirtualFileHistoryGraph.this;
         }
 
         @Override

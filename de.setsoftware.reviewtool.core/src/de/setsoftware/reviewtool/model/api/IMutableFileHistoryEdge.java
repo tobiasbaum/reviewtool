@@ -9,6 +9,9 @@ import de.setsoftware.reviewtool.model.changestructure.FileDiff;
 public interface IMutableFileHistoryEdge extends IFileHistoryEdge {
 
     @Override
+    public abstract IMutableFileHistoryGraph getGraph();
+
+    @Override
     public abstract IMutableFileHistoryNode getAncestor();
 
     @Override
