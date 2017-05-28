@@ -174,7 +174,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     /**
      * An edge in a {@link VirtualFileHistoryGraph}.
      */
-    private final class VirtualFileHistoryEdge implements IFileHistoryEdge {
+    private final class VirtualFileHistoryEdge extends AbstractFileHistoryEdge {
 
         private final IFileHistoryNode ancestor;
         private final IFileHistoryNode descendant;

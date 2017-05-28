@@ -6,7 +6,7 @@ import de.setsoftware.reviewtool.model.api.IMutableFileHistoryEdge;
 /**
  * Implementation of a {@link IMutableFileHistoryEdge}.
  */
-public final class FileHistoryEdge implements IMutableFileHistoryEdge {
+public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IMutableFileHistoryEdge {
 
     private final FileHistoryNode ancestor;
     private final FileHistoryNode descendant;
@@ -79,10 +79,5 @@ public final class FileHistoryEdge implements IMutableFileHistoryEdge {
     @Override
     public int hashCode() {
         return this.ancestor.hashCode() ^ this.descendant.hashCode();
-    }
-
-    @Override
-    public String toString() {
-        return this.ancestor.toString() + " ==(" + this.type.toString() + ")=> " + this.descendant.toString();
     }
 }
