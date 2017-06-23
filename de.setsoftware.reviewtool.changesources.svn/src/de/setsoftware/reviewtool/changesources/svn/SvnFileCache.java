@@ -7,7 +7,6 @@ import java.util.Map;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.io.SVNRepository;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
 
 /**
  * Represents a cache for file contents for a single SVN repository.
@@ -47,18 +46,15 @@ public class SvnFileCache {
         }
     }
 
-    private final SVNClientManager mgr;
-    private final SvnRepo repoUrl;
+    private final SVNRepository repo;
     private final Map<CachedFile, byte[]> fileContents;
 
     /**
      * Constructor.
-     * @param mgr The {@link SVNClientManager} to use.
-     * @param repoUrl The {@link SvnRepo}.
+     * @param repo The {@link SVNRepository}.
      */
-    public SvnFileCache(final SVNClientManager mgr, final SvnRepo repoUrl) {
-        this.mgr = mgr;
-        this.repoUrl = repoUrl;
+    public SvnFileCache(final SVNRepository repo) {
+        this.repo = repo;
         this.fileContents = new HashMap<>();
     }
 
@@ -73,7 +69,7 @@ public class SvnFileCache {
         final CachedFile entry = new CachedFile(path, revision);
         byte[] contents = this.fileContents.get(entry);
         if (contents == null) {
-            contents = this.loadFile(this.repoUrl, path, revision);
+            contents = this.loadFile(this.repo, path, revision);
             this.fileContents.put(entry, contents);
         }
         return contents;
@@ -87,8 +83,7 @@ public class SvnFileCache {
      * @return The file contents as a byte array.
      * @throws SVNException if some error occurs.
      */
-    private byte[] loadFile(final SvnRepo repoUrl, final String path, final long revision) throws SVNException {
-        final SVNRepository repo = this.mgr.getRepositoryPool().createRepository(repoUrl.getRemoteUrl(), true);
+    private byte[] loadFile(final SVNRepository repo, final String path, final long revision) throws SVNException {
         final ByteArrayOutputStream contents = new ByteArrayOutputStream();
         if (repo.checkPath(path, revision) != SVNNodeKind.FILE) {
             return new byte[0];
