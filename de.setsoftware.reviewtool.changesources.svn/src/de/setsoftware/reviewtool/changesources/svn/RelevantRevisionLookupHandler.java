@@ -73,39 +73,65 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
         return ret;
     }
 
+    /**
+     * @return {@code true} if the path is relevant.
+     */
+    private static boolean isPathRelevant(
+            final String path,
+            final ISvnRevision revision,
+            final IMutableFileHistoryGraph historyGraph) {
+        return revision.isVisible() || historyGraph.contains(path, revision.getRepository());
+    }
+
+    /**
+     * Processes a single repository revision by translating it into a file history graph operation.
+     *
+     * @param revision The revision to process,
+     * @param historyGraph The file history graph to operate on.
+     * @return {@code true} if the revision contained at least one relevant path, else {@code false}.
+     */
     public static boolean processRevision(final ISvnRevision revision, final IMutableFileHistoryGraph historyGraph) {
         boolean isRelevant = false;
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String path = e.getKey();
-            if (e.getValue().isDeleted()) {
-                if (revision.isVisible() || historyGraph.contains(path, revision.getRepository())) {
-                    historyGraph.addDeletion(path, revision.toRevision());
-                    isRelevant = true;
-                }
+            if (isPathRelevant(path, revision, historyGraph)) {
+                isRelevant = true;
             } else {
-                final String copyPath = e.getValue().getCopyPath();
-                if (copyPath != null
-                        && (revision.isVisible() || historyGraph.contains(copyPath, revision.getRepository()))) {
+                continue;
+            }
+
+            final CachedLogEntryPath pathInfo = e.getValue();
+            final String copyPath = pathInfo.getCopyPath();
+            if (pathInfo.isDeleted()) {
+                historyGraph.addDeletion(path, revision.toRevision());
+            } else if (pathInfo.isReplaced()) {
+                if (copyPath != null) {
+                    historyGraph.addReplacement(
+                            path,
+                            revision.toRevision(),
+                            copyPath,
+                            ChangestructureFactory.createRepoRevision(pathInfo.getCopyRevision(),
+                                    revision.getRepository()));
+                } else {
+                    historyGraph.addReplacement(path, revision.toRevision());
+                }
+            } else if (pathInfo.isNew()) {
+                if (copyPath != null) {
                     historyGraph.addCopy(
                             copyPath,
                             path,
-                            ChangestructureFactory.createRepoRevision(e.getValue().getAncestorRevision(),
+                            ChangestructureFactory.createRepoRevision(pathInfo.getCopyRevision(),
                                     revision.getRepository()),
                             revision.toRevision());
-                    isRelevant = true;
-                } else if (e.getValue().isFile()
-                        && (revision.isVisible() || historyGraph.contains(path, revision.getRepository()))) {
-                    if (e.getValue().isNew()) {
-                        historyGraph.addAddition(path, revision.toRevision());
-                    } else {
-                        historyGraph.addChange(path, revision.toRevision(),
-                                Collections.<IRevision>singleton(ChangestructureFactory.createRepoRevision(
-                                        e.getValue().getAncestorRevision(),
-                                        revision.getRepository())
-                                ));
-                    }
-                    isRelevant = true;
+                } else {
+                    historyGraph.addAddition(path, revision.toRevision());
                 }
+            } else {
+                historyGraph.addChange(path, revision.toRevision(),
+                        Collections.<IRevision>singleton(ChangestructureFactory.createRepoRevision(
+                                e.getValue().getAncestorRevision(),
+                                revision.getRepository())
+                        ));
             }
         }
         return isRelevant;
