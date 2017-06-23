@@ -40,7 +40,7 @@ public class SvnRepo extends AbstractRepository {
         this.remoteUrl = rootUrl;
         this.relPath = relPath + '/';
         this.checkoutPrefix = checkoutPrefix;
-        this.svnRepo = mgr.getRepositoryPool().createRepository(rootUrl, false);
+        this.svnRepo = mgr.createRepository(rootUrl, false);
         this.fileCache = new SvnFileCache(this.svnRepo);
     }
 
