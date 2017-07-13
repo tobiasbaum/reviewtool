@@ -24,4 +24,20 @@ public class PositionRequest<T> {
         return this.targetPosition;
     }
 
+    @Override
+    public int hashCode() {
+        return this.matchSet.hashCode() + this.distinguishedPart.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof PositionRequest)) {
+            return false;
+        }
+        final PositionRequest<?> other = (PositionRequest<?>) o;
+        return other.matchSet.equals(this.matchSet)
+            && other.distinguishedPart.equals(this.distinguishedPart)
+            && other.targetPosition == this.targetPosition;
+    }
+
 }

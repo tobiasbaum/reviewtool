@@ -72,8 +72,9 @@ public class TourCalculator<T> {
             }
 
             //determine a minimal subset that still allows the match to happen
-            boolean foundUnnecessaryFold = false;
+            boolean foundUnnecessaryFold;
             do {
+                foundUnnecessaryFold = false;
                 for (final Integer index : activeFolds.toArray(new Integer[activeFolds.size()])) {
                     //try without a fold. if it still matches, this fold is unnecessary
                     activeFolds.remove(index);

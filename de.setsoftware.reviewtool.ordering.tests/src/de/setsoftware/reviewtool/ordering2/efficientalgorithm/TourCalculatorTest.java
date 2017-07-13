@@ -4,7 +4,9 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -137,6 +139,53 @@ public class TourCalculatorTest {
         assertEquals(
                 Arrays.asList("Buch", "Maus", "Stern", "Birne", "Strasse", "Baum", "Homer"),
                 actual.getTour());
+    }
+
+    private static void doTestWithGeneratedData(Random r) {
+        final int size = r.nextInt(30) + 3;
+        final int matches = r.nextInt(2 * size) + 1;
+        doTestWithGeneratedData(r, size, matches);
+    }
+
+    private static void doTestWithGeneratedData(Random r, final int size, final int matches) {
+        final List<String> ints = new ArrayList<>();
+        for (int i = 1; i <= size; i++) {
+            ints.add(Integer.toString(i));
+        }
+        final TourCalculatorInput b = TourCalculatorInput.tourCalculatorFor(ints.toArray(new String[ints.size()]));
+        for (int round = 0; round < matches; round++) {
+            Collections.shuffle(ints, r);
+            final int setSize = 2 + r.nextInt(ints.size() - 2);
+            final String[] set = ints.subList(0, setSize).toArray(new String[setSize]);
+            TargetPosition pos;
+            switch (r.nextInt(3)) {
+            case 0:
+                pos = TargetPosition.FIRST;
+                break;
+            case 1:
+                pos = TargetPosition.SECOND;
+                break;
+            case 2:
+                pos = TargetPosition.LAST;
+                break;
+            default:
+                throw new AssertionError();
+            }
+            b.match(set[0], pos, Arrays.copyOfRange(set, 1, set.length));
+        }
+        final TourCalculator<String> result = b.calculate();
+        assertEquals(result.getTour().size(), ints.size());
+    }
+
+    @Test
+    public void testSmokeTest() {
+        for (int i = 0; i < 100; i++) {
+            try {
+                doTestWithGeneratedData(new Random(i));
+            } catch (final AssertionError e) {
+                throw new AssertionError("problem with seed " + i, e);
+            }
+        }
     }
 
 }
