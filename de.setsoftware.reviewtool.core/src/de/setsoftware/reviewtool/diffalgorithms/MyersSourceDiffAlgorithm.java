@@ -137,8 +137,9 @@ class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
         assert !cur.isSnake();
         final int newPos = cur.getPosNew() - stepsUpwards;
         return cur.getLengthOld() == 0 //currently only additions are supported
-            && newPos >= cur.getLengthNew()
-            && (cur.getPrev() == null || newPos >= cur.getPrev().getStartPosNew())
+            && newPos >= cur.getLengthNew() //index will not become negative
+            && (cur.getPrev() == null
+                || cur.getStartPosNew() - stepsUpwards >= cur.getPrev().getStartPosNew()) //no overlap previous snake
             && file.getItem(newPos).equals(file.getItem(newPos - cur.getLengthNew()));
     }
 

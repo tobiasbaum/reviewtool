@@ -852,4 +852,88 @@ public class SimpleTextDiffAlgorithmTest {
         assertEquals(Arrays.asList(insertedLines(6, 9)), diff);
     }
 
+    /**
+     * There was a problem that upwards shifting led to overlapping fragments in some cases. This testcase
+     * triggered that problem.
+     */
+    @Test
+    public void testShiftingDoesNotCauseOverlap() throws Exception {
+        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+                "/**\r\n"
+                + " * Verwaltet einheitlich den Zugriff auf Verwerfungsanfragen (temporäre und persistente).\r\n"
+                + " */\r\n"
+                + "public final class DBTerminationRequestStore extends AbstractTerminationRequestStore {\r\n"
+                + "\r\n"
+                + "    private final StorageEnvironmentConnection connection;\r\n"
+                + "    private final DocumentTerminationRequestDatabase database;\r\n"
+                + "    private final DBStorageTransaction storageTransaction;\r\n"
+                + "    private final FlyweightDocumentCreator documentCreator;\r\n"
+                + "    private final FlyweightDocumentTerminationRequestCreator documentTerminationRequestCreator;\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Erstellt ein neues {@link DBTerminationRequestStore} Objekt.\r\n"
+                + "     */\r\n"
+                + "    DBTerminationRequestStore(\r\n"
+                + "            final StorageEnvironmentConnection connection,\r\n"
+                + "            final DBStorageTransaction storageTransaction,\r\n"
+                + "            final FlyweightDocumentTerminationRequestCreator documentTerminationRequestCreator,\r\n"
+                + "            final FlyweightDocumentCreator documentCreator) {\r\n"
+                + "        this.database = connection.getDatabase(DocumentTerminationRequestDatabase.class);\r\n"
+                + "        this.connection = connection;\r\n"
+                + "        this.storageTransaction = storageTransaction;\r\n"
+                + "        this.documentTerminationRequestCreator = documentTerminationRequestCreator;\r\n"
+                + "        this.documentCreator = documentCreator;\r\n"
+                + "    }\r\n"
+                + "}\r\n",
+
+                "/**\r\n"
+                + " * Verwaltet einheitlich den Zugriff auf Verwerfungsanfragen (temporäre und persistente).\r\n"
+                + " */\r\n"
+                + "public final class DBTerminationRequestStore extends AbstractTerminationRequestStore {\r\n"
+                + "\r\n"
+                + "    private final StorageEnvironmentConnection connection;\r\n"
+                + "    private final DocumentTerminationRequestDatabase database;\r\n"
+                + "    private final DBStorageTransaction storageTransaction;\r\n"
+                + "    private final FlyweightDocumentCreator documentCreator;\r\n"
+                + "    private final FlyweightDocumentTerminationRequestCreator documentTerminationRequestCreator;\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Erstellt ein neues {@link DBTerminationRequestStore} Objekt.\r\n"
+                + "     * Ermöglicht das Stornieren von Produktionsaufträgen.\r\n"
+                + "     */\r\n"
+                + "    public DBTerminationRequestStore(\r\n"
+                + "            final StorageEnvironmentConnection connection,\r\n"
+                + "            final DBStorageTransaction storageTransaction,\r\n"
+                + "            final FlyweightDocumentTerminationRequestCreator documentTerminationRequestCreator,\r\n"
+                + "            final FlyweightDocumentCreator documentCreator,\r\n"
+                + "            final Set<MonitoringId> mailingsWithProductionJobs) {\r\n"
+                + "        super(mailingsWithProductionJobs);\r\n"
+                + "        this.database = connection.getDatabase(DocumentTerminationRequestDatabase.class);\r\n"
+                + "        this.connection = connection;\r\n"
+                + "        this.storageTransaction = storageTransaction;\r\n"
+                + "        this.documentTerminationRequestCreator = documentTerminationRequestCreator;\r\n"
+                + "        this.documentCreator = documentCreator;\r\n"
+                + "    }\r\n"
+                + "\r\n"
+                + "    /**\r\n"
+                + "     * Erstellt ein neues {@link DBTerminationRequestStore} Objekt.\r\n"
+                + "     * Mit diesem Store können keine Produktionsaufträge verworfen werden.\r\n"
+                + "     */\r\n"
+                + "    public DBTerminationRequestStore(\r\n"
+                + "            final StorageEnvironmentConnection connection,\r\n"
+                + "            final DBStorageTransaction storageTransaction,\r\n"
+                + "            final FlyweightDocumentTerminationRequestCreator documentTerminationRequestCreator,\r\n"
+                + "            final FlyweightDocumentCreator documentCreator) {\r\n"
+                + "        super();\r\n"
+                + "        this.database = connection.getDatabase(DocumentTerminationRequestDatabase.class);\r\n"
+                + "        this.connection = connection;\r\n"
+                + "        this.storageTransaction = storageTransaction;\r\n"
+                + "        this.documentTerminationRequestCreator = documentTerminationRequestCreator;\r\n"
+                + "        this.documentCreator = documentCreator;\r\n"
+                + "    }\r\n"
+                + "}\r\n"
+        );
+        assertEquals(Arrays.asList(insertedLines(14, 14), insertedLines(16, 34), insertedLines(39, 39)), diff);
+    }
+
 }
