@@ -39,22 +39,18 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
         final boolean isNew = ancestorRevisions.isEmpty();
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
-        final FileHistoryNode node = this.getOrCreateFileHistoryNode(file, true, isNew, !isNew);
-        if (node.isRoot()) {
-            // for each root file within the history graph, we need an artificial ancestor node to record the changes
-            final Set<IRevision> ancestorRevs;
-            if (isNew) {
-                // use an UnknownRevision node as ancestor for newly added nodes
-                ancestorRevs = Collections.<IRevision>singleton(new UnknownRevision(revision.getRepository()));
-            } else {
-                ancestorRevs = ancestorRevisions;
-            }
+        final FileHistoryNode node = this.getOrCreateFileHistoryNode(file, isNew, !isNew);
+        if (node.getType().equals(Type.DELETED)) {
+            assert isNew;
+            node.makeReplaced();
+        }
 
-            for (final IRevision ancestorRevision : ancestorRevs) {
+        // if a node is a copy target, no ancestor has to be created and associated because it already exists
+        if (!node.isCopyTarget()) {
+            for (final IRevision ancestorRevision : ancestorRevisions) {
                 final IRevisionedFile prevFile = ChangestructureFactory.createFileInRevision(path, ancestorRevision);
                 final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(
                         prevFile,
-                        true,   // must not exist
                         false,  // is not known to be a new node
                         false); // don't copy children (they do not exist anyway)
                 this.addDescendants(ancestor, node, IFileHistoryEdge.Type.NORMAL);
@@ -97,7 +93,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         for (final IRevision ancestorRevision : ancestorRevisions) {
             final IRevisionedFile ancestorFile =
                     ChangestructureFactory.createFileInRevision(path, ancestorRevision);
-            final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, false, true);
+            final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, true);
             assert !ancestor.getType().equals(Type.DELETED);
             ancestors.add(ancestor);
         }
@@ -134,7 +130,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         if (node == null) {
             final FileHistoryNode deletionNode = new FileHistoryNode(file, Type.DELETED);
             this.addParentNodes(deletionNode, false, false);
-            final Pair<String, IRepository> key = FileHistoryGraph.this.createKey(file);
+            final Pair<String, IRepository> key = this.createKey(file);
             this.index.put(key, deletionNode);
             for (final FileHistoryNode ancestor : ancestors) {
                 ancestor.addDescendant(deletionNode, IFileHistoryEdge.Type.NORMAL,
@@ -148,6 +144,28 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     }
 
     @Override
+    public final void addReplacement(
+            final String path,
+            final IRevision revision,
+            final Set<IRevision> ancestorRevisions) {
+
+        this.addDeletion(path, revision, ancestorRevisions);
+        this.addAdditionOrChange(path, revision, Collections.<IRevision> emptySet());
+    }
+
+    @Override
+    public final void addReplacement(
+            final String path,
+            final IRevision revision,
+            final Set<IRevision> ancestorRevisions,
+            final String pathFrom,
+            final IRevision revisionFrom) {
+
+        this.addDeletion(path, revision, ancestorRevisions);
+        this.addCopy(pathFrom, path, revisionFrom, revision);
+    }
+
+    @Override
     public final void addCopy(
             final String pathFrom,
             final String pathTo,
@@ -157,12 +175,34 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         final IRevisionedFile fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom);
         final IRevisionedFile fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo);
 
-        final FileHistoryNode fromNode = this.getOrCreateFileHistoryNode(fileFrom, false, false, true);
-        final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true, true);
-
-        if (!fromNode.hasDescendant(toNode)) {
-            this.addEdge(fromNode, toNode, IFileHistoryEdge.Type.COPY, true);
+        final FileHistoryNode fromNode = this.getOrCreateFileHistoryNode(fileFrom, false, true);
+        final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true);
+        if (toNode.getType().equals(Type.DELETED)) {
+            toNode.makeReplaced();
         }
+
+        /*
+         * This can result in two copy edges (one of type COPY and one of type COPY_DELETED) between two nodes.
+         * Consider the following Subversion commands:
+         *
+         *   mkdir -p trunk/x
+         *   > trunk/x/a
+         *   svn add trunk; svn ci -m "." trunk; svn update
+         *   # copy trunk --> trunk2, which also copies trunk/x --> trunk2/x and trunk/x/a --> trunk2/x/a
+         *   svn copy trunk trunk2
+         *   # replace trunk2/x, which deletes trunk2/x/a
+         *   svn rm trunk2/x
+         *   mkdir trunk2/x
+         *   svn add trunk2/x
+         *   # "resurrect" trunk2/x/a
+         *   svn copy trunk/x/a trunk2/x/a
+         *
+         * After these operations, we have a COPY_DELETED edge between trunk/x/a and trunk2/x/a because of the
+         * deletion of trunk2/x being child of copied trunk2, and a COPY edge between trunk/x/a and trunk2/x/a
+         * because of the explicit copy operation. Technically, there are two flows trunk2/x/a is being part of,
+         * but the terminating flow is redundant.
+         */
+        this.addEdge(fromNode, toNode, IFileHistoryEdge.Type.COPY, true);
     }
 
     /**
@@ -198,7 +238,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                         parentPath,
                         file.getRevision());
                 // don't copy child nodes when traversing upwards the tree as they already exist
-                final FileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false, false);
+                final FileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false);
                 parent.addChild(node);
 
                 if (!isNew && parent.isCopyTarget()) {
@@ -211,7 +251,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                                 parentAncestorRev.getPath() + "/" + name,
                                 parentAncestorRev.getRevision());
                         final FileHistoryNode ancestor =
-                                this.getOrCreateFileHistoryNode(ancestorRev, false, false, false);
+                                this.getOrCreateFileHistoryNode(ancestorRev, false, false);
                         this.addEdge(ancestor, node,
                                 node.getType().equals(Type.DELETED) ? IFileHistoryEdge.Type.COPY_DELETED
                                         : IFileHistoryEdge.Type.COPY,
@@ -254,15 +294,16 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * In addition, it is inserted into a possibly existing ancestor/descendant chain and/or parent/child of other
      * {@link FileHistoryNode}s.
      *
-     * @param mustNotExist If <code>true</code>, the node may not already exist.
      * @param isNew If <code>true</code>, the node is known to have been added in passed revision. This makes a
      *      difference when the node's parent is a copied directory: New nodes remain root nodes, while other nodes
      *      will be associated to an ancestor in the parent's copy source.
      * @param copyChildren If <code>true</code> and a new node is created, child nodes are copied from the ancestor
      *      (if it exists) to the new node.
      */
-    private FileHistoryNode getOrCreateFileHistoryNode(final IRevisionedFile file, final boolean mustNotExist,
-            final boolean isNew, final boolean copyChildren) {
+    private FileHistoryNode getOrCreateFileHistoryNode(
+            final IRevisionedFile file,
+            final boolean isNew,
+            final boolean copyChildren) {
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             final FileHistoryNode newNode = new FileHistoryNode(file, Type.NORMAL);
@@ -279,7 +320,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
             return newNode;
         } else {
-            assert !isNew && !mustNotExist;
+            assert !isNew || node.getType().equals(Type.DELETED);
             return node;
         }
     }

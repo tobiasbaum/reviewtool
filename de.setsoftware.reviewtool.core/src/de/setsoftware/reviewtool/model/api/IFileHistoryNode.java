@@ -21,7 +21,12 @@ public interface IFileHistoryNode {
         /**
          * A node denoting a deletion, i.e. the termination of an existing flow.
          */
-        DELETED
+        DELETED,
+        /**
+         * A node denoting a replacement, i.e. the termination of an existing and the start of a new or continuation
+         * of an existing flow (the latter happens when the node is replaced by a copy of some other node).
+         */
+        REPLACED
     }
 
     /**

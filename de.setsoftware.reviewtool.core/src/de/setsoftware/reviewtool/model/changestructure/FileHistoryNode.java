@@ -14,7 +14,8 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 /**
  * A node in a {@link FileHistoryGraph}. It denotes a path pointing to either a directory or a file.
  * <p/>
- * A node can be in one of two states: "normal" or deleted.
+ * A node can be in one of three states: "normal", deleted, or replaced (which basically means that
+ * the chain of history has been broken deliberately).
  */
 public final class FileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 
@@ -150,6 +151,14 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
                 ancestorEdge.setType(IFileHistoryEdge.Type.COPY_DELETED);
             }
         }
+    }
+
+    /**
+     * Makes this node a replaced node. Requires that the node is a {@link Type#DELETED} node.
+     */
+    void makeReplaced() {
+        assert this.type.equals(Type.DELETED);
+        this.type = Type.REPLACED;
     }
 
     /**
