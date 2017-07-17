@@ -13,6 +13,7 @@ import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
+import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 
 /**
  * Factory for the various classes belonging to the changestructure.
@@ -56,6 +57,10 @@ public class ChangestructureFactory {
 
     public static IRepoRevision createRepoRevision(final Object id, final IRepository repo) {
         return new RepoRevision(id, repo);
+    }
+
+    public static IUnknownRevision createUnknownRevision(final IRepository repo) {
+        return new UnknownRevision(repo);
     }
 
     public static IPositionInText createPositionInText(int line, int column) {
