@@ -11,6 +11,20 @@ import de.setsoftware.reviewtool.model.changestructure.FileDiff;
 public interface IFileHistoryNode {
 
     /**
+     * Represents the type of an edge.
+     */
+    public enum Type {
+        /**
+         * A normal node denoting an addition or change, i.e. the start of a new or continuation of an existing flow.
+         */
+        NORMAL,
+        /**
+         * A node denoting a deletion, i.e. the termination of an existing flow.
+         */
+        DELETED
+    }
+
+    /**
      * Returns the {@link IRevisionedFile} wrapped by this node.
      */
     public abstract IRevisionedFile getFile();
@@ -22,10 +36,9 @@ public interface IFileHistoryNode {
     public abstract boolean isRoot();
 
     /**
-     * Checks whether this {@link IFileHistoryNode} denotes a deleted node.
-     * @return <code>true</code> if this node is deleted, else <code>false</code>
+     * Returns the type of this node.
      */
-    public abstract boolean isDeleted();
+    public abstract Type getType();
 
     /**
      * Returns the set of outgoing edges pointing to the nearest ancestor {@link IFileHistoryNode}s.

@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Collections;
 import java.util.List;
 
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -63,7 +64,7 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
             }
         }
         if (nearestNode != null) {
-            return nearestNode.isDeleted() ? null : nearestNode;
+            return nearestNode.getType().equals(IFileHistoryNode.Type.DELETED) ? null : nearestNode;
         } else {
             return null;
         }

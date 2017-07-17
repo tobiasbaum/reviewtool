@@ -11,7 +11,9 @@ import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
- * A node in a {@link FileHistoryGraph}.
+ * A node in a {@link FileHistoryGraph}. It denotes a path pointing to either a directory or a file.
+ * <p/>
+ * A node can be in one of two states: "normal" or deleted.
  */
 public final class FileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 
@@ -20,18 +22,19 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     private final Set<FileHistoryEdge> descendants;
     private FileHistoryNode parent;
     private final List<FileHistoryNode> children;
-    private boolean isDeleted;
+    private Type type;
 
     /**
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
+     *
      * @param file The {@link IRevisionedFile} to wrap.
      */
-    public FileHistoryNode(final IRevisionedFile file, final boolean isDeleted) {
+    public FileHistoryNode(final IRevisionedFile file, final Type type) {
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
         this.children = new ArrayList<>();
-        this.isDeleted = isDeleted;
+        this.type = type;
     }
 
     @Override
@@ -55,23 +58,29 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     @Override
-    public boolean isDeleted() {
-        return this.isDeleted;
+    public Type getType() {
+        return this.type;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Only internal properties of the nodes are compared, no properties that would require traversing the graph.
+     * So neither ancestors nor descendants, neither parent nodes nor child nodes are compared.
+     */
     @Override
     public boolean equals(final Object o) {
         if (o instanceof FileHistoryNode) {
             final FileHistoryNode other = (FileHistoryNode) o;
             return this.file.equals(other.file)
-                    && this.isDeleted == other.isDeleted;
+                    && this.type.equals(other.type);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return this.file.hashCode() ^ Boolean.valueOf(this.isDeleted).hashCode();
+        return this.file.hashCode();
     }
 
     /**
@@ -102,10 +111,10 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     /**
-     * Adds a descendant {@link FileHistoryNode} of this node.
+     * Checks whether passed node is a descendant {@link FileHistoryNode} of this node.
      */
     public boolean hasDescendant(final FileHistoryNode descendant) {
-        for (final FileHistoryEdge descendantEdge : this.getDescendants()) {
+        for (final FileHistoryEdge descendantEdge : this.descendants) {
             if (descendantEdge.getDescendant().equals(descendant)) {
                 return true;
             }
@@ -114,11 +123,11 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     /**
-     * Sets whether this node is deleted.
-     * @param newDeleted {@code true} if this node should represent a deleted path, else {@code false}.
+     * Makes this node a deleted node. Requires that the node is a {@link Type#NORMAL} node.
      */
-    void setDeleted(final boolean newDeleted) {
-        this.isDeleted = newDeleted;
+    void makeDeleted() {
+        assert this.type.equals(Type.NORMAL);
+        this.type = Type.DELETED;
     }
 
     /**

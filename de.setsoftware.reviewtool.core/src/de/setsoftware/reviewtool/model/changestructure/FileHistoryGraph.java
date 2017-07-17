@@ -8,6 +8,7 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
@@ -92,7 +93,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final IRevisionedFile ancestorFile =
                     ChangestructureFactory.createFileInRevision(path, ancestorRevision);
             final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, false, true);
-            assert !ancestor.isDeleted();
+            assert !ancestor.getType().equals(Type.DELETED);
             ancestors.add(ancestor);
         }
 
@@ -103,8 +104,8 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             @Override
             public Void handleLocalRevision(final ILocalRevision revision) {
                 if (node != null) {
-                    assert !node.isDeleted();
-                    node.setDeleted(true);
+                    assert !node.getType().equals(Type.DELETED);
+                    node.makeDeleted();
                 }
                 return null;
             }
@@ -126,7 +127,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         });
 
         if (node == null) {
-            final FileHistoryNode deletionNode = new FileHistoryNode(file, true);
+            final FileHistoryNode deletionNode = new FileHistoryNode(file, Type.DELETED);
             this.addParentNodes(deletionNode, false, false);
             final Pair<String, IRepository> key = FileHistoryGraph.this.createKey(file);
             this.index.put(key, deletionNode);
@@ -224,9 +225,9 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
         for (final FileHistoryNode child : oldNode.getChildren()) {
             // don't copy deleted children
-            if (!child.isDeleted()) {
+            if (!child.getType().equals(Type.DELETED)) {
                 final String childPath = child.getFile().getPath();
-                FileHistoryGraph.this.addCopy(childPath,
+                this.addCopy(childPath,
                         crateCopyTargetName(childPath, oldParentPath, newParentPath),
                         oldRevision, newRevision);
             }
@@ -251,7 +252,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final boolean isNew, final boolean copyChildren) {
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
-            final FileHistoryNode newNode = new FileHistoryNode(file, false);
+            final FileHistoryNode newNode = new FileHistoryNode(file, Type.NORMAL);
             this.index.put(this.createKey(file), newNode);
 
             this.addParentNodes(newNode, isNew, copyChildren);
@@ -319,8 +320,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
     /**
      * Returns the nearest ancestor for passed {@link IRevisionedFile} having the same path, or <code>null</code>
-     * if no suitable node exists. To be suitable, the ancestor node must be an {@link ExistingFileHistoryNode} as
-     * a deleted file cannot be an ancestor.
+     * if no suitable node exists. To be suitable, the ancestor node must not be deleted.
      */
     public abstract FileHistoryNode findAncestorFor(IRevisionedFile file);
 

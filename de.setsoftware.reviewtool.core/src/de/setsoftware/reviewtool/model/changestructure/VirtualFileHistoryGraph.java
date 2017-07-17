@@ -25,10 +25,12 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
 
         private final IRevisionedFile file;
         private final Set<IFileHistoryNode> nodes;
+        private final Type type;
 
         VirtualFileHistoryNode(final IRevisionedFile file, final Set<IFileHistoryNode> nodes) {
             this.file = file;
             this.nodes = nodes;
+            this.type = nodes.iterator().next().getType();
         }
 
         @Override
@@ -42,13 +44,8 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         }
 
         @Override
-        public boolean isDeleted() {
-            for (final IFileHistoryNode node : this.nodes) {
-                if (node.isDeleted()) {
-                    return true;
-                }
-            }
-            return false;
+        public Type getType() {
+            return this.type;
         }
 
         @Override
