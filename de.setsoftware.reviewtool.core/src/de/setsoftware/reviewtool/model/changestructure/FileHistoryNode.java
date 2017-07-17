@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -62,6 +63,19 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
         return this.type;
     }
 
+    @Override
+    public boolean isCopyTarget() {
+        for (final FileHistoryEdge ancestorEdge : this.ancestors) {
+            if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY)) {
+                return true;
+            } else if (this.type.equals(Type.DELETED)
+                    && ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY_DELETED)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * {@inheritDoc}
      * <p/>
@@ -104,8 +118,8 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     /**
      * Adds a descendant {@link FileHistoryNode} of this node.
      */
-    public void addDescendant(final FileHistoryNode descendant, final IFileDiff diff) {
-        final FileHistoryEdge edge = new FileHistoryEdge(this, descendant, diff);
+    void addDescendant(final FileHistoryNode descendant, final IFileHistoryEdge.Type type, final IFileDiff diff) {
+        final FileHistoryEdge edge = new FileHistoryEdge(this, descendant, type, diff);
         this.descendants.add(edge);
         descendant.addAncestor(edge);
     }
@@ -128,6 +142,14 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     void makeDeleted() {
         assert this.type.equals(Type.NORMAL);
         this.type = Type.DELETED;
+
+        final Iterator<FileHistoryEdge> it = this.ancestors.iterator();
+        while (it.hasNext()) {
+            final FileHistoryEdge ancestorEdge = it.next();
+            if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY)) {
+                ancestorEdge.setType(IFileHistoryEdge.Type.COPY_DELETED);
+            }
+        }
     }
 
     /**
@@ -166,21 +188,6 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
      */
     private void setParent(final FileHistoryNode newParent) {
         this.parent = newParent;
-    }
-
-    /**
-     * Returns <code>true</code> if this node results from a copy operation.
-     */
-    public boolean isCopied() {
-        if (this.isRoot()) {
-            return false;
-        }
-        for (final IFileHistoryEdge ancestor : this.ancestors) {
-            if (!this.getFile().getPath().equals(ancestor.getAncestor().getFile().getPath())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

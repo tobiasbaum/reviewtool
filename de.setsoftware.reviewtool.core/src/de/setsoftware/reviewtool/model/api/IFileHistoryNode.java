@@ -41,6 +41,14 @@ public interface IFileHistoryNode {
     public abstract Type getType();
 
     /**
+     * Checks whether this {@link IFileHistoryNode} denotes a copy target.
+     * In case of a replaced node the copy target state refers to the replacing node in the new flow,
+     * not the replaced one in the old flow.
+     * @return <code>true</code> if this node is a copy target, else <code>false</code>
+     */
+    public abstract boolean isCopyTarget();
+
+    /**
      * Returns the set of outgoing edges pointing to the nearest ancestor {@link IFileHistoryNode}s.
      * Note that the nodes returned by this operation may change over time when intermediate
      * {@link IFileHistoryNode}s are created due to recorded copy operations.

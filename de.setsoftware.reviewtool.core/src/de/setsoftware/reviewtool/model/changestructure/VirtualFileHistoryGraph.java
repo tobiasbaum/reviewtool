@@ -49,6 +49,16 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         }
 
         @Override
+        public boolean isCopyTarget() {
+            for (final IFileHistoryNode node : this.nodes) {
+                if (node.isCopyTarget()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
         public Set<? extends IFileHistoryEdge> getAncestors() {
             final Set<IFileHistoryEdge> edges = new LinkedHashSet<>();
             for (final IFileHistoryNode node : this.nodes) {
@@ -56,6 +66,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
                     edges.add(new VirtualFileHistoryEdge(
                             VirtualFileHistoryGraph.this.getNodeFor(ancestorEdge.getAncestor().getFile()),
                             VirtualFileHistoryGraph.this.getNodeFor(ancestorEdge.getDescendant().getFile()),
+                            ancestorEdge.getType(),
                             ancestorEdge.getDiff()));
                 }
             }
@@ -70,6 +81,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
                     edges.add(new VirtualFileHistoryEdge(
                             VirtualFileHistoryGraph.this.getNodeFor(descendantEdge.getAncestor().getFile()),
                             VirtualFileHistoryGraph.this.getNodeFor(descendantEdge.getDescendant().getFile()),
+                            descendantEdge.getType(),
                             descendantEdge.getDiff()));
                 }
             }
@@ -98,7 +110,8 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
 
         private final IFileHistoryNode ancestor;
         private final IFileHistoryNode descendant;
-        private IFileDiff diff;
+        private final Type type;
+        private final IFileDiff diff;
 
         /**
          * Constructor.
@@ -109,9 +122,11 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         public VirtualFileHistoryEdge(
                 final IFileHistoryNode ancestor,
                 final IFileHistoryNode descendant,
+                final Type type,
                 final IFileDiff diff) {
             this.ancestor = ancestor;
             this.descendant = descendant;
+            this.type = type;
             this.diff = diff;
         }
 
@@ -123,6 +138,11 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         @Override
         public IFileHistoryNode getDescendant() {
             return this.descendant;
+        }
+
+        @Override
+        public Type getType() {
+            return this.type;
         }
 
         @Override

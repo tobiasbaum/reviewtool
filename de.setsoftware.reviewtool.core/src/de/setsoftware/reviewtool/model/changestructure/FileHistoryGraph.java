@@ -8,6 +8,7 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
@@ -56,7 +57,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                         true,   // must not exist
                         false,  // is not known to be a new node
                         false); // don't copy children (they do not exist anyway)
-                this.addDescendants(ancestor, node);
+                this.addDescendants(ancestor, node, IFileHistoryEdge.Type.NORMAL);
             }
         }
     }
@@ -66,13 +67,17 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * Traverses the hierarchy upwards and adds all missing edges between the parents, if necessary.
      * @param ancestor The ancestor node.
      * @param descendant The descendant node.
+     * @param type The type of the edges to add.
      */
-    private void addDescendants(final FileHistoryNode ancestor, final FileHistoryNode descendant) {
+    private void addDescendants(
+            final FileHistoryNode ancestor,
+            final FileHistoryNode descendant,
+            final IFileHistoryEdge.Type type) {
         assert ancestor.getFile().getPath().equals(descendant.getFile().getPath());
         FileHistoryNode ancestorNode = ancestor;
         FileHistoryNode descendantNode = descendant;
         while (!ancestorNode.hasDescendant(descendantNode)) {
-            ancestorNode.addDescendant(descendantNode, new FileDiff(ancestor.getFile(), descendant.getFile()));
+            ancestorNode.addDescendant(descendantNode, type, new FileDiff(ancestor.getFile(), descendant.getFile()));
             assert ancestorNode.hasParent() == descendantNode.hasParent();
             if (!ancestorNode.hasParent()) {
                 return;
@@ -132,7 +137,8 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final Pair<String, IRepository> key = FileHistoryGraph.this.createKey(file);
             this.index.put(key, deletionNode);
             for (final FileHistoryNode ancestor : ancestors) {
-                ancestor.addDescendant(deletionNode, new FileDiff(ancestor.getFile(), file));
+                ancestor.addDescendant(deletionNode, IFileHistoryEdge.Type.NORMAL,
+                        new FileDiff(ancestor.getFile(), file));
                 for (final FileHistoryNode child : ancestor.getChildren()) {
                     this.addDeletion(child.getFile().getPath(), revision,
                             Collections.singleton(ancestor.getFile().getRevision()));
@@ -155,7 +161,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true, true);
 
         if (!fromNode.hasDescendant(toNode)) {
-            this.addEdge(fromNode, toNode, true);
+            this.addEdge(fromNode, toNode, IFileHistoryEdge.Type.COPY, true);
         }
     }
 
@@ -163,11 +169,15 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * Adds an ancestor/descendant relationship between two nodes.
      * @param ancestor The ancestor.
      * @param descendant The descendant.
+     * @param type The type of the edge to create.
      * @param copyChildren If <code>true</code>, the children of the ancestor node are copied to the descendant node.
      */
-    private void addEdge(final FileHistoryNode ancestor, final FileHistoryNode descendant,
+    private void addEdge(
+            final FileHistoryNode ancestor,
+            final FileHistoryNode descendant,
+            final IFileHistoryEdge.Type type,
             final boolean copyChildren) {
-        ancestor.addDescendant(descendant, new FileDiff(ancestor.getFile(), descendant.getFile()));
+        ancestor.addDescendant(descendant, type, new FileDiff(ancestor.getFile(), descendant.getFile()));
         if (copyChildren) {
             this.copyChildNodes(ancestor, descendant);
         }
@@ -191,7 +201,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                 final FileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false, false);
                 parent.addChild(node);
 
-                if (!isNew && !node.isCopied() && parent.isCopied()) {
+                if (!isNew && parent.isCopyTarget()) {
                     // special case: node begins lifetime with a change or deletion in a copied directory
                     final String name = path.substring(path.lastIndexOf("/") + 1);
                     for (final FileHistoryEdge parentAncestorEdge : parent.getAncestors()) {
@@ -202,7 +212,10 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                                 parentAncestorRev.getRevision());
                         final FileHistoryNode ancestor =
                                 this.getOrCreateFileHistoryNode(ancestorRev, false, false, false);
-                        this.addEdge(ancestor, node, copyChildren);
+                        this.addEdge(ancestor, node,
+                                node.getType().equals(Type.DELETED) ? IFileHistoryEdge.Type.COPY_DELETED
+                                        : IFileHistoryEdge.Type.COPY,
+                                copyChildren);
                     }
                 }
             }
@@ -260,7 +273,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                 final FileHistoryNode ancestor = this.findAncestorFor(file);
                 if (ancestor != null) {
                     this.injectInteriorNode(ancestor, newNode);
-                    this.addEdge(ancestor, newNode, copyChildren);
+                    this.addEdge(ancestor, newNode, IFileHistoryEdge.Type.NORMAL, copyChildren);
                 }
             }
 
@@ -275,19 +288,22 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * Injects a node into an existing ancestor/descendant relationship between other nodes. This can happen if the
      * interior node is created later due to copying an old file revision.
      *
-     * @param ancestor The ancestor.
-     * @param descendant The descendant.
+     * @param ancestor The ancestor node.
+     * @param interiorNode The interior node.
      */
-    private void injectInteriorNode(final FileHistoryNode ancestor, final FileHistoryNode descendant) {
+    private void injectInteriorNode(final FileHistoryNode ancestor, final FileHistoryNode interiorNode) {
         final Iterator<FileHistoryEdge> it = ancestor.getDescendants().iterator();
         while (it.hasNext()) {
             final FileHistoryEdge descendantOfAncestorEdge = it.next();
-            final FileHistoryNode descendantOfAncestor = descendantOfAncestorEdge.getDescendant();
-            // only inject interior node if it's the same path (i.e. no rename/move)
-            if (ancestor.getFile().getPath().equals(descendantOfAncestor.getFile().getPath())) {
+            // only inject interior node if edge is not a copy (this includes rename/move operations)
+            if (descendantOfAncestorEdge.getType().equals(IFileHistoryEdge.Type.NORMAL)) {
+                final FileHistoryNode descendantOfAncestor = descendantOfAncestorEdge.getDescendant();
+                assert ancestor.getFile().getPath().equals(descendantOfAncestor.getFile().getPath());
+
                 it.remove();
                 descendantOfAncestor.removeAncestor(descendantOfAncestorEdge);
-                descendant.addDescendant(descendantOfAncestor, descendantOfAncestorEdge.getDiff());
+                interiorNode.addDescendant(descendantOfAncestor, IFileHistoryEdge.Type.NORMAL,
+                        descendantOfAncestorEdge.getDiff());
             }
         }
     }
