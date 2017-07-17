@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -10,14 +9,10 @@ import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
-import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
-import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
-import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
@@ -89,55 +84,32 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final IRevision revision,
             final Set<IRevision> ancestorRevisions) {
 
-        final Set<FileHistoryNode> ancestors = new LinkedHashSet<>();
-        for (final IRevision ancestorRevision : ancestorRevisions) {
-            final IRevisionedFile ancestorFile =
-                    ChangestructureFactory.createFileInRevision(path, ancestorRevision);
-            final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, true);
-            assert !ancestor.getType().equals(Type.DELETED);
-            ancestors.add(ancestor);
-        }
-
+        assert !ancestorRevisions.isEmpty();
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
         final FileHistoryNode node = this.getNodeFor(file);
-        revision.accept(new IRevisionVisitor<Void>() {
-
-            @Override
-            public Void handleLocalRevision(final ILocalRevision revision) {
-                if (node != null) {
-                    assert !node.getType().equals(Type.DELETED);
-                    node.makeDeleted();
-                }
-                return null;
-            }
-
-            @Override
-            public Void handleRepoRevision(final IRepoRevision revision) {
-                // a file in a non-local revision can have at most one associated node per revision
-                assert node == null;
-                return null;
-            }
-
-            @Override
-            public Void handleUnknownRevision(final IUnknownRevision revision) {
-                // it is not allowed to delete artificial nodes
-                assert node == null;
-                return null;
-            }
-
-        });
-
-        if (node == null) {
+        if (node != null) {
+            node.makeDeleted();
+        } else {
             final FileHistoryNode deletionNode = new FileHistoryNode(file, Type.DELETED);
             this.addParentNodes(deletionNode, false, false);
             final Pair<String, IRepository> key = this.createKey(file);
             this.index.put(key, deletionNode);
-            for (final FileHistoryNode ancestor : ancestors) {
-                ancestor.addDescendant(deletionNode, IFileHistoryEdge.Type.NORMAL,
-                        new FileDiff(ancestor.getFile(), file));
-                for (final FileHistoryNode child : ancestor.getChildren()) {
-                    this.addDeletion(child.getFile().getPath(), revision,
-                            Collections.singleton(ancestor.getFile().getRevision()));
+
+            if (deletionNode.isRoot()) { // addParentNodes() may have already added ancestors
+                for (final IRevision ancestorRevision : ancestorRevisions) {
+                    final IRevisionedFile ancestorFile =
+                            ChangestructureFactory.createFileInRevision(path, ancestorRevision);
+                    final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, true);
+                    assert !ancestor.getType().equals(Type.DELETED);
+
+                    this.addDescendants(ancestor, deletionNode, IFileHistoryEdge.Type.NORMAL);
+
+                    for (final FileHistoryNode child : ancestor.getChildren()) {
+                        if (!child.getType().equals(Type.DELETED)) {
+                            this.addDeletion(child.getFile().getPath(), revision,
+                                    Collections.singleton(ancestor.getFile().getRevision()));
+                        }
+                    }
                 }
             }
         }
