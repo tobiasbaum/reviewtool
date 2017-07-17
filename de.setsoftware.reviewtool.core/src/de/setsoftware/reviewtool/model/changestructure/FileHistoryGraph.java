@@ -148,7 +148,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         final IRevisionedFile fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo);
 
         final FileHistoryNode fromNode = this.getOrCreateFileHistoryNode(fileFrom, false, true);
-        final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true);
+        final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true, false);
         if (toNode.getType().equals(Type.DELETED)) {
             toNode.makeReplaced();
         }
@@ -265,6 +265,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * If a node for that {@link IRevisionedFile} does not exist, it is created.
      * In addition, it is inserted into a possibly existing ancestor/descendant chain and/or parent/child of other
      * {@link FileHistoryNode}s.
+     * If necessary, an artificial ancestor is created for a root node.
      *
      * @param isNew If <code>true</code>, the node is known to have been added in passed revision. This makes a
      *      difference when the node's parent is a copied directory: New nodes remain root nodes, while other nodes
@@ -276,14 +277,44 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final IRevisionedFile file,
             final boolean isNew,
             final boolean copyChildren) {
+        return this.getOrCreateFileHistoryNode(file, isNew, copyChildren, true);
+    }
+
+    /**
+     * Returns or creates a {@link FileHistoryNode} for a given {@link IRevisionedFile}.
+     * If a node for that {@link IRevisionedFile} already exists, it is returned.
+     * If a node for that {@link IRevisionedFile} does not exist, it is created.
+     * In addition, it is inserted into a possibly existing ancestor/descendant chain and/or parent/child of other
+     * {@link FileHistoryNode}s.
+     *
+     * @param isNew If <code>true</code>, the node is known to have been added in passed revision. This makes a
+     *      difference when the node's parent is a copied directory: New nodes remain root nodes, while other nodes
+     *      will be associated to an ancestor in the parent's copy source.
+     * @param copyChildren If <code>true</code> and a new node is created, child nodes are copied from the ancestor
+     *      (if it exists) to the new node.
+     * @param createArtificialAncestor If {@code true}, an artificial ancestor node is created for a root node.
+     */
+    private FileHistoryNode getOrCreateFileHistoryNode(
+            final IRevisionedFile file,
+            final boolean isNew,
+            final boolean copyChildren,
+            final boolean createArtificialAncestor) {
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             final FileHistoryNode newNode = new FileHistoryNode(file, Type.NORMAL);
             this.index.put(this.createKey(file), newNode);
 
             this.addParentNodes(newNode, isNew, copyChildren);
-            if (!isNew && newNode.isRoot()) { // addParentNodes() may have already added an ancestor
-                final FileHistoryNode ancestor = this.findAncestorFor(file);
+            if (newNode.isRoot()) { // addParentNodes() may have already added ancestors
+                FileHistoryNode ancestor = this.findAncestorFor(file);
+                if (ancestor == null && createArtificialAncestor) {
+                    final IRevisionedFile alphaFile = ChangestructureFactory.createFileInRevision(
+                            file.getPath(), ChangestructureFactory.createUnknownRevision(file.getRepository()));
+                    if (!alphaFile.equals(file)) {
+                        ancestor = this.getOrCreateFileHistoryNode(alphaFile, false, false);
+                    }
+                }
+
                 if (ancestor != null) {
                     this.injectInteriorNode(ancestor, newNode);
                     this.addEdge(ancestor, newNode, IFileHistoryEdge.Type.NORMAL, copyChildren);

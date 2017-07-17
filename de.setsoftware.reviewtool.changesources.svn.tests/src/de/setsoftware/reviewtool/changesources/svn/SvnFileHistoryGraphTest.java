@@ -271,7 +271,7 @@ public class SvnFileHistoryGraphTest {
                 Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1)));
         assertEquals(
-                Arrays.asList(file("a", 5), file("b", 23)),
+                Arrays.asList(file("b", 23)),
                 g.getLatestFiles(file("a", 5)));
         assertEquals(
                 Arrays.asList(file("a", 6)),
