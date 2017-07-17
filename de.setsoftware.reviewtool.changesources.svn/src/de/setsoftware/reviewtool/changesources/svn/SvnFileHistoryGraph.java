@@ -90,7 +90,7 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
 
             @Override
             public Long handleUnknownRevision(final IUnknownRevision revision) {
-                return 0L;
+                return -1L;
             }
 
         });
