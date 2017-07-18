@@ -200,6 +200,18 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     /**
+     * Returns the path of this node relative to its parent.
+     * If this node does not have a parent, the node's path is returned unmodified.
+     */
+    String getPathRelativeToParent() {
+        if (this.parent == null) {
+            return this.file.getPath();
+        } else {
+            return this.file.getPath().substring(this.parent.getFile().getPath().length());
+        }
+    }
+
+    /**
      * Fills a list of additional attributes used by toString().
      * @param attributes A list containing elements to be included in the output of {@link #toString()}.
      */

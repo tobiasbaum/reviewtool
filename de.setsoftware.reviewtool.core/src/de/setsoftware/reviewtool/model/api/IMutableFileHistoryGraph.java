@@ -11,14 +11,22 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
     public abstract IMutableFileHistoryNode getNodeFor(IRevisionedFile file);
 
     /**
-     * Adds the information that the path {@link path} was added or changed in revision {@link revision}.
-     * If the set {@code ancestorRevisions} is not empty, a change is recorded and linked to the ancestors,
-     * otherwise an addition is recorded.
+     * Adds the information that the path {@link path} was added in revision {@link revision}.
      */
-    public abstract void addAdditionOrChange(
+    public abstract void addAddition(
+            String path,
+            IRevision revision);
+
+    /**
+     * Adds the information that the path {@link path} was changed in revision {@link revision}.
+     *
+     * @param ancestorRevisions
+     *      The ancestor revisions of {@link revision}. Used if no other ancestor is known (e.g. due to a copy).
+     */
+    public abstract void addChange(
             String path,
             IRevision revision,
-            Set<IRevision> ancestorRevisions);
+            Set<? extends IRevision> ancestorRevisions);
 
     /**
      * Adds the information that the file with the given path was deleted with the commit of the given revision.

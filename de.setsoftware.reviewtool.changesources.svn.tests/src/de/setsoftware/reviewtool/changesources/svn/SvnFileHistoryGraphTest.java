@@ -94,7 +94,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopy() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("a", 5), file("b", 6)),
@@ -113,7 +113,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testDeletion() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(12));
         assertEquals(
                 Arrays.asList(file("a", 1)),
@@ -132,7 +132,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveOneWay() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addCopy("a", "b", rev(5), rev(6));
         g.addDeletion("a", rev(6));
         assertEquals(
@@ -149,7 +149,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveOtherWay() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(6));
         g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
@@ -166,7 +166,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveWithMultipleCopies() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)) );
         g.addCopy("a", "b", rev(5), rev(6));
         g.addDeletion("a", rev(6));
         g.addCopy("a", "c", rev(5), rev(6));
@@ -191,7 +191,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveMultipleTimes() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
         g.addDeletion("b", rev(21));
@@ -213,7 +213,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveAndDeleteAfterwards() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
         g.addDeletion("b", rev(21));
@@ -244,8 +244,8 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopyWithRevisionSkip() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
-        g.addChange("a", rev(5), rev(6));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
+        g.addChange("a", rev(6), Collections.singleton(rev(5)));
         g.addDeletion("a", rev(20));
         g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
@@ -287,8 +287,8 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopyMultipleTimesWithRevisionSkip() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
-        g.addChange("a", rev(5), rev(6));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
+        g.addChange("a", rev(6), Collections.singleton(rev(5)));
         g.addDeletion("a", rev(20));
         g.addCopy("a", "b", rev(5), rev(23));
         g.addCopy("b", "c", rev(23), rev(24));
@@ -309,10 +309,11 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveParentDirectory() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1));
-        g.addChange("a/x", rev(1), rev(2));
+        g.addChange("a", rev(1), Collections.singleton(rev(0)));
+        g.addChange("a/x", rev(2), Collections.singleton(rev(1)));
         g.addCopy("a", "b", rev(10), rev(11));
-        g.addChange("a/x", rev(10), rev(11));
+        g.addChange("a/x", rev(11), Collections.singleton(rev(10)));
+        g.addChange("b/x", rev(11), Collections.singleton(rev(10)));
         g.addDeletion("a", rev(13));
         g.addDeletion("b/x", rev(21));
 

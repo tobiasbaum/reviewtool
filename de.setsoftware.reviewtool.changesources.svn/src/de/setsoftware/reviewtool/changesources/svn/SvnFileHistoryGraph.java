@@ -1,12 +1,10 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
-import java.util.Collections;
 import java.util.List;
 
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
@@ -17,25 +15,6 @@ import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
 final class SvnFileHistoryGraph extends FileHistoryGraph {
-
-    /**
-     * Adds the information that the file with the given path was added or changed at the commit of the given revision.
-     */
-    public void addAddition(
-            final String path,
-            final IRevision revision) {
-        this.addAdditionOrChange(path, revision, Collections.<IRevision>emptySet());
-    }
-
-    /**
-     * Adds the information that the file with the given path was added or changed at the commit of the given revision.
-     */
-    public void addChange(
-            final String path,
-            final IRevision prevRevision,
-            final IRevision revision) {
-        this.addAdditionOrChange(path, revision, Collections.<IRevision>singleton(prevRevision));
-    }
 
     @Override
     public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
