@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -24,7 +23,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     private final Set<FileHistoryEdge> ancestors;
     private final Set<FileHistoryEdge> descendants;
     private FileHistoryNode parent;
-    private final List<FileHistoryNode> children;
+    private final Set<FileHistoryNode> children;
     private Type type;
 
     /**
@@ -37,7 +36,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
-        this.children = new ArrayList<>();
+        this.children = new LinkedHashSet<>();
         this.type = type;
     }
 
@@ -172,7 +171,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     /**
      * Returns a list of child {@link FileHistoryNode}s.
      */
-    public List<FileHistoryNode> getChildren() {
+    public Set<FileHistoryNode> getChildren() {
         return this.children;
     }
 
