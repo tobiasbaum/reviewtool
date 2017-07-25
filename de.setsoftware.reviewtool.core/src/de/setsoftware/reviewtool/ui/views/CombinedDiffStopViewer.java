@@ -52,6 +52,7 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
                 final IFileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
                 final Set<FileDiff> diffs = node.buildHistories(ancestor);
                 // TODO: we currently cowardly refuse to display any history beyond the first merge parent
+                // TODO: it happened to me once that "diffs" was empty here; fix here or somewhere else?
                 final FileDiff diff = diffs.iterator().next();
 
                 final List<Fragment> origins = new ArrayList<>();
@@ -96,8 +97,8 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
                 }
 
                 this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
-                        Arrays.asList(createFragmentForWholeFile(firstRevision, oldContents)),
-                        Arrays.asList(createFragmentForWholeFile(lastRevision, newContents)),
+                        Arrays.asList(this.createFragmentForWholeFile(firstRevision, oldContents)),
+                        Arrays.asList(this.createFragmentForWholeFile(lastRevision, newContents)),
                         oldPositions,
                         newPositions);
             }
