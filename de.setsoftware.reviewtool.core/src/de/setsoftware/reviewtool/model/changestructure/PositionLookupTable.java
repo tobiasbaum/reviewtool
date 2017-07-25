@@ -10,6 +10,7 @@ import java.util.List;
 import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
 /**
@@ -28,6 +29,9 @@ public class PositionLookupTable {
      */
     public static PositionLookupTable create(IFile file)
             throws IOException, CoreException {
+        if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
+            file.refreshLocal(IResource.DEPTH_ZERO, null);
+        }
         final InputStream stream = file.getContents();
         try {
             final Reader r = new InputStreamReader(stream, file.getCharset());
