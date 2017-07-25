@@ -31,6 +31,7 @@ import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchesListener;
 import org.eclipse.equinox.security.storage.ISecurePreferences;
 import org.eclipse.equinox.security.storage.StorageException;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -158,17 +159,37 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         @Override
-        public boolean handleLocalWorkingCopyOutOfDate(final String detailInfo) {
+        public Boolean handleLocalWorkingCopyOutOfDate(final String detailInfo) {
             return ReviewPlugin.this.callUiFromBackgroundJob(
                     null,
                     this.display,
                     new Callback<Boolean, Void>() {
                         @Override
                         public Boolean run(final Void unused) {
-                            return MessageDialog.openQuestion(
-                                    null, "Working copy out of date",
+                            final MessageDialog dg = new MessageDialog(
+                                    null,
+                                    "Working copy out of date",
+                                    null,
                                     "The working copy (" + detailInfo
-                                    + ") does not contain all relevant changes. Perform an update?");
+                                    + ") does not contain all relevant changes. Perform an update?",
+                                    MessageDialog.QUESTION_WITH_CANCEL,
+                                    new String[]{
+                                        IDialogConstants.YES_LABEL,
+                                        IDialogConstants.NO_LABEL,
+                                        IDialogConstants.CANCEL_LABEL},
+                                    0);
+                            switch (dg.open()) {
+                            case 0:
+                                //yes
+                                return Boolean.TRUE;
+                            case 1:
+                                //no
+                                return Boolean.FALSE;
+                            case 2:
+                            default:
+                                //cancel
+                                return null;
+                            }
                         }
                     });
         }
@@ -813,7 +834,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void loadToursAndCreateMarkers(final Callback<?, Boolean> tail, final String action) {
-        IProgressService progressService = PlatformUI.getWorkbench().getProgressService();
+        final IProgressService progressService = PlatformUI.getWorkbench().getProgressService();
         try {
             final Display display = Display.getCurrent();
             progressService.busyCursorWhile(new IRunnableWithProgress() {
@@ -851,7 +872,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                 if (choices.size() == 1) {
                     return choices.get(0).getSecond();
                 }
-                return callUiFromBackgroundJob(
+                return ReviewPlugin.this.callUiFromBackgroundJob(
                         choices,
                         display,
                         new Callback<List<? extends Tour>, List<? extends Pair<String, List<? extends Tour>>>>() {
@@ -869,7 +890,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                 if (choices.isEmpty()) {
                     return Collections.emptyList();
                 }
-                return callUiFromBackgroundJob(
+                return ReviewPlugin.this.callUiFromBackgroundJob(
                         choices,
                         display,
                         new Callback<

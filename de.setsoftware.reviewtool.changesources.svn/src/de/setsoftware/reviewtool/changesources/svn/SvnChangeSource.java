@@ -175,7 +175,10 @@ public class SvnChangeSource implements IChangeSource {
             final File wc = repo.getLocalRoot();
             final long wcRev = this.mgr.getStatusClient().doStatus(wc, false).getRevision().getNumber();
             if (wcRev < e.getValue()) {
-                final boolean doUpdate = ui.handleLocalWorkingCopyOutOfDate(wc.toString());
+                final Boolean doUpdate = ui.handleLocalWorkingCopyOutOfDate(wc.toString());
+                if (doUpdate == null) {
+                    throw new OperationCanceledException();
+                }
                 if (doUpdate) {
                     this.mgr.getUpdateClient().doUpdate(wc, SVNRevision.HEAD, SVNDepth.INFINITY, true, false);
                 }
