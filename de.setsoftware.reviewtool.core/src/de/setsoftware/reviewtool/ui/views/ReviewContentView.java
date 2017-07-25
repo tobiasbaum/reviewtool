@@ -33,6 +33,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -669,6 +670,13 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             } else {
                 return pos.getShortFileName();
             }
+        }
+
+        @Override
+        public Point getToolTipShift(Object object) {
+            //use a tool-tip shift to avoid that the user clicks on the tool-tip
+            //  when he wants to click on the tree item
+            return new Point(10, 10);
         }
 
         @Override
