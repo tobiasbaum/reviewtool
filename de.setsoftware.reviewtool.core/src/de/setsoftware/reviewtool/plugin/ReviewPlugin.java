@@ -513,6 +513,10 @@ public class ReviewPlugin implements IReviewConfigurable {
             }
         }
 
+        if (this.checkUnsavedFilesAndCheckCancel()) {
+            return;
+        }
+
         try {
             this.loadReviewData(Mode.REVIEWING, new UiCallback<Void>(Display.getCurrent()) {
                 @Override
@@ -561,6 +565,10 @@ public class ReviewPlugin implements IReviewConfigurable {
     public void startFixing() {
         this.checkConfigured();
         if (this.invalidMode(Mode.IDLE)) {
+            return;
+        }
+
+        if (this.checkUnsavedFilesAndCheckCancel()) {
             return;
         }
 
@@ -706,6 +714,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (this.invalidMode(Mode.REVIEWING)) {
             return;
         }
+        if (this.checkUnsavedFilesAndCheckCancel()) {
+            return;
+        }
+
         final ReviewData reviewData = this.getCurrentReviewDataParsed();
         final EndTransition.Type preferredEndTransitionType;
         if (reviewData.hasTemporaryMarkers()) {
@@ -747,6 +759,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         ImageCache.dispose();
     }
 
+    private boolean checkUnsavedFilesAndCheckCancel() {
+        return !PlatformUI.getWorkbench().saveAllEditors(true);
+    }
+
     private List<String> determinePreferredEndTransitions(EndTransition.Type type) {
         final List<String> ret = new ArrayList<>();
         for (final IPreferredTransitionStrategy strategy : this.preferredTransitionStrategies) {
@@ -780,6 +796,11 @@ public class ReviewPlugin implements IReviewConfigurable {
                 return;
             }
         }
+
+        if (this.checkUnsavedFilesAndCheckCancel()) {
+            return;
+        }
+
         Telemetry.event("fixingEnded")
             .param("round", this.persistence.getCurrentRound())
             .log();
