@@ -42,6 +42,7 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.IShowInTarget;
 import org.eclipse.ui.part.MultiPageEditorPart;
@@ -244,7 +245,25 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     ? -1 : stop.getMostRecentFragment().getFrom().getLine())
                 .param("type", typeForTelemetry)
                 .log();
-            openEditorFor(tours, stop);
+            openEditorFor(tours, stop, false);
+        } catch (final CoreException | IOException e) {
+            throw new ReviewtoolException(e);
+        }
+    }
+
+    /**
+     * Jumps to the given fragment and opens it in a text editor. Ensures that the corresponding tour is active.
+     */
+    public static void openInTextEditor(ToursInReview tours, Tour tour, Stop stop) {
+        CurrentStop.setCurrentStop(stop);
+        try {
+            tours.ensureTourActive(tour, new RealMarkerFactory());
+            Telemetry.event("openTextEditor")
+                .param("resource", stop.getMostRecentFile().getPath())
+                .param("line", stop.getMostRecentFragment() == null
+                    ? -1 : stop.getMostRecentFragment().getFrom().getLine())
+                .log();
+            openEditorFor(tours, stop, true);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -255,7 +274,9 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         tv.expandToLevel(activeTour, TreeViewer.ALL_LEVELS);
     }
 
-    private static void openEditorFor(final ToursInReview tours, final Stop stop) throws CoreException, IOException {
+    private static void openEditorFor(final ToursInReview tours, final Stop stop, boolean forceTextEditor)
+            throws CoreException, IOException {
+
         final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 
         //when jumping to a marker, Eclipse selects all the contained text. We don't want that, so
@@ -278,12 +299,20 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         final IMarker marker = tours.createMarkerFor(new RealMarkerFactory(), jumpTarget);
         if (marker != null) {
+            if (forceTextEditor) {
+                marker.setAttribute(IDE.EDITOR_ID_ATTR, getTextEditorId());
+            }
             IDE.openEditor(page, marker);
             marker.delete();
         } else {
             final IFileStore fileStore =
                     EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath());
-            final IEditorPart part = IDE.openEditorOnFileStore(page, fileStore);
+            final IEditorPart part;
+            if (forceTextEditor) {
+                part = page.openEditor(new FileStoreEditorInput(fileStore), getTextEditorId());
+            } else {
+                part = IDE.openEditorOnFileStore(page, fileStore);
+            }
             //for files not in the workspace, we cannot create markers, but let's at least select the text
             if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {
                 final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
@@ -292,6 +321,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 setSelection(part, new TextSelection(posStart, posEnd - posStart));
             }
         }
+    }
+
+    private static String getTextEditorId() {
+        return "org.eclipse.ui.DefaultTextEditor";
     }
 
     private static void setSelection(IEditorPart part, TextSelection textSelection) {

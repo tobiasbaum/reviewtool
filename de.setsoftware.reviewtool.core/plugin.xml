@@ -150,6 +150,18 @@
                </with>
              </visibleWhen>
        </command>
+       <command commandId="de.setsoftware.reviewtool.commands.openInTextEditor"
+             label="Open in text editor"
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.changestructure.Stop" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
 	 </menuContribution>
    </extension>
    <extension point="org.eclipse.ui.commands">
@@ -185,6 +197,9 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.OpenDirectoryAction"
         id="de.setsoftware.reviewtool.commands.openDirectory" name="Open directory of selected stop">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.OpenInTextEditorAction"
+        id="de.setsoftware.reviewtool.commands.openInTextEditor" name="Open directory of selected stop">
      </command>
    </extension>
 
