@@ -56,15 +56,18 @@ public class CachedLog {
         }
     }
 
-    private static final int LOOKUP_LIMIT = 1000;
     private static final CachedLog INSTANCE = new CachedLog();
 
     private final Map<String, RepoDataCache> repoDataPerWcRoot;
     private final Map<String, List<CachedLogEntry>> entriesPerWcRoot;
+    private int minCount;
+    private int maxCount;
 
     private CachedLog() {
         this.repoDataPerWcRoot = new HashMap<>();
         this.entriesPerWcRoot = new HashMap<>();
+        this.minCount = 1000;
+        this.maxCount = 1000;
 
         try {
             this.readCacheFromFile();
@@ -75,6 +78,14 @@ public class CachedLog {
 
     public static CachedLog getInstance() {
         return INSTANCE;
+    }
+
+    /**
+     * Changes the default values for minimum and maximum size of the log.
+     */
+    public void setSizeLimits(int minCount, int maxCount) {
+        this.minCount = Math.min(minCount, maxCount);
+        this.maxCount = Math.max(minCount, maxCount);
     }
 
     /**
@@ -160,7 +171,7 @@ public class CachedLog {
                 false,
                 true,
                 false,
-                LOOKUP_LIMIT,
+                this.minCount,
                 new String[0],
                 new ISVNLogEntryHandler() {
                     @Override
@@ -222,7 +233,7 @@ public class CachedLog {
                 oos.writeUTF(e.getKey());
                 oos.writeObject(e.getValue());
                 entryCount++;
-                if (entryCount > LOOKUP_LIMIT) {
+                if (entryCount > this.maxCount) {
                     break;
                 }
             }

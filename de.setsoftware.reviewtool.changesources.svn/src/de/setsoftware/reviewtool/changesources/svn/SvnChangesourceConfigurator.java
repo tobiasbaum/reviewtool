@@ -40,8 +40,13 @@ public class SvnChangesourceConfigurator implements IConfigurator {
         final String pwd = xml.getAttribute("password");
         final String pattern = xml.getAttribute("pattern");
         final String maxTextDiffThreshold = xml.getAttribute("maxTextDiffFileSizeThreshold");
+        final String minLogCacheSize = xml.getAttribute("minLogCacheSize");
+        final String maxLogCacheSize = xml.getAttribute("maxLogCacheSize");
         configurable.setChangeSource(new SvnChangeSource(
-                projectDirs, pattern, user, pwd, Long.parseLong(maxTextDiffThreshold)));
+                projectDirs, pattern, user, pwd,
+                Long.parseLong(maxTextDiffThreshold),
+                minLogCacheSize.isEmpty() ? 1000 : Integer.parseInt(minLogCacheSize),
+                maxLogCacheSize.isEmpty() ? 1000 : Integer.parseInt(maxLogCacheSize)));
     }
 
 }
