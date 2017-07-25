@@ -18,14 +18,16 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.TextSelection;
+import org.eclipse.jface.viewers.CellLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
-import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -193,6 +195,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         panel.setLayout(new FillLayout());
 
         final TreeViewer tv = new TreeViewer(panel);
+        ColumnViewerToolTipSupport.enableFor(tv);
         tv.setUseHashlookup(true);
         tv.setContentProvider(new ViewContentProvider(tours));
         tv.setLabelProvider(new TourAndStopLabelProvider());
@@ -544,7 +547,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     /**
      * Label provider for the tree with tours and stops.
      */
-    private static final class TourAndStopLabelProvider extends LabelProvider {
+    private static final class TourAndStopLabelProvider extends CellLabelProvider {
         private static final RGB[] VIEW_COLORS = new RGB[] {
             new RGB(255, 235, 0),
             new RGB(223, 235, 0),
@@ -559,8 +562,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         private static final RGB IRRELEVANT_COLOR = new RGB(170, 170, 170);
 
-        @Override
-        public String getText(Object element) {
+        private String getText(Object element) {
             if (element instanceof Tour) {
                 return ((Tour) element).getDescription().replace("\r", "").replace("\n", "; ");
             } else if (element instanceof Stop) {
@@ -577,8 +579,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             }
         }
 
-        @Override
-        public Image getImage(Object element) {
+        private Image getImage(Object element) {
             if (element instanceof Stop) {
                 final Stop f = (Stop) element;
                 final ViewStatistics statistics = TrackerManager.get().getStatistics();
@@ -635,6 +636,29 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             } else {
                 return pos.getShortFileName();
             }
+        }
+
+        @Override
+        public String getToolTipText(Object element) {
+            if (element instanceof Tour) {
+                return ((Tour) element).getDescription().replace(" + ", "\n + ");
+            } else if (element instanceof Stop) {
+                final Stop f = (Stop) element;
+                if (f.getMostRecentFragment() != null) {
+                    return f.getMostRecentFragment().toString();
+                } else {
+                    return f.getMostRecentFile().toString();
+                }
+            } else {
+                return element.toString() + "(" + element.getClass() + ")";
+            }
+        }
+
+        @Override
+        public void update(ViewerCell cell) {
+            final Object element = cell.getElement();
+            cell.setText(this.getText(element));
+            cell.setImage(this.getImage(element));
         }
     }
 

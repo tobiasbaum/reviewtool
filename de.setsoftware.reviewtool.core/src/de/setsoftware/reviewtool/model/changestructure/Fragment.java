@@ -178,7 +178,13 @@ public final class Fragment implements Comparable<Fragment> {
         result.append(this.to.toString());
         result.append(" in ");
         result.append(this.file.toString());
-        result.append(this.origins.toString());
+        if (this.origins.size() > 1) {
+            result.append("\norigins: ");
+            result.append(this.origins.toString().replace(", ", ",\n  "));
+        } else if (this.origins.size() == 1) {
+            result.append("\norigin: ");
+            result.append(this.origins.iterator().next());
+        }
         return result.toString();
     }
 
