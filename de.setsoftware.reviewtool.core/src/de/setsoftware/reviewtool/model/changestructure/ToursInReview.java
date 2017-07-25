@@ -46,7 +46,8 @@ public class ToursInReview {
 
         /**
          * Is called when the active tour changes. Will not be called when the active tour
-         * changes together with the tours as a whole.
+         * changes together with the tours as a whole. Both arguments can be null, meaning that
+         * there is no respective tour.
          */
         public abstract void activeTourChanged(Tour oldActive, Tour newActive);
     }

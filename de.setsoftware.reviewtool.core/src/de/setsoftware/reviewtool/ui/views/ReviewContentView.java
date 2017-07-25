@@ -481,8 +481,12 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             if (this.viewer == null) {
                 return;
             }
-            this.viewer.update(oldActive, null);
-            this.viewer.update(newActive, null);
+            if (oldActive != null) {
+                this.viewer.update(oldActive, null);
+            }
+            if (newActive != null) {
+                this.viewer.update(newActive, null);
+            }
             ensureActiveTourExpanded(this.viewer, this.tours);
         }
 
