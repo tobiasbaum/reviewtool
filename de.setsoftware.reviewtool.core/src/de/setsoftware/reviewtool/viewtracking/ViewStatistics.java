@@ -1,8 +1,10 @@
 package de.setsoftware.reviewtool.viewtracking;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,31 +45,22 @@ public class ViewStatistics {
     }
 
     /**
-     * Marks the given stop as checked. This kind of explicit manual marking is orthogonal to
+     * Marks the given stop as checked when it is currently not, or removes the mark when it
+     * is currently present. This kind of explicit manual marking is orthogonal to
      * the automatic marking of viewed portions of the file.
      */
-    public void markExplicitlyAsChecked(Stop stop) {
-        this.explicitMarks.add(stop);
-        this.notifyListeners(stop.getAbsoluteFile());
-    }
-
-    /**
-     * Removes the "checked" mark for the given stop.
-     */
-    public void removeExplicitMark(Stop stop) {
-        this.explicitMarks.remove(stop);
-        this.notifyListeners(stop.getAbsoluteFile());
-    }
-
-    /**
-     * Marks the given stop as checked when it is currently not, or removes the mark when it
-     * is currently present.
-     */
-    public void toggleExplicitlyCheckedMark(Stop stop) {
-        if (this.isMarkedAsChecked(stop)) {
-            this.removeExplicitMark(stop);
-        } else {
-            this.markExplicitlyAsChecked(stop);
+    public void toggleExplicitlyCheckedMark(Collection<Stop> stops) {
+        final Set<File> files = new LinkedHashSet<>();
+        for (final Stop stop : stops) {
+            if (this.isMarkedAsChecked(stop)) {
+                this.explicitMarks.remove(stop);
+            } else {
+                this.explicitMarks.add(stop);
+            }
+            files.add(stop.getAbsoluteFile());
+        }
+        for (final File file : files) {
+            this.notifyListeners(file);
         }
     }
 

@@ -31,9 +31,7 @@ public class MarkAsCheckedAction extends AbstractHandler {
 
         final List<Stop> stops = new ArrayList<>(ts.toList());
         final ViewStatistics statistics = TrackerManager.get().getStatistics();
-        for (final Stop stop : stops) {
-            statistics.toggleExplicitlyCheckedMark(stop);
-        }
+        statistics.toggleExplicitlyCheckedMark(stops);
         return null;
     }
 
