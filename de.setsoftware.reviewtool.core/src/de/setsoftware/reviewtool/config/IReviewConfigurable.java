@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.config;
 
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
+import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
 import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
@@ -41,5 +42,10 @@ public interface IReviewConfigurable {
      * Adds a strategy to determine the preferred end transition.
      */
     public abstract void addPreferredTransitionStrategy(IPreferredTransitionStrategy strategy);
+
+    /**
+     * Adds a strategy to determine irrelevant fragments.
+     */
+    public abstract void addIrrelevanceStrategy(IIrrelevanceDetermination strategy);
 
 }

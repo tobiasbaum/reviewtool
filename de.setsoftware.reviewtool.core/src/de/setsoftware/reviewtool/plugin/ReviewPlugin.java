@@ -58,9 +58,8 @@ import de.setsoftware.reviewtool.config.IReviewConfigurable;
 import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
 import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
-import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.ImportChangeFilter;
-import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.PackageDeclarationFilter;
-import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.WhitespaceChangeFilter;
+import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.BasicIrrelevanceFilterConfigurator;
+import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.PathIrrelevanceFilterConfigurator;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.FileReviewDataCache;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
@@ -71,6 +70,7 @@ import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.Change;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
@@ -376,6 +376,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
     private ILaunchesListener launchesListener;
     private IResourceChangeListener changeListener;
+    private final List<IIrrelevanceDetermination> relevanceFilters = new ArrayList<>();
     private final List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
     private final List<IPreferredTransitionStrategy> preferredTransitionStrategies = new ArrayList<>();
     private IStopViewer stopViewer = new CombinedDiffStopViewer();
@@ -396,6 +397,8 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.configInterpreter.addConfigurator(new SurveyAtEndConfigurator());
         this.configInterpreter.addConfigurator(new StopViewConfigurator());
         this.configInterpreter.addConfigurator(new PathRegexStrategyConfigurator());
+        this.configInterpreter.addConfigurator(new BasicIrrelevanceFilterConfigurator());
+        this.configInterpreter.addConfigurator(new PathIrrelevanceFilterConfigurator());
         final IExtensionPoint configuratorExtensions =
                 Platform.getExtensionRegistry().getExtensionPoint("de.setsoftware.reviewtool.configurator");
         for (final IExtension extension : configuratorExtensions.getExtensions()) {
@@ -431,6 +434,8 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         this.changeSource = null;
         this.endReviewExtensions.clear();
+        this.preferredTransitionStrategies.clear();
+        this.relevanceFilters.clear();
 
         try {
             final Document config = ConfigurationInterpreter.load(configFile);
@@ -932,10 +937,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             this.toursInReview = ToursInReview.create(
                     this.changeSource,
                     sourceUi,
-                    Arrays.asList(
-                            new WhitespaceChangeFilter(),
-                            new ImportChangeFilter(),
-                            new PackageDeclarationFilter()),
+                    this.relevanceFilters,
                     Arrays.asList(
                             new OneStopPerPartOfFileRestructuring()),
                     createUi,
@@ -998,6 +1000,11 @@ public class ReviewPlugin implements IReviewConfigurable {
     private void unregisterGlobalTelemetryListeners() {
         DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(this.launchesListener);
         ResourcesPlugin.getWorkspace().removeResourceChangeListener(this.changeListener);
+    }
+
+    @Override
+    public void addIrrelevanceStrategy(IIrrelevanceDetermination strategy) {
+        this.relevanceFilters.add(strategy);
     }
 
     @Override
@@ -1073,4 +1080,5 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
         return result.get();
     }
+
 }

@@ -35,4 +35,6 @@
     </question>
   </surveyAtReviewEnd>
   <reminder minCount="4" minDays="3"/>
+  <basicIrrelevanceFilters />
+  <pathIrrelevanceFilter pattern="**/*.bmp" description="BMP-Bitmaps" />
 </reviewToolConfig>
