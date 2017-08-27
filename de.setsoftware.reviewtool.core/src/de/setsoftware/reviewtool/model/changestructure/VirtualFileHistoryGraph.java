@@ -57,16 +57,14 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
          * @throws ReviewtoolException if the underlying node types are incompatible.
          */
         private Type determineNodeType() {
-            Type resultingType = Type.NORMAL;
+            Type resultingType = Type.UNCONFIRMED;
             for (final IFileHistoryNode node : this.nodes) {
                 final Type nodeType = node.getType();
-                if (!nodeType.equals(Type.NORMAL)) {
-                    if (resultingType.equals(Type.NORMAL) || resultingType.equals(nodeType)) {
-                        resultingType = nodeType;
-                    } else {
-                        throw new ReviewtoolException("Incompatible types for " + this.file + ": "
-                                + resultingType + " # " + nodeType);
-                    }
+                if (resultingType.equals(Type.UNCONFIRMED)) {
+                    resultingType = nodeType;
+                } else if (!nodeType.equals(Type.UNCONFIRMED) && !nodeType.equals(resultingType)) {
+                    throw new ReviewtoolException("Incompatible types for " + this.file + ": "
+                            + resultingType + " # " + nodeType);
                 }
             }
             return resultingType;

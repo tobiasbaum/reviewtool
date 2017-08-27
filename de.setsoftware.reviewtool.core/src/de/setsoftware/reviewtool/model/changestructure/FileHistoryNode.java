@@ -30,6 +30,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
      *
      * @param file The {@link IRevisionedFile} to wrap.
+     * @param type The node type.
      */
     public FileHistoryNode(final FileHistoryGraph graph, final IRevisionedFile file, final Type type) {
         this.graph = graph;
@@ -137,10 +138,10 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     /**
-     * Makes this node a deleted node. Requires that the node is a {@link Type#NORMAL} node.
+     * Makes this node a deleted node. Requires that the node is a {@link Type#ADDED} or {@link Type#CHANGED} node.
      */
     void makeDeleted() {
-        assert this.type.equals(Type.NORMAL);
+        assert this.type.equals(Type.ADDED) || this.type.equals(Type.CHANGED);
         this.type = Type.DELETED;
 
         final Iterator<FileHistoryEdge> it = this.ancestors.iterator();
@@ -161,11 +162,18 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     /**
-     * Makes this node a confirmed node. Requires that the node is a {@link Type#UNCONFIRMED} node.
+     * Changes the type of this node to {@link Type#CHANGED}.
+     * Requires that the node is a {@link Type#UNCONFIRMED} node.
+     * In addition, {@link #makeConfirmed()} is invoked on the parent node if that exists and if it is of type
+     * {@link Type#UNCONFIRMED}.
      */
     void makeConfirmed() {
         assert this.type.equals(Type.UNCONFIRMED);
-        this.type = Type.NORMAL;
+        this.type = Type.CHANGED;
+
+        if (this.parent != null && !this.parent.isConfirmed()) {
+            this.parent.makeConfirmed();
+        }
     }
 
     /**

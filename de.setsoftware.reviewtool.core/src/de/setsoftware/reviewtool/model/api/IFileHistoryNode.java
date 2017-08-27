@@ -15,9 +15,14 @@ public interface IFileHistoryNode {
      */
     public enum Type {
         /**
-         * A normal node denoting an addition or change, i.e. the start of a new or continuation of an existing flow.
+         * A node denoting an addition, i.e. the start of a new flow.
          */
-        NORMAL,
+        ADDED,
+        /**
+         * A node denoting a change, i.e. the continuation of an existing flow.
+         * The change may be empty. Such a node results from confirming an unconfirmed copy source retroactively.
+         */
+        CHANGED,
         /**
          * A node denoting a deletion, i.e. the termination of an existing flow.
          */
