@@ -47,11 +47,11 @@ public abstract class Repository {
     protected final Revision getSmallestOfComparableRevisions(Collection<? extends Revision> revisions) {
         Revision smallestSoFar = null;
         for (final Revision r : revisions) {
-            if (smallestSoFar == null) {
-                smallestSoFar = r;
-            } else if (r instanceof UnknownRevision) {
+            if (r instanceof UnknownRevision) {
                 //unknown revision (the source of an added file) is always smallest
                 return r;
+            } else if (smallestSoFar == null) {
+                smallestSoFar = r;
             } else if (r instanceof RepoRevision) {
                 if (smallestSoFar instanceof RepoRevision) {
                     final Object vs = ((RepoRevision) smallestSoFar).getId();
