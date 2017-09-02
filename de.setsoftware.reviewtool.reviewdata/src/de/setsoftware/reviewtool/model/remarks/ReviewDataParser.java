@@ -17,7 +17,7 @@ class ReviewDataParser {
     private static final String REMARK_PREFIX = "*# ";
     private static final String COMMENT_PREFIX = "*#* ";
 
-    private static final Pattern REVIEW_HEADER_PATTERN = Pattern.compile("Review (\\d+):");
+    private static final Pattern REVIEW_HEADER_PATTERN = Pattern.compile("Review +#?(\\d+):");
     private static final Pattern COMMENT_PATTERN = Pattern.compile("([^ ]+): (.+)", Pattern.DOTALL);
 
     /**
@@ -49,6 +49,7 @@ class ReviewDataParser {
         if (this.state == ParseState.BEFORE_ROUND) {
             if (trimmedLine.isEmpty()) {
                 //ist OK, nichts tun
+                return;
             }
             final Matcher m = REVIEW_HEADER_PATTERN.matcher(trimmedLine);
             if (m.matches()) {
@@ -63,6 +64,8 @@ class ReviewDataParser {
                 this.endLastItem();
                 this.state = ParseState.BEFORE_ROUND;
                 this.currentRound = null;
+                this.currentRemark = null;
+                this.currentType = null;
             } else if (trimmedLine.startsWith(TYPE_PREFIX)) {
                 this.endLastItem();
                 this.currentType = this.parseType(trimmedLine);
@@ -103,6 +106,9 @@ class ReviewDataParser {
         case IN_REMARK:
             final ResolutionType resoRemark = this.handleResolutionMarkers();
             final Position pos = this.parsePosition();
+            if (this.currentType == null) {
+                throw new ReviewRemarkException("missing remark type for: " + this.currentText);
+            }
             this.currentRemark = ReviewRemark.create(
                     this.markerFactory.createMarker(pos),
                     this.getReviewerForCurrentRound(),
@@ -118,6 +124,9 @@ class ReviewDataParser {
             final ResolutionType resoComment = this.handleResolutionMarkers();
             final Matcher m = COMMENT_PATTERN.matcher(this.currentText);
             if (m.matches()) {
+                if (this.currentRemark == null) {
+                    throw new ReviewRemarkException("dangling comment: " + this.currentText);
+                }
                 this.currentRemark.addComment(m.group(1), m.group(2));
                 if (resoComment != null) {
                     this.currentRemark.setResolution(resoComment);
