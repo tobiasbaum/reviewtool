@@ -11,6 +11,8 @@ import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Display;
 
+import de.setsoftware.reviewtool.base.Logger;
+
 /**
  * Caches images and has nice factory methods for them.
  */
@@ -40,8 +42,13 @@ public class ImageCache {
         color.dispose();
         gc.dispose();
 
-        images.put(key, img);
+        cache(key, img);
         return img;
+    }
+
+    private static void cache(final String key, final Image img) {
+        images.put(key, img);
+        Logger.debug("image cache has " + images.size() + " items after caching " + key);
     }
 
     /**
@@ -66,7 +73,7 @@ public class ImageCache {
         colorFill.dispose();
         gc.dispose();
 
-        images.put(key, img);
+        cache(key, img);
         return img;
     }
 
@@ -92,7 +99,7 @@ public class ImageCache {
         colorFill.dispose();
         gc.dispose();
 
-        images.put(key, img);
+        cache(key, img);
         return img;
     }
 
@@ -116,7 +123,7 @@ public class ImageCache {
         green.dispose();
         gc.dispose();
 
-        images.put(key, img);
+        cache(key, img);
         return img;
     }
 
