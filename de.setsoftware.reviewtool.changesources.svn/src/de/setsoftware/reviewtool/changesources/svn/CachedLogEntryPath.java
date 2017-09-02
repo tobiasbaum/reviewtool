@@ -56,7 +56,7 @@ public class CachedLogEntryPath implements Serializable {
             this.path = '/' + status.getRepositoryRelativePath();
             this.copyPath = null;
             if (status.getRevision().equals(SVNRevision.UNDEFINED)) {
-                this.prevRevision = Long.MAX_VALUE;
+                this.prevRevision = SVNRevision.BASE.getNumber();
             } else {
                 this.prevRevision = status.getCommittedRevision().getNumber();
             }
