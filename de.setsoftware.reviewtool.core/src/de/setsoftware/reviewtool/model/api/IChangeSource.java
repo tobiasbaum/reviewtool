@@ -8,7 +8,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 /**
  * Interface for strategies to determine the changes for a ticket, separated into commits.
  */
-public interface IChangeSource {
+public interface IChangeSource extends IRepositoryProvider {
 
     /**
      * Returns all repository changes (that are relevant for the review tool) for the ticket with the given key.
@@ -19,12 +19,12 @@ public interface IChangeSource {
      * Returns all local changes (that are relevant for the review tool) in a new {@link IChangeData} object,
      * based on a {@link IChangeData} object returned earlier by {@link #getRepositoryChanges(String, IChangeSourceUi)}.
      *
-     * @param changedPaths The files to consider while searching for modifications. If {@code null},
+     * @param relevantPaths The files to consider while searching for modifications. If {@code null},
      *      the whole working copy is considered.
      */
     public abstract IChangeData getLocalChanges(
             IChangeData remoteChanges,
-            List<File> changedPaths,
+            List<File> relevantPaths,
             IProgressMonitor ui);
 
 }

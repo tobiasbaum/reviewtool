@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -86,6 +87,17 @@ public class CachedLog {
     public void setSizeLimits(int minCount, int maxCount) {
         this.minCount = Math.min(minCount, maxCount);
         this.maxCount = Math.max(minCount, maxCount);
+    }
+
+    /**
+     * Returns a collection of all known Subversion repositories.
+     */
+    public Collection<SvnRepo> getRepositories() {
+        final List<SvnRepo> result = new ArrayList<>();
+        for (final RepoDataCache info : this.repoDataPerWcRoot.values()) {
+            result.add(info.getRepo());
+        }
+        return result;
     }
 
     /**
