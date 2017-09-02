@@ -1,35 +1,42 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-/**
- * A singular change of a part of a text file.
- */
-public class TextualChangeHunk extends Change {
+import de.setsoftware.reviewtool.model.api.IChangeVisitor;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
 
-    private final Fragment from;
-    private final Fragment to;
+/**
+ * Default implementation of {@link ITextualChange}.
+ */
+public class TextualChangeHunk extends Change implements ITextualChange {
+
+    private final IFragment from;
+    private final IFragment to;
 
     TextualChangeHunk(
-            final Fragment from, final Fragment to, final boolean irrelevantForReview, final boolean isVisible) {
+            final IFragment from, final IFragment to, final boolean irrelevantForReview, final boolean isVisible) {
         super(irrelevantForReview, isVisible);
         this.from = from;
         this.to = to;
     }
 
     @Override
-    public void accept(ChangeVisitor visitor) {
+    public void accept(IChangeVisitor visitor) {
         visitor.handle(this);
     }
 
-    public Fragment getFromFragment() {
+    @Override
+    public IFragment getFromFragment() {
         return this.from;
     }
 
-    public Fragment getToFragment() {
+    @Override
+    public IFragment getToFragment() {
         return this.to;
     }
 
     @Override
-    protected TextualChangeHunk makeIrrelevant() {
+    public ITextualChange makeIrrelevant() {
         if (this.isIrrelevantForReview()) {
             return this;
         }
@@ -37,12 +44,12 @@ public class TextualChangeHunk extends Change {
     }
 
     @Override
-    public FileInRevision getFrom() {
+    public IRevisionedFile getFrom() {
         return this.getFromFragment().getFile();
     }
 
     @Override
-    public FileInRevision getTo() {
+    public IRevisionedFile getTo() {
         return this.getToFragment().getFile();
     }
 

@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.model.api.IReviewElement;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.telemetry.TelemetryEventBuilder;
 import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
 
@@ -73,7 +75,7 @@ public class Tour implements IReviewElement {
      * from this come before files from the other tour.
      */
     public Tour mergeWith(Tour t2) {
-        final Multimap<FileInRevision, Stop> stopsInFile = new Multimap<>();
+        final Multimap<IRevisionedFile, Stop> stopsInFile = new Multimap<>();
 
         for (final Stop s : this.stops) {
             stopsInFile.put(s.getMostRecentFile(), s);
@@ -83,7 +85,7 @@ public class Tour implements IReviewElement {
         }
 
         final List<Stop> mergedStops = new ArrayList<>();
-        for (final Entry<FileInRevision, List<Stop>> e : stopsInFile.entrySet()) {
+        for (final Entry<IRevisionedFile, List<Stop>> e : stopsInFile.entrySet()) {
             mergedStops.addAll(this.sortByLine(this.mergeInSameFile(e.getValue())));
         }
         return new Tour(this.getDescription() + " + " + t2.getDescription(), mergedStops);

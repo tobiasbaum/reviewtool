@@ -3,7 +3,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Date;
 import java.util.Map;
 
-import de.setsoftware.reviewtool.model.changestructure.Revision;
+import de.setsoftware.reviewtool.model.api.IRevision;
 
 /**
  * Represents a Subversion revision which can be a repository revision or a working copy revision.
@@ -26,9 +26,9 @@ public interface ISvnRevision {
     public abstract String getRevisionString();
 
     /**
-     * @return The {@link Revision} for this Subversion revision.
+     * @return The {@link IRevision} for this Subversion revision.
      */
-    public abstract Revision toRevision();
+    public abstract IRevision toRevision();
 
     /**
      * @return The associated commit date.

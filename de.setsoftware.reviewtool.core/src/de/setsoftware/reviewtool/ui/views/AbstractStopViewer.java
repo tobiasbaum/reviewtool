@@ -19,8 +19,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.ui.IStopViewer;
 
 /**
@@ -154,10 +154,10 @@ public abstract class AbstractStopViewer implements IStopViewer {
      * @param fragments The list of fragments.
      * @return The concatenated contents of the fragments passed.
      */
-    protected String mapFragmentsToString(final List<Fragment> fragments) {
+    protected String mapFragmentsToString(final List<? extends IFragment> fragments) {
         final StringBuilder text = new StringBuilder();
         boolean first = true;
-        for (final Fragment f : fragments) {
+        for (final IFragment f : fragments) {
             if (first) {
                 first = false;
             } else {
@@ -178,9 +178,9 @@ public abstract class AbstractStopViewer implements IStopViewer {
      * @param targetFragments The target fragments.
      */
     protected void createDiffViewer(final ViewPart view, final Composite parent,
-            final FileInRevision sourceRevision, final FileInRevision targetRevision,
-            final List<Fragment> sourceFragments,
-            final List<Fragment> targetFragments,
+            final IRevisionedFile sourceRevision, final IRevisionedFile targetRevision,
+            final List<? extends IFragment> sourceFragments,
+            final List<? extends IFragment> targetFragments,
             final List<Position> rangesLeft,
             final List<Position> rangesRight) {
         if (sourceFragments.isEmpty() || targetFragments.isEmpty()) {
@@ -201,10 +201,10 @@ public abstract class AbstractStopViewer implements IStopViewer {
     private void createTextHunkViewer(
             final ViewPart viewPart,
             final Composite parent,
-            final FileInRevision sourceRevision,
-            final FileInRevision targetRevision,
-            final List<Fragment> sourceFragments,
-            final List<Fragment> targetFragments,
+            final IRevisionedFile sourceRevision,
+            final IRevisionedFile targetRevision,
+            final List<? extends IFragment> sourceFragments,
+            final List<? extends IFragment> targetFragments,
             final List<Position> rangesLeft,
             final List<Position> rangesRight) {
         final CompareConfiguration compareConfiguration = new CompareConfiguration();
@@ -236,7 +236,7 @@ public abstract class AbstractStopViewer implements IStopViewer {
         }
     }
 
-    private static String toLabel(FileInRevision revision) {
+    private static String toLabel(IRevisionedFile revision) {
         return revision.toString();
     }
 

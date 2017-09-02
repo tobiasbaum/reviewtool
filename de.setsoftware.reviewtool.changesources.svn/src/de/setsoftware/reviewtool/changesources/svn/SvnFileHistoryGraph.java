@@ -3,15 +3,15 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Collections;
 import java.util.List;
 
+import de.setsoftware.reviewtool.model.api.ILocalRevision;
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.LocalRevision;
-import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.Repository;
-import de.setsoftware.reviewtool.model.changestructure.Revision;
-import de.setsoftware.reviewtool.model.changestructure.RevisionVisitor;
-import de.setsoftware.reviewtool.model.changestructure.UnknownRevision;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
@@ -23,9 +23,9 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
      */
     public void addAddition(
             final String path,
-            final Revision revision,
-            final Repository repo) {
-        this.addAdditionOrChange(path, revision, Collections.<Revision>emptySet(), repo);
+            final IRevision revision,
+            final IRepository repo) {
+        this.addAdditionOrChange(path, revision, Collections.<IRevision>emptySet(), repo);
     }
 
     /**
@@ -33,10 +33,10 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
      */
     public void addChange(
             final String path,
-            final Revision prevRevision,
-            final Revision revision,
-            final Repository repo) {
-        this.addAdditionOrChange(path, revision, Collections.<Revision>singleton(prevRevision), repo);
+            final IRevision prevRevision,
+            final IRevision revision,
+            final IRepository repo) {
+        this.addAdditionOrChange(path, revision, Collections.<IRevision>singleton(prevRevision), repo);
     }
 
     /**
@@ -47,14 +47,14 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
      */
     public void addDeletion(
             final String path,
-            final Revision prevRevision,
-            final Revision revision,
-            final Repository repo) {
-        this.addDeletion(path, revision, Collections.<Revision>singleton(prevRevision), repo);
+            final IRevision prevRevision,
+            final IRevision revision,
+            final IRepository repo) {
+        this.addDeletion(path, revision, Collections.<IRevision>singleton(prevRevision), repo);
     }
 
     @Override
-    public FileHistoryNode findAncestorFor(final FileInRevision file) {
+    public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
         final List<FileHistoryNode> nodesForKey = this.lookupFile(file);
         final long targetRevision = getRevision(file);
         long nearestRevision = Long.MIN_VALUE;
@@ -79,21 +79,21 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
      * @param revision The revision.
      * @return The revision number.
      */
-    private static long getRevision(final FileInRevision revision) {
-        return revision.getRevision().accept(new RevisionVisitor<Long>() {
+    private static long getRevision(final IRevisionedFile revision) {
+        return revision.getRevision().accept(new IRevisionVisitor<Long>() {
 
             @Override
-            public Long handleLocalRevision(final LocalRevision revision) {
+            public Long handleLocalRevision(final ILocalRevision revision) {
                 return Long.MAX_VALUE;
             }
 
             @Override
-            public Long handleRepoRevision(final RepoRevision revision) {
+            public Long handleRepoRevision(final IRepoRevision revision) {
                 return (Long) revision.getId();
             }
 
             @Override
-            public Long handleUnknownRevision(final UnknownRevision revision) {
+            public Long handleUnknownRevision(final IUnknownRevision revision) {
                 return 0L;
             }
 

@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 

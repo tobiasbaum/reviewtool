@@ -9,6 +9,8 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.IFragment;
+
 /**
  * Tests for {@link Tour}.
  */
@@ -34,13 +36,13 @@ public class TourTest {
 
     @Test
     public void testMergeWithDifferentFiles() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
+        final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 1));
         final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
-        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 1));
-        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
+        final IFragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
         final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
         final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
@@ -54,18 +56,18 @@ public class TourTest {
 
     @Test
     public void testMergeWithDifferentPartsOfSameFileAndDifferentFile() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
+        final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 1));
         final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
-        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 1));
-        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
+        final IFragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
         final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
         final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
-        final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 1));
-        final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 1));
+        final IFragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 1));
+        final IFragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 1));
         final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 1));
         final Stop s3 = new Stop(new TextualChangeHunk(from3, to3, false, true), current3);
 
@@ -79,18 +81,18 @@ public class TourTest {
 
     @Test
     public void testMergeOrderInFileByLine() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
+        final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 1));
         final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
-        final Fragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 1));
-        final Fragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
+        final IFragment from2 = new Fragment(file("b.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment to2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
         final Fragment current2 = new Fragment(file("b.java", 3), pos(1, 1), pos(2, 1));
         final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
-        final Fragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 1));
-        final Fragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 1));
+        final IFragment from3 = new Fragment(file("a.java", 2), pos(4, 1), pos(5, 1));
+        final IFragment to3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 1));
         final Fragment current3 = new Fragment(file("a.java", 3), pos(4, 1), pos(5, 1));
         final Stop s3 = new Stop(new TextualChangeHunk(from3, to3, false, true), current3);
 
@@ -104,13 +106,13 @@ public class TourTest {
 
     @Test
     public void testMergeOfAdjacentLines() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
+        final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 1));
         final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
-        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 1));
-        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
+        final IFragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 1));
+        final IFragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
         final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, false, true), current2);
 
@@ -143,13 +145,13 @@ public class TourTest {
 
     @Test
     public void testCannotMergeNeighboringStopsWithDifferentRelevance() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
+        final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
+        final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 1));
         final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
-        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 1));
-        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
+        final IFragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 1));
+        final IFragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
         final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, true, true), current2);
 
@@ -159,13 +161,13 @@ public class TourTest {
 
     @Test
     public void testCanMergeOverlappingStopsWithDifferentRelevance() {
-        final Fragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 1));
-        final Fragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(3, 1));
+        final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 1));
+        final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(3, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(3, 1));
         final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false, true), current1);
 
-        final Fragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(4, 1));
-        final Fragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 1));
+        final IFragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(4, 1));
+        final IFragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 1));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 1));
         final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, true, true), current2);
 

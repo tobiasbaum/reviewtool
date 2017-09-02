@@ -8,41 +8,49 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.ILocalRevision;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
 public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implements IMutableFileHistoryGraph {
 
-    private final Multimap<Pair<String, Repository>, FileHistoryNode> index = new Multimap<>();
+    private final Multimap<Pair<String, IRepository>, FileHistoryNode> index = new Multimap<>();
 
     @Override
-    public final boolean contains(final String path, final Repository repo) {
+    public final boolean contains(final String path, final IRepository repo) {
         return !this.index.get(Pair.create(path, repo)).isEmpty();
     }
 
     @Override
     public final void addAdditionOrChange(
             final String path,
-            final Revision revision,
-            final Set<Revision> ancestorRevisions,
-            final Repository repo) {
+            final IRevision revision,
+            final Set<IRevision> ancestorRevisions,
+            final IRepository repo) {
 
         final boolean isNew = ancestorRevisions.isEmpty();
-        final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
+        final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision, repo);
         final FileHistoryNode node = this.getOrCreateFileHistoryNode(file, true, isNew, !isNew);
         if (node.isRoot()) {
             // for each root file within the history graph, we need an artificial ancestor node to record the changes
-            final Set<Revision> ancestorRevs;
+            final Set<IRevision> ancestorRevs;
             if (isNew) {
                 // use an UnknownRevision node as ancestor for newly added nodes
-                ancestorRevs = Collections.<Revision>singleton(new UnknownRevision());
+                ancestorRevs = Collections.<IRevision>singleton(new UnknownRevision());
             } else {
                 ancestorRevs = ancestorRevisions;
             }
 
-            for (final Revision ancestorRevision : ancestorRevs) {
-                final FileInRevision prevFile =
+            for (final IRevision ancestorRevision : ancestorRevs) {
+                final IRevisionedFile prevFile =
                         ChangestructureFactory.createFileInRevision(path, ancestorRevision, repo);
                 final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(
                         prevFile,
@@ -78,25 +86,25 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     @Override
     public final void addDeletion(
             final String path,
-            final Revision revision,
-            final Set<Revision> ancestorRevisions,
-            final Repository repo) {
+            final IRevision revision,
+            final Set<IRevision> ancestorRevisions,
+            final IRepository repo) {
 
         final Set<FileHistoryNode> ancestors = new LinkedHashSet<>();
-        for (final Revision ancestorRevision : ancestorRevisions) {
-            final FileInRevision ancestorFile =
+        for (final IRevision ancestorRevision : ancestorRevisions) {
+            final IRevisionedFile ancestorFile =
                     ChangestructureFactory.createFileInRevision(path, ancestorRevision, repo);
             final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, false, true);
             assert !ancestor.isDeleted();
             ancestors.add(ancestor);
         }
 
-        final FileInRevision file = ChangestructureFactory.createFileInRevision(path, revision, repo);
+        final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision, repo);
         final FileHistoryNode node = this.getNodeFor(file);
-        revision.accept(new RevisionVisitor<Void>() {
+        revision.accept(new IRevisionVisitor<Void>() {
 
             @Override
-            public Void handleLocalRevision(final LocalRevision revision) {
+            public Void handleLocalRevision(final ILocalRevision revision) {
                 if (node != null) {
                     assert !node.isDeleted();
                     node.setDeleted(true);
@@ -105,14 +113,14 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             }
 
             @Override
-            public Void handleRepoRevision(final RepoRevision revision) {
+            public Void handleRepoRevision(final IRepoRevision revision) {
                 // a file in a non-local revision can have at most one associated node per revision
                 assert node == null;
                 return null;
             }
 
             @Override
-            public Void handleUnknownRevision(final UnknownRevision revision) {
+            public Void handleUnknownRevision(final IUnknownRevision revision) {
                 // it is not allowed to delete artificial nodes
                 assert node == null;
                 return null;
@@ -123,7 +131,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         if (node == null) {
             final FileHistoryNode deletionNode = new FileHistoryNode(file, true);
             this.addParentNodes(deletionNode, false, false);
-            final Pair<String, Repository> key = FileHistoryGraph.this.createKey(file);
+            final Pair<String, IRepository> key = FileHistoryGraph.this.createKey(file);
             this.index.put(key, deletionNode);
             for (final FileHistoryNode ancestor : ancestors) {
                 ancestor.addDescendant(deletionNode, new FileDiff(ancestor.getFile(), file));
@@ -139,12 +147,12 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     public final void addCopy(
             final String pathFrom,
             final String pathTo,
-            final Revision revisionFrom,
-            final Revision revisionTo,
-            final Repository repo) {
+            final IRevision revisionFrom,
+            final IRevision revisionTo,
+            final IRepository repo) {
 
-        final FileInRevision fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom, repo);
-        final FileInRevision fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo, repo);
+        final IRevisionedFile fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom, repo);
+        final IRevisionedFile fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo, repo);
 
         final FileHistoryNode fromNode = this.getOrCreateFileHistoryNode(fileFrom, false, false, true);
         final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true, true);
@@ -174,12 +182,12 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * @param isNew If <code>true</code>, it is known that the node has been added in its revision.
      */
     private void addParentNodes(final FileHistoryNode node, final boolean isNew, final boolean copyChildren) {
-        final FileInRevision file = node.getFile();
+        final IRevisionedFile file = node.getFile();
         final String path = file.getPath();
         if (path.contains("/")) {
             final String parentPath = path.substring(0, path.lastIndexOf("/"));
             if (!parentPath.isEmpty()) {
-                final FileInRevision fileRev = ChangestructureFactory.createFileInRevision(
+                final IRevisionedFile fileRev = ChangestructureFactory.createFileInRevision(
                         parentPath,
                         file.getRevision(),
                         file.getRepository());
@@ -192,8 +200,8 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                     final String name = path.substring(path.lastIndexOf("/") + 1);
                     for (final FileHistoryEdge parentAncestorEdge : parent.getAncestors()) {
                         final FileHistoryNode parentAncestor = parentAncestorEdge.getAncestor();
-                        final FileInRevision parentAncestorRev = parentAncestor.getFile();
-                        final FileInRevision ancestorRev = ChangestructureFactory.createFileInRevision(
+                        final IRevisionedFile parentAncestorRev = parentAncestor.getFile();
+                        final IRevisionedFile ancestorRev = ChangestructureFactory.createFileInRevision(
                                 parentAncestorRev.getPath() + "/" + name,
                                 parentAncestorRev.getRevision(),
                                 parentAncestorRev.getRepository());
@@ -216,10 +224,10 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      */
     private void copyChildNodes(final FileHistoryNode oldNode, final FileHistoryNode newNode) {
         final String oldParentPath = oldNode.getFile().getPath();
-        final Revision oldRevision = oldNode.getFile().getRevision();
+        final IRevision oldRevision = oldNode.getFile().getRevision();
         final String newParentPath = newNode.getFile().getPath();
-        final Revision newRevision = newNode.getFile().getRevision();
-        final Repository repository = oldNode.getFile().getRepository();
+        final IRevision newRevision = newNode.getFile().getRevision();
+        final IRepository repository = oldNode.getFile().getRepository();
 
         for (final FileHistoryNode child : oldNode.getChildren()) {
             // don't copy deleted children
@@ -233,9 +241,9 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     }
 
     /**
-     * Returns or creates a {@link FileHistoryNode} for a given {@link FileInRevision}.
-     * If a node for that {@link FileInRevision} already exists, it is returned.
-     * If a node for that {@link FileInRevision} does not exist, it is created.
+     * Returns or creates a {@link FileHistoryNode} for a given {@link IRevisionedFile}.
+     * If a node for that {@link IRevisionedFile} already exists, it is returned.
+     * If a node for that {@link IRevisionedFile} does not exist, it is created.
      * In addition, it is inserted into a possibly existing ancestor/descendant chain and/or parent/child of other
      * {@link FileHistoryNode}s.
      *
@@ -246,7 +254,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * @param copyChildren If <code>true</code> and a new node is created, child nodes are copied from the ancestor
      *      (if it exists) to the new node.
      */
-    private FileHistoryNode getOrCreateFileHistoryNode(final FileInRevision file, final boolean mustNotExist,
+    private FileHistoryNode getOrCreateFileHistoryNode(final IRevisionedFile file, final boolean mustNotExist,
             final boolean isNew, final boolean copyChildren) {
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
@@ -291,8 +299,8 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     }
 
     @Override
-    public final FileHistoryNode getNodeFor(final FileInRevision file) {
-        final Pair<String, Repository> key = this.createKey(file);
+    public final FileHistoryNode getNodeFor(final IRevisionedFile file) {
+        final Pair<String, IRepository> key = this.createKey(file);
         final List<FileHistoryNode> nodesForKey = this.index.get(key);
         for (final FileHistoryNode node : nodesForKey) {
             if (node.getFile().getRevision().equals(file.getRevision())) {
@@ -302,7 +310,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         return null;
     }
 
-    private Pair<String, Repository> createKey(final FileInRevision file) {
+    private Pair<String, IRepository> createKey(final IRevisionedFile file) {
         return Pair.create(file.getPath(), file.getRepository());
     }
 
@@ -311,17 +319,17 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * @param file The file to look for.
      * @return A list of matching {@link FileHistoryNode}s.
      */
-    protected final List<FileHistoryNode> lookupFile(final FileInRevision file) {
-        final Pair<String, Repository> key = this.createKey(file);
+    protected final List<FileHistoryNode> lookupFile(final IRevisionedFile file) {
+        final Pair<String, IRepository> key = this.createKey(file);
         return this.index.get(key);
     }
 
     /**
-     * Returns the nearest ancestor for passed {@link FileInRevision} having the same path, or <code>null</code>
+     * Returns the nearest ancestor for passed {@link IRevisionedFile} having the same path, or <code>null</code>
      * if no suitable node exists. To be suitable, the ancestor node must be an {@link ExistingFileHistoryNode} as
      * a deleted file cannot be an ancestor.
      */
-    public abstract FileHistoryNode findAncestorFor(FileInRevision file);
+    public abstract FileHistoryNode findAncestorFor(IRevisionedFile file);
 
     @Override
     public String toString() {

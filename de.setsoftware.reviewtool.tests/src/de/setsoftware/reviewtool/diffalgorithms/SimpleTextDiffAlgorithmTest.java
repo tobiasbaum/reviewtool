@@ -11,16 +11,16 @@ import java.util.Random;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
-import de.setsoftware.reviewtool.model.changestructure.PositionInText;
 
 /**
  * Tests for {@link SimpleSourceDiffAlgorithm}.
  */
 public class SimpleTextDiffAlgorithmTest {
 
-    private static List<Pair<PositionInText, PositionInText>> determineDiff(String oldContent, String newContent)
+    private static List<Pair<IPositionInText, IPositionInText>> determineDiff(String oldContent, String newContent)
             throws Exception {
         return toPositionsInNewFile(new MyersSourceDiffAlgorithm().determineDiff(
                 ChangestructureFactory.createFileInRevision("", null, null),
@@ -36,38 +36,38 @@ public class SimpleTextDiffAlgorithmTest {
 //                "UTF-8"));
     }
 
-    private static List<Pair<PositionInText, PositionInText>> toPositionsInNewFile(
-            List<Pair<Fragment, Fragment>> diff) {
-        final List<Pair<PositionInText, PositionInText>> ret = new ArrayList<>();
-        for (final Pair<Fragment, Fragment> p : diff) {
+    private static List<Pair<IPositionInText, IPositionInText>> toPositionsInNewFile(
+            List<Pair<IFragment, IFragment>> diff) {
+        final List<Pair<IPositionInText, IPositionInText>> ret = new ArrayList<>();
+        for (final Pair<IFragment, IFragment> p : diff) {
             ret.add(Pair.create(p.getSecond().getFrom(), p.getSecond().getTo()));
         }
         return ret;
     }
 
-    private static Pair<PositionInText, PositionInText> insertedLines(int startIncl, int endIncl) {
+    private static Pair<IPositionInText, IPositionInText> insertedLines(int startIncl, int endIncl) {
         return changeIn(startIncl, endIncl);
     }
 
-    private static Pair<PositionInText, PositionInText> changeIn(int startIncl, int endIncl) {
+    private static Pair<IPositionInText, IPositionInText> changeIn(int startIncl, int endIncl) {
         return Pair.create(
                 ChangestructureFactory.createPositionInText(startIncl, 1),
                 ChangestructureFactory.createPositionInText(endIncl + 1, 1));
     }
 
-    private static Pair<PositionInText, PositionInText> inLineChange(int line, int startCharIncl, int endCharExcl) {
+    private static Pair<IPositionInText, IPositionInText> inLineChange(int line, int startCharIncl, int endCharExcl) {
         return Pair.create(
                 ChangestructureFactory.createPositionInText(line, startCharIncl),
                 ChangestructureFactory.createPositionInText(line, endCharExcl));
     }
 
-    private static Pair<PositionInText, PositionInText> deletionAt(int line) {
+    private static Pair<IPositionInText, IPositionInText> deletionAt(int line) {
         return changeIn(line, line - 1);
     }
 
     @Test
     public void testEqualEmptyContent() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff("", "");
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff("", "");
         assertEquals(Collections.emptyList(), diff);
     }
 
@@ -77,13 +77,13 @@ public class SimpleTextDiffAlgorithmTest {
                 + "\r\n"
                 + "class X {\r\n"
                 + "}\r\n";
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(text, text);
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(text, text);
         assertEquals(Collections.emptyList(), diff);
     }
 
     @Test
     public void testFullInsertion() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "",
                 "package a;\r\n"
                         + "\r\n"
@@ -94,7 +94,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testFullInsertionMissingEolAtEof() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "",
                 "package a;\r\n"
                         + "\r\n"
@@ -105,7 +105,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testFullInsertionWithMultipleEqualLines() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "",
                 "package a;\r\n"
                         + "\r\n"
@@ -118,7 +118,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testPartialInsertion() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -133,7 +133,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testSimpleChange() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -149,7 +149,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testTwoChanges() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -169,7 +169,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testAsymmetricChanges() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -191,7 +191,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testPartialDeletion() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -206,7 +206,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testChangeInRepeatedLines() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "aaa\r\n"
                         + "bbb\r\n"
                         + "aaa\r\n"
@@ -228,7 +228,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testDeletionInRepeatedLines() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "aaa\r\n"
                         + "bbb\r\n"
                         + "aaa\r\n"
@@ -252,7 +252,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testDeleteEmptyLines() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -283,7 +283,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testAddEmptyLines() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -316,7 +316,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testAddStuffWithEmptyLine() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package a;\r\n"
                         + "\r\n"
                         + "class X {\r\n"
@@ -343,7 +343,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testWhenInDoubtMarkAdditionRangeAtMethodBoundaries() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package text.xyz.abc;\r\n"
                 + "\r\n"
                 + "import java.util.List;\r\n"
@@ -398,7 +398,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testWhenInDoubtMarkAdditionRangeAtMethodBoundariesWithDeletion() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package text.xyz.abc;\r\n"
                 + "\r\n"
                 + "import java.util.List;\r\n"
@@ -452,7 +452,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testWhenInDoubtMarkAdditionRangeAtMethodBoundariesWithMultipleInserts() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "package text.xyz.abc;\r\n"
                 + "\r\n"
                 + "import java.util.List;\r\n"
@@ -629,7 +629,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testXMove() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "line 01\r\n"
                         + "line 02\r\n"
                         + "line 03\r\n"
@@ -653,7 +653,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testNoUniqueLines() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "<?xml version=\"1.0\"?>\r\n"
                         + "<test>\r\n"
                         + "  <sendung dicke=\"1mm\" gewicht=\"2g\">\r\n"
@@ -741,7 +741,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testInsertMethod() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "/**\r\n"
                         + " * asdf\r\n"
                         + " */\r\n"
@@ -766,7 +766,7 @@ public class SimpleTextDiffAlgorithmTest {
     @Test
     public void testInsertXml() throws Exception {
         //in this example common suffix stripping has to be undone by moving the diff down
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                         "</abc>\r\n",
                         "</abc>\r\n"
                                 + "<abc>\r\n"
@@ -778,7 +778,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testInsertIf() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "public class Test {\r\n"
                 + "\r\n"
                 + "    public static function test() {\r\n"
@@ -830,7 +830,7 @@ public class SimpleTextDiffAlgorithmTest {
 
     @Test
     public void testInsertWhereEmptyLineIsBestStart() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "public class Test {\r\n"
                 + "\r\n"
                 + "    public static function test1() {\r\n"
@@ -858,7 +858,7 @@ public class SimpleTextDiffAlgorithmTest {
      */
     @Test
     public void testShiftingDoesNotCauseOverlap() throws Exception {
-        final List<Pair<PositionInText, PositionInText>> diff = determineDiff(
+        final List<Pair<IPositionInText, IPositionInText>> diff = determineDiff(
                 "/**\r\n"
                 + " * Verwaltet einheitlich den Zugriff auf Verwerfungsanfragen (temporäre und persistente).\r\n"
                 + " */\r\n"

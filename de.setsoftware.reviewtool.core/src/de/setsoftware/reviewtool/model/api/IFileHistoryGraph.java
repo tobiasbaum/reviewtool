@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 import java.util.List;
 
@@ -13,16 +13,16 @@ public interface IFileHistoryGraph {
      * @param repo The repository.
      * @return <code>true</code> if the path is known, else <code>false</code>
      */
-    public abstract boolean contains(String path, Repository repo);
+    public abstract boolean contains(String path, IRepository repo);
 
     /**
-     * Returns the {@link IFileHistoryNode} for the given {@link FileInRevision <code>file</code>},
+     * Returns the {@link IFileHistoryNode} for the given {@link IRevisionedFile <code>file</code>},
      * or <code>null</code> if <code>file</code> is not part of the history graph.
      *
-     * @param file The {@link FileInRevision} to search for.
+     * @param file The {@link IRevisionedFile} to search for.
      * @return The corresponding {@link IFileHistoryNode} or <code>null</code> if not found.
      */
-    public abstract IFileHistoryNode getNodeFor(FileInRevision file);
+    public abstract IFileHistoryNode getNodeFor(IRevisionedFile file);
 
     /**
      * Returns the latest known versions of the given file. If all versions were deleted, the last known versions
@@ -31,6 +31,6 @@ public interface IFileHistoryGraph {
      * <p/>
      * The revisions returned are topologically sorted according to their dependencies.
      */
-    public abstract List<FileInRevision> getLatestFiles(FileInRevision file);
+    public abstract List<? extends IRevisionedFile> getLatestFiles(IRevisionedFile file);
 
 }

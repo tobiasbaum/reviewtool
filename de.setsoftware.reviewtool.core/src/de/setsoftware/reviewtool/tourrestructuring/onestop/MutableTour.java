@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Util;
-import de.setsoftware.reviewtool.model.changestructure.IReviewElement;
+import de.setsoftware.reviewtool.model.api.IReviewElement;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 

@@ -3,8 +3,8 @@ package de.setsoftware.reviewtool.diffalgorithms;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
  * Interface for diff algorithms.
@@ -17,10 +17,10 @@ public interface IDiffAlgorithm {
      * Not all changes on the byte level have to result in change fragments, as an implementation can
      * choose to ignore certain changes.
      */
-    public abstract List<Pair<Fragment, Fragment>> determineDiff(
-            FileInRevision fileOldInfo,
+    public abstract List<Pair<IFragment, IFragment>> determineDiff(
+            IRevisionedFile fileOldInfo,
             byte[] fileOldContent,
-            FileInRevision fileNewInfo,
+            IRevisionedFile fileNewInfo,
             byte[] fileNewContent,
             String charset);
 

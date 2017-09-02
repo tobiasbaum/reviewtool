@@ -13,6 +13,8 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.model.api.IPositionInText;
+
 /**
  * Allows the transformation from position in the form (line,column) to
  * "number of characters since file start" and caches relevant information.
@@ -76,7 +78,7 @@ public class PositionLookupTable {
     /**
      * Returns the number of characters from the start of the file up to (and including) the given position.
      */
-    public int getCharsSinceFileStart(PositionInText pos) {
+    public int getCharsSinceFileStart(IPositionInText pos) {
         //when tracing of changes does not work properly, there can be positions that are out of the file and
         //  that have to be handled in some way
         if (pos.getLine() <= 0) {

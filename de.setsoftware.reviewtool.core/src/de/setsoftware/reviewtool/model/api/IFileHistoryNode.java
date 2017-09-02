@@ -1,17 +1,19 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 import java.util.Set;
 
+import de.setsoftware.reviewtool.model.changestructure.FileDiff;
+
 /**
  * A node in a {@link IFileHistoryGraph}.
- * It is bound to a {@link FileInRevision} and knows its ancestors and descendants.
+ * It is bound to a {@link IRevisionedFile} and knows its ancestors and descendants.
  */
 public interface IFileHistoryNode {
 
     /**
-     * Returns the {@link FileInRevision} wrapped by this node.
+     * Returns the {@link IRevisionedFile} wrapped by this node.
      */
-    public abstract FileInRevision getFile();
+    public abstract IRevisionedFile getFile();
 
     /**
      * Checks whether this {@link IFileHistoryNode} is a root node, i.e. without an ancestor.
@@ -44,5 +46,5 @@ public interface IFileHistoryNode {
      * ancestor), one (if {@code from} is reached by a single path backwards in history), or multiple ones
      * (if {@code from} can be reached by multiple paths backwards in history).
      */
-    public abstract Set<FileDiff> buildHistories(IFileHistoryNode from);
+    public abstract Set<? extends IFileDiff> buildHistories(IFileHistoryNode from);
 }

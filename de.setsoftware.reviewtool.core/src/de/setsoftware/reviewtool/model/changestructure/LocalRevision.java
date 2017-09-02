@@ -1,9 +1,13 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import de.setsoftware.reviewtool.model.api.ILocalRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
+
 /**
- * The most recent version in the local working copy.
+ * Default implementation of {@link ILocalRevision}.
  */
-public class LocalRevision extends Revision {
+public final class LocalRevision implements ILocalRevision {
 
     LocalRevision() {
     }
@@ -24,12 +28,12 @@ public class LocalRevision extends Revision {
     }
 
     @Override
-    public <R> R accept(RevisionVisitor<R> visitor) {
+    public <R> R accept(IRevisionVisitor<R> visitor) {
         return visitor.handleLocalRevision(this);
     }
 
     @Override
-    public <R, E extends Throwable> R accept(RevisionVisitorE<R, E> visitor) throws E {
+    public <R, E extends Throwable> R accept(IRevisionVisitorE<R, E> visitor) throws E {
         return visitor.handleLocalRevision(this);
     }
 }

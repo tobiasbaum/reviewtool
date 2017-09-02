@@ -34,22 +34,24 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
-import de.setsoftware.reviewtool.model.changestructure.Change;
+import de.setsoftware.reviewtool.model.api.IBinaryChange;
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IChangeData;
+import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IHunk;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryEdge;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.Commit;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Hunk;
-import de.setsoftware.reviewtool.model.changestructure.IChangeData;
-import de.setsoftware.reviewtool.model.changestructure.IChangeSource;
-import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
-import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryEdge;
-import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryNode;
-import de.setsoftware.reviewtool.model.changestructure.IncompatibleFragmentException;
-import de.setsoftware.reviewtool.model.changestructure.Repository;
-import de.setsoftware.reviewtool.model.changestructure.Revision;
 
 /**
  * A simple change source that loads the changes from subversion.
@@ -131,7 +133,7 @@ public class SvnChangeSource implements IChangeSource {
             ui.subTask("Checking state of working copy...");
             this.checkWorkingCopiesUpToDate(neededRevisionPerRepo, ui);
             ui.subTask("Analyzing commits...");
-            final List<Commit> commits = this.convertToChanges(historyGraph, revisions, ui);
+            final List<ICommit> commits = this.convertToChanges(historyGraph, revisions, ui);
             return new SvnChangeData(
                     this,
                     neededRevisionPerRepo.keySet(),
@@ -154,7 +156,7 @@ public class SvnChangeSource implements IChangeSource {
             final List<WorkingCopyRevision> revisions =
                     this.collectWorkingCopyChanges(remoteChanges.getRepositories(), changedPaths, historyGraph, ui);
             ui.subTask("Analyzing local changes...");
-            final List<Commit> commits = this.convertToChanges(historyGraph, revisions, ui);
+            final List<ICommit> commits = this.convertToChanges(historyGraph, revisions, ui);
             final List<File> localPaths = this.extractLocalPaths(revisions);
             return new SvnChangeData(this, remoteChanges.getRepositories(), commits, localPaths, historyGraph);
         } catch (final SVNException e) {
@@ -191,13 +193,13 @@ public class SvnChangeSource implements IChangeSource {
 
     /**
      * Collects all local changes and integrates them into the {@link IMutableFileHistoryGraph}.
-     * @param repositories The list of relevant {@link Repository Repositories}.
+     * @param repositories The list of relevant {@link IRepository Repositories}.
      * @param historyGraph The {@link IMutableFileHistoryGraph}. Local changes will be integrated using a
      *      {@link WorkingCopyRevision}.
      * @return A list of {@link WorkingCopyRevision}s. May be empty if no relevant local changes have been found.
      */
     private List<WorkingCopyRevision> collectWorkingCopyChanges(
-            final Collection<? extends Repository> repositories,
+            final Collection<? extends IRepository> repositories,
             final List<File> changedPaths,
             final IMutableFileHistoryGraph historyGraph,
             final IProgressMonitor ui) throws SVNException {
@@ -210,12 +212,12 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private List<WorkingCopyRevision> collectWorkingCopyChangesByRepository(
-            final Collection<? extends Repository> repositories,
+            final Collection<? extends IRepository> repositories,
             final IMutableFileHistoryGraph historyGraph,
             final IProgressMonitor ui) throws SVNException {
 
         final List<WorkingCopyRevision> revisions = new ArrayList<>();
-        for (final Repository repo : repositories) {
+        for (final IRepository repo : repositories) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
@@ -345,11 +347,11 @@ public class SvnChangeSource implements IChangeSource {
         return handler.determineRelevantRevisions(historyGraph, ui);
     }
 
-    private List<Commit> convertToChanges(
+    private List<ICommit> convertToChanges(
             final IMutableFileHistoryGraph historyGraph,
             final List<? extends ISvnRevision> revisions,
             final IProgressMonitor ui) {
-        final List<Commit> ret = new ArrayList<>();
+        final List<ICommit> ret = new ArrayList<>();
         for (final ISvnRevision e : revisions) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
@@ -360,8 +362,8 @@ public class SvnChangeSource implements IChangeSource {
     }
 
     private void convertToCommitIfPossible(final IMutableFileHistoryGraph historyGraph, final ISvnRevision e,
-            final Collection<? super Commit> result, final IProgressMonitor ui) {
-        final List<Change> changes = this.determineChangesInCommit(historyGraph, e, ui);
+            final Collection<? super ICommit> result, final IProgressMonitor ui) {
+        final List<? extends IChange> changes = this.determineChangesInCommit(historyGraph, e, ui);
         if (!changes.isEmpty()) {
             result.add(ChangestructureFactory.createCommit(e.toPrettyString(), changes, e.isVisible()));
         }
@@ -397,10 +399,12 @@ public class SvnChangeSource implements IChangeSource {
 
     }
 
-    private List<Change> determineChangesInCommit(final IMutableFileHistoryGraph historyGraph, final ISvnRevision e,
+    private List<? extends IChange> determineChangesInCommit(
+            final IMutableFileHistoryGraph historyGraph,
+            final ISvnRevision e,
             final IProgressMonitor ui) {
 
-        final List<Change> ret = new ArrayList<>();
+        final List<IChange> ret = new ArrayList<>();
         final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();
         final DirectoryCopyInfo dirCopies = new DirectoryCopyInfo(changedPaths.values());
         final Set<String> copySources = this.determineCopySources(changedPaths.values(), dirCopies);
@@ -420,7 +424,7 @@ public class SvnChangeSource implements IChangeSource {
                 continue;
             }
 
-            final FileInRevision fileInfo = ChangestructureFactory.createFileInRevision(
+            final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(
                     path,
                     this.revision(e),
                     e.getRepository());
@@ -432,10 +436,10 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private Change createBinaryChange(final SvnRepo repo, final IFileHistoryNode node,
+    private IBinaryChange createBinaryChange(final SvnRepo repo, final IFileHistoryNode node,
             final IFileHistoryNode ancestor, final boolean isVisible) {
 
-        final FileInRevision oldFileInfo = ChangestructureFactory.createFileInRevision(ancestor.getFile().getPath(),
+        final IRevisionedFile oldFileInfo = ChangestructureFactory.createFileInRevision(ancestor.getFile().getPath(),
                         ancestor.getFile().getRevision(), repo);
 
         return ChangestructureFactory.createBinaryChange(
@@ -445,8 +449,8 @@ public class SvnChangeSource implements IChangeSource {
                 isVisible);
     }
 
-    private Revision revision(final ISvnRevision revision) {
-        final ValueWrapper<Revision> result = new ValueWrapper<>();
+    private IRevision revision(final ISvnRevision revision) {
+        final ValueWrapper<IRevision> result = new ValueWrapper<>();
         revision.accept(new ISvnRevisionVisitor() {
 
             @Override
@@ -462,7 +466,7 @@ public class SvnChangeSource implements IChangeSource {
         return result.get();
     }
 
-    private List<Change> determineChangesInFile(final SvnRepo repo, final IMutableFileHistoryNode node,
+    private List<? extends IChange> determineChangesInFile(final SvnRepo repo, final IMutableFileHistoryNode node,
             final boolean isVisible) {
 
         final byte[] newFileContent;
@@ -472,7 +476,7 @@ public class SvnChangeSource implements IChangeSource {
             return Collections.emptyList(); // loading new file data failed
         }
 
-        final List<Change> ret = new ArrayList<>();
+        final List<IChange> ret = new ArrayList<>();
         for (final IMutableFileHistoryEdge ancestorEdge : node.getAncestors()) {
             final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
 
@@ -493,14 +497,14 @@ public class SvnChangeSource implements IChangeSource {
             }
 
             final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
-            final List<Pair<Fragment, Fragment>> changes = diffAlgorithm.determineDiff(
+            final List<Pair<IFragment, IFragment>> changes = diffAlgorithm.determineDiff(
                     ancestor.getFile(),
                     oldFileContent,
                     node.getFile(),
                     newFileContent,
                     this.guessEncoding(oldFileContent, newFileContent));
-            final List<Hunk> hunks = new ArrayList<>();
-            for (final Pair<Fragment, Fragment> pos : changes) {
+            final List<IHunk> hunks = new ArrayList<>();
+            for (final Pair<IFragment, IFragment> pos : changes) {
                 ret.add(ChangestructureFactory.createTextualChangeHunk(
                         pos.getFirst(), pos.getSecond(), false, isVisible));
                 hunks.add(new Hunk(pos.getFirst(), pos.getSecond()));

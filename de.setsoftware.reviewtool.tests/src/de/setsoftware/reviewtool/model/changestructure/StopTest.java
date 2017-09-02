@@ -7,6 +7,8 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.IPositionInText;
+
 /**
  * Tests for {@link Stop}.
  */
@@ -16,7 +18,7 @@ public class StopTest {
         return new FileInRevision(name, new RepoRevision(revision), StubRepo.INSTANCE);
     }
 
-    private static PositionInText line(int line) {
+    private static IPositionInText line(int line) {
         return ChangestructureFactory.createPositionInText(line, 1);
     }
 

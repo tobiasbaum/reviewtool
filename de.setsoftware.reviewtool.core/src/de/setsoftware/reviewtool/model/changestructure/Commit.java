@@ -5,37 +5,39 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.ICommit;
+
 /**
- * A commit (SCM transaction) with the changes performed in it.
+ * Default implementation of @{link ICommit}.
  */
-public class Commit {
+public class Commit implements ICommit {
 
     private final String message;
-    private final List<Change> changes;
+    private final List<IChange> changes;
     private final boolean isVisible;
 
-    Commit(String message, List<Change> changes, final boolean isVisible) {
+    Commit(String message, List<? extends IChange> changes, final boolean isVisible) {
         this.message = message;
-        this.changes = new ArrayList<Change>(changes);
+        this.changes = new ArrayList<>(changes);
         this.isVisible = isVisible;
     }
 
+    @Override
     public String getMessage() {
         return this.message;
     }
 
-    public List<Change> getChanges() {
+    @Override
+    public List<? extends IChange> getChanges() {
         return Collections.unmodifiableList(this.changes);
     }
 
-    /**
-     * Creates and returns a copy of this commit where all changes contained in the given
-     * set haven been changed to "irrelevant for review".
-     */
-    public Commit makeChangesIrrelevant(Set<? extends Change> toMakeIrrelevant) {
-        final List<Change> adjustedChanges = new ArrayList<>();
+    @Override
+    public Commit makeChangesIrrelevant(Set<? extends IChange> toMakeIrrelevant) {
+        final List<IChange> adjustedChanges = new ArrayList<>();
         boolean isVisible = false;
-        for (final Change change : this.changes) {
+        for (final IChange change : this.changes) {
             if (toMakeIrrelevant.contains(change)) {
                 adjustedChanges.add(change.makeIrrelevant());
             } else {
@@ -46,6 +48,7 @@ public class Commit {
         return new Commit(this.message, adjustedChanges, isVisible);
     }
 
+    @Override
     public boolean isVisible() {
         return this.isVisible;
     }

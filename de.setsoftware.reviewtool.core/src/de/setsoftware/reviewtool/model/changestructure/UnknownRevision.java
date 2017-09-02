@@ -1,10 +1,13 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
+import de.setsoftware.reviewtool.model.api.IUnknownRevision;
+
 /**
- * Represents an unknown revision. Such revisions are used in the file history graph
- * when the file history is not completely known.
+ * Default implementation of {@link IUnknownRevision}.
  */
-public final class UnknownRevision extends Revision {
+public final class UnknownRevision implements IUnknownRevision {
 
     @Override
     public String toString() {
@@ -22,12 +25,12 @@ public final class UnknownRevision extends Revision {
     }
 
     @Override
-    public <R> R accept(RevisionVisitor<R> visitor) {
+    public <R> R accept(IRevisionVisitor<R> visitor) {
         return visitor.handleUnknownRevision(this);
     }
 
     @Override
-    public <R, E extends Throwable> R accept(RevisionVisitorE<R, E> visitor) throws E {
+    public <R, E extends Throwable> R accept(IRevisionVisitorE<R, E> visitor) throws E {
         return visitor.handleUnknownRevision(this);
     }
 }

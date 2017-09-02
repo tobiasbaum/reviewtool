@@ -6,16 +6,21 @@ import java.util.List;
 import java.util.ListIterator;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IDelta;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IFragmentList;
+import de.setsoftware.reviewtool.model.api.IPositionInText;
+import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 
 /**
- * A fragment list is a sorted collection of fragments.
+ * Default implementation of {@link IFragmentList}.
  */
-public class FragmentList {
+public class FragmentList implements IFragmentList {
 
     /**
      * The managed fragments.
      */
-    private final List<Fragment> fragments;
+    private final List<IFragment> fragments;
 
     /**
      * Creates an empty fragment list.
@@ -28,35 +33,27 @@ public class FragmentList {
      * Creates a singleton fragment list.
      * @param fragment The fragment to add.
      */
-    public FragmentList(final Fragment fragment) {
+    public FragmentList(final IFragment fragment) {
         this.fragments = new LinkedList<>();
         this.fragments.add(fragment);
     }
 
-    /**
-     * @return A read-only view on the fragments in this fragment list.
-     */
-    public List<? extends Fragment> getFragments() {
+    @Override
+    public List<? extends IFragment> getFragments() {
         return Collections.unmodifiableList(this.fragments);
     }
 
-    /**
-     * @return {@code true} if this fragment list is empty.
-     */
+    @Override
     public boolean isEmpty() {
         return this.fragments.isEmpty();
     }
 
-    /**
-     * Adds a fragment to the fragment list.
-     * @param fragment The fragment to add.
-     * @throws IncompatibleFragmentException if the fragment overlaps some other fragment in this fragment list.
-     */
-    public void addFragment(final Fragment fragment) throws IncompatibleFragmentException {
-        final PositionInText posTo = fragment.getTo();
-        final ListIterator<Fragment> it = this.fragments.listIterator();
+    @Override
+    public void addFragment(final IFragment fragment) throws IncompatibleFragmentException {
+        final IPositionInText posTo = fragment.getTo();
+        final ListIterator<IFragment> it = this.fragments.listIterator();
         while (it.hasNext()) {
-            final Fragment oldFragment = it.next();
+            final IFragment oldFragment = it.next();
             if (oldFragment.overlaps(fragment)) {
                 throw new IncompatibleFragmentException();
             } else if (posTo.compareTo(oldFragment.getFrom()) <= 0) {
@@ -68,14 +65,12 @@ public class FragmentList {
         this.fragments.add(fragment);
     }
 
-    /**
-     * Merges adjacent fragments.
-     */
+    @Override
     public void coalesce() {
-        final ListIterator<Fragment> it = this.fragments.listIterator();
-        Fragment fragment = null;
+        final ListIterator<IFragment> it = this.fragments.listIterator();
+        IFragment fragment = null;
         while (it.hasNext()) {
-            final Fragment oldFragment = it.next();
+            final IFragment oldFragment = it.next();
             if (fragment == null) {
                 fragment = oldFragment;
                 it.remove();
@@ -93,25 +88,15 @@ public class FragmentList {
         }
     }
 
-    /**
-     * Adds the fragments of some other fragment list to this fragment list.
-     * @param fragmentList The other fragment list.
-     * @throws IncompatibleFragmentException if some fragment in the other fragment list overlaps some other fragment
-     *                                          in this fragment list.
-     */
-    public void addFragmentList(final FragmentList fragmentList) throws IncompatibleFragmentException {
-        for (final Fragment fragment : fragmentList.fragments) {
+    @Override
+    public void addFragmentList(final IFragmentList fragmentList) throws IncompatibleFragmentException {
+        for (final IFragment fragment : fragmentList.getFragments()) {
             this.addFragment(fragment);
         }
     }
 
-    /**
-     * Overlays this fragment list by some {@link Fragment}. That means that parts that overlap are taken
-     * from the fragment passed.
-     * @param fragment The fragment.
-     * @return A fragment list storing the overlay result.
-     */
-    public FragmentList overlayBy(final Fragment fragment) {
+    @Override
+    public IFragmentList overlayBy(final IFragment fragment) {
         final FragmentList result = new FragmentList();
         try {
             result.addFragment(fragment);
@@ -119,20 +104,20 @@ public class FragmentList {
             throw new ReviewtoolException(e);
         }
 
-        final PositionInText posTo = fragment.getTo();
-        final ListIterator<Fragment> it = this.fragments.listIterator();
+        final IPositionInText posTo = fragment.getTo();
+        final ListIterator<IFragment> it = this.fragments.listIterator();
         while (it.hasNext()) {
-            final Fragment oldFragment = it.next();
+            final IFragment oldFragment = it.next();
             if (posTo.compareTo(oldFragment.getFrom()) <= 0) {
                 break;
             }
 
-            final ListIterator<Fragment> fIt = result.fragments.listIterator();
+            final ListIterator<IFragment> fIt = result.fragments.listIterator();
             while (fIt.hasNext()) {
-                final Fragment f = fIt.next();
-                final FragmentList rest = f.subtract(oldFragment);
+                final IFragment f = fIt.next();
+                final IFragmentList rest = f.subtract(oldFragment);
                 fIt.remove();
-                for (final Fragment newFragment : rest.fragments) {
+                for (final IFragment newFragment : rest.getFragments()) {
                     fIt.add(newFragment);
                 }
             }
@@ -147,15 +132,11 @@ public class FragmentList {
         return result;
     }
 
-    /**
-     * Subtracts some {@link Fragment} from this fragment list.
-     * @param fragment The fragment to subtract.
-     * @return A list of remaining fragments.
-     */
-    public FragmentList subtract(final Fragment fragment) {
+    @Override
+    public IFragmentList subtract(final IFragment fragment) {
         final FragmentList result = new FragmentList();
         try {
-            for (final Fragment oldFragment : this.fragments) {
+            for (final IFragment oldFragment : this.fragments) {
                 if (oldFragment.overlaps(fragment)) {
                     result.addFragmentList(oldFragment.subtract(fragment));
                 } else {
@@ -168,27 +149,19 @@ public class FragmentList {
         return result;
     }
 
-    /**
-     * Subtracts some other fragment list from this fragment list.
-     * @param fragmentList The fragment list to subtract.
-     * @return A list of remaining fragments.
-     */
-    public FragmentList subtract(final FragmentList fragmentList) {
-        FragmentList result = this;
-        for (final Fragment fragment : fragmentList.getFragments()) {
+    @Override
+    public IFragmentList subtract(final IFragmentList fragmentList) {
+        IFragmentList result = this;
+        for (final IFragment fragment : fragmentList.getFragments()) {
             result = result.subtract(fragment);
         }
         return result;
     }
 
-    /**
-     * Moves fragments starting at a given position.
-     * @param pos The start position.
-     * @param delta The delta to apply.
-     */
-    public FragmentList move(final PositionInText pos, final Delta delta) {
+    @Override
+    public IFragmentList move(final IPositionInText pos, final IDelta delta) {
         final FragmentList result = new FragmentList();
-        for (final Fragment fragment : this.fragments) {
+        for (final IFragment fragment : this.fragments) {
             if (fragment.getFrom().compareTo(pos) <= 0) {
                 result.fragments.add(fragment);
             } else {

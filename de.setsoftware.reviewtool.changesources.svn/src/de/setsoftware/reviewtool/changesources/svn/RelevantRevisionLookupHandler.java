@@ -12,10 +12,10 @@ import java.util.regex.Pattern;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNException;
 
+import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.IChangeSourceUi;
-import de.setsoftware.reviewtool.model.changestructure.IMutableFileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.Revision;
 
 /**
  * Handler that filters log entries with a given pattern.
@@ -73,7 +73,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
         return ret;
     }
 
-    private static Revision toRevision(final long revision) {
+    private static IRevision toRevision(final long revision) {
         if (revision == Long.MAX_VALUE) {
             return ChangestructureFactory.createLocalRevision();
         } else {
@@ -90,7 +90,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                     historyGraph.addDeletion(
                             path,
                             revision.toRevision(),
-                            Collections.<Revision>singleton(toRevision(e.getValue().getAncestorRevision())),
+                            Collections.<IRevision>singleton(toRevision(e.getValue().getAncestorRevision())),
                             revision.getRepository());
                     isRelevant = true;
                 }
@@ -111,13 +111,13 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                         historyGraph.addAdditionOrChange(
                                 path,
                                 revision.toRevision(),
-                                Collections.<Revision>emptySet(),
+                                Collections.<IRevision>emptySet(),
                                 revision.getRepository());
                     } else {
                         historyGraph.addAdditionOrChange(
                                 path,
                                 revision.toRevision(),
-                                Collections.<Revision>singleton(toRevision(e.getValue().getAncestorRevision())),
+                                Collections.<IRevision>singleton(toRevision(e.getValue().getAncestorRevision())),
                                 revision.getRepository());
                     }
                     isRelevant = true;

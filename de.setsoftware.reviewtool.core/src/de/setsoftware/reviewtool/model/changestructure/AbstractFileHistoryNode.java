@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IFileDiff;
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 
 /**
  * Contains behaviour common to all {@link IFileHistoryNode} implementations.
@@ -21,15 +25,15 @@ public abstract class AbstractFileHistoryNode implements IFileHistoryNode {
     };
 
     @Override
-    public final Set<FileDiff> buildHistories(final IFileHistoryNode from) {
+    public final Set<? extends IFileDiff> buildHistories(final IFileHistoryNode from) {
         if (from.equals(this)) {
             return Collections.singleton(new FileDiff(from.getFile(), from.getFile()));
         }
 
         if (!this.isRoot()) {
-            final Set<FileDiff> result = new LinkedHashSet<>();
+            final Set<IFileDiff> result = new LinkedHashSet<>();
             for (final IFileHistoryEdge ancestorEdge : this.getAncestors()) {
-                for (final FileDiff diff : ancestorEdge.getAncestor().buildHistories(from)) {
+                for (final IFileDiff diff : ancestorEdge.getAncestor().buildHistories(from)) {
                     try {
                         result.add(diff.merge(ancestorEdge.getDiff()));
                     } catch (final IncompatibleFragmentException e) {

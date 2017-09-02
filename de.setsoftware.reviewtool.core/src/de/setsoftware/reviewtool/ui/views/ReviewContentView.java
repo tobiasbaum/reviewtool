@@ -55,12 +55,12 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IReviewElement;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
-import de.setsoftware.reviewtool.model.changestructure.IReviewElement;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
-import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
@@ -284,11 +284,11 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         //  we create a copy of the fragment without size
         Stop jumpTarget;
         if (stop.isDetailedFragmentKnown()) {
-            final Fragment fragment = ChangestructureFactory.createFragment(
+            final IFragment fragment = ChangestructureFactory.createFragment(
                     stop.getMostRecentFile(),
                     stop.getMostRecentFragment().getFrom(),
                     stop.getMostRecentFragment().getFrom());
-            final TextualChangeHunk change = ChangestructureFactory.createTextualChangeHunk(
+            final ITextualChange change = ChangestructureFactory.createTextualChangeHunk(
                     fragment,
                     fragment,
                     false,

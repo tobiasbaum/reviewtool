@@ -16,12 +16,13 @@ import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.LineSequence;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IFileDiff;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IHunk;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileDiff;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Fragment;
-import de.setsoftware.reviewtool.model.changestructure.Hunk;
-import de.setsoftware.reviewtool.model.changestructure.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 
@@ -37,31 +38,31 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
             return;
         }
 
-        final Map<FileInRevision, FileInRevision> changes = stop.getHistory();
-        final List<FileInRevision> sortedRevs = FileInRevision.sortByRevision(changes.keySet());
-        final FileInRevision firstRevision = sortedRevs.get(0);
-        final FileInRevision lastRevision = changes.get(sortedRevs.get(sortedRevs.size() - 1));
+        final Map<IRevisionedFile, IRevisionedFile> changes = stop.getHistory();
+        final List<? extends IRevisionedFile> sortedRevs = FileInRevision.sortByRevision(changes.keySet());
+        final IRevisionedFile firstRevision = sortedRevs.get(0);
+        final IRevisionedFile lastRevision = changes.get(sortedRevs.get(sortedRevs.size() - 1));
 
         final IFileHistoryNode node = tours.getFileHistoryNode(lastRevision);
         if (node != null) {
             if (stop.isBinaryChange()) {
                 this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
-                        new ArrayList<Fragment>(), new ArrayList<Fragment>(),
+                        new ArrayList<IFragment>(), new ArrayList<IFragment>(),
                         new ArrayList<Position>(), new ArrayList<Position>());
             } else {
                 final IFileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
-                final Set<FileDiff> diffs = node.buildHistories(ancestor);
+                final Set<? extends IFileDiff> diffs = node.buildHistories(ancestor);
                 // TODO: we currently cowardly refuse to display any history beyond the first merge parent
                 // TODO: it happened to me once that "diffs" was empty here; fix here or somewhere else?
-                final FileDiff diff = diffs.iterator().next();
+                final IFileDiff diff = diffs.iterator().next();
 
-                final List<Fragment> origins = new ArrayList<>();
-                for (final FileInRevision file : changes.keySet()) {
-                    for (final Hunk hunk : stop.getContentFor(file)) {
+                final List<IFragment> origins = new ArrayList<>();
+                for (final IRevisionedFile file : changes.keySet()) {
+                    for (final IHunk hunk : stop.getContentFor(file)) {
                         origins.addAll(hunk.getTarget().getOrigins());
                     }
                 }
-                final List<Hunk> relevantHunks = diff.getHunksWithTargetChangesInOneOf(origins);
+                final List<? extends IHunk> relevantHunks = diff.getHunksWithTargetChangesInOneOf(origins);
 
                 final LineSequence oldContents;
                 final LineSequence newContents;
@@ -75,9 +76,9 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
                 final List<Position> oldPositions = new ArrayList<>();
                 final List<Position> newPositions = new ArrayList<>();
 
-                for (final Hunk hunk : relevantHunks) {
-                    final Fragment sourceFragment = hunk.getSource();
-                    final Fragment targetFragment = hunk.getTarget();
+                for (final IHunk hunk : relevantHunks) {
+                    final IFragment sourceFragment = hunk.getSource();
+                    final IFragment targetFragment = hunk.getTarget();
 
                     final int oldStartOffset =
                             oldContents.getStartPositionOfLine(sourceFragment.getFrom().getLine() - 1)
@@ -105,15 +106,15 @@ public class CombinedDiffStopViewer extends AbstractStopViewer {
         }
     }
 
-    private Fragment createFragmentForWholeFile(final FileInRevision revision, final LineSequence contents) {
+    private IFragment createFragmentForWholeFile(final IRevisionedFile revision, final LineSequence contents) {
         final int numLines = contents.getNumberOfLines();
-        final Fragment fragment = ChangestructureFactory.createFragment(revision,
+        final IFragment fragment = ChangestructureFactory.createFragment(revision,
                 ChangestructureFactory.createPositionInText(1, 1),
                 ChangestructureFactory.createPositionInText(numLines + 1, 1));
         return fragment;
     }
 
-    private static LineSequence fileToLineSequence(final FileInRevision file) throws Exception {
+    private static LineSequence fileToLineSequence(final IRevisionedFile file) throws Exception {
         final byte[] data = file.getContents();
 
         try {

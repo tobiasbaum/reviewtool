@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 /**
  * Represents a review element.
@@ -12,6 +12,6 @@ public interface IReviewElement {
      * A, the changes in revision 2 need to be included because the changes in revision 3 depend upon them, but these
      * changes in revision 2 are marked as invisible as they are not part of ticket A.
      */
-    boolean isVisible();
+    public abstract boolean isVisible();
 
 }

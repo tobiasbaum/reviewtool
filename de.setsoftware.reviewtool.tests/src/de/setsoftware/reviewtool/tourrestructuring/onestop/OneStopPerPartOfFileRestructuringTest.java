@@ -12,12 +12,13 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.IPositionInText;
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.PositionInText;
-import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.Repository;
-import de.setsoftware.reviewtool.model.changestructure.Revision;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 
@@ -26,7 +27,7 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
  */
 public class OneStopPerPartOfFileRestructuringTest {
 
-    private static final Repository REPO = new Repository() {
+    private static final IRepository REPO = new AbstractRepository() {
         @Override
         public File getLocalRoot() {
             return null;
@@ -43,17 +44,17 @@ public class OneStopPerPartOfFileRestructuringTest {
         }
 
         @Override
-        public Revision getSmallestRevision(Collection<? extends Revision> revisions) {
+        public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
             return this.getSmallestOfComparableRevisions(revisions);
         }
 
         @Override
-        public byte[] getFileContents(final String path, final RepoRevision revision) {
+        public byte[] getFileContents(final String path, final IRepoRevision revision) {
             return new byte[0];
         }
     };
 
-    private static FileInRevision fileInRevision(String file, int i) {
+    private static IRevisionedFile fileInRevision(String file, int i) {
         return ChangestructureFactory.createFileInRevision(
                 file,
                 ChangestructureFactory.createRepoRevision(i),
@@ -76,8 +77,8 @@ public class OneStopPerPartOfFileRestructuringTest {
     }
 
     private static Stop stopWithLines(final String file, int revision, int lineFrom, int lineTo) {
-        final PositionInText posFrom = ChangestructureFactory.createPositionInText(lineFrom, 1);
-        final PositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 1);
+        final IPositionInText posFrom = ChangestructureFactory.createPositionInText(lineFrom, 1);
+        final IPositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 1);
         return new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),

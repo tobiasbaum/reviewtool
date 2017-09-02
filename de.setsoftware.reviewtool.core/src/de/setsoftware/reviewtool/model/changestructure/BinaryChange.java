@@ -1,36 +1,44 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import de.setsoftware.reviewtool.model.api.IBinaryChange;
+import de.setsoftware.reviewtool.model.api.IChangeVisitor;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+
 /**
- * A change in a binary file for which no diff is available.
+ * Default implementation of {@link IBinaryChange}.
  */
-public class BinaryChange extends Change {
+public class BinaryChange extends Change implements IBinaryChange {
 
-    private final FileInRevision from;
-    private final FileInRevision to;
+    private final IRevisionedFile from;
+    private final IRevisionedFile to;
 
-    BinaryChange(FileInRevision from, FileInRevision to, boolean irrelevantForReview, final boolean isVisible) {
+    BinaryChange(
+            final IRevisionedFile from,
+            final IRevisionedFile to,
+            final boolean irrelevantForReview,
+            final boolean isVisible) {
         super(irrelevantForReview, isVisible);
         this.from = from;
         this.to = to;
     }
 
     @Override
-    public void accept(ChangeVisitor visitor) {
+    public void accept(IChangeVisitor visitor) {
         visitor.handle(this);
     }
 
     @Override
-    public FileInRevision getFrom() {
+    public IRevisionedFile getFrom() {
         return this.from;
     }
 
     @Override
-    public FileInRevision getTo() {
+    public IRevisionedFile getTo() {
         return this.to;
     }
 
     @Override
-    protected BinaryChange makeIrrelevant() {
+    public IBinaryChange makeIrrelevant() {
         if (this.isIrrelevantForReview()) {
             return this;
         }

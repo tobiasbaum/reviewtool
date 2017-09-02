@@ -1,6 +1,8 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.model.api;
 
 import java.util.Set;
+
+import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 
 /**
  * A node in a {@link IMutableFileHistoryGraph}.

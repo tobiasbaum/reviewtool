@@ -11,6 +11,13 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Util;
+import de.setsoftware.reviewtool.model.api.IBinaryChange;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IFragmentTracer;
+import de.setsoftware.reviewtool.model.api.IHunk;
+import de.setsoftware.reviewtool.model.api.IReviewElement;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
 
 /**
  * A part of a review tour, corresponding to some notion of "singular change".
@@ -21,13 +28,13 @@ import de.setsoftware.reviewtool.base.Util;
  */
 public class Stop implements IReviewElement {
 
-    private final Map<FileInRevision, FileInRevision> historyOrder;
-    private final Multimap<FileInRevision, Hunk> history;
+    private final Map<IRevisionedFile, IRevisionedFile> historyOrder;
+    private final Multimap<IRevisionedFile, Hunk> history;
 
-    private final FileInRevision mostRecentFile;
-    private final Fragment mostRecentFragment;
-    private transient FileInRevision mostRecentFileConsideringLocalChanges;
-    private transient Fragment mostRecentFragmentConsideringLocalChanges;
+    private final IRevisionedFile mostRecentFile;
+    private final IFragment mostRecentFragment;
+    private transient IRevisionedFile mostRecentFileConsideringLocalChanges;
+    private transient IFragment mostRecentFragmentConsideringLocalChanges;
     //TODO does this flag make sense? visibility is an attribute of a tour (if at all)
     private final boolean isVisible;
 
@@ -37,8 +44,8 @@ public class Stop implements IReviewElement {
      * Constructor for textual changes.
      */
     public Stop(
-            final TextualChangeHunk change,
-            final Fragment traceFragment) {
+            final ITextualChange change,
+            final IFragment traceFragment) {
         this.historyOrder = new LinkedHashMap<>();
         this.historyOrder.put(change.getFrom(), change.getTo());
         this.history = new Multimap<>();
@@ -57,8 +64,8 @@ public class Stop implements IReviewElement {
      * Constructor for binary changes.
      */
     public Stop(
-            final BinaryChange change,
-            final FileInRevision traceFile) {
+            final IBinaryChange change,
+            final IRevisionedFile traceFile) {
         this.historyOrder = new LinkedHashMap<>();
         this.historyOrder.put(change.getFrom(), change.getTo());
         this.history = new Multimap<>();
@@ -76,12 +83,12 @@ public class Stop implements IReviewElement {
      * Constructor for internal use.
      */
     private Stop(
-            final Map<FileInRevision, FileInRevision> historyOrder,
-            final Multimap<FileInRevision, Hunk> history,
-            final FileInRevision mostRecentFile,
-            final Fragment mostRecentFragment,
-            final FileInRevision mostRecentFileConsideringLocalChanges,
-            final Fragment mostRecentFragmentConsideringLocalChanges,
+            final Map<IRevisionedFile, IRevisionedFile> historyOrder,
+            final Multimap<IRevisionedFile, Hunk> history,
+            final IRevisionedFile mostRecentFile,
+            final IFragment mostRecentFragment,
+            final IRevisionedFile mostRecentFileConsideringLocalChanges,
+            final IFragment mostRecentFragmentConsideringLocalChanges,
             final boolean irrelevantForReview,
             final boolean isVisible) {
         this.historyOrder = historyOrder;
@@ -103,20 +110,20 @@ public class Stop implements IReviewElement {
         return this.mostRecentFragment != null;
     }
 
-    public Fragment getOriginalMostRecentFragment() {
+    public IFragment getOriginalMostRecentFragment() {
         return this.mostRecentFragment;
     }
 
-    public FileInRevision getOriginalMostRecentFile() {
+    public IRevisionedFile getOriginalMostRecentFile() {
         return this.mostRecentFile;
     }
 
-    public Fragment getMostRecentFragment() {
+    public IFragment getMostRecentFragment() {
         return this.mostRecentFragmentConsideringLocalChanges != null ? this.mostRecentFragmentConsideringLocalChanges
                 : this.mostRecentFragment;
     }
 
-    public FileInRevision getMostRecentFile() {
+    public IRevisionedFile getMostRecentFile() {
         return this.mostRecentFileConsideringLocalChanges != null ? this.mostRecentFileConsideringLocalChanges
                 : this.mostRecentFile;
     }
@@ -128,12 +135,12 @@ public class Stop implements IReviewElement {
      */
     public void updateMostRecentData(final IFragmentTracer tracer) {
         if (this.mostRecentFragment != null) {
-            final List<Fragment> fragments = tracer.traceFragment(this.mostRecentFragment);
+            final List<? extends IFragment> fragments = tracer.traceFragment(this.mostRecentFragment);
             if (!fragments.isEmpty()) {
                 this.mostRecentFragmentConsideringLocalChanges = fragments.get(0);
             }
         }
-        final List<FileInRevision> files = tracer.traceFile(this.mostRecentFile);
+        final List<IRevisionedFile> files = tracer.traceFile(this.mostRecentFile);
         if (!files.isEmpty()) {
             this.mostRecentFileConsideringLocalChanges = files.get(0);
         }
@@ -143,11 +150,11 @@ public class Stop implements IReviewElement {
      * Returns the revisions relevant for this stop, as a map with entries
      * in the form (from revision, to revision).
      */
-    public Map<FileInRevision, FileInRevision> getHistory() {
+    public Map<IRevisionedFile, IRevisionedFile> getHistory() {
         return Collections.unmodifiableMap(this.historyOrder);
     }
 
-    public List<Hunk> getContentFor(final FileInRevision revision) {
+    public List<Hunk> getContentFor(final IRevisionedFile revision) {
         return this.history.get(revision);
     }
 
@@ -198,10 +205,11 @@ public class Stop implements IReviewElement {
     public Stop merge(final Stop other) {
         assert this.canBeMergedWith(other);
 
-        final LinkedHashMap<FileInRevision, FileInRevision> mergedHistoryOrder = new LinkedHashMap<>(this.historyOrder);
+        final LinkedHashMap<IRevisionedFile, IRevisionedFile> mergedHistoryOrder =
+                new LinkedHashMap<>(this.historyOrder);
         mergedHistoryOrder.putAll(other.historyOrder);
 
-        final Multimap<FileInRevision, Hunk> mergedHistory = new Multimap<>();
+        final Multimap<IRevisionedFile, Hunk> mergedHistory = new Multimap<>();
         mergedHistory.putAll(this.history);
         mergedHistory.putAll(other.history);
         mergedHistory.sortValues();
@@ -258,7 +266,7 @@ public class Stop implements IReviewElement {
      */
     public int getNumberOfFragments() {
         int ret = 1;
-        for (final Entry<FileInRevision, List<Hunk>> e : this.history.entrySet()) {
+        for (final Entry<IRevisionedFile, List<Hunk>> e : this.history.entrySet()) {
             ret += e.getValue().size();
         }
         return ret;
@@ -278,16 +286,16 @@ public class Stop implements IReviewElement {
      */
     public int getNumberOfRemovedLines() {
         int ret = 0;
-        for (final FileInRevision oldestFile : this.getHistoryRoots()) {
-            for (final Hunk hunk : this.getContentFor(oldestFile)) {
+        for (final IRevisionedFile oldestFile : this.getHistoryRoots()) {
+            for (final IHunk hunk : this.getContentFor(oldestFile)) {
                 ret += hunk.getSource().getNumberOfLines();
             }
         }
         return ret;
     }
 
-    private Set<FileInRevision> getHistoryRoots() {
-        final Set<FileInRevision> ret = new LinkedHashSet<>(this.historyOrder.keySet());
+    private Set<IRevisionedFile> getHistoryRoots() {
+        final Set<IRevisionedFile> ret = new LinkedHashSet<>(this.historyOrder.keySet());
         ret.removeAll(this.historyOrder.values());
         return ret;
     }

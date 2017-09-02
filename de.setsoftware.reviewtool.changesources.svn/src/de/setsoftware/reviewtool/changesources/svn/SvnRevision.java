@@ -3,8 +3,8 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Date;
 import java.util.Map;
 
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.RepoRevision;
 
 /**
  * Encapsulates a Subversion revision with associated information about the repository, the log message, the commit
@@ -45,7 +45,7 @@ final class SvnRevision implements ISvnRevision {
     }
 
     @Override
-    public RepoRevision toRevision() {
+    public IRepoRevision toRevision() {
         return ChangestructureFactory.createRepoRevision(this.getRevisionNumber());
     }
 

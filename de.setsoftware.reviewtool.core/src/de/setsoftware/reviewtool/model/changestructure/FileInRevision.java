@@ -17,48 +17,51 @@ import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.PositionTransformer;
+import de.setsoftware.reviewtool.model.api.ILocalRevision;
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 
 /**
- * Denotes a certain revision of a file.
+ * Default implementation of {@link IRevisionFile}.
  */
-public class FileInRevision {
+public class FileInRevision implements IRevisionedFile {
 
     private final String path;
-    private final Revision revision;
-    private final Repository repo;
+    private final IRevision revision;
+    private final IRepository repo;
     private Path localPath;
 
-    FileInRevision(String path, Revision revision, Repository repository) {
+    FileInRevision(String path, IRevision revision, IRepository repository) {
         this.path = path;
         this.revision = revision;
         this.repo = repository;
     }
 
-    /**
-     * Returns the path of the file (relative to the SCM repository root).
-     */
+    @Override
     public String getPath() {
         return this.path;
     }
 
-    public Revision getRevision() {
+    @Override
+    public IRevision getRevision() {
         return this.revision;
     }
 
-    public Repository getRepository() {
+    @Override
+    public IRepository getRepository() {
         return this.repo;
     }
 
-    /**
-     * Returns this revisioned file's contents.
-     * @return The file contents or null if unknown.
-     * @throws IOException if an error occurrs.
-     */
+    @Override
     public byte[] getContents() throws Exception {
-        return this.revision.accept(new RevisionVisitorE<byte[], Exception>() {
+        return this.revision.accept(new IRevisionVisitorE<byte[], Exception>() {
 
             @Override
-            public byte[] handleLocalRevision(final LocalRevision revision) throws IOException {
+            public byte[] handleLocalRevision(final ILocalRevision revision) throws IOException {
                 final IPath localPath = FileInRevision.this.toLocalPath();
                 final File file = localPath.toFile();
                 if (!file.exists()) {
@@ -69,12 +72,12 @@ public class FileInRevision {
             }
 
             @Override
-            public byte[] handleRepoRevision(final RepoRevision revision) throws Exception {
+            public byte[] handleRepoRevision(final IRepoRevision revision) throws Exception {
                 return FileInRevision.this.repo.getFileContents(FileInRevision.this.path, revision);
             }
 
             @Override
-            public byte[] handleUnknownRevision(final UnknownRevision revision) throws Exception {
+            public byte[] handleUnknownRevision(final IUnknownRevision revision) throws Exception {
                 return new byte[0];
             }
 
@@ -87,10 +90,11 @@ public class FileInRevision {
     }
 
     /**
-     * Finds a resource corresponding to a path that is relative to the SCM repository root.
+     * {@inheritDoc}
+     * <p/>
      * Heuristically drops path prefixes (like "trunk", ...) until a resource can be found.
-     * If none can be found, null is returned.
      */
+    @Override
     public IResource determineResource() {
         String partOfPath = this.getPath();
         if (partOfPath.startsWith("/")) {
@@ -115,9 +119,7 @@ public class FileInRevision {
         }
     }
 
-    /**
-     * Returns the absolute path of the file in the local working copy.
-     */
+    @Override
     public IPath toLocalPath() {
         if (this.localPath == null) {
             this.localPath = new Path(this.repo.toAbsolutePathInWc(this.path));
@@ -147,29 +149,29 @@ public class FileInRevision {
      * For non-comparable revisions, the sort is stable. The earliest revisions come first.
      * Does NOT sort in-place.
      */
-    public static List<FileInRevision> sortByRevision(Collection<? extends FileInRevision> toSort) {
+    public static List<? extends IRevisionedFile> sortByRevision(Collection<? extends IRevisionedFile> toSort) {
 
         if (toSort.isEmpty()) {
             return Collections.emptyList();
         }
         //TODO better handling of multiple different repos
-        final Repository repo = toSort.iterator().next().getRepository();
+        final IRepository repo = toSort.iterator().next().getRepository();
 
-        final LinkedHashSet<Revision> remainingRevisions = new LinkedHashSet<>();
-        final Multimap<Revision, FileInRevision> filesForRevision = new Multimap<>();
-        for (final FileInRevision f : toSort) {
+        final LinkedHashSet<IRevision> remainingRevisions = new LinkedHashSet<>();
+        final Multimap<IRevision, IRevisionedFile> filesForRevision = new Multimap<>();
+        for (final IRevisionedFile f : toSort) {
             remainingRevisions.add(f.getRevision());
             filesForRevision.put(f.getRevision(), f);
         }
 
-        final List<FileInRevision> ret = new ArrayList<>();
+        final List<IRevisionedFile> ret = new ArrayList<>();
         while (!remainingRevisions.isEmpty()) {
-            final Revision smallest = repo.getSmallestRevision(remainingRevisions);
-            final List<FileInRevision> revs = new ArrayList<>(filesForRevision.get(smallest));
-            Collections.sort(revs, new Comparator<FileInRevision>() {
+            final IRevision smallest = repo.getSmallestRevision(remainingRevisions);
+            final List<IRevisionedFile> revs = new ArrayList<>(filesForRevision.get(smallest));
+            Collections.sort(revs, new Comparator<IRevisionedFile>() {
 
                 @Override
-                public int compare(final FileInRevision o1, final FileInRevision o2) {
+                public int compare(final IRevisionedFile o1, final IRevisionedFile o2) {
                     return o1.getPath().compareTo(o2.getPath());
                 }
             });

@@ -6,13 +6,18 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+
 /**
  * Contains behaviour common to all {@link IFileHistoryGraph} implementations.
  */
 public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
 
     @Override
-    public final List<FileInRevision> getLatestFiles(final FileInRevision file) {
+    public final List<? extends IRevisionedFile> getLatestFiles(final IRevisionedFile file) {
         Set<IFileHistoryNode> nodes = this.getLatestFilesHelper(file, false);
         if (nodes.isEmpty()) {
             nodes = this.getLatestFilesHelper(file, true);
@@ -21,7 +26,7 @@ public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
         if (nodes.isEmpty()) {
             return Collections.singletonList(file);
         } else {
-            final List<FileInRevision> revs = new ArrayList<>();
+            final List<IRevisionedFile> revs = new ArrayList<>();
             for (final IFileHistoryNode node : nodes) {
                 revs.add(node.getFile());
             }
@@ -36,7 +41,7 @@ public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
      * @param returnDeletions If <code>true</code> and all versions were deleted, the last known nodes
      *      before deletion are returned. If <code>false</code>, no nodes are returned in this case.
      */
-    private Set<IFileHistoryNode> getLatestFilesHelper(final FileInRevision file, final boolean returnDeletions) {
+    private Set<IFileHistoryNode> getLatestFilesHelper(final IRevisionedFile file, final boolean returnDeletions) {
         final IFileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             // unknown file
