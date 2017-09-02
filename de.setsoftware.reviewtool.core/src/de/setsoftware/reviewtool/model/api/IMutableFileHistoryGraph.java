@@ -18,8 +18,7 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
     public abstract void addAdditionOrChange(
             String path,
             IRevision revision,
-            Set<IRevision> ancestorRevisions,
-            IRepository repo);
+            Set<IRevision> ancestorRevisions);
 
     /**
      * Adds the information that the file with the given path was deleted with the commit of the given revision.
@@ -30,8 +29,7 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
     public abstract void addDeletion(
             String path,
             IRevision revision,
-            Set<IRevision> ancestorRevisions,
-            IRepository repo);
+            Set<IRevision> ancestorRevisions);
 
     /**
      * Adds the information that the file with the given "from" path was copied with the commit of the given revision
@@ -41,7 +39,6 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
             String pathFrom,
             String pathTo,
             IRevision revisionFrom,
-            IRevision revisionTo,
-            IRepository repo);
+            IRevision revisionTo);
 
 }

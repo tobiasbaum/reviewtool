@@ -32,13 +32,11 @@ public class FileInRevision implements IRevisionedFile {
 
     private final String path;
     private final IRevision revision;
-    private final IRepository repo;
     private Path localPath;
 
-    FileInRevision(String path, IRevision revision, IRepository repository) {
+    FileInRevision(String path, IRevision revision) {
         this.path = path;
         this.revision = revision;
-        this.repo = repository;
     }
 
     @Override
@@ -53,7 +51,7 @@ public class FileInRevision implements IRevisionedFile {
 
     @Override
     public IRepository getRepository() {
-        return this.repo;
+        return this.revision.getRepository();
     }
 
     @Override
@@ -73,7 +71,7 @@ public class FileInRevision implements IRevisionedFile {
 
             @Override
             public byte[] handleRepoRevision(final IRepoRevision revision) throws Exception {
-                return FileInRevision.this.repo.getFileContents(FileInRevision.this.path, revision);
+                return FileInRevision.this.getRepository().getFileContents(FileInRevision.this.path, revision);
             }
 
             @Override
@@ -122,7 +120,7 @@ public class FileInRevision implements IRevisionedFile {
     @Override
     public IPath toLocalPath() {
         if (this.localPath == null) {
-            this.localPath = new Path(this.repo.toAbsolutePathInWc(this.path));
+            this.localPath = new Path(this.getRepository().toAbsolutePathInWc(this.path));
         }
         return this.localPath;
     }
@@ -139,8 +137,7 @@ public class FileInRevision implements IRevisionedFile {
         }
         final FileInRevision f = (FileInRevision) o;
         return this.path.equals(f.path)
-            && this.revision.equals(f.revision)
-            && this.repo.equals(f.repo);
+            && this.revision.equals(f.revision);
     }
 
     /**

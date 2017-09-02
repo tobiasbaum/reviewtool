@@ -29,8 +29,18 @@ public class OneStopPerPartOfFileRestructuringTest {
 
     private static final IRepository REPO = new AbstractRepository() {
         @Override
+        public String getId() {
+            return "stub";
+        }
+
+        @Override
         public File getLocalRoot() {
             return null;
+        }
+
+        @Override
+        public IRepoRevision toRevision(final String revisionId) {
+            return ChangestructureFactory.createRepoRevision(revisionId, this);
         }
 
         @Override
@@ -45,7 +55,7 @@ public class OneStopPerPartOfFileRestructuringTest {
 
         @Override
         public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
-            return this.getSmallestOfComparableRevisions(revisions);
+            return getSmallestOfComparableRevisions(revisions);
         }
 
         @Override
@@ -57,8 +67,7 @@ public class OneStopPerPartOfFileRestructuringTest {
     private static IRevisionedFile fileInRevision(String file, int i) {
         return ChangestructureFactory.createFileInRevision(
                 file,
-                ChangestructureFactory.createRepoRevision(i),
-                REPO);
+                ChangestructureFactory.createRepoRevision(i, REPO));
     }
 
     private static Stop stop(final String file, int revision) {

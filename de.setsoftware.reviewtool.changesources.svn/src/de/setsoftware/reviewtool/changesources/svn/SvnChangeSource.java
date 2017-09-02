@@ -365,7 +365,11 @@ public class SvnChangeSource implements IChangeSource {
             final Collection<? super ICommit> result, final IProgressMonitor ui) {
         final List<? extends IChange> changes = this.determineChangesInCommit(historyGraph, e, ui);
         if (!changes.isEmpty()) {
-            result.add(ChangestructureFactory.createCommit(e.toPrettyString(), changes, e.isVisible()));
+            result.add(ChangestructureFactory.createCommit(
+                    e.toPrettyString(),
+                    changes,
+                    e.isVisible(),
+                    this.revision(e)));
         }
     }
 
@@ -424,23 +428,20 @@ public class SvnChangeSource implements IChangeSource {
                 continue;
             }
 
-            final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(
-                    path,
-                    this.revision(e),
-                    e.getRepository());
+            final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(path, this.revision(e));
             final IMutableFileHistoryNode node = historyGraph.getNodeFor(fileInfo);
             if (node != null) {
-                ret.addAll(this.determineChangesInFile(e.getRepository(), node, e.isVisible()));
+                ret.addAll(this.determineChangesInFile(node, e.isVisible()));
             }
         }
         return ret;
     }
 
-    private IBinaryChange createBinaryChange(final SvnRepo repo, final IFileHistoryNode node,
-            final IFileHistoryNode ancestor, final boolean isVisible) {
+    private IBinaryChange createBinaryChange(final IFileHistoryNode node, final IFileHistoryNode ancestor,
+            final boolean isVisible) {
 
         final IRevisionedFile oldFileInfo = ChangestructureFactory.createFileInRevision(ancestor.getFile().getPath(),
-                        ancestor.getFile().getRevision(), repo);
+                        ancestor.getFile().getRevision());
 
         return ChangestructureFactory.createBinaryChange(
                 oldFileInfo,
@@ -455,18 +456,20 @@ public class SvnChangeSource implements IChangeSource {
 
             @Override
             public void handle(WorkingCopyRevision revision) {
-                result.setValue(ChangestructureFactory.createLocalRevision());
+                result.setValue(ChangestructureFactory.createLocalRevision(revision.getRepository()));
             }
 
             @Override
             public void handle(SvnRevision revision) {
-                result.setValue(ChangestructureFactory.createRepoRevision(revision.getRevisionNumber()));
+                result.setValue(ChangestructureFactory.createRepoRevision(
+                        revision.getRevisionNumber(), revision.getRepository()));
             }
         });
         return result.get();
     }
 
-    private List<? extends IChange> determineChangesInFile(final SvnRepo repo, final IMutableFileHistoryNode node,
+    private List<? extends IChange> determineChangesInFile(
+            final IMutableFileHistoryNode node,
             final boolean isVisible) {
 
         final byte[] newFileContent;
@@ -488,11 +491,11 @@ public class SvnChangeSource implements IChangeSource {
             }
 
             if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
-                ret.add(this.createBinaryChange(repo, node, ancestor, isVisible));
+                ret.add(this.createBinaryChange(node, ancestor, isVisible));
                 continue;
             }
             if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
-                ret.add(this.createBinaryChange(repo, node, ancestor, isVisible));
+                ret.add(this.createBinaryChange(node, ancestor, isVisible));
                 continue;
             }
 

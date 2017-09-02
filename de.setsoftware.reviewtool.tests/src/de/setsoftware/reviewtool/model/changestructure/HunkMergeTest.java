@@ -18,7 +18,7 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 public class HunkMergeTest {
 
     private static FileInRevision file(final int revision) {
-        return new FileInRevision("file", new RepoRevision(revision), StubRepo.INSTANCE);
+        return new FileInRevision("file", new RepoRevision(revision, StubRepo.INSTANCE));
     }
 
     private static PositionInText pos(int line, int col) {

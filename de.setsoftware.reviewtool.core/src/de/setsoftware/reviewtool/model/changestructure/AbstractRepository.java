@@ -11,10 +11,24 @@ import de.setsoftware.reviewtool.model.api.IRevision;
  */
 public abstract class AbstractRepository implements IRepository {
 
+    @Override
+    public final boolean equals(final Object o) {
+        if (o instanceof IRepository) {
+            final IRepository other = (IRepository) o;
+            return this.getId().equals(other.getId());
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return this.getId().hashCode();
+    }
+
     /**
      * Simple implementation for {@link #getSmallestRevision} that uses a comparable revision number.
      */
-    public IRevision getSmallestOfComparableRevisions(Collection<? extends IRevision> revisions) {
+    public static IRevision getSmallestOfComparableRevisions(Collection<? extends IRevision> revisions) {
         IRevision smallestSoFar = null;
         for (final IRevision r : revisions) {
             if (r instanceof UnknownRevision) {
@@ -26,7 +40,7 @@ public abstract class AbstractRepository implements IRepository {
                 if (smallestSoFar instanceof RepoRevision) {
                     final Object vs = ((IRepoRevision) smallestSoFar).getId();
                     final Object vr = ((IRepoRevision) r).getId();
-                    if (this.areCompatibleComparables(vs, vr)) {
+                    if (areCompatibleComparables(vs, vr)) {
                         final Comparable<Comparable<?>> cs = (Comparable<Comparable<?>>) vs;
                         final Comparable<Comparable<?>> cr = (Comparable<Comparable<?>>) vr;
                         if (cr.compareTo(cs) < 0) {
@@ -41,7 +55,7 @@ public abstract class AbstractRepository implements IRepository {
         return smallestSoFar;
     }
 
-    private boolean areCompatibleComparables(Object vs, Object vr) {
+    private static boolean areCompatibleComparables(Object vs, Object vr) {
         return vs instanceof Comparable<?> && vs.getClass().equals(vr.getClass());
     }
 

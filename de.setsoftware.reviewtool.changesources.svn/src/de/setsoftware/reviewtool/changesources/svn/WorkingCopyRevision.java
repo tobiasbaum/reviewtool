@@ -44,7 +44,7 @@ final class WorkingCopyRevision implements ISvnRevision {
 
     @Override
     public ILocalRevision toRevision() {
-        return ChangestructureFactory.createLocalRevision();
+        return ChangestructureFactory.createLocalRevision(this.repository);
     }
 
     @Override

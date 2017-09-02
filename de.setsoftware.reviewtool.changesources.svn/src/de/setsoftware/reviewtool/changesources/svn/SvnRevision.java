@@ -46,7 +46,7 @@ final class SvnRevision implements ISvnRevision {
 
     @Override
     public IRepoRevision toRevision() {
-        return ChangestructureFactory.createRepoRevision(this.getRevisionNumber());
+        return ChangestructureFactory.createRepoRevision(this.getRevisionNumber(), this.repository);
     }
 
     @Override

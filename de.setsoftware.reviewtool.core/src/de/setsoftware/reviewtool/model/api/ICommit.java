@@ -14,6 +14,11 @@ public interface ICommit {
     public abstract String getMessage();
 
     /**
+     * @return The revision of the commit.
+     */
+    public abstract IRevision getRevision();
+
+    /**
      * @return The {@list IChange}s of the commit.
      */
     public abstract List<? extends IChange> getChanges();

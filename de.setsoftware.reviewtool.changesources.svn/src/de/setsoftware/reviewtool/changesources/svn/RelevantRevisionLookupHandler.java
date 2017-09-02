@@ -14,6 +14,7 @@ import org.tmatesoft.svn.core.SVNException;
 
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
@@ -73,11 +74,11 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
         return ret;
     }
 
-    private static IRevision toRevision(final long revision) {
+    private static IRevision toRevision(final long revision, final IRepository repo) {
         if (revision == Long.MAX_VALUE) {
-            return ChangestructureFactory.createLocalRevision();
+            return ChangestructureFactory.createLocalRevision(repo);
         } else {
-            return ChangestructureFactory.createRepoRevision(revision);
+            return ChangestructureFactory.createRepoRevision(revision, repo);
         }
     }
 
@@ -90,8 +91,8 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                     historyGraph.addDeletion(
                             path,
                             revision.toRevision(),
-                            Collections.<IRevision>singleton(toRevision(e.getValue().getAncestorRevision())),
-                            revision.getRepository());
+                            Collections.<IRevision>singleton(toRevision(e.getValue().getAncestorRevision(),
+                                    revision.getRepository())));
                     isRelevant = true;
                 }
             } else {
@@ -101,9 +102,9 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                     historyGraph.addCopy(
                             copyPath,
                             path,
-                            ChangestructureFactory.createRepoRevision(e.getValue().getAncestorRevision()),
-                            revision.toRevision(),
-                            revision.getRepository());
+                            ChangestructureFactory.createRepoRevision(e.getValue().getAncestorRevision(),
+                                    revision.getRepository()),
+                            revision.toRevision());
                     isRelevant = true;
                 } else if (e.getValue().isFile()
                         && (revision.isVisible() || historyGraph.contains(path, revision.getRepository()))) {
@@ -111,14 +112,13 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                         historyGraph.addAdditionOrChange(
                                 path,
                                 revision.toRevision(),
-                                Collections.<IRevision>emptySet(),
-                                revision.getRepository());
+                                Collections.<IRevision>emptySet());
                     } else {
                         historyGraph.addAdditionOrChange(
                                 path,
                                 revision.toRevision(),
-                                Collections.<IRevision>singleton(toRevision(e.getValue().getAncestorRevision())),
-                                revision.getRepository());
+                                Collections.<IRevision>singleton(toRevision(e.getValue().getAncestorRevision(),
+                                        revision.getRepository())));
                     }
                     isRelevant = true;
                 }

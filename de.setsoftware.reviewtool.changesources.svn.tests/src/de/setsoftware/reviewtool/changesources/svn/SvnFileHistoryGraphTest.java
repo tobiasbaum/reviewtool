@@ -26,8 +26,18 @@ public class SvnFileHistoryGraphTest {
 
     private static final IRepository STUB_REPO = new AbstractRepository() {
         @Override
+        public String getId() {
+            return "stub";
+        }
+
+        @Override
         public File getLocalRoot() {
             return null;
+        }
+
+        @Override
+        public IRepoRevision toRevision(final String revisionId) {
+            return ChangestructureFactory.createRepoRevision(revisionId, this);
         }
 
         @Override
@@ -63,12 +73,11 @@ public class SvnFileHistoryGraphTest {
     private static IRevisionedFile file(String path, long revision) {
         return ChangestructureFactory.createFileInRevision(
                 path,
-                rev(revision),
-                STUB_REPO);
+                rev(revision));
     }
 
     private static IRepoRevision rev(long revision) {
-        return ChangestructureFactory.createRepoRevision(revision);
+        return ChangestructureFactory.createRepoRevision(revision, STUB_REPO);
     }
 
     @Test
@@ -85,8 +94,8 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopy() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addCopy("a", "b", rev(5), rev(6), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("a", 5), file("b", 6)),
                 g.getLatestFiles(file("a", 1)));
@@ -104,8 +113,8 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testDeletion() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addDeletion("a", rev(11), rev(12), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addDeletion("a", rev(11), rev(12));
         assertEquals(
                 Arrays.asList(file("a", 11)),
                 g.getLatestFiles(file("a", 1)));
@@ -114,7 +123,7 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testDeletionOfUnknown() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addDeletion("a", rev(11), rev(12), STUB_REPO);
+        g.addDeletion("a", rev(11), rev(12));
         assertEquals(
                 Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1)));
@@ -123,9 +132,9 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveOneWay() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addCopy("a", "b", rev(5), rev(6), STUB_REPO);
-        g.addDeletion("a", rev(5), rev(6), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addCopy("a", "b", rev(5), rev(6));
+        g.addDeletion("a", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
                 g.getLatestFiles(file("a", 1)));
@@ -140,9 +149,9 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveOtherWay() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addDeletion("a", rev(5), rev(6), STUB_REPO);
-        g.addCopy("a", "b", rev(5), rev(6), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addDeletion("a", rev(5), rev(6));
+        g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
                 g.getLatestFiles(file("a", 1)));
@@ -157,11 +166,11 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveWithMultipleCopies() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addCopy("a", "b", rev(5), rev(6), STUB_REPO);
-        g.addDeletion("a", rev(5), rev(6), STUB_REPO);
-        g.addCopy("a", "c", rev(5), rev(6), STUB_REPO);
-        g.addCopy("a", "d", rev(5), rev(6), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addCopy("a", "b", rev(5), rev(6));
+        g.addDeletion("a", rev(5), rev(6));
+        g.addCopy("a", "c", rev(5), rev(6));
+        g.addCopy("a", "d", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6), file("c", 6), file("d", 6)),
                 g.getLatestFiles(file("a", 1)));
@@ -182,13 +191,13 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveMultipleTimes() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addDeletion("a", rev(10), rev(11), STUB_REPO);
-        g.addCopy("a", "b", rev(10), rev(11), STUB_REPO);
-        g.addDeletion("b", rev(20), rev(21), STUB_REPO);
-        g.addCopy("b", "c", rev(20), rev(21), STUB_REPO);
-        g.addDeletion("c", rev(30), rev(31), STUB_REPO);
-        g.addCopy("c", "d", rev(30), rev(31), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addDeletion("a", rev(10), rev(11));
+        g.addCopy("a", "b", rev(10), rev(11));
+        g.addDeletion("b", rev(20), rev(21));
+        g.addCopy("b", "c", rev(20), rev(21));
+        g.addDeletion("c", rev(30), rev(31));
+        g.addCopy("c", "d", rev(30), rev(31));
 
         assertEquals(
                 Arrays.asList(file("d", 31)),
@@ -204,10 +213,10 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveAndDeleteAfterwards() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addDeletion("a", rev(10), rev(11), STUB_REPO);
-        g.addCopy("a", "b", rev(10), rev(11), STUB_REPO);
-        g.addDeletion("b", rev(20), rev(21), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addDeletion("a", rev(10), rev(11));
+        g.addCopy("a", "b", rev(10), rev(11));
+        g.addDeletion("b", rev(20), rev(21));
 
         assertEquals(
                 Arrays.asList(file("b", 20)),
@@ -220,9 +229,9 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveAndDeleteAfterwardsStartWithDeletion() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addDeletion("a", rev(10), rev(11), STUB_REPO);
-        g.addCopy("a", "b", rev(10), rev(11), STUB_REPO);
-        g.addDeletion("b", rev(20), rev(21), STUB_REPO);
+        g.addDeletion("a", rev(10), rev(11));
+        g.addCopy("a", "b", rev(10), rev(11));
+        g.addDeletion("b", rev(20), rev(21));
 
         assertEquals(
                 Arrays.asList(file("a", 1)),
@@ -235,10 +244,10 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopyWithRevisionSkip() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addChange("a", rev(5), rev(6), STUB_REPO);
-        g.addDeletion("a", rev(19), rev(20), STUB_REPO);
-        g.addCopy("a", "b", rev(5), rev(23), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(5), rev(6));
+        g.addDeletion("a", rev(19), rev(20));
+        g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
                 Arrays.asList(file("b", 23)),
                 g.getLatestFiles(file("a", 1)));
@@ -256,8 +265,8 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopyWithRevisionSkipStartWithDeletion() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addDeletion("a", rev(19), rev(20), STUB_REPO);
-        g.addCopy("a", "b", rev(5), rev(23), STUB_REPO);
+        g.addDeletion("a", rev(19), rev(20));
+        g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
                 Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1)));
@@ -278,11 +287,11 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testCopyMultipleTimesWithRevisionSkip() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addChange("a", rev(5), rev(6), STUB_REPO);
-        g.addDeletion("a", rev(19), rev(20), STUB_REPO);
-        g.addCopy("a", "b", rev(5), rev(23), STUB_REPO);
-        g.addCopy("b", "c", rev(23), rev(24), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addChange("a", rev(5), rev(6));
+        g.addDeletion("a", rev(19), rev(20));
+        g.addCopy("a", "b", rev(5), rev(23));
+        g.addCopy("b", "c", rev(23), rev(24));
         assertEquals(
                 Arrays.asList(file("b", 23), file("c", 24)),
                 g.getLatestFiles(file("a", 1)));
@@ -300,12 +309,12 @@ public class SvnFileHistoryGraphTest {
     @Test
     public void testMoveParentDirectory() {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
-        g.addChange("a", rev(0), rev(1), STUB_REPO);
-        g.addChange("a/x", rev(1), rev(2), STUB_REPO);
-        g.addCopy("a", "b", rev(10), rev(11), STUB_REPO);
-        g.addChange("a/x", rev(10), rev(11), STUB_REPO);
-        g.addDeletion("a", rev(12), rev(13), STUB_REPO);
-        g.addDeletion("b/x", rev(20), rev(21), STUB_REPO);
+        g.addChange("a", rev(0), rev(1));
+        g.addChange("a/x", rev(1), rev(2));
+        g.addCopy("a", "b", rev(10), rev(11));
+        g.addChange("a/x", rev(10), rev(11));
+        g.addDeletion("a", rev(12), rev(13));
+        g.addDeletion("b/x", rev(20), rev(21));
 
         assertEquals(
                 Arrays.asList(file("a/x", 12)),

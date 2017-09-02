@@ -14,8 +14,18 @@ public final class StubRepo extends AbstractRepository {
     public static StubRepo INSTANCE = new StubRepo();
 
     @Override
+    public String getId() {
+        return "stub";
+    }
+
+    @Override
     public File getLocalRoot() {
         return null;
+    }
+
+    @Override
+    public IRepoRevision toRevision(final String revisionId) {
+        return ChangestructureFactory.createRepoRevision(revisionId, this);
     }
 
     @Override
@@ -30,7 +40,7 @@ public final class StubRepo extends AbstractRepository {
 
     @Override
     public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
-        return this.getSmallestOfComparableRevisions(revisions);
+        return getSmallestOfComparableRevisions(revisions);
     }
 
     @Override

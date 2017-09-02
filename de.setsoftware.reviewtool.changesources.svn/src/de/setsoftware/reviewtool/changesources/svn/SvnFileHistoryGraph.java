@@ -5,7 +5,6 @@ import java.util.List;
 
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
@@ -23,9 +22,8 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
      */
     public void addAddition(
             final String path,
-            final IRevision revision,
-            final IRepository repo) {
-        this.addAdditionOrChange(path, revision, Collections.<IRevision>emptySet(), repo);
+            final IRevision revision) {
+        this.addAdditionOrChange(path, revision, Collections.<IRevision>emptySet());
     }
 
     /**
@@ -34,9 +32,8 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
     public void addChange(
             final String path,
             final IRevision prevRevision,
-            final IRevision revision,
-            final IRepository repo) {
-        this.addAdditionOrChange(path, revision, Collections.<IRevision>singleton(prevRevision), repo);
+            final IRevision revision) {
+        this.addAdditionOrChange(path, revision, Collections.<IRevision>singleton(prevRevision));
     }
 
     /**
@@ -48,9 +45,8 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
     public void addDeletion(
             final String path,
             final IRevision prevRevision,
-            final IRevision revision,
-            final IRepository repo) {
-        this.addDeletion(path, revision, Collections.<IRevision>singleton(prevRevision), repo);
+            final IRevision revision) {
+        this.addDeletion(path, revision, Collections.<IRevision>singleton(prevRevision));
     }
 
     @Override

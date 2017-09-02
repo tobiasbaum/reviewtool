@@ -12,12 +12,14 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
  * Wraps the information needed on a SVN repository and corresponding working copy.
  */
 public class SvnRepo extends AbstractRepository {
 
+    private final String id;
     private final File workingCopyRoot;
     private final SVNURL remoteUrl;
     private final String relPath;
@@ -26,10 +28,12 @@ public class SvnRepo extends AbstractRepository {
 
     public SvnRepo(
             final SVNClientManager mgr,
+            final String id,
             final File workingCopyRoot,
             final SVNURL rootUrl,
             final String relPath,
             final int checkoutPrefix) {
+        this.id = id;
         this.workingCopyRoot = workingCopyRoot;
         this.remoteUrl = rootUrl;
         this.relPath = relPath + '/';
@@ -39,6 +43,11 @@ public class SvnRepo extends AbstractRepository {
 
     public SVNURL getRemoteUrl() {
         return this.remoteUrl;
+    }
+
+    @Override
+    public String getId() {
+        return this.id;
     }
 
     @Override
@@ -86,12 +95,21 @@ public class SvnRepo extends AbstractRepository {
 
     @Override
     public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
-        return this.getSmallestOfComparableRevisions(revisions);
+        return getSmallestOfComparableRevisions(revisions);
     }
 
     @Override
     public File getLocalRoot() {
         return this.workingCopyRoot;
+    }
+
+    @Override
+    public IRepoRevision toRevision(final String revisionId) {
+        try {
+            return ChangestructureFactory.createRepoRevision(Long.valueOf(revisionId), this);
+        } catch (final NumberFormatException e) {
+            return null;
+        }
     }
 
     @Override

@@ -6,6 +6,11 @@ package de.setsoftware.reviewtool.model.api;
 public interface IRevision {
 
     /**
+     * Returns the repository this revision is associated with.
+     */
+    public abstract IRepository getRepository();
+
+    /**
      * Accepts a {@link IRevisionVisitor}.
      * @param visitor The visitor.
      * @return Some result.

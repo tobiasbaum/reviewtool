@@ -42,7 +42,7 @@ public class ViewStatisticsTest {
 
     private static Stop stop(String string) {
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(
-                string, ChangestructureFactory.createLocalRevision(), new StubRepo());
+                string, ChangestructureFactory.createLocalRevision(new StubRepo()));
         return new Stop(ChangestructureFactory.createBinaryChange(file, file, false, true), file);
     }
 

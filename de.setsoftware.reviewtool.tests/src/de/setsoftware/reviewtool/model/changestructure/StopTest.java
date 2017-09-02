@@ -15,7 +15,7 @@ import de.setsoftware.reviewtool.model.api.IPositionInText;
 public class StopTest {
 
     private static FileInRevision file(String name, int revision) {
-        return new FileInRevision(name, new RepoRevision(revision), StubRepo.INSTANCE);
+        return new FileInRevision(name, new RepoRevision(revision, StubRepo.INSTANCE));
     }
 
     private static IPositionInText line(int line) {

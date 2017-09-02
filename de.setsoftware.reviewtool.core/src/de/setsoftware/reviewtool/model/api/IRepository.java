@@ -10,9 +10,19 @@ import java.util.Collection;
 public interface IRepository {
 
     /**
+     * @return An identifier unique amongst all known repositories.
+     */
+    public abstract String getId();
+
+    /**
      * @return The root of the working copy.
      */
     public abstract File getLocalRoot();
+
+    /**
+     * Converts the string representation of a repository revision into a {@link IRepoRevision}.
+     */
+    public abstract IRepoRevision toRevision(String revisionId);
 
     /**
      * Converts a path that is absolute in the repository to a path that is absolute in the file

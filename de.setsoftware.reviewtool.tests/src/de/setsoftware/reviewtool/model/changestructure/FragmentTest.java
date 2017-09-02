@@ -16,11 +16,11 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 public class FragmentTest {
 
     private static FileInRevision file() {
-        return new FileInRevision("file", new LocalRevision(), StubRepo.INSTANCE);
+        return new FileInRevision("file", new LocalRevision(StubRepo.INSTANCE));
     }
 
     private static FileInRevision fileWithContent(final String content) {
-        return new FileInRevision("file", new LocalRevision(), StubRepo.INSTANCE) {
+        return new FileInRevision("file", new LocalRevision(StubRepo.INSTANCE)) {
             @Override
             public byte[] getContents() {
                 try {
