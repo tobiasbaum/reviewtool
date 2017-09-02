@@ -17,11 +17,11 @@ public abstract class AbstractRepository implements IRepository {
     public IRevision getSmallestOfComparableRevisions(Collection<? extends IRevision> revisions) {
         IRevision smallestSoFar = null;
         for (final IRevision r : revisions) {
-            if (smallestSoFar == null) {
-                smallestSoFar = r;
-            } else if (r instanceof UnknownRevision) {
+            if (r instanceof UnknownRevision) {
                 //unknown revision (the source of an added file) is always smallest
                 return r;
+            } else if (smallestSoFar == null) {
+                smallestSoFar = r;
             } else if (r instanceof RepoRevision) {
                 if (smallestSoFar instanceof RepoRevision) {
                     final Object vs = ((IRepoRevision) smallestSoFar).getId();
