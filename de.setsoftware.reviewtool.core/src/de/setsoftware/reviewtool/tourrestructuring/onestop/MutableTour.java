@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Util;
-import de.setsoftware.reviewtool.model.api.IReviewElement;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 
@@ -15,7 +14,7 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
  * A helper class for restructuring the tours, containing the information like a tour,
  * but being mutable instead.
  */
-class MutableTour implements IReviewElement {
+class MutableTour {
 
     /**
      * Helper class containing data about a stop and its position in a (mutable) tour.
@@ -126,11 +125,6 @@ class MutableTour implements IReviewElement {
 
     public boolean isEmpty() {
         return this.stops.isEmpty();
-    }
-
-    @Override
-    public boolean isVisible() {
-        return true;
     }
 
 }

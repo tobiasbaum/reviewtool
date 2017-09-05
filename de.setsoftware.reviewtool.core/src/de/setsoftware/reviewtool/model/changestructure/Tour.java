@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import de.setsoftware.reviewtool.base.Multimap;
-import de.setsoftware.reviewtool.model.api.IReviewElement;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.telemetry.TelemetryEventBuilder;
 import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
@@ -22,7 +21,7 @@ import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
  * <p/>
  * A tour is immutable.
  */
-public class Tour implements IReviewElement {
+public class Tour {
 
     private final String description;
     private final List<Stop> stops = new ArrayList<>();
@@ -50,14 +49,6 @@ public class Tour implements IReviewElement {
         final Tour t = (Tour) o;
         return this.description.equals(t.description)
             && this.stops.equals(t.stops);
-    }
-
-    /**
-     * A tour is always visible, as its reason for being is to be visible for review.
-     */
-    @Override
-    public boolean isVisible() {
-        return true;
     }
 
     public List<Stop> getStops() {

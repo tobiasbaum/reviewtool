@@ -2,10 +2,8 @@ package de.setsoftware.reviewtool.ui.views;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.commands.ExecutionException;
@@ -56,7 +54,6 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.IFragment;
-import de.setsoftware.reviewtool.model.api.IReviewElement;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
@@ -292,7 +289,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     fragment,
                     fragment,
                     false,
-                    stop.isVisible());
+                    true);
             jumpTarget = new Stop(change, fragment);
         } else {
             jumpTarget = stop;
@@ -441,21 +438,6 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             CurrentStop.registerListener(this);
         }
 
-        /**
-         * Filters out invisible elements.
-         * @param elements A list of {@link IReviewElement}s to filter.
-         * @return A list where all {@link IReviewElement}s are visible.
-         */
-        private <T extends IReviewElement> List<T> filterOutInvisible(final List<T> elements) {
-            final List<T> result = new ArrayList<>();
-            for (final T element : elements) {
-                if (element.isVisible()) {
-                    result.add(element);
-                }
-            }
-            return result;
-        }
-
         @Override
         public Object[] getElements(Object inputElement) {
             assert inputElement == this.tours;
@@ -465,10 +447,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement == null) {
-                return this.filterOutInvisible(this.tours.getTours()).toArray();
+                return this.tours.getTours().toArray();
             } else if (parentElement instanceof Tour) {
                 final Tour s = (Tour) parentElement;
-                return this.filterOutInvisible(s.getStops()).toArray();
+                return s.getStops().toArray();
             } else {
                 return new Object[0];
             }

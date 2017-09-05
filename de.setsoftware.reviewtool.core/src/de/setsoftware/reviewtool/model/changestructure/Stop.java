@@ -15,7 +15,6 @@ import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IHunk;
-import de.setsoftware.reviewtool.model.api.IReviewElement;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 
@@ -26,7 +25,7 @@ import de.setsoftware.reviewtool.model.api.ITextualChange;
  * <p/>
  * A stop is immutable.
  */
-public class Stop implements IReviewElement {
+public class Stop {
 
     private final Map<IRevisionedFile, IRevisionedFile> historyOrder;
     private final Multimap<IRevisionedFile, Hunk> history;
@@ -35,8 +34,6 @@ public class Stop implements IReviewElement {
     private final IFragment mostRecentFragment;
     private transient IRevisionedFile mostRecentFileConsideringLocalChanges;
     private transient IFragment mostRecentFragmentConsideringLocalChanges;
-    //TODO does this flag make sense? visibility is an attribute of a tour (if at all)
-    private final boolean isVisible;
 
     private final boolean irrelevantForReview;
 
@@ -57,7 +54,7 @@ public class Stop implements IReviewElement {
         this.mostRecentFragmentConsideringLocalChanges = null;
 
         this.irrelevantForReview = change.isIrrelevantForReview();
-        this.isVisible = change.isVisible();
+        assert change.isVisible();
     }
 
     /**
@@ -76,7 +73,7 @@ public class Stop implements IReviewElement {
         this.mostRecentFragmentConsideringLocalChanges = null;
 
         this.irrelevantForReview = change.isIrrelevantForReview();
-        this.isVisible = change.isVisible();
+        assert change.isVisible();
     }
 
     /**
@@ -89,8 +86,7 @@ public class Stop implements IReviewElement {
             final IFragment mostRecentFragment,
             final IRevisionedFile mostRecentFileConsideringLocalChanges,
             final IFragment mostRecentFragmentConsideringLocalChanges,
-            final boolean irrelevantForReview,
-            final boolean isVisible) {
+            final boolean irrelevantForReview) {
         this.historyOrder = historyOrder;
         this.history = history;
         this.mostRecentFile = mostRecentFile;
@@ -98,12 +94,6 @@ public class Stop implements IReviewElement {
         this.mostRecentFileConsideringLocalChanges = mostRecentFileConsideringLocalChanges;
         this.mostRecentFragmentConsideringLocalChanges = mostRecentFragmentConsideringLocalChanges;
         this.irrelevantForReview = irrelevantForReview;
-        this.isVisible = isVisible;
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.isVisible;
     }
 
     public boolean isDetailedFragmentKnown() {
@@ -227,8 +217,7 @@ public class Stop implements IReviewElement {
                 //  to track which part is relevant and which is not (so that a merge could result in multiple
                 //  stops), but this complicates some algorithms and is only useful for large irrelevant stops,
                 //  which should be quite rare
-                this.irrelevantForReview && other.irrelevantForReview,
-                this.isVisible || other.isVisible);
+                this.irrelevantForReview && other.irrelevantForReview);
     }
 
     @Override
