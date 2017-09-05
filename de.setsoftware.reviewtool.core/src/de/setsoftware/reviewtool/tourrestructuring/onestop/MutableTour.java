@@ -41,6 +41,7 @@ class MutableTour {
     public MutableTour(Tour t) {
         this.descriptionParts = new LinkedHashSet<>();
         this.descriptionParts.add(t.getDescription());
+        //mutable tours are normally only used with flat tours; if not, the tour will be flattened now
         this.stops = new ArrayList<>(t.getStops());
     }
 

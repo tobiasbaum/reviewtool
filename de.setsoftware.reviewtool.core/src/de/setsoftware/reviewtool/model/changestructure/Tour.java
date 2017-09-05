@@ -19,9 +19,9 @@ import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
 public class Tour extends TourElement {
 
     private final String description;
-    private final List<Stop> children = new ArrayList<>();
+    private final List<TourElement> children = new ArrayList<>();
 
-    public Tour(String description, List<? extends Stop> list) {
+    public Tour(String description, List<? extends TourElement> list) {
         this.description = description;
         this.children.addAll(list);
     }
