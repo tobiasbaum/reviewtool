@@ -113,19 +113,6 @@
 	   </menu>
 	 </menuContribution>
 	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.reviewcontentview?after=additions">
-	   <command commandId="de.setsoftware.reviewtool.commands.mergetours"
-	   		 label="Merge review tours" 
-	   		 style="push">
-	   		 <visibleWhen>
-	   		   <with variable="activeMenuSelection">
-                 <count value="(1-"/>
-                 <iterate>
-                   <adapt type="de.setsoftware.reviewtool.model.changestructure.Tour">
-                   </adapt>
-                 </iterate>
-               </with>
-             </visibleWhen>
-	   </command>
        <command commandId="de.setsoftware.reviewtool.commands.markAsChecked"
              label="Mark/Unmark explicitly checked"
              style="push">
@@ -188,9 +175,6 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.WriteToTicketSystemAction"
         id="de.setsoftware.reviewtool.commands.writeremarks" name="Write remarks to ticket system">
-     </command>
-     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MergeToursAction"
-        id="de.setsoftware.reviewtool.commands.mergetours" name="Merge review tours">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkAsCheckedAction"
         id="de.setsoftware.reviewtool.commands.markAsChecked" name="Mark selected stop as checked/unchecked">

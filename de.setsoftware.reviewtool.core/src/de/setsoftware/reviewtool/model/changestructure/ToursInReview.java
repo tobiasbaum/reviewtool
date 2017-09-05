@@ -513,57 +513,6 @@ public class ToursInReview {
                 ? null : this.tours.get(this.currentTourIndex);
     }
 
-    /**
-     * Merges the given tours. If one of them is currently active, the merge result will be active
-     * afterwards, otherwise the active tour stays the same. The merged tour's position is the previous
-     * position of the "biggest" part.
-     */
-    public void mergeTours(List<Tour> toursToMerge, IStopMarkerFactory markerFactory) throws CoreException {
-        final List<Tour> mergeableToursToMerge = new ArrayList<>();
-        for (final Tour t : toursToMerge) {
-            mergeableToursToMerge.add(t);
-        }
-
-        if (mergeableToursToMerge.size() <= 1) {
-            return;
-        }
-
-        //determine the indices of the tours; they are needed for telemetry logging later
-        final List<Integer> tourIndices = new ArrayList<>();
-        for (final Tour t : mergeableToursToMerge) {
-            tourIndices.add(this.tours.indexOf(t));
-        }
-
-        //determine the merged tour
-        Tour mergeResult = mergeableToursToMerge.get(0);
-        for (int i = 1; i < mergeableToursToMerge.size(); i++) {
-            mergeResult = mergeResult.mergeWith(mergeableToursToMerge.get(i));
-        }
-
-        //save the currently active tour
-        final Tour activeTour = this.getActiveTour();
-
-        //replace the largest part with the merge result and remove the old tours
-        final Tour largestTour = this.determineLargestTour(mergeableToursToMerge);
-        this.tours.set(this.tours.indexOf(largestTour), mergeResult);
-        this.tours.removeAll(mergeableToursToMerge);
-
-        //restore the active tour
-        this.currentTourIndex = this.tours.indexOf(activeTour);
-        if (this.currentTourIndex < 0) {
-            this.ensureTourActive(mergeResult, markerFactory, false);
-        }
-
-        for (final IToursInReviewChangeListener l : this.listeners) {
-            l.toursChanged();
-        }
-
-        Telemetry.event("toursMerged")
-                .param("mergedTourIndices", tourIndices)
-                .params(Tour.determineSize(this.tours))
-                .log();
-    }
-
     private void notifyListenersAboutTourStructureChange(final IStopMarkerFactory markerFactory) {
         // markerFactors is null only if called from ToursInReview.create(), and in this case ensureTourActive()
         // is called later on which recreates the markers
@@ -586,19 +535,6 @@ public class ToursInReview {
                 }
             }
         });
-    }
-
-    private Tour determineLargestTour(List<Tour> toursToMerge) {
-        int largestSize = Integer.MIN_VALUE;
-        Tour largestTour = null;
-        for (final Tour t : toursToMerge) {
-            final int curSize = t.getStops().size();
-            if (curSize > largestSize) {
-                largestSize = curSize;
-                largestTour = t;
-            }
-        }
-        return largestTour;
     }
 
     public void registerListener(IToursInReviewChangeListener listener) {
