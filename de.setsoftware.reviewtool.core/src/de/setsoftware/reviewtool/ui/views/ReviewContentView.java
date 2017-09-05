@@ -59,6 +59,7 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
+import de.setsoftware.reviewtool.model.changestructure.TourElement;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
 import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
@@ -458,15 +459,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         @Override
         public Object getParent(Object element) {
-            //TODO
-            if (element instanceof Stop) {
-                final Stop f = (Stop) element;
-                for (final Tour s : this.tours.getTopmostTours()) {
-                    if (s.getStops().contains(f)) {
-                        return s;
-                    }
-                }
-                return null;
+            if (element instanceof TourElement) {
+                return this.tours.getParentFor((TourElement) element);
             } else {
                 return null;
             }
@@ -534,12 +528,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         }
 
         private Tour getTourFor(Stop stop) {
-            for (final Tour t : this.tours.getTopmostTours()) {
-                if (t.getStops().contains(stop)) {
-                    return t;
-                }
-            }
-            return null;
+            return this.tours.getParentFor(stop);
         }
 
         @Override

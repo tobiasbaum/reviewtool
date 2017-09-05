@@ -173,4 +173,18 @@ public class Tour extends TourElement {
         };
     }
 
+    Tour findParentFor(TourElement element) {
+        for (final TourElement child : this.stops) {
+            if (child.equals(element)) {
+                return this;
+            } else if (child instanceof Tour) {
+                final Tour recursiveResult = ((Tour) child).findParentFor(element);
+                if (recursiveResult != null) {
+                    return recursiveResult;
+                }
+            }
+        }
+        return null;
+    }
+
 }

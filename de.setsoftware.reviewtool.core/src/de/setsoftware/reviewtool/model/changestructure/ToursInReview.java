@@ -616,4 +616,32 @@ public class ToursInReview {
             return 0;
         }
     }
+
+    /**
+     * Determines the direct parent tour of the given element.
+     * Returns null when none is found.
+     */
+    public Tour getParentFor(TourElement element) {
+        for (final Tour t : this.topmostTours) {
+            final Tour parent = t.findParentFor(element);
+            if (parent != null) {
+                return parent;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Determines the topmost parent tour of the given element.
+     * Returns null when none is found.
+     */
+    public Tour getTopmostTourWith(TourElement element) {
+        for (final Tour t : this.topmostTours) {
+            final Tour parent = t.findParentFor(element);
+            if (parent != null) {
+                return t;
+            }
+        }
+        return null;
+    }
 }

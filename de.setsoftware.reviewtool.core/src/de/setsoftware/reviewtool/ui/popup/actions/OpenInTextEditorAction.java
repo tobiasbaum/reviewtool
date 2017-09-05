@@ -36,18 +36,9 @@ public class OpenInTextEditorAction extends AbstractHandler {
 
         final List<Stop> stops = new ArrayList<>(ts.toList());
         for (final Stop stop : stops) {
-            final Tour tour = this.getTour(tours, stop);
+            final Tour tour = tours.getTopmostTourWith(stop);
             if (tour != null) {
                 ReviewContentView.openInTextEditor(tours, tour, stop);
-            }
-        }
-        return null;
-    }
-
-    private Tour getTour(ToursInReview tours, Stop stop) {
-        for (final Tour tour : tours.getTopmostTours()) {
-            if (tour.getStops().contains(stop)) {
-                return tour;
             }
         }
         return null;
