@@ -19,21 +19,21 @@ import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
 public class Tour extends TourElement {
 
     private final String description;
-    private final List<Stop> stops = new ArrayList<>();
+    private final List<Stop> children = new ArrayList<>();
 
     public Tour(String description, List<? extends Stop> list) {
         this.description = description;
-        this.stops.addAll(list);
+        this.children.addAll(list);
     }
 
     @Override
     public String toString() {
-        return "Tour: " + this.description + ", " + this.stops;
+        return "Tour: " + this.description + ", " + this.children;
     }
 
     @Override
     public int hashCode() {
-        return this.description.hashCode() + this.stops.size();
+        return this.description.hashCode() + this.children.size();
     }
 
     @Override
@@ -43,15 +43,27 @@ public class Tour extends TourElement {
         }
         final Tour t = (Tour) o;
         return this.description.equals(t.description)
-            && this.stops.equals(t.stops);
+            && this.children.equals(t.children);
     }
 
+    /**
+     * Returns all stops (=leaves) in this tour hierarchy.
+     */
     public List<Stop> getStops() {
-        return Collections.unmodifiableList(this.stops);
+        final List<Stop> buffer = new ArrayList<>();
+        this.fillStopsInto(buffer);
+        return Collections.unmodifiableList(buffer);
+    }
+
+    @Override
+    protected void fillStopsInto(List<Stop> buffer) {
+        for (final TourElement e : this.children) {
+            e.fillStopsInto(buffer);
+        }
     }
 
     public List<? extends TourElement> getChildren() {
-        return Collections.unmodifiableList(this.stops);
+        return Collections.unmodifiableList(this.children);
     }
 
     public String getDescription() {
@@ -63,8 +75,9 @@ public class Tour extends TourElement {
      * If the given stop is not contained in this, all stops are returned.
      */
     public List<Stop> getStopsAfter(Stop currentStop) {
-        final int index = this.stops.indexOf(currentStop);
-        return this.stops.subList(index + 1, this.stops.size());
+        final List<Stop> allStops = this.getStops();
+        final int index = allStops.indexOf(currentStop);
+        return allStops.subList(index + 1, allStops.size());
     }
 
     /**
@@ -72,8 +85,9 @@ public class Tour extends TourElement {
      * If the given stop is not contained in this, the empty list.
      */
     public List<Stop> getStopsBefore(Stop currentStop) {
-        final int index = this.stops.indexOf(currentStop);
-        return index <= 0 ? Collections.<Stop>emptyList() : this.stops.subList(0, index - 1);
+        final List<Stop> allStops = this.getStops();
+        final int index = allStops.indexOf(currentStop);
+        return index <= 0 ? Collections.<Stop>emptyList() : allStops.subList(0, index - 1);
     }
 
     public int getNumberOfStops(boolean onlyRelevant) {
@@ -118,14 +132,14 @@ public class Tour extends TourElement {
     private List<Stop> filterRelevance(boolean onlyRelevant) {
         if (onlyRelevant) {
             final List<Stop> ret = new ArrayList<>();
-            for (final Stop s : this.stops) {
+            for (final Stop s : this.getStops()) {
                 if (!s.isIrrelevantForReview()) {
                     ret.add(s);
                 }
             }
             return ret;
         } else {
-            return this.stops;
+            return this.getStops();
         }
     }
 
@@ -174,7 +188,7 @@ public class Tour extends TourElement {
     }
 
     Tour findParentFor(TourElement element) {
-        for (final TourElement child : this.stops) {
+        for (final TourElement child : this.children) {
             if (child.equals(element)) {
                 return this;
             } else if (child instanceof Tour) {

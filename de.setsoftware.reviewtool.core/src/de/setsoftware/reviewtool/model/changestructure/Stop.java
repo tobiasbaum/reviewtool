@@ -296,4 +296,9 @@ public class Stop extends TourElement {
         return this.irrelevantForReview;
     }
 
+    @Override
+    protected void fillStopsInto(List<Stop> buffer) {
+        buffer.add(this);
+    }
+
 }
