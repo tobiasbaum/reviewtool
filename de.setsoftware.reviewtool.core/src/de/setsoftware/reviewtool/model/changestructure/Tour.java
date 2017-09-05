@@ -50,6 +50,10 @@ public class Tour extends TourElement {
         return Collections.unmodifiableList(this.stops);
     }
 
+    public List<? extends TourElement> getChildren() {
+        return Collections.unmodifiableList(this.stops);
+    }
+
     public String getDescription() {
         return this.description;
     }
@@ -64,7 +68,7 @@ public class Tour extends TourElement {
     }
 
     /**
-     * Returns a list with all stops after the given stop.
+     * Returns a list with all stops before the given stop.
      * If the given stop is not contained in this, the empty list.
      */
     public List<Stop> getStopsBefore(Stop currentStop) {

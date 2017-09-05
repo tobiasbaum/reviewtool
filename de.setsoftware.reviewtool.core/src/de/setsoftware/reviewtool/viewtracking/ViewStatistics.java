@@ -134,15 +134,15 @@ public class ViewStatistics {
     public Stop getNextUnvisitedStop(
             ToursInReview tours, Stop currentStop, INextStopCallback nextStopCallback) {
 
-        if (tours.getTours().isEmpty()) {
+        if (tours.getTopmostTours().isEmpty()) {
             return null;
         }
 
         final int startTourIndex = tours.findTourIndexWithStop(currentStop);
 
-        final int tourCount = tours.getTours().size();
+        final int tourCount = tours.getTopmostTours().size();
         for (int i = 0; i <= tourCount; i++) {
-            final Tour tour = tours.getTours().get((startTourIndex + i) % tourCount);
+            final Tour tour = tours.getTopmostTours().get((startTourIndex + i) % tourCount);
             final List<Stop> remainingStops;
             if (i == 0) {
                 remainingStops = tour.getStopsAfter(currentStop);

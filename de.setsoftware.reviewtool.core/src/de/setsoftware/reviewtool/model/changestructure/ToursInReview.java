@@ -91,23 +91,23 @@ public class ToursInReview {
     }
 
     private final VirtualFileHistoryGraph historyGraph;
-    private final List<Tour> tours;
+    private final List<Tour> topmostTours;
     private final IChangeData remoteChanges;
     private Map<File, IRevisionedFile> modifiedFiles;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
 
-    private ToursInReview(final List<? extends Tour> tours, final IChangeData remoteChanges) {
+    private ToursInReview(final List<? extends Tour> topmostTours, final IChangeData remoteChanges) {
         this.historyGraph = new VirtualFileHistoryGraph(remoteChanges.getHistoryGraph());
-        this.tours = new ArrayList<>(tours);
+        this.topmostTours = new ArrayList<>(topmostTours);
         this.remoteChanges = remoteChanges;
         this.modifiedFiles = remoteChanges.getLocalPathMap();
         this.currentTourIndex = 0;
     }
 
-    private ToursInReview(final List<? extends Tour> tours) {
+    private ToursInReview(final List<? extends Tour> topmostTours) {
         this.historyGraph = new VirtualFileHistoryGraph();
-        this.tours = new ArrayList<>(tours);
+        this.topmostTours = new ArrayList<>(topmostTours);
         this.remoteChanges = null;
         this.modifiedFiles = new LinkedHashMap<>();
         this.currentTourIndex = 0;
@@ -202,7 +202,7 @@ public class ToursInReview {
 
     private void updateMostRecentFragmentsWithLocalChanges() {
         final IFragmentTracer tracer = new FragmentTracer(this.historyGraph);
-        for (final Tour tour : this.tours) {
+        for (final Tour tour : this.topmostTours) {
             for (final Stop stop : tour.getStops()) {
                 stop.updateMostRecentData(tracer);
             }
@@ -395,8 +395,8 @@ public class ToursInReview {
      */
     public void createMarkers(final IStopMarkerFactory markerFactory, final IProgressMonitor progressMonitor) {
         final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
-        for (int i = 0; i < this.tours.size(); i++) {
-            final Tour s = this.tours.get(i);
+        for (int i = 0; i < this.topmostTours.size(); i++) {
+            final Tour s = this.topmostTours.get(i);
             for (final Stop f : s.getStops()) {
                 if (progressMonitor != null && progressMonitor.isCanceled()) {
                     throw new OperationCanceledException();
@@ -458,8 +458,8 @@ public class ToursInReview {
         return this.historyGraph.getNodeFor(file);
     }
 
-    public List<Tour> getTours() {
-        return this.tours;
+    public List<Tour> getTopmostTours() {
+        return this.topmostTours;
     }
 
     /**
@@ -477,7 +477,7 @@ public class ToursInReview {
     public void ensureTourActive(Tour t, IStopMarkerFactory markerFactory, boolean notify)
         throws CoreException {
 
-        final int index = this.tours.indexOf(t);
+        final int index = this.topmostTours.indexOf(t);
         if (index != this.currentTourIndex) {
             this.clearMarkers();
             final Tour oldActive = this.getActiveTour();
@@ -509,8 +509,8 @@ public class ToursInReview {
      * occur when there are no tours).
      */
     public Tour getActiveTour() {
-        return this.currentTourIndex >= this.tours.size() || this.currentTourIndex < 0
-                ? null : this.tours.get(this.currentTourIndex);
+        return this.currentTourIndex >= this.topmostTours.size() || this.currentTourIndex < 0
+                ? null : this.topmostTours.get(this.currentTourIndex);
     }
 
     private void notifyListenersAboutTourStructureChange(final IStopMarkerFactory markerFactory) {
@@ -546,7 +546,7 @@ public class ToursInReview {
      */
     public List<Stop> getStopsFor(File absolutePath) {
         final List<Stop> ret = new ArrayList<>();
-        for (final Tour t : this.tours) {
+        for (final Tour t : this.topmostTours) {
             for (final Stop s : t.getStops()) {
                 if (absolutePath.equals(s.getAbsoluteFile())) {
                     ret.add(s);
@@ -561,8 +561,8 @@ public class ToursInReview {
      * If none exists, -1 is returned.
      */
     public int findTourIndexWithStop(Stop currentStop) {
-        for (int i = 0; i < this.tours.size(); i++) {
-            for (final Stop s : this.tours.get(i).getStops()) {
+        for (int i = 0; i < this.topmostTours.size(); i++) {
+            for (final Stop s : this.topmostTours.get(i).getStops()) {
                 if (s == currentStop) {
                     return i;
                 }
@@ -577,13 +577,13 @@ public class ToursInReview {
      * for cases where he did not click directly on a stop.
      */
     public Pair<Tour, Stop> findNearestStop(IPath absoluteResourcePath, int line) {
-        if (this.tours.isEmpty()) {
+        if (this.topmostTours.isEmpty()) {
             return null;
         }
         Tour bestTour = null;
         Stop bestStop = null;
         int bestDist = Integer.MAX_VALUE;
-        for (final Tour t : this.tours) {
+        for (final Tour t : this.topmostTours) {
             for (final Stop stop : t.getStops()) {
                 final int candidateDist = this.calculateDistance(stop, absoluteResourcePath, line);
                 if (candidateDist < bestDist) {

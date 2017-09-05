@@ -45,7 +45,7 @@ public class OpenInTextEditorAction extends AbstractHandler {
     }
 
     private Tour getTour(ToursInReview tours, Stop stop) {
-        for (final Tour tour : tours.getTours()) {
+        for (final Tour tour : tours.getTopmostTours()) {
             if (tour.getStops().contains(stop)) {
                 return tour;
             }

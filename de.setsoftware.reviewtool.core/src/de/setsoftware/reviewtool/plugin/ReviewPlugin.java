@@ -542,7 +542,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
             Telemetry.event("reviewStarted")
                     .param("round", this.persistence.getCurrentRound())
-                    .params(Tour.determineSize(this.toursInReview.getTours()))
+                    .params(Tour.determineSize(this.toursInReview.getTopmostTours()))
                     .log();
 
             this.registerGlobalTelemetryListeners();

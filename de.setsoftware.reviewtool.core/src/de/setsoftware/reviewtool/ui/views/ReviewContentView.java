@@ -447,10 +447,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         @Override
         public Object[] getChildren(Object parentElement) {
             if (parentElement == null) {
-                return this.tours.getTours().toArray();
+                return this.tours.getTopmostTours().toArray();
             } else if (parentElement instanceof Tour) {
                 final Tour s = (Tour) parentElement;
-                return s.getStops().toArray();
+                return s.getChildren().toArray();
             } else {
                 return new Object[0];
             }
@@ -458,9 +458,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         @Override
         public Object getParent(Object element) {
+            //TODO
             if (element instanceof Stop) {
                 final Stop f = (Stop) element;
-                for (final Tour s : this.tours.getTours()) {
+                for (final Tour s : this.tours.getTopmostTours()) {
                     if (s.getStops().contains(f)) {
                         return s;
                     }
@@ -533,7 +534,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         }
 
         private Tour getTourFor(Stop stop) {
-            for (final Tour t : this.tours.getTours()) {
+            for (final Tour t : this.tours.getTopmostTours()) {
                 if (t.getStops().contains(stop)) {
                     return t;
                 }

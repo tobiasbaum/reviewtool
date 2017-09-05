@@ -36,7 +36,7 @@ public class PathRegexAndReviewerCountStrategy implements IPreferredTransitionSt
             return Collections.emptyList();
         }
 
-        for (final Tour t : toursInReview.getTours()) {
+        for (final Tour t : toursInReview.getTopmostTours()) {
             for (final Stop s : t.getStops()) {
                 if (this.pattern.matcher(s.getMostRecentFile().getPath()).matches()) {
                     return Collections.singletonList(this.transitionName);
