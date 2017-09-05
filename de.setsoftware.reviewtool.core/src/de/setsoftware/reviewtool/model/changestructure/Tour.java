@@ -15,13 +15,14 @@ import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
 
 /**
  * A tour through a part of the changes. The consists of stops in a certain order, with
- * each stop belonging to some part of the change.
+ * each stop belonging to some part of the change. Tours can be structured into sub-tours,
+ * forming a hierarchy (composite).
  * <p/>
  * The Tour+Stop metaphor is borrowed from the JTourBus tool.
  * <p/>
  * A tour is immutable.
  */
-public class Tour {
+public class Tour extends TourElement {
 
     private final String description;
     private final List<Stop> stops = new ArrayList<>();

@@ -25,7 +25,7 @@ import de.setsoftware.reviewtool.model.api.ITextualChange;
  * <p/>
  * A stop is immutable.
  */
-public class Stop {
+public class Stop extends TourElement {
 
     private final Map<IRevisionedFile, IRevisionedFile> historyOrder;
     private final Multimap<IRevisionedFile, Hunk> history;
