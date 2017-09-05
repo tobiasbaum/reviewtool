@@ -154,9 +154,40 @@ public class ToursInReview {
             return null;
         }
 
-        final ToursInReview result = new ToursInReview(userSelection, changes);
+        final List<? extends Tour> toursToShow = groupAndSort(userSelection);
+
+        final ToursInReview result = new ToursInReview(toursToShow, changes);
         result.createLocalTour(null, changeSourceUi, null);
         return result;
+    }
+
+    private static List<? extends Tour> groupAndSort(List<? extends Tour> userSelection) {
+        //TODO do better resorting and grouping
+        final List<Tour> ret = new ArrayList<>();
+        for (final Tour t : userSelection) {
+            ret.add(new Tour(t.getDescription(), createTourPerFile(t.getStops())));
+        }
+        return ret;
+    }
+
+    private static List<? extends TourElement> createTourPerFile(List<Stop> stops) {
+        final List<Tour> ret = new ArrayList<>();
+        final List<Stop> accumulated = new ArrayList<>();
+        IRevisionedFile curFile = null;
+        for (final Stop s : stops) {
+            if (curFile == null || !curFile.equals(s.getMostRecentFile())) {
+                if (curFile != null) {
+                    ret.add(new Tour(curFile.getPath(), accumulated));
+                }
+                curFile = s.getMostRecentFile();
+                accumulated.clear();
+            }
+            accumulated.add(s);
+        }
+        if (curFile != null) {
+            ret.add(new Tour(curFile.getPath(), accumulated));
+        }
+        return ret;
     }
 
     /**
