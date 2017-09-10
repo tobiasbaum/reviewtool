@@ -39,6 +39,20 @@
          unpack="false"/>
 
    <plugin
+         id="de.setsoftware.reviewtool.reviewdata"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <!--<plugin
+         id="de.setsoftware.reviewtool.ordering"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>-->
+
+   <plugin
          id="de.setsoftware.reviewtool.tests"
          download-size="0"
          install-size="0"
