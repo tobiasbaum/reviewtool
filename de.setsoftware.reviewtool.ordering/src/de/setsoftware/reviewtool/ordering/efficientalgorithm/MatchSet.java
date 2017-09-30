@@ -1,5 +1,6 @@
-package de.setsoftware.reviewtool.ordering2.efficientalgorithm;
+package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -7,7 +8,7 @@ public class MatchSet<T> {
 
     private final Set<T> parts;
 
-    public MatchSet(Set<T> set) {
+    public MatchSet(Collection<T> set) {
         this.parts = new LinkedHashSet<>(set);
     }
 

@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ordering2.efficientalgorithm;
+package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -15,6 +15,10 @@ import java.util.Random;
 import java.util.Set;
 
 import org.junit.Test;
+
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.BundleCombinationTreeElement;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.BundleCombinationTreeLeaf;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.BundleCombinationTreeNode;
 
 public class BundleCombinationTreeTest {
 

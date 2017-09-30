@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ordering2.efficientalgorithm;
+package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,6 +11,11 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.junit.Test;
+
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TargetPosition;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculator;
 
 public class TourCalculatorTest {
 

@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ordering2.efficientalgorithm;
+package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -14,6 +14,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.junit.Test;
+
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeElement;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeLeaf;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeNode;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeNodeFixedOrder;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeNodeReorderable;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TargetPosition;
 
 public class PositionTreeTest {
 

@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ordering2.efficientalgorithm;
+package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.List;
 

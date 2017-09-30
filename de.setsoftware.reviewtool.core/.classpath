@@ -6,5 +6,6 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="hackybuffer-1.0.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/de.setsoftware.reviewtool.reviewdata"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/de.setsoftware.reviewtool.ordering"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
