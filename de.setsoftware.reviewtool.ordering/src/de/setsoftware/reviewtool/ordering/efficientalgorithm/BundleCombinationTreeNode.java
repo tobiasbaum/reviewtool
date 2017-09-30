@@ -8,6 +8,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * An intermediate node in the bundling tree. It comes in two sub-flavors, either with reordering of
+ * the children allowed or forbidden.
+ *
+ * @param <T> Type of the stops.
+ */
 public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T> {
 
     private final BundleCombinationTreeElement<T>[] children;
@@ -102,20 +108,20 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
             if (needsNoSplit) {
                 matchSubtree = tf(
                     parts.get(ResultType.PARTIAL_BOTTOM),
-                    parts.get(ResultType.FULL).isEmpty() ? this.empty() : l(ta(parts.get(ResultType.FULL))),
+                    parts.get(ResultType.FULL).isEmpty() ? this.empty() : li(ta(parts.get(ResultType.FULL))),
                     parts.get(ResultType.PARTIAL_TOP)
                 );
             } else {
                 matchSubtree = tf(
                     split(parts.get(ResultType.PARTIAL_BOTTOM), bundle),
-                    parts.get(ResultType.FULL).isEmpty() ? this.empty() : l(ta(parts.get(ResultType.FULL))),
+                    parts.get(ResultType.FULL).isEmpty() ? this.empty() : li(ta(parts.get(ResultType.FULL))),
                     split(parts.get(ResultType.PARTIAL_TOP), bundle)
                 );
             }
             return result(resultType,
                     ta(
                         resultType == ResultType.PARTIAL_BOTTOM ? parts.get(ResultType.NONE) : this.empty(),
-                        l(matchSubtree),
+                        li(matchSubtree),
                         resultType != ResultType.PARTIAL_BOTTOM ? parts.get(ResultType.NONE) : this.empty()));
         } else {
             final List<BundleResult<T>> childResultsInOrder = new ArrayList<>();
@@ -262,12 +268,13 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         return Collections.emptyList();
     }
 
-    private static<S> List<BundleCombinationTreeElement<S>> l(BundleCombinationTreeElement<S> child) {
+    private static<S> List<BundleCombinationTreeElement<S>> li(BundleCombinationTreeElement<S> child) {
         return Collections.singletonList(child);
     }
 
     @SafeVarargs
-    private static<S> BundleCombinationTreeElement<S> ta(List<? extends BundleCombinationTreeElement<S>>... childrenLists) {
+    private static<S> BundleCombinationTreeElement<S> ta(
+            List<? extends BundleCombinationTreeElement<S>>... childrenLists) {
         final List<BundleCombinationTreeElement<S>> combined = new ArrayList<>();
         for (final List<? extends BundleCombinationTreeElement<S>> list : childrenLists) {
             combined.addAll(list);
@@ -275,8 +282,19 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         return ta(combined);
     }
 
+    private static<S> BundleCombinationTreeElement<S> ta(
+            List<? extends BundleCombinationTreeElement<S>> children) {
+        if (children.size() == 1) {
+            return children.get(0);
+        } else {
+            return new BundleCombinationTreeNode<>(
+                    children.toArray(new BundleCombinationTreeElement[children.size()]), true);
+        }
+    }
+
     @SafeVarargs
-    private static<S> BundleCombinationTreeElement<S> tf(List<? extends BundleCombinationTreeElement<S>>... childrenLists) {
+    private static<S> BundleCombinationTreeElement<S> tf(
+            List<? extends BundleCombinationTreeElement<S>>... childrenLists) {
         final List<BundleCombinationTreeElement<S>> combined = new ArrayList<>();
         for (final List<? extends BundleCombinationTreeElement<S>> list : childrenLists) {
             combined.addAll(list);
@@ -284,19 +302,13 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         return tf(combined);
     }
 
-    private static<S> BundleCombinationTreeElement<S> ta(List<? extends BundleCombinationTreeElement<S>> children) {
+    private static<S> BundleCombinationTreeElement<S> tf(
+            List<? extends BundleCombinationTreeElement<S>> children) {
         if (children.size() == 1) {
             return children.get(0);
         } else {
-            return new BundleCombinationTreeNode<>(children.toArray(new BundleCombinationTreeElement[children.size()]), true);
-        }
-    }
-
-    private static<S> BundleCombinationTreeElement<S> tf(List<? extends BundleCombinationTreeElement<S>> children) {
-        if (children.size() == 1) {
-            return children.get(0);
-        } else {
-            return new BundleCombinationTreeNode<>(children.toArray(new BundleCombinationTreeElement[children.size()]), false);
+            return new BundleCombinationTreeNode<>(
+                    children.toArray(new BundleCombinationTreeElement[children.size()]), false);
         }
     }
 
@@ -321,7 +333,8 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         }
     }
 
-    private static<S> List<? extends BundleCombinationTreeElement<S>> split(List<? extends BundleCombinationTreeElement<S>> list, Set<S> bundle) {
+    private static<S> List<? extends BundleCombinationTreeElement<S>> split(
+            List<? extends BundleCombinationTreeElement<S>> list, Set<S> bundle) {
         assert list.size() <= 1;
         return list.isEmpty() ? Collections.<BundleCombinationTreeElement<S>>emptyList() : list.get(0).split(bundle);
     }

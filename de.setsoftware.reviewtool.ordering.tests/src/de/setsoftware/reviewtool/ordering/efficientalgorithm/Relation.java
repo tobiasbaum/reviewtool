@@ -10,8 +10,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+/**
+ * Defines a partial order relation like defined in the paper.
+ */
 public class Relation {
 
+    /**
+     * Helper class to keep track of the matches.
+     */
     private static final class Matches {
 
         private final Map<MatchSet<String>, Set<PositionRequest<String>>> matches = new HashMap<>();
@@ -50,6 +56,9 @@ public class Relation {
 
     }
 
+    /**
+     * Returns true iff the first order is at least as good as the second in terms of the "is better than" relation.
+     */
     public static boolean isBetterThanOrEqual(List<String> order1, List<String> order2,
             List<MatchSet<String>> matchSets, List<PositionRequest<String>> positionRequests) {
         final Matches m1 = determineMatches(order1, matchSets, positionRequests);
@@ -77,8 +86,8 @@ public class Relation {
                 ret.add(ms, getSatisfiedPositions(matchOrder, ms, positionRequests));
                 ret.add(determineMatches(
                         shrink(order, ms),
-                        shrinkMS(matchSets, ms),
-                        shrinkPR(positionRequests, ms)));
+                        shrinkMs(matchSets, ms),
+                        shrinkPr(positionRequests, ms)));
             }
         }
         return ret;
@@ -100,7 +109,15 @@ public class Relation {
         }
     }
 
-    private static List<MatchSet<String>> shrinkMS(List<MatchSet<String>> matchSets, MatchSet<String> ms) {
+    private static MatchSet<String> shrink(MatchSet<String> toShrink, MatchSet<String> ms) {
+        final LinkedHashSet<String> ret = new LinkedHashSet<>();
+        for (final String s : ms.getChangeParts()) {
+            ret.add(shrink(s, ms));
+        }
+        return new MatchSet<>(ret);
+    }
+
+    private static List<MatchSet<String>> shrinkMs(List<MatchSet<String>> matchSets, MatchSet<String> ms) {
         final LinkedHashSet<MatchSet<String>> ret = new LinkedHashSet<>();
         for (final MatchSet<String> cur : matchSets) {
             final MatchSet<String> shrunk = shrink(cur, ms);
@@ -111,7 +128,8 @@ public class Relation {
         return new ArrayList<>(ret);
     }
 
-    private static List<PositionRequest<String>> shrinkPR(List<PositionRequest<String>> positionRequests, MatchSet<String> ms) {
+    private static List<PositionRequest<String>> shrinkPr(
+            List<PositionRequest<String>> positionRequests, MatchSet<String> ms) {
         final LinkedHashSet<PositionRequest<String>> ret = new LinkedHashSet<>();
         for (final PositionRequest<String> cur : positionRequests) {
             final MatchSet<String> shrunkMs = shrink(cur.getMatchSet(), ms);
@@ -121,14 +139,6 @@ public class Relation {
             }
         }
         return new ArrayList<>(ret);
-    }
-
-    private static MatchSet<String> shrink(MatchSet<String> toShrink, MatchSet<String> ms) {
-        final LinkedHashSet<String> ret = new LinkedHashSet<>();
-        for (final String s : ms.getChangeParts()) {
-            ret.add(shrink(s, ms));
-        }
-        return new MatchSet<>(ret);
     }
 
     private static String createReplacement(MatchSet<String> ms) {

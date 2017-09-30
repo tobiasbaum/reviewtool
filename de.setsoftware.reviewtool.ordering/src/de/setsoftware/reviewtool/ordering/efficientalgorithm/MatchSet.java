@@ -4,6 +4,11 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+/**
+ * A set of change parts/stops that have been matched by a grouping pattern.
+ *
+ * @param <T> Type of the stops.
+ */
 public class MatchSet<T> {
 
     private final Set<T> parts;

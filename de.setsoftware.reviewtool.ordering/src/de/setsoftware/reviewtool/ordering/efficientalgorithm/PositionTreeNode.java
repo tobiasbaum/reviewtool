@@ -4,6 +4,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Superclass for intermediate nodes in the positioning tree.
+ *
+ * @param <T> Type of the stops.
+ */
 public abstract class PositionTreeNode<T> extends PositionTreeElement<T> {
 
     private final PositionTreeElement<T>[] children;
@@ -13,6 +18,10 @@ public abstract class PositionTreeNode<T> extends PositionTreeElement<T> {
         this.children = children;
     }
 
+    /**
+     * Fixes the position of the given element in the given match as requested by position.
+     * Returns the new tree if the request could be satisfied and null if not.
+     */
     public final PositionTreeNode<T> fixPosition(Set<T> match, T toFix, TargetPosition position) {
         assert match.size() >= 2;
 

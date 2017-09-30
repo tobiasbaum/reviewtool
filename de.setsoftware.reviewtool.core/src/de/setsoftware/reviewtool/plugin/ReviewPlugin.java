@@ -77,6 +77,7 @@ import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateTour
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.ReviewData;
+import de.setsoftware.reviewtool.ordering.StopOrdering;
 import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
 import de.setsoftware.reviewtool.preferredtransitions.basicstrategies.PathRegexStrategyConfigurator;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
@@ -940,6 +941,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                     this.relevanceFilters,
                     Arrays.asList(
                             new OneStopPerPartOfFileRestructuring()),
+                    new StopOrdering(),
                     createUi,
                     ticketKey);
             if (this.toursInReview == null) {

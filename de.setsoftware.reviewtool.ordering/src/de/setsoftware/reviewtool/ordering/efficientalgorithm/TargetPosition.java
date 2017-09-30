@@ -4,7 +4,7 @@ import java.util.List;
 
 /**
  * The possible values where a value can be fixed relative to its match.
- *
+ * <p/>
  * The position fixing problem contains subset sum as a subproblem (which child sizes
  * of a reorderable node sum up to the intended position). By limiting the possible
  * positions, we avoid bad runtime behavior.

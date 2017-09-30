@@ -4,6 +4,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A leaf of the bundling tree, representing a single value.
+ *
+ * @param <T> Type of the values/stops.
+ */
 class BundleCombinationTreeLeaf<T> extends BundleCombinationTreeElement<T> {
 
     private final T value;

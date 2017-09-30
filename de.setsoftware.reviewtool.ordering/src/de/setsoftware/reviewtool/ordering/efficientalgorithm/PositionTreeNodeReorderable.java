@@ -6,6 +6,11 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A node in the positioning tree whose children can be freely reordered.
+ *
+ * @param <T> The type of the stops.
+ */
 public class PositionTreeNodeReorderable<T> extends PositionTreeNode<T> {
 
     private Map<TargetPosition, T> fixedPositions;
@@ -203,7 +208,8 @@ public class PositionTreeNodeReorderable<T> extends PositionTreeNode<T> {
             }
         }
         if (newFixes.containsKey(TargetPosition.LAST)) {
-            if (!children[children.length - 1].satisfiesCurrently(newFixes.get(TargetPosition.LAST), TargetPosition.LAST)) {
+            if (!children[children.length - 1].satisfiesCurrently(
+                    newFixes.get(TargetPosition.LAST), TargetPosition.LAST)) {
                 return false;
             }
         }

@@ -41,7 +41,6 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
-import de.setsoftware.reviewtool.ordering.StopOrdering;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
@@ -131,6 +130,7 @@ public class ToursInReview {
             IChangeSourceUi changeSourceUi,
             List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
             List<? extends ITourRestructuring> tourRestructuringStrategies,
+            IStopOrdering orderingAlgorithm,
             ICreateToursUi createUi,
             String ticketKey) {
         changeSourceUi.subTask("Determining relevant changes...");
@@ -155,18 +155,18 @@ public class ToursInReview {
             return null;
         }
 
-        final List<? extends Tour> toursToShow = groupAndSort(userSelection);
+        final List<? extends Tour> toursToShow = groupAndSort(userSelection, orderingAlgorithm);
 
         final ToursInReview result = new ToursInReview(toursToShow, changes);
         result.createLocalTour(null, changeSourceUi, null);
         return result;
     }
 
-    private static List<? extends Tour> groupAndSort(List<? extends Tour> userSelection) {
-        //TODO do better resorting and grouping
+    private static List<? extends Tour> groupAndSort(
+            List<? extends Tour> userSelection, IStopOrdering orderingAlgorithm) {
         final List<Tour> ret = new ArrayList<>();
         for (final Tour t : userSelection) {
-            ret.add(new Tour(t.getDescription(), StopOrdering.groupAndSort(t.getStops())));
+            ret.add(new Tour(t.getDescription(), orderingAlgorithm.groupAndSort(t.getStops())));
         }
         return ret;
     }

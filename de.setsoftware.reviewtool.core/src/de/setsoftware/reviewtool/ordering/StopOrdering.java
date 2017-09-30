@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import de.setsoftware.reviewtool.model.changestructure.IStopOrdering;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.TourElement;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
@@ -13,13 +14,14 @@ import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculator;
 /**
  * Facade for sorting and hierarchical grouping of stops.
  */
-public class StopOrdering {
+public class StopOrdering implements IStopOrdering {
 
     /**
      * Determines a good ordering of the given stops, groups them into sub-tours if applicable
      * and returns the result.
      */
-    public static List<? extends TourElement> groupAndSort(List<Stop> stops) {
+    @Override
+    public List<? extends TourElement> groupAndSort(List<Stop> stops) {
         final List<OrderingInfo> orderingInfos = new ArrayList<>();
         for (final RelationMatcher m : getRelationMatchers()) {
             orderingInfos.addAll(m.determineMatches(stops));

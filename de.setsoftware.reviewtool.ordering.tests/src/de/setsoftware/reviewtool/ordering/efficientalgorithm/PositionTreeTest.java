@@ -15,13 +15,9 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeElement;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeLeaf;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeNode;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeNodeFixedOrder;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionTreeNodeReorderable;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.TargetPosition;
-
+/**
+ * Tests for the positioning tree.
+ */
 public class PositionTreeTest {
 
     private static PositionTreeTestHelper create(PositionTreeNode<String> tree) {
@@ -32,6 +28,9 @@ public class PositionTreeTest {
         return new TreeSet<>(Arrays.asList(set));
     }
 
+    /**
+     * An item in the matching/positioning history.
+     */
     private static final class HistoryItem {
         private final Set<String> match;
         private final String toFix;
@@ -72,6 +71,9 @@ public class PositionTreeTest {
         }
     }
 
+    /**
+     * Helper for the tests that stores results and checks invariants.
+     */
     private static final class PositionTreeTestHelper {
         private PositionTreeNode<String> current;
         private final List<HistoryItem> historySuccess;
@@ -96,12 +98,14 @@ public class PositionTreeTest {
         }
 
         public void fixPositionAndCheckSuccess(Set<String> match, String toFix, TargetPosition position) {
-             assertTrue("unexpected conflict for " + toFix + "=" + position + " in " + match + ", old tree is " + this.current,
+            assertTrue("unexpected conflict for " + toFix + "=" + position + " in " + match
+                     + ", old tree is " + this.current,
                      this.fixPosition(match, toFix, position));
         }
 
         public void fixPositionAndCheckConflict(Set<String> match, String toFix, TargetPosition position) {
-            assertFalse("expected conflict did not happen for " + toFix + "=" + position + " in " + match + ", new tree is " + this.current,
+            assertFalse("expected conflict did not happen for " + toFix + "=" + position + " in "
+                    + match + ", new tree is " + this.current,
                     this.fixPosition(match, toFix, position));
         }
 
@@ -113,12 +117,15 @@ public class PositionTreeTest {
                         + " (history=" + this.historySuccess + ")",
                         addedAgain);
                 //adding it at a different position is not possible anymore
-                assertNull("adding at a different position is still possible for " + historyItem + " to " + this.current + " (history=" + this.historySuccess + ")",
+                assertNull("adding at a different position is still possible for " + historyItem
+                        + " to " + this.current + " (history=" + this.historySuccess + ")",
                         historyItem.changedPosition(true).replay(this.current));
-                assertNull("adding at a different position is still possible for " + historyItem + " to " + this.current + " (history=" + this.historySuccess + ")",
+                assertNull("adding at a different position is still possible for " + historyItem
+                        + " to " + this.current + " (history=" + this.historySuccess + ")",
                         historyItem.changedPosition(false).replay(this.current));
                 //adding another value at the same position is not possible anymore
-                assertNull("adding another value at the same position is still possible for " + historyItem + " to " + this.current + " (history=" + this.historySuccess + ")",
+                assertNull("adding another value at the same position is still possible for " + historyItem
+                        + " to " + this.current + " (history=" + this.historySuccess + ")",
                         historyItem.changedValue().replay(this.current));
                 //the returned order contains the item at the correct position
                 assertTrue("matched but not contained in order " + historyItem + ", " + this.current.getPossibleOrder()
@@ -129,10 +136,12 @@ public class PositionTreeTest {
             for (final HistoryItem historyItem : this.historyConflict) {
                 final PositionTreeElement<String> addedAgain = historyItem.replay(this.current);
                 //adding it again is still not possible
-                assertNull("adding again became possible for " + historyItem + " to " + this.current + " (history=" + this.historySuccess + ")",
+                assertNull("adding again became possible for " + historyItem + " to " + this.current
+                        + " (history=" + this.historySuccess + ")",
                         addedAgain);
                 //the returned order does not contain the item at the correct position
-                assertFalse("not matched but contained in order " + historyItem + ", " + this.current.getPossibleOrder(),
+                assertFalse("not matched but contained in order " + historyItem + ", "
+                        + this.current.getPossibleOrder(),
                         this.containsAtCorrectPosition(this.current.getPossibleOrder(), historyItem));
             }
         }

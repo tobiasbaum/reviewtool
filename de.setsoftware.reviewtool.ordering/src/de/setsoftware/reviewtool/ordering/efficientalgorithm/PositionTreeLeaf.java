@@ -4,6 +4,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * A leaf in the position tree, corresponding to a single stop/change part.
+ *
+ * @param <T> Type of the stops.
+ */
 public class PositionTreeLeaf<T> extends PositionTreeElement<T> {
 
     private final T value;

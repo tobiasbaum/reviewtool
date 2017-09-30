@@ -14,12 +14,24 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 
+/**
+ * Contains the algorithm for efficiently grouping and reordering change parts/stops.
+ * Internally, it uses two types of trees, one for the grouping and one for re-ordering based on the results
+ * of the grouping.
+ *
+ * @param <T> Type of the stops.
+ */
 public class TourCalculator<T> {
 
     private final Set<MatchSet<T>> successfulMatches = new LinkedHashSet<>();
     private final Set<PositionRequest<T>> successfulPositionings = new LinkedHashSet<>();
     private List<T> resultingTour;
 
+    /**
+     * Helper class for recursive folding and matching.
+     *
+     * @param <S> Type of the stops.
+     */
     private static final class FoldMatchingHelper<S> {
 
         private BundleCombinationTreeElement<S> bundler;
@@ -48,9 +60,6 @@ public class TourCalculator<T> {
                     if (Collections.disjoint(e.getKey().getChangeParts(), toFold.getChangeParts())) {
                         continue;
                     }
-//                    if (willMakeCollapse(e.getKey(), e.getValue(), toFold)) {
-//                        continue;
-//                    }
                     e.getValue().add(toFold);
                     if (this.matchWithNewFold(e.getKey(), e.getValue())) {
                         iter.remove();
@@ -124,6 +133,14 @@ public class TourCalculator<T> {
 
     }
 
+    /**
+     * Determine a reordering that satisfies as many of the given grouping and positioning requests as possible.
+     * A resulting tour can be requested from the returned {@link TourCalculator} object.
+     *
+     * @param allChangeParts The change parts/stops to reorder.
+     * @param matchSets The match sets to group. Order in list determines priority.
+     * @param positionRequests The position requests to satisfy. Order in list determines priority.
+     */
     public static<S> TourCalculator<S> calculateFor(
             List<S> allChangeParts,
             List<MatchSet<S>> matchSets,

@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Superclass for elements of the tree used for positioning the stops after they have been grouped.
+ *
+ * @param <T> Type of the stops.
+ */
 abstract class PositionTreeElement<T> {
 
     public final List<T> getPossibleOrder() {

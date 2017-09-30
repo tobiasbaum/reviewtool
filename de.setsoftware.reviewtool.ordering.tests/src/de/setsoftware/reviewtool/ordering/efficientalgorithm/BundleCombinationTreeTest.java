@@ -16,10 +16,9 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.BundleCombinationTreeElement;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.BundleCombinationTreeLeaf;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.BundleCombinationTreeNode;
-
+/**
+ * Tests for the bundle combination tree.
+ */
 public class BundleCombinationTreeTest {
 
     private static BundleCombinationTestHelper create(Integer... items) {
@@ -31,6 +30,9 @@ public class BundleCombinationTreeTest {
         return bundle;
     }
 
+    /**
+     * Helper for the tests that stores results and checks invariants.
+     */
     private static class BundleCombinationTestHelper {
         private BundleCombinationTreeElement<Integer> current;
         private final List<Set<Integer>> historySuccess;
@@ -62,8 +64,6 @@ public class BundleCombinationTreeTest {
                 assertNotNull("adding again was not possible for " + setInHistory + " to " + this.current
                         + " (history=" + this.historySuccess + ")",
                         addedAgain);
-                //adding it again does not change the tree
-//                assertEquals("adding " + setInHistory + " again changed the tree", this.current.toString(), addedAgain.toString());
                 //the returned order contains the bundled set as direct neighbors
                 assertTrue("matched but not contained in order " + setInHistory + ", " + this.current.getPossibleOrder()
                         + " of tree " + this.current + " (history=" + this.historySuccess + ")",
@@ -73,10 +73,12 @@ public class BundleCombinationTreeTest {
             for (final Set<Integer> setInHistory : this.historyConflict) {
                 final BundleCombinationTreeElement<Integer> addedAgain = this.current.bundle(setInHistory);
                 //adding it again is still not possible
-                assertNull("adding again became possible for " + setInHistory + " to " + this.current + " (history=" + this.historySuccess + ")",
+                assertNull("adding again became possible for " + setInHistory + " to "
+                        + this.current + " (history=" + this.historySuccess + ")",
                         addedAgain);
                 //the returned order does not contain the bundled set as direct neighbors
-                assertFalse("not matched but contained in order " + setInHistory + ", " + this.current.getPossibleOrder(),
+                assertFalse("not matched but contained in order " + setInHistory + ", "
+                        + this.current.getPossibleOrder(),
                         this.containsAsNeighbours(this.current.getPossibleOrder(), setInHistory));
             }
         }
@@ -105,11 +107,13 @@ public class BundleCombinationTreeTest {
         }
 
         public void addAndCheckInvariantsAndSuccess(Integer... set) {
-             assertTrue("unexpected conflict for set " + Arrays.toString(set) + ", old tree is " + this.current, this.addAndCheckInvariants(set));
+            assertTrue("unexpected conflict for set " + Arrays.toString(set) + ", old tree is "
+                     + this.current, this.addAndCheckInvariants(set));
         }
 
         public void addAndCheckInvariantsAndConflict(Integer... set) {
-            assertFalse("expected conflict did not happen for set " + Arrays.toString(set) + ", new tree is " + this.current, this.addAndCheckInvariants(set));
+            assertFalse("expected conflict did not happen for set " + Arrays.toString(set) + ", new tree is "
+                    + this.current, this.addAndCheckInvariants(set));
         }
 
         public BundleCombinationTreeElement<Integer> get() {
@@ -314,8 +318,10 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 9, 11, 12, 15, 17, 19);
         b.addAndCheckInvariantsAndSuccess(2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
         b.addAndCheckInvariantsAndSuccess(4, 11, 12, 17, 18);
-        assertEquals(Arrays.asList(3, 1, 9, 15, 19, 11, 12, 17, 18, 4, 16, 14, 13, 10, 8, 7, 6, 5, 2), b.get().getPossibleOrder());
-        assertEquals("{3, [1, {9, 15, 19}, {11, 12, 17}, {18, 4}, {16, 14, 13, 10, 8, 7, 6, 5, 2}]}", b.get().toString());
+        assertEquals(Arrays.asList(3, 1, 9, 15, 19, 11, 12, 17, 18, 4, 16, 14, 13, 10, 8, 7, 6, 5, 2),
+                b.get().getPossibleOrder());
+        assertEquals("{3, [1, {9, 15, 19}, {11, 12, 17}, {18, 4}, {16, 14, 13, 10, 8, 7, 6, 5, 2}]}",
+                b.get().toString());
     }
 
     @Test

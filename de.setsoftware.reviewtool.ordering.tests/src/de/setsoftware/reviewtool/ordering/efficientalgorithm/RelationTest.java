@@ -10,11 +10,9 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.Relation;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.TargetPosition;
-
+/**
+ * Tests for {@link Relation}.
+ */
 public class RelationTest {
 
     private static MatchSet<String> ms(String... s) {

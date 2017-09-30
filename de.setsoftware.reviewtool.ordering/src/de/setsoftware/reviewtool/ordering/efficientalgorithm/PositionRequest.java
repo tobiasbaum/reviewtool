@@ -1,5 +1,10 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
+/**
+ * A request to put a certain part of a match set to a distinguished position (e.g. to the front or the back).
+ *
+ * @param <T> Type of the stops.
+ */
 public class PositionRequest<T> {
 
     private final MatchSet<T> matchSet;

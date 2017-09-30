@@ -13,16 +13,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.Relation;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.TargetPosition;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculator;
-
+/**
+ * Not a real test: Used to determine the optimal orders for the experiment.
+ */
+@Ignore
 public class ExperimentDataTest {
 
+    /**
+     * Helper class to build input for the tour calculator.
+     */
     private static final class TourCalculatorInput {
         private final List<String> parts = new ArrayList<>();
         private final List<MatchSet<String>> matchSets = new ArrayList<>();
@@ -98,7 +100,7 @@ public class ExperimentDataTest {
             .match("g", TargetPosition.FIRST, "f", "m") //removed load info attribute in old code
 
             //class hierarchy
-            .matchSymmetric("h", "i", "j", "m") //overriding _run() (the abstract method itself is not contained in change)
+            .matchSymmetric("h", "i", "j", "m") //overriding _run() (the abstract method itself is not contained)
 
             //call flow
             .match("h", TargetPosition.SECOND, "a") //to DeleteBrowserTask constructor
@@ -109,22 +111,22 @@ public class ExperimentDataTest {
             .match("o", TargetPosition.SECOND, "a", "b", "c", "d") //to BrowserIORequest constructor in old code
 
             //data flow
-    //        .matchChained("a", "h") //to DeleteBrowserTask constructor
-    //        .matchChained("a", "o") //to BrowserIORequest constructor in old code
-    //        .matchChained("b", "j") //to RenameBrowserTask constructor
-    //        .matchChained("b", "o") //to BrowserIORequest constructor in old code
-    //        .matchChained("c", "j") //to RenameBrowserTask constructor
-    //        .matchChained("c", "o") //to BrowserIORequest constructor in old code
-    //        .matchChained("d", "i") //to MkDirBrowserTask constructor
-    //        .matchChained("d", "o") //to BrowserIORequest constructor in old code
-    //        .matchChained("e", "f") //to other AbstractBrowserTask constructor in old code
-    //        .matchChained("h", "f") //to AbstractBrowserTask constructor (and setting atts)
-    //        .matchChained("i", "f") //to AbstractBrowserTask constructor (and setting atts)
-    //        .matchChained("j", "f") //to AbstractBrowserTask constructor (and setting atts)
-    //        .matchChained("k", "f") //to AbstractBrowserTask constructor
-    //        .matchChained("k", "m") //setting loadInfo attribute
-    //        .matchChained("f", "m") //setting path attribute and others
-    //        .matchChained("f", "n") //setting path attribute and others
+            //        .matchChained("a", "h") //to DeleteBrowserTask constructor
+            //        .matchChained("a", "o") //to BrowserIORequest constructor in old code
+            //        .matchChained("b", "j") //to RenameBrowserTask constructor
+            //        .matchChained("b", "o") //to BrowserIORequest constructor in old code
+            //        .matchChained("c", "j") //to RenameBrowserTask constructor
+            //        .matchChained("c", "o") //to BrowserIORequest constructor in old code
+            //        .matchChained("d", "i") //to MkDirBrowserTask constructor
+            //        .matchChained("d", "o") //to BrowserIORequest constructor in old code
+            //        .matchChained("e", "f") //to other AbstractBrowserTask constructor in old code
+            //        .matchChained("h", "f") //to AbstractBrowserTask constructor (and setting atts)
+            //        .matchChained("i", "f") //to AbstractBrowserTask constructor (and setting atts)
+            //        .matchChained("j", "f") //to AbstractBrowserTask constructor (and setting atts)
+            //        .matchChained("k", "f") //to AbstractBrowserTask constructor
+            //        .matchChained("k", "m") //setting loadInfo attribute
+            //        .matchChained("f", "m") //setting path attribute and others
+            //        .matchChained("f", "n") //setting path attribute and others
 
             //order inside files
             .matchChained("a", "b", "c", "d") //VFSBrowser
@@ -171,29 +173,6 @@ public class ExperimentDataTest {
 
     @Test
     public void testC1WorstFiles() throws Exception {
-//        final TourCalculatorInput input = TourCalculatorInput
-//                .tourCalculatorFor("abcd", "efg", "h", "i", "j", "klmn", "o")
-//
-//                //similarity
-//                .matchChained("o", "h") //moved code from BrowserIORequest to DeleteBrowserTask
-//                .matchChained("o", "i") //moved code from BrowserIORequest to MkDirBrowserTask
-//                .matchChained("o", "j") //moved code from BrowserIORequest to RenameBrowserTask
-//                .matchChained("o", "klmn") //moved code from BrowserIORequest to ListDirectoryBrowserTask?
-//
-//                //declare & use
-//                .match("efg", TargetPosition.FIRST, "h", "j", "klmn") //path attribute
-//                .match("efg", TargetPosition.FIRST, "klmn") //removed load info attribute in old code
-//
-//                //class hierarchy
-//                .matchSymmetric("h", "i", "j", "klmn") //overriding _run() (the abstract method itself is not contained in change)
-//
-//                //call flow
-//                .match("h", TargetPosition.SECOND, "abcd") //to DeleteBrowserTask constructor
-//                .match("j", TargetPosition.SECOND, "abcd") //to RenameBrowserTask constructor
-//                .match("i", TargetPosition.SECOND, "abcd") //to MkDirBrowserTask constructor
-//                .match("efg", TargetPosition.SECOND, "h", "i", "j", "klmn") //to AbstractBrowserTask constructor
-//                .match("o", TargetPosition.SECOND, "abcd"); //to BrowserIORequest constructor in old code
-
         final TourCalculatorInput input = TourCalculatorInput
                 .tourCalculatorFor("i", "j", "k", "n", "l", "m", "b", "d", "a", "c", "e", "g", "f", "o", "h");
         relationsC1(input);
@@ -256,8 +235,9 @@ public class ExperimentDataTest {
 
     @Test
     public void testC2OptimalFiles() throws Exception {
-        final TourCalculatorInput input = TourCalculatorInput
-                .tourCalculatorFor("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u");
+        final TourCalculatorInput input = TourCalculatorInput.tourCalculatorFor(
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+                "n", "o", "p", "q", "r", "s", "t", "u");
 
         fileRelationsC2(input);
         relationsC2(input);
@@ -267,8 +247,9 @@ public class ExperimentDataTest {
 
     @Test
     public void testC2OptimalNoFiles() throws Exception {
-        final TourCalculatorInput input = TourCalculatorInput
-                .tourCalculatorFor("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u");
+        final TourCalculatorInput input = TourCalculatorInput.tourCalculatorFor(
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+                "n", "o", "p", "q", "r", "s", "t", "u");
 
         relationsC2(input);
 
@@ -277,8 +258,9 @@ public class ExperimentDataTest {
 
     @Test
     public void testC2WorstNoFiles() throws Exception {
-        final TourCalculatorInput input = TourCalculatorInput
-                .tourCalculatorFor("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u");
+        final TourCalculatorInput input = TourCalculatorInput.tourCalculatorFor(
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m",
+                "n", "o", "p", "q", "r", "s", "t", "u");
 
         fileRelationsC2(input);
         relationsC2(input);
@@ -288,31 +270,14 @@ public class ExperimentDataTest {
 
     @Test
     public void testC2WorstFiles() throws Exception {
-//        final TourCalculatorInput input = TourCalculatorInput
-//                .tourCalculatorFor("roqpstu", "a", "dbc", "gfe", "hji", "kml", "n")
-//
-//                .matchSymmetric("gfe", "n") //setting of noWordSep in matcher
-//
-//                //declare & use
-//                .match("roqpstu", TargetPosition.FIRST, "kml", "hji") //wholeWord
-//
-//                //class hierarchy
-//                .matchSymmetric("hji", "kml") //overriding nextMatch() (the abstract method itself is not contained in change)
-//
-//                //call flow
-//                .match("hji", TargetPosition.SECOND, "gfe") //PatternSearchMatcher constructor with flag
-//                .match("kml", TargetPosition.SECOND, "gfe") //BoyerMooreSearchMatcher constructor with flag
-//                .match("roqpstu", TargetPosition.SECOND, "dbc") //matcher.getNoWordSep()
-//                .match("roqpstu", TargetPosition.SECOND, "dbc", "gfe", "n") //matcher.setNoWordSep()
-//                .match("roqpstu", TargetPosition.SECOND, "kml"); //isWholeWord()
-//        System.out.println(this.determineWorst(input));
-
-        final TourCalculatorInput input = TourCalculatorInput
-                .tourCalculatorFor("g", "f", "e", "r", "o", "q", "p", "s", "t", "u", "a", "d", "b", "c", "h", "j", "i", "n", "k", "m", "l");
+        final TourCalculatorInput input = TourCalculatorInput.tourCalculatorFor(
+                "g", "f", "e", "r", "o", "q", "p", "s", "t", "u", "a", "d", "b", "c",
+                "h", "j", "i", "n", "k", "m", "l");
         relationsC2(input);
 
-        final TourCalculatorInput toKeep = TourCalculatorInput
-                .tourCalculatorFor("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u");
+        final TourCalculatorInput toKeep = TourCalculatorInput.tourCalculatorFor(
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
+                "o", "p", "q", "r", "s", "t", "u");
         fileRelationsC2(toKeep);
 
         System.out.println(this.determineWorst(input, toKeep.matchSets));
@@ -344,7 +309,10 @@ public class ExperimentDataTest {
     }
 
     private List<String> invalidate(
-            List<String> cur, MatchSet<String> toInvalidate, List<MatchSet<String>> matchSets, List<MatchSet<String>> toKeep)
+            List<String> cur,
+            MatchSet<String> toInvalidate,
+            List<MatchSet<String>> matchSets,
+            List<MatchSet<String>> toKeep)
         throws IOException {
 
         final List<MatchSet<String>> nonMatches = new ArrayList<>();
@@ -463,20 +431,25 @@ public class ExperimentDataTest {
 
     @Test
     public void testOrdersC2() {
-        final TourCalculatorInput input = TourCalculatorInput
-                .tourCalculatorFor("a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u");
+        final TourCalculatorInput input = TourCalculatorInput.tourCalculatorFor(
+                "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
+                "o", "p", "q", "r", "s", "t", "u");
 
         fileRelationsC2(input);
         relationsC2(input);
 
         final List<String> onf = Arrays.asList(
-                "a", "k", "t", "d", "b", "c", "p", "o", "u", "r", "q", "m", "j", "l", "s", "h", "i", "e", "f", "g", "n");
+                "a", "k", "t", "d", "b", "c", "p", "o", "u", "r", "q", "m", "j", "l",
+                "s", "h", "i", "e", "f", "g", "n");
         final List<String> of = Arrays.asList(
-                "d", "b", "c", "p", "o", "u", "r", "q", "t", "s", "k", "l", "m", "j", "i", "h", "e", "f", "g", "n", "a");
+                "d", "b", "c", "p", "o", "u", "r", "q", "t", "s", "k", "l", "m", "j",
+                "i", "h", "e", "f", "g", "n", "a");
         final List<String> wf = Arrays.asList(
-                "g", "e", "f", "r", "o", "q", "u", "p", "s", "t", "a", "d", "b", "c", "h", "j", "i", "n", "k", "m", "l");
+                "g", "e", "f", "r", "o", "q", "u", "p", "s", "t", "a", "d", "b", "c",
+                "h", "j", "i", "n", "k", "m", "l");
         final List<String> wnf = Arrays.asList(
-                "r", "o", "q", "a", "d", "g", "p", "b", "h", "j", "k", "n", "s", "t", "c", "f", "i", "m", "e", "l", "u");
+                "r", "o", "q", "a", "d", "g", "p", "b", "h", "j", "k", "n", "s", "t",
+                "c", "f", "i", "m", "e", "l", "u");
 
         assertTrue(Relation.isBetterThanOrEqual(onf, onf, input.matchSets, input.positionRequests));
         assertFalse(Relation.isBetterThanOrEqual(onf, of, input.matchSets, input.positionRequests));

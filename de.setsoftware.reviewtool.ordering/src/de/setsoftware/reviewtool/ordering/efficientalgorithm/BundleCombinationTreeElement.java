@@ -6,8 +6,16 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Superclass for elements of the bundle combination tree.
+ *
+ * @param <T> The type of stops.
+ */
 public abstract class BundleCombinationTreeElement<T> implements BundleCombination<T> {
 
+    /**
+     * The different possibilites for a set of stops to be contained in the sequence.
+     */
     protected enum ResultType {
         NONE {
             @Override
@@ -113,6 +121,10 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
         public abstract boolean isPartial();
     }
 
+    /**
+     * Helper class for the results of a bundling step.
+     * @param <S> Type of the stops.
+     */
     protected static final class BundleResult<S> {
         private final BundleCombinationTreeElement<S> newTree;
         private final ResultType resultType;
@@ -136,6 +148,10 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
         }
     }
 
+    /**
+     * Creates a tree element for the given list of stops. Depending on the size of a list it is
+     * either directly a leaf or a node with the stops as children.
+     */
     public static<S> BundleCombinationTreeElement<S> create(Collection<S> asList) {
         assert asList.size() > 0;
         if (asList.size() == 1) {

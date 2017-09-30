@@ -10,8 +10,17 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A node in the positioning tree whose children cannot be reordered.
+ *
+ * @param <T> The type of the stops.
+ */
 public class PositionTreeNodeFixedOrder<T> extends PositionTreeNode<T> {
 
+    /**
+     * A fixation of a value/stop relative to a match.
+     * @param <S> The type of the stops.
+     */
     private static final class Fix<S> {
         private final S value;
         private final int positionRelativeToMatch;

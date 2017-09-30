@@ -12,13 +12,14 @@ import java.util.TreeSet;
 
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.TargetPosition;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculator;
-
+/**
+ * Tests for {@link TourCalculator}.
+ */
 public class TourCalculatorTest {
 
+    /**
+     * Helper class to build the test data.
+     */
     private static final class TourCalculatorInput {
         private final List<String> parts = new ArrayList<>();
         private final List<MatchSet<String>> matchSets = new ArrayList<>();
@@ -129,11 +130,13 @@ public class TourCalculatorTest {
                 .match("Strasse", TargetPosition.FIRST, "Baum")
                 //addRelationStar(g, TestRelationTypes.SAME_METHOD, "<init>()", "Stern", "Birne");
                 .match("Stern", TargetPosition.FIRST, "Birne")
-                //addRelationStar(g, TestRelationTypes.DECLARATION_USE, "att:maxTextDiffThreshold", "Homer", "Strasse", "Baum", "Birne");
+                //addRelationStar(g, TestRelationTypes.DECLARATION_USE, "att:maxTextDiffThreshold",
+                //     "Homer", "Strasse", "Baum", "Birne");
                 .match("Homer", TargetPosition.FIRST, "Strasse", "Baum", "Birne")
                 //addRelationStar(g, TestRelationTypes.DECLARATION_USE, "par:maxTextDiffThreshold", "Stern", "Birne");
                 .match("Stern", TargetPosition.FIRST, "Birne")
-                //addRelationChain(g, TestRelationTypes.DATA_FLOW, "xml_param", "Buch", "Maus", "Stern", "Birne", "Strasse", "Baum");
+                //addRelationChain(g, TestRelationTypes.DATA_FLOW, "xml_param", "Buch", "Maus",
+                //     "Stern", "Birne", "Strasse", "Baum");
                 .matchChained("Buch", "Maus")
                 //addRelationStar(g, TestRelationTypes.CALL_FLOW, "SvnChangeSource()", "Maus", "Stern");
                 .match("Stern", TargetPosition.SECOND, "Maus")
