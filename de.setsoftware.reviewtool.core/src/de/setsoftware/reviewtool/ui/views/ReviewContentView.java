@@ -522,9 +522,23 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 //  whole tour
                 toursToRefresh.add(this.getTourFor(stop));
             }
+            final Set<Tour> toursToUpdate = new HashSet<>();
             for (final Tour t : toursToRefresh) {
                 this.viewer.refresh(t, false);
+                this.addSelfAndParentsIfNotContained(t, toursToUpdate);
             }
+            //the icon could have changed, therefore update the parent tours
+            for (final Tour t : toursToUpdate) {
+                this.viewer.update(t, null);
+            }
+        }
+
+        private void addSelfAndParentsIfNotContained(Tour t, Set<Tour> buffer) {
+            if (t == null || buffer.contains(t)) {
+                return;
+            }
+            buffer.add(t);
+            this.addSelfAndParentsIfNotContained(this.tours.getParentFor(t), buffer);
         }
 
         private Tour getTourFor(Stop stop) {
@@ -587,40 +601,80 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         private Image getImage(Object element) {
             if (element instanceof Stop) {
-                final Stop f = (Stop) element;
-                final ViewStatistics statistics = TrackerManager.get().getStatistics();
+                return this.determineImageForStop((Stop) element);
+            } else if (element instanceof Tour) {
+                return this.determineImageForTour((Tour) element);
+            } else {
+                return null;
+            }
+        }
+
+        private Image determineImageForTour(Tour tour) {
+            final ToursInReview tours = ViewDataSource.get().getToursInReview();
+            if (tours != null && tours.getActiveTour() == tour) {
+                return ImageCache.getColoredDot(new RGB(255, 0, 0));
+            }
+            final ViewStatistics statistics = TrackerManager.get().getStatistics();
+            boolean allIrrelevant = true;
+            boolean allNotViewedAtAll = true;
+            boolean allMarkedAsChecked = true;
+            double maxRatio = 0.0;
+            double sumRatio = 0.0;
+            int count = 0;
+
+            for (final Stop f : tour.getStops()) {
                 if (statistics != null && statistics.isMarkedAsChecked(f)) {
-                    return ImageCache.getGreenCheckMark();
+                    maxRatio = 1.0;
+                } else {
+                    allMarkedAsChecked = false;
                 }
                 final ViewStatDataForStop viewRatio = this.determineViewRatio(f);
-                if (viewRatio.isNotViewedAtAll()) {
-                    if (f.isIrrelevantForReview()) {
-                        return ImageCache.getColoredHalfCircle(
-                                IRRELEVANT_COLOR,
-                                IRRELEVANT_COLOR);
-                    } else {
-                        return null;
-                    }
-                } else {
-                    if (f.isIrrelevantForReview()) {
-                        return ImageCache.getColoredHalfCircle(
-                                VIEW_COLORS[toColorIndex(viewRatio.getMaxRatio())],
-                                VIEW_COLORS[toColorIndex(viewRatio.getAverageRatio())]);
-                    } else {
-                        return ImageCache.getColoredRectangle(
-                                VIEW_COLORS[toColorIndex(viewRatio.getMaxRatio())],
-                                VIEW_COLORS[toColorIndex(viewRatio.getAverageRatio())]);
-                    }
-                }
-            } else if (element instanceof Tour) {
-                final ToursInReview tours = ViewDataSource.get().getToursInReview();
-                if (tours != null && tours.getActiveTour() == element) {
-                    return ImageCache.getColoredDot(new RGB(255, 0, 0));
+                allNotViewedAtAll &= viewRatio.isNotViewedAtAll();
+                maxRatio = Math.max(maxRatio, viewRatio.getMaxRatio());
+                sumRatio += viewRatio.getAverageRatio();
+                count++;
+                allIrrelevant &= f.isIrrelevantForReview();
+            }
+
+            if (count > 0 && allMarkedAsChecked) {
+                return ImageCache.getGreenCheckMark();
+            }
+            return this.determineImage(allNotViewedAtAll, maxRatio, sumRatio / count, allIrrelevant);
+        }
+
+        private Image determineImageForStop(final Stop f) {
+            final ViewStatistics statistics = TrackerManager.get().getStatistics();
+            if (statistics != null && statistics.isMarkedAsChecked(f)) {
+                return ImageCache.getGreenCheckMark();
+            }
+            final ViewStatDataForStop viewRatio = this.determineViewRatio(f);
+            return this.determineImage(
+                    viewRatio.isNotViewedAtAll(),
+                    viewRatio.getMaxRatio(),
+                    viewRatio.getAverageRatio(),
+                    f.isIrrelevantForReview());
+        }
+
+        private Image determineImage(boolean notViewedAtAll, double maxRatio, double averageRatio,
+                boolean irrelevantForReview) {
+            if (notViewedAtAll) {
+                if (irrelevantForReview) {
+                    return ImageCache.getColoredHalfCircle(
+                            IRRELEVANT_COLOR,
+                            IRRELEVANT_COLOR);
                 } else {
                     return null;
                 }
             } else {
-                return null;
+                if (irrelevantForReview) {
+                    return ImageCache.getColoredHalfCircle(
+                            VIEW_COLORS[toColorIndex(maxRatio)],
+                            VIEW_COLORS[toColorIndex(averageRatio)]);
+                } else {
+                    return ImageCache.getColoredRectangle(
+                            VIEW_COLORS[toColorIndex(maxRatio)],
+                            VIEW_COLORS[toColorIndex(averageRatio)]);
+                }
             }
         }
 
