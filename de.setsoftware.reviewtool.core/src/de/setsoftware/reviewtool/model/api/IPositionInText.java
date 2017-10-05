@@ -47,9 +47,4 @@ public interface IPositionInText extends Comparable<IPositionInText> {
      */
     public abstract IPositionInText startOfLine();
 
-    /**
-     * Returns the position at the end of the line.
-     */
-    public abstract IPositionInText endOfLine();
-
 }

@@ -24,7 +24,7 @@ public interface IFragment extends Comparable<IFragment> {
     public abstract IPositionInText getFrom();
 
     /**
-     * The end position of the fragment (inclusive).
+     * The end position of the fragment (exclusive).
      */
     public abstract IPositionInText getTo();
 
@@ -48,6 +48,12 @@ public interface IFragment extends Comparable<IFragment> {
      * Full lines are returned, even if the fragment spans only part of the line(s).
      */
     public abstract String getContentFullLines();
+
+    /**
+     * Returns the content underlying this fragment.
+     * Only the content inside the fragments region is returned, i.e. the start and end might not be a full line.
+     */
+    public abstract String getContent();
 
     /**
      * @return {@code true} if this fragment is an original one, i.e. if it has no other origin(s).

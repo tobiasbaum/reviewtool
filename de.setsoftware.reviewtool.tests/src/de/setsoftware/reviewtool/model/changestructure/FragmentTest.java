@@ -331,29 +331,64 @@ public class FragmentTest {
     }
 
     @Test
-    public void testGetContent1() {
+    public void testGetContentFullLines1() {
         final IFragment f1 = new Fragment(file(), pos(1, 1), pos(1, 1));
         assertEquals("", f1.getContentFullLines());
     }
 
     @Test
-    public void testGetContent2() {
+    public void testGetContentFullLines2() {
         final String content = "abcdef";
         final IFragment f1 = new Fragment(fileWithContent(content), pos(1, 2), pos(1, 4));
         assertEquals("abcdef\n", f1.getContentFullLines());
     }
 
     @Test
-    public void testGetContent3() {
+    public void testGetContentFullLines3() {
         final String content = "a\nb\nc\nd\ne\nf\n";
         final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 1), pos(5, 1));
         assertEquals("b\nc\nd\n", f1.getContentFullLines());
     }
 
     @Test
-    public void testGetContent4() {
+    public void testGetContentFullLines4() {
         final String content = "a\nb\nc\nd\ne\nf\n";
         final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 2), pos(5, 2));
         assertEquals("b\nc\nd\ne\n", f1.getContentFullLines());
+    }
+
+    @Test
+    public void testGetContent1() {
+        final String content = "x\nabcdefgh\n";
+        final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 1), pos(3, 1));
+        assertEquals("abcdefgh\n", f1.getContent());
+    }
+
+    @Test
+    public void testGetContent2() {
+        final String content = "x\nabcdefgh\n";
+        final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 2), pos(3, 1));
+        assertEquals("bcdefgh\n", f1.getContent());
+    }
+
+    @Test
+    public void testGetContent3() {
+        final String content = "x\nabcdefgh\n";
+        final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 1), pos(2, 3));
+        assertEquals("ab", f1.getContent());
+    }
+
+    @Test
+    public void testGetContent4() {
+        final String content = "x\nabcdefgh\n";
+        final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 3), pos(2, 6));
+        assertEquals("cde", f1.getContent());
+    }
+
+    @Test
+    public void testGetContent5() {
+        final String content = "x\nabcdefgh\nABCDEFGH\n";
+        final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 3), pos(3, 5));
+        assertEquals("cdefgh\nABCD", f1.getContent());
     }
 }

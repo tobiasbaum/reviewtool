@@ -124,6 +124,33 @@ public final class Fragment implements IFragment {
         return this.content;
     }
 
+    @Override
+    public String getContent() {
+        final String s = this.getContentFullLines();
+        if (s.isEmpty()) {
+            return s;
+        }
+        if (this.to.getColumn() > 1) {
+            final int discardFromEnd = countCharsInLastLine(s) - this.to.getColumn() + 1;
+            final int endIndex = s.length() - discardFromEnd;
+            return s.substring(this.from.getColumn() - 1, endIndex);
+        } else {
+            return s.substring(this.from.getColumn() - 1);
+        }
+    }
+
+    private static int countCharsInLastLine(String s) {
+        int count = s.endsWith("\n") ? 1 : 0;
+        for (int i = s.length() - count - 1; i >= 0; i--) {
+            if (s.charAt(i) == '\n') {
+                break;
+            } else {
+                count++;
+            }
+        }
+        return count;
+    }
+
     private String extractContent() {
         if (this.isDeletion()) {
             return "";

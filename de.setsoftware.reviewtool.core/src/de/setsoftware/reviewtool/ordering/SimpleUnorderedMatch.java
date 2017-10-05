@@ -42,4 +42,29 @@ public class SimpleUnorderedMatch implements OrderingInfo {
         return this.description;
     }
 
+    @Override
+    public int hashCode() {
+        return this.matchSet.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof SimpleUnorderedMatch)) {
+            return false;
+        }
+        final SimpleUnorderedMatch m = (SimpleUnorderedMatch) o;
+        if (this.explicit != m.explicit) {
+            return false;
+        }
+        if (this.explicit && !this.description.equals(m.description)) {
+            return false;
+        }
+        return this.matchSet.equals(m.matchSet);
+    }
+
+    @Override
+    public String toString() {
+        return this.explicit + "," + this.description + "," + this.matchSet;
+    }
+
 }

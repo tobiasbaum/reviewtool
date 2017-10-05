@@ -82,11 +82,4 @@ public class PositionInText implements IPositionInText {
         return new PositionInText(this.line, 1);
     }
 
-    @Override
-    public IPositionInText endOfLine() {
-        if (this.column == 0) {
-            return this;
-        }
-        return new PositionInText(this.line + 1, 0);
-    }
 }

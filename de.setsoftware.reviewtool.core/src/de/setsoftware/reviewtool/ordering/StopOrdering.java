@@ -43,7 +43,8 @@ public class StopOrdering implements IStopOrdering {
     private static List<? extends RelationMatcher> getRelationMatchers() {
         //TODO make loading of relation matchers more dynamic
         return Arrays.asList(
-                new InSameFileRelation());
+                new InSameFileRelation(),
+                new TokenSimilarityRelation());
     }
 
     private static List<MatchSet<Stop>> getMatchSets(List<OrderingInfo> orderingInfos) {
