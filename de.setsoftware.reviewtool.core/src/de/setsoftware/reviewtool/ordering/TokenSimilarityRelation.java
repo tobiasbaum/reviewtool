@@ -115,6 +115,10 @@ class TokenSimilarityRelation implements RelationMatcher {
     }
 
     private double jaccardSimilarity(Set<String> s1, Set<String> s2) {
+        if (s2.size() < s1.size()) {
+            //performance optimization
+            return this.jaccardSimilarity(s2, s1);
+        }
         int intersectionSize = 0;
         int unionSize = s1.size() + s2.size();
         for (final String s : s1) {
