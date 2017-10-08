@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: de.setsoftware.reviewtool.ordering
 Bundle-SymbolicName: de.setsoftware.reviewtool.ordering
-Bundle-Version: 1.16.0.qualifier
+Bundle-Version: 1.17.0.qualifier
 Bundle-Vendor: Tobias Baum
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Export-Package: de.setsoftware.reviewtool.ordering.efficientalgorithm
