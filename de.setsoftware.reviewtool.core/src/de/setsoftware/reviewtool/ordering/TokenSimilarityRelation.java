@@ -28,6 +28,9 @@ class TokenSimilarityRelation implements RelationMatcher {
     public Collection<? extends OrderingInfo> determineMatches(List<Stop> stops) {
         final List<Pair<Stop, Set<String>>> tokenSets = new ArrayList<>(stops.size());
         for (final Stop s : stops) {
+            if (s.isIrrelevantForReview()) {
+                continue;
+            }
             final Set<String> tokens = this.determineTokenSet(s);
             if (!tokens.isEmpty()) {
                 tokenSets.add(Pair.create(s, tokens));
