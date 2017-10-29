@@ -196,4 +196,34 @@ public class TourCalculatorTest {
         }
     }
 
+//TEST
+//    @Test
+//    public void testPerformance() {
+//        final List<String> allChangeParts = new ArrayList<>();
+//        final List<MatchSet<String>> matchSets = new ArrayList<>();
+//        for (int i = 0; i < 200; i++) {
+//            final String a = "p" + i + "_A";
+//            final String b = "p" + i + "_B";
+//            final String c = "p" + i + "_C";
+//            allChangeParts.add(a);
+//            allChangeParts.add(b);
+//            allChangeParts.add(c);
+//            matchSets.add(new MatchSet<>(new HashSet<String>(Arrays.asList(a, b, c))));
+//        }
+//        for (int i = 0; i < allChangeParts.size() / 3; i++) {
+//            for (int j = i + 1; j < allChangeParts.size() / 3; j++) {
+//                matchSets.add(new MatchSet<>(new HashSet<String>(Arrays.asList(
+//                        allChangeParts.get(3 * i),
+//                        allChangeParts.get(3 * j)))));
+//            }
+//        }
+//
+//        final List<PositionRequest<String>> positionRequests = new ArrayList<>();
+//        System.out.println("init done");
+//        final long start = System.currentTimeMillis();
+//        final TourCalculator<String> t = TourCalculator.calculateFor(allChangeParts, matchSets, positionRequests);
+//        final long end = System.currentTimeMillis();
+//        System.out.println("elapsed: " + (end - start));
+//    }
+
 }

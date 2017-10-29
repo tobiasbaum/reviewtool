@@ -12,7 +12,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
-import java.util.Set;
 
 import org.junit.Test;
 
@@ -25,9 +24,8 @@ public class BundleCombinationTreeTest {
         return new BundleCombinationTestHelper(BundleCombinationTreeElement.create(Arrays.asList(items)));
     }
 
-    private static HashSet<Integer> set(Integer... set) {
-        final HashSet<Integer> bundle = new HashSet<>(Arrays.asList(set));
-        return bundle;
+    private static SimpleSet<Integer> set(Integer... set) {
+        return new SimpleSetAdapter<>(new HashSet<>(Arrays.asList(set)));
     }
 
     /**
@@ -35,8 +33,8 @@ public class BundleCombinationTreeTest {
      */
     private static class BundleCombinationTestHelper {
         private BundleCombinationTreeElement<Integer> current;
-        private final List<Set<Integer>> historySuccess;
-        private final List<Set<Integer>> historyConflict;
+        private final List<SimpleSet<Integer>> historySuccess;
+        private final List<SimpleSet<Integer>> historyConflict;
 
         public BundleCombinationTestHelper(BundleCombinationTreeElement<Integer> initial) {
             this.current = initial;
@@ -45,7 +43,7 @@ public class BundleCombinationTreeTest {
         }
 
         public boolean addAndCheckInvariants(Integer... set) {
-            final HashSet<Integer> bundle = set(set);
+            final SimpleSet<Integer> bundle = set(set);
             final BundleCombinationTreeElement<Integer> newTree = this.current.bundle(bundle);
             if (newTree != null) {
                 this.current = newTree;
@@ -58,7 +56,7 @@ public class BundleCombinationTreeTest {
         }
 
         private void checkInvariants() {
-            for (final Set<Integer> setInHistory : this.historySuccess) {
+            for (final SimpleSet<Integer> setInHistory : this.historySuccess) {
                 final BundleCombinationTreeElement<Integer> addedAgain = this.current.bundle(setInHistory);
                 //adding it again is possible
                 assertNotNull("adding again was not possible for " + setInHistory + " to " + this.current
@@ -70,7 +68,7 @@ public class BundleCombinationTreeTest {
                         this.containsAsNeighbours(this.current.getPossibleOrder(), setInHistory));
             }
 
-            for (final Set<Integer> setInHistory : this.historyConflict) {
+            for (final SimpleSet<Integer> setInHistory : this.historyConflict) {
                 final BundleCombinationTreeElement<Integer> addedAgain = this.current.bundle(setInHistory);
                 //adding it again is still not possible
                 assertNull("adding again became possible for " + setInHistory + " to "
@@ -83,8 +81,8 @@ public class BundleCombinationTreeTest {
             }
         }
 
-        private boolean containsAsNeighbours(List<Integer> possibleOrder, Set<Integer> set) {
-            if (!possibleOrder.containsAll(set)) {
+        private boolean containsAsNeighbours(List<Integer> possibleOrder, SimpleSet<Integer> set) {
+            if (!possibleOrder.containsAll(set.toSet())) {
                 return false;
             }
             boolean hadMatch = false;

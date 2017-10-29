@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * An intermediate node in the bundling tree. It comes in two sub-flavors, either with reordering of
@@ -26,7 +25,7 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
     }
 
     @Override
-    protected BundleResult<T> addBundle(Set<T> bundle) {
+    protected BundleResult<T> addBundle(SimpleSet<T> bundle) {
 
         if (this.reorderingAllowed) {
             //add recursively and split by result type
@@ -257,7 +256,7 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         return false;
     }
 
-    private void reverseAndSplitLast(List<BundleCombinationTreeElement<T>> newChildren, Set<T> bundle) {
+    private void reverseAndSplitLast(List<BundleCombinationTreeElement<T>> newChildren, SimpleSet<T> bundle) {
         final int lastIndex = newChildren.size() - 1;
         final BundleCombinationTreeElement<T> element = newChildren.remove(lastIndex);
         newChildren.addAll(element.reverse().split(bundle));
@@ -334,13 +333,13 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
     }
 
     private static<S> List<? extends BundleCombinationTreeElement<S>> split(
-            List<? extends BundleCombinationTreeElement<S>> list, Set<S> bundle) {
+            List<? extends BundleCombinationTreeElement<S>> list, SimpleSet<S> bundle) {
         assert list.size() <= 1;
         return list.isEmpty() ? Collections.<BundleCombinationTreeElement<S>>emptyList() : list.get(0).split(bundle);
     }
 
     @Override
-    protected List<? extends BundleCombinationTreeElement<T>> split(Set<T> bundle) {
+    protected List<? extends BundleCombinationTreeElement<T>> split(SimpleSet<T> bundle) {
         if (this.reorderingAllowed) {
             final List<BundleCombinationTreeElement<T>> ret = new ArrayList<>();
             final List<BundleCombinationTreeElement<T>> temp = new ArrayList<>();
@@ -378,7 +377,7 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
     }
 
     @Override
-    protected ResultType checkContainment(Set<T> bundle) {
+    protected ResultType checkContainment(SimpleSet<T> bundle) {
         final boolean startsWithMatch = this.children[0].checkContainment(bundle).hasTopMatch();
         final boolean endsWithMatch = this.children[this.children.length - 1].checkContainment(bundle).hasBottomMatch();
         if (startsWithMatch && !endsWithMatch) {

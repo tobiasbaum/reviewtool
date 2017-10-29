@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 /**
  * A leaf of the bundling tree, representing a single value.
@@ -22,7 +21,7 @@ class BundleCombinationTreeLeaf<T> extends BundleCombinationTreeElement<T> {
     }
 
     @Override
-    protected BundleResult<T> addBundle(Set<T> bundle) {
+    protected BundleResult<T> addBundle(SimpleSet<T> bundle) {
         return bundle.contains(this.value) ? this.thisFull : this.thisNone;
     }
 
@@ -37,12 +36,12 @@ class BundleCombinationTreeLeaf<T> extends BundleCombinationTreeElement<T> {
     }
 
     @Override
-    protected List<? extends BundleCombinationTreeElement<T>> split(Set<T> bundle) {
+    protected List<? extends BundleCombinationTreeElement<T>> split(SimpleSet<T> bundle) {
         return Collections.singletonList(this);
     }
 
     @Override
-    protected ResultType checkContainment(Set<T> bundle) {
+    protected ResultType checkContainment(SimpleSet<T> bundle) {
         return bundle.contains(this.value) ? ResultType.FULL : ResultType.NONE;
     }
 

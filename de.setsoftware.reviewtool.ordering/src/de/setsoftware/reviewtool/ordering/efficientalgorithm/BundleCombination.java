@@ -1,7 +1,6 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Interface for a data structure/algorithm that can be used to determine an order of items that conforms to
@@ -16,7 +15,7 @@ public interface BundleCombination<T> {
      * the condition given as a parameter. If the parameter is in conflict to the existing bundlings, null
      * is returned.
      */
-    public abstract BundleCombination<T> bundle(Set<T> bundle);
+    public abstract BundleCombination<T> bundle(SimpleSet<T> bundle);
 
     /**
      * Returns a list that contains all of the items in an order that satisfies all bundlings.

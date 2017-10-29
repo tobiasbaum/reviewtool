@@ -69,12 +69,8 @@ public class TourCalculator<T> {
         }
 
         private boolean matchWithNewFold(MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds) {
-            final Set<Integer> activeFolds = new LinkedHashSet<>();
-            for (int i = 0; i < potentialFolds.size(); i++) {
-                activeFolds.add(i);
-            }
-
-            final boolean matchesWithFullSet = this.matchesWithFoldSubset(toMatch, potentialFolds, activeFolds);
+            final SubsettingSet<S> activeFolds = new SubsettingSet<>(toMatch, potentialFolds);
+            final boolean matchesWithFullSet = this.matchesWithFoldSubset(toMatch, activeFolds);
             if (!matchesWithFullSet) {
                 //does not match with the full set, cannot match with a subset either
                 return false;
@@ -84,44 +80,42 @@ public class TourCalculator<T> {
             boolean foundUnnecessaryFold;
             do {
                 foundUnnecessaryFold = false;
-                for (final Integer index : activeFolds.toArray(new Integer[activeFolds.size()])) {
+                for (final Integer index : activeFolds.potentialRemovals()) {
                     //try without a fold. if it still matches, this fold is unnecessary
-                    activeFolds.remove(index);
-                    if (this.matchesWithFoldSubset(toMatch, potentialFolds, activeFolds)) {
+                    activeFolds.preliminaryRemove(index);
+                    if (this.matchesWithFoldSubset(toMatch, activeFolds)) {
                         foundUnnecessaryFold = true;
+                        activeFolds.commitRemoval();
                     } else {
-                        activeFolds.add(index);
+                        activeFolds.rollbackRemoval();
                     }
                 }
             } while (foundUnnecessaryFold);
-            final Set<S> extendedSet = this.determineExtendedSet(toMatch, potentialFolds, activeFolds);
-            this.bundler = this.bundler.bundle(extendedSet);
-            this.todoQueue.add(new MatchSet<>(extendedSet));
+            this.bundler = this.bundler.bundle(activeFolds);
+            this.todoQueue.add(new MatchSet<>(activeFolds.toSet()));
             this.matchedWithFolds.put(toMatch, this.selectActiveFolds(potentialFolds, activeFolds));
             return true;
         }
 
-        private boolean matchesWithFoldSubset(
-                MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds, final Set<Integer> activeFolds) {
-            final Set<S> extendedSet = this.determineExtendedSet(toMatch, potentialFolds, activeFolds);
-            return this.bundler.bundle(extendedSet) != null;
+        private boolean matchesWithFoldSubset(MatchSet<S> toMatch, SimpleSet<S> set) {
+            return this.bundler.bundle(set) != null;
         }
 
-        private Set<S> determineExtendedSet(
+        private SimpleSet<S> determineExtendedSet(
                 MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds, Set<Integer> activeFolds) {
 
             final Set<S> combined = new LinkedHashSet<>(toMatch.getChangeParts());
             for (final Integer index : activeFolds) {
                 combined.addAll(potentialFolds.get(index).getChangeParts());
             }
-            return combined;
+            return new SimpleSetAdapter<>(combined);
         }
 
         private List<MatchSet<S>> selectActiveFolds(
-                List<MatchSet<S>> potentialFolds, Set<Integer> activeFolds) {
+                List<MatchSet<S>> potentialFolds, SubsettingSet<S> activeFolds) {
 
             final List<MatchSet<S>> ret = new ArrayList<>();
-            for (final Integer index : activeFolds) {
+            for (final Integer index : activeFolds.potentialRemovals()) {
                 ret.add(potentialFolds.get(index));
             }
             return ret;
@@ -156,7 +150,8 @@ public class TourCalculator<T> {
         BundleCombinationTreeElement<S> bundler = BundleCombinationTreeElement.create(allChangeParts);
         final List<MatchSet<S>> unsatisfiedMatches = new ArrayList<>();
         for (final MatchSet<S> matchSet : matchSets) {
-            final BundleCombinationTreeElement<S> next = bundler.bundle(matchSet.getChangeParts());
+            final BundleCombinationTreeElement<S> next =
+                    bundler.bundle(new SimpleSetAdapter<>(matchSet.getChangeParts()));
             if (next != null) {
                 bundler = next;
                 ret.successfulMatches.add(matchSet);

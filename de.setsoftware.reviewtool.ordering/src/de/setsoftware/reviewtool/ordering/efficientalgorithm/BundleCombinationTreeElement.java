@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Superclass for elements of the bundle combination tree.
@@ -169,7 +168,7 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
     }
 
     @Override
-    public final BundleCombinationTreeElement<T> bundle(Set<T> bundle) {
+    public final BundleCombinationTreeElement<T> bundle(SimpleSet<T> bundle) {
         final BundleResult<T> result = this.addBundle(bundle);
         if (result.resultType == ResultType.CONFLICT) {
             return null;
@@ -178,7 +177,7 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
         }
     }
 
-    protected abstract BundleResult<T> addBundle(Set<T> bundle);
+    protected abstract BundleResult<T> addBundle(SimpleSet<T> bundle);
 
     @Override
     public final List<T> getPossibleOrder() {
@@ -189,9 +188,9 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
 
     protected abstract void addItemsInOrder(List<T> buffer);
 
-    protected abstract List<? extends BundleCombinationTreeElement<T>> split(Set<T> bundle);
+    protected abstract List<? extends BundleCombinationTreeElement<T>> split(SimpleSet<T> bundle);
 
-    protected abstract ResultType checkContainment(Set<T> bundle);
+    protected abstract ResultType checkContainment(SimpleSet<T> bundle);
 
     protected abstract BundleCombinationTreeElement<T> reverse();
 
