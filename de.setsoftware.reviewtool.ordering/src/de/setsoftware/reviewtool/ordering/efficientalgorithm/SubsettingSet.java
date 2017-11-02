@@ -29,7 +29,7 @@ public class SubsettingSet<S> implements SimpleSet<S> {
             this.remainingFoldIndices.add(i);
         }
 
-        this.allItems = new CountingSet<>();
+        this.allItems = new CountingSet<>(toMatch.getChangeParts().size() + potentialFolds.size() * 4);
         this.allItems.addAll(toMatch.getChangeParts());
         for (final MatchSet<S> ms : potentialFolds) {
             this.allItems.addAll(ms.getChangeParts());

@@ -104,7 +104,33 @@ public class TourCalculatorTest {
                 .calculate();
 
         assertEquals(
-                Arrays.asList("declB", "useB", "commonCallee", "declA", "useA", "useC", "declC", "other"),
+                Arrays.asList("declA", "useA", "commonCallee", "declC", "useC", "useB", "declB", "other"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testMatchingWithClustering2() {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor(
+                        "f1_A", "f1_B", "f1_C",
+                        "f2_A", "f2_B", "f2_C",
+                        "f3_A", "f3_B", "f3_C",
+                        "f4_A", "f4_B", "f4_C")
+                .matchSymmetric("f1_A", "f1_B", "f1_C")
+                .matchSymmetric("f2_A", "f2_B", "f2_C")
+                .matchSymmetric("f3_A", "f3_B", "f3_C")
+                .matchSymmetric("f4_A", "f4_B", "f4_C")
+                .matchSymmetric("f1_A", "f2_A")
+                .matchSymmetric("f3_A", "f4_A")
+                .matchSymmetric("f2_A", "f4_A")
+                .calculate();
+
+        assertEquals(
+                Arrays.asList(
+                        "f1_C", "f1_B", "f1_A",
+                        "f2_A", "f2_B", "f2_C",
+                        "f4_C", "f4_B", "f4_A",
+                        "f3_A", "f3_B", "f3_C"),
                 actual.getTour());
     }
 
@@ -196,12 +222,11 @@ public class TourCalculatorTest {
         }
     }
 
-//TEST
 //    @Test
-//    public void testPerformance() {
+//    public void testPerformance() throws Exception {
 //        final List<String> allChangeParts = new ArrayList<>();
 //        final List<MatchSet<String>> matchSets = new ArrayList<>();
-//        for (int i = 0; i < 200; i++) {
+//        for (int i = 0; i < 100; i++) {
 //            final String a = "p" + i + "_A";
 //            final String b = "p" + i + "_B";
 //            final String c = "p" + i + "_C";
@@ -220,10 +245,22 @@ public class TourCalculatorTest {
 //
 //        final List<PositionRequest<String>> positionRequests = new ArrayList<>();
 //        System.out.println("init done");
-//        final long start = System.currentTimeMillis();
-//        final TourCalculator<String> t = TourCalculator.calculateFor(allChangeParts, matchSets, positionRequests);
-//        final long end = System.currentTimeMillis();
-//        System.out.println("elapsed: " + (end - start));
+//        final List<Long> durations = new ArrayList<>();
+//        for (int i = 0; i < 10; i++) {
+////            while (System.in.read() != 'a') {
+////            }
+//            final long start = System.currentTimeMillis();
+//            final TourCalculator<String> t = TourCalculator.calculateFor(allChangeParts, matchSets, positionRequests);
+//            final long end = System.currentTimeMillis();
+//            final long duration = end - start;
+//            System.out.println("elapsed: " + duration);
+//            System.out.println("tour size: " + t.getTour().size());
+//            durations.add(duration);
+////            while (System.in.read() != 'b') {
+////            }
+//        }
+//        Collections.sort(durations);
+//        System.out.println("Median: " + durations.get(durations.size() / 2));
 //    }
 
 }

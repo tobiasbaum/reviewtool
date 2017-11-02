@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -52,63 +51,89 @@ public class TourCalculator<T> {
         public void addPotentialFolds(Collection<MatchSet<S>> matches) {
             this.todoQueue.addAll(matches);
             while (!this.todoQueue.isEmpty()) {
-                final MatchSet<S> toFold = this.todoQueue.poll();
-                final Iterator<Entry<MatchSet<S>, List<MatchSet<S>>>> iter =
-                        this.unsatisfiedMatchesWithPotentiallyRelevantFolds.entrySet().iterator();
-                while (iter.hasNext()) {
-                    final Entry<MatchSet<S>, List<MatchSet<S>>> e = iter.next();
-                    if (Collections.disjoint(e.getKey().getChangeParts(), toFold.getChangeParts())) {
-                        continue;
+                //assign the next batch of folds to try to the unsatisfied matches they might help to satisfy
+                final Set<MatchSet<S>> unsatisfiedMatchesThatCouldNowMatch = new LinkedHashSet<>();
+                while (!this.todoQueue.isEmpty()) {
+                    final MatchSet<S> toFold = this.todoQueue.poll();
+                    final Iterator<Entry<MatchSet<S>, List<MatchSet<S>>>> iter =
+                            this.unsatisfiedMatchesWithPotentiallyRelevantFolds.entrySet().iterator();
+                    while (iter.hasNext()) {
+                        final Entry<MatchSet<S>, List<MatchSet<S>>> e = iter.next();
+                        //to be able to satisfy the match, the candidate fold has to contain elements from the match
+                        if (!this.disjoint(e.getKey().getChangeParts(), toFold.getChangeParts())) {
+                            this.removeSubsets(e.getValue(), toFold);
+                            e.getValue().add(toFold);
+                            unsatisfiedMatchesThatCouldNowMatch.add(e.getKey());
+                        }
                     }
-                    e.getValue().add(toFold);
-                    if (this.matchWithNewFold(e.getKey(), e.getValue())) {
-                        iter.remove();
-                    }
+                }
+
+                //check for matches that can now be satisfied
+                for (final MatchSet<S> toMatch : unsatisfiedMatchesThatCouldNowMatch) {
+                    this.matchWithNewFold(toMatch, this.unsatisfiedMatchesWithPotentiallyRelevantFolds.get(toMatch));
                 }
             }
         }
 
-        private boolean matchWithNewFold(MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds) {
+        private boolean disjoint(Set<S> c1, Set<S> c2) {
+            Set<S> iterate;
+            Set<S> contains;
+            if (c1.size() > c2.size()) {
+                iterate = c2;
+                contains = c1;
+            } else {
+                iterate = c1;
+                contains = c2;
+            }
+
+            for (final S e : iterate) {
+                if (contains.contains(e)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private void removeSubsets(List<MatchSet<S>> value, MatchSet<S> toFold) {
+            final Iterator<MatchSet<S>> iter = value.iterator();
+            while (iter.hasNext()) {
+                final MatchSet<S> cur = iter.next();
+                if (toFold.getChangeParts().containsAll(cur.getChangeParts())) {
+                    iter.remove();
+                }
+            }
+        }
+
+        private void matchWithNewFold(MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds) {
             final SubsettingSet<S> activeFolds = new SubsettingSet<>(toMatch, potentialFolds);
             final boolean matchesWithFullSet = this.matchesWithFoldSubset(toMatch, activeFolds);
             if (!matchesWithFullSet) {
                 //does not match with the full set, cannot match with a subset either
-                return false;
+                return;
             }
 
             //determine a minimal subset that still allows the match to happen
-            boolean foundUnnecessaryFold;
-            do {
-                foundUnnecessaryFold = false;
-                for (final Integer index : activeFolds.potentialRemovals()) {
-                    //try without a fold. if it still matches, this fold is unnecessary
-                    activeFolds.preliminaryRemove(index);
-                    if (this.matchesWithFoldSubset(toMatch, activeFolds)) {
-                        foundUnnecessaryFold = true;
-                        activeFolds.commitRemoval();
-                    } else {
-                        activeFolds.rollbackRemoval();
-                    }
+            for (final Integer index : activeFolds.potentialRemovals()) {
+                //try without a fold
+                activeFolds.preliminaryRemove(index);
+                if (this.matchesWithFoldSubset(toMatch, activeFolds)) {
+                    //still matches => fold is unnecessary
+                    activeFolds.commitRemoval();
+                } else {
+                    //does not match any more => fold is necessary
+                    activeFolds.rollbackRemoval();
                 }
-            } while (foundUnnecessaryFold);
+            }
+
+            //change attributes according to match
             this.bundler = this.bundler.bundle(activeFolds);
             this.todoQueue.add(new MatchSet<>(activeFolds.toSet()));
             this.matchedWithFolds.put(toMatch, this.selectActiveFolds(potentialFolds, activeFolds));
-            return true;
+            this.unsatisfiedMatchesWithPotentiallyRelevantFolds.remove(toMatch);
         }
 
         private boolean matchesWithFoldSubset(MatchSet<S> toMatch, SimpleSet<S> set) {
             return this.bundler.bundle(set) != null;
-        }
-
-        private SimpleSet<S> determineExtendedSet(
-                MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds, Set<Integer> activeFolds) {
-
-            final Set<S> combined = new LinkedHashSet<>(toMatch.getChangeParts());
-            for (final Integer index : activeFolds) {
-                combined.addAll(potentialFolds.get(index).getChangeParts());
-            }
-            return new SimpleSetAdapter<>(combined);
         }
 
         private List<MatchSet<S>> selectActiveFolds(

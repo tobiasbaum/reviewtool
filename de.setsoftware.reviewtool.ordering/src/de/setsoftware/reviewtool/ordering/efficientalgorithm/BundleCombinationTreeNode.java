@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * An intermediate node in the bundling tree. It comes in two sub-flavors, either with reordering of
@@ -36,14 +38,14 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
             }
             for (final BundleCombinationTreeElement<T> child : this.children) {
                 final BundleResult<T> childResult = child.addBundle(bundle);
+                if (childResult.getType() == ResultType.CONFLICT) {
+                    return result(ResultType.CONFLICT, this);
+                }
                 parts.get(childResult.getType()).add(childResult.getTree());
                 newChildren.add(childResult.getTree());
             }
 
             //check the different possible outcomes
-            if (!parts.get(ResultType.CONFLICT).isEmpty()) {
-                return result(ResultType.CONFLICT, this);
-            }
             final int atLeastPartialMatchCount = this.children.length - parts.get(ResultType.NONE).size();
             if (atLeastPartialMatchCount == 0) {
                 return result(ResultType.NONE, this);
@@ -125,7 +127,11 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         } else {
             final List<BundleResult<T>> childResultsInOrder = new ArrayList<>();
             for (final BundleCombinationTreeElement<T> child : this.children) {
-                childResultsInOrder.add(child.addBundle(bundle));
+                final BundleResult<T> childResult = child.addBundle(bundle);
+                if (childResult.getType() == ResultType.CONFLICT) {
+                    return result(ResultType.CONFLICT, this);
+                }
+                childResultsInOrder.add(childResult);
             }
             final boolean containsMultipleMatches = this.containsMultipleMatches(childResultsInOrder);
 
@@ -204,9 +210,9 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
                     newChildren.add(childResult.getTree());
                     break;
                 case CONFLICT:
-                    return result(ResultType.CONFLICT, this);
+                    throw new AssertionError("should not happen, has been handled above");
                 default:
-                    throw new RuntimeException("should not happen " + childResult.getType());
+                    throw new AssertionError("should not happen " + childResult.getType());
                 }
             }
 

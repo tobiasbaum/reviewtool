@@ -15,13 +15,17 @@ public class CountingSet<T> {
      * Wrapper for the counter value.
      */
     private static final class Counter {
-        private int count;
+        private int count = 1;
     }
 
     private final Map<T, Counter> items;
 
     public CountingSet() {
         this.items = new LinkedHashMap<>();
+    }
+
+    public CountingSet(int initialCapacity) {
+        this.items = new LinkedHashMap<>(initialCapacity);
     }
 
     /**
@@ -34,12 +38,12 @@ public class CountingSet<T> {
     }
 
     private void add(T item) {
-        Counter c = this.items.get(item);
+        final Counter c = this.items.get(item);
         if (c == null) {
-            c = new Counter();
-            this.items.put(item, c);
+            this.items.put(item, new Counter());
+        } else {
+            c.count++;
         }
-        c.count++;
     }
 
     /**
