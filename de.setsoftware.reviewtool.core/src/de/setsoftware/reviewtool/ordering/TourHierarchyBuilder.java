@@ -43,14 +43,17 @@ class TourHierarchyBuilder {
     private final Map<Stop, Integer> indexMap;
     private TreeNode firstRoot;
 
-    public TourHierarchyBuilder(List<Stop> sorted) {
-        this.stops = sorted;
+    public TourHierarchyBuilder(List<ChangePart> sorted) {
+        this.stops = new ArrayList<>();
+        for (final ChangePart c : sorted) {
+            this.stops.addAll(c.getStops());
+        }
 
         this.indexMap = new HashMap<>();
         TreeNode cur = null;
-        for (int i = sorted.size() - 1; i >= 0; i--) {
+        for (int i = this.stops.size() - 1; i >= 0; i--) {
             cur = new TreeNode(i, i, cur, null, null);
-            this.indexMap.put(sorted.get(i), i);
+            this.indexMap.put(this.stops.get(i), i);
         }
         this.firstRoot = cur;
     }
@@ -59,9 +62,11 @@ class TourHierarchyBuilder {
         int minIndex = Integer.MAX_VALUE;
         int maxIndex = Integer.MIN_VALUE;
 
-        for (final Stop s : o.getMatchSet().getChangeParts()) {
-            minIndex = Math.min(minIndex, this.indexMap.get(s));
-            maxIndex = Math.max(maxIndex, this.indexMap.get(s));
+        for (final ChangePart c : o.getMatchSet().getChangeParts()) {
+            for (final Stop s : c.getStops()) {
+                minIndex = Math.min(minIndex, this.indexMap.get(s));
+                maxIndex = Math.max(maxIndex, this.indexMap.get(s));
+            }
         }
 
         if (maxIndex - minIndex != o.getMatchSet().getChangeParts().size() - 1) {

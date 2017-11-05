@@ -7,7 +7,6 @@ import java.util.Map.Entry;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.changestructure.Stop;
 
 /**
  * Groups stops that belong to the same file.
@@ -15,14 +14,14 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 class InSameFileRelation implements RelationMatcher {
 
     @Override
-    public Collection<? extends OrderingInfo> determineMatches(List<Stop> stops) {
-        final Multimap<IRevisionedFile, Stop> grouping = new Multimap<>();
-        for (final Stop s : stops) {
-            grouping.put(s.getMostRecentFile(), s);
+    public Collection<? extends OrderingInfo> determineMatches(List<ChangePart> changeParts) {
+        final Multimap<IRevisionedFile, ChangePart> grouping = new Multimap<>();
+        for (final ChangePart c : changeParts) {
+            grouping.put(c.getStops().get(0).getMostRecentFile(), c);
         }
 
         final List<OrderingInfo> ret = new ArrayList<>();
-        for (final Entry<IRevisionedFile, List<Stop>> e : grouping.entrySet()) {
+        for (final Entry<IRevisionedFile, List<ChangePart>> e : grouping.entrySet()) {
             ret.add(new SimpleUnorderedMatch(true, e.getKey().toLocalPath().lastSegment(), e.getValue()));
         }
         return ret;

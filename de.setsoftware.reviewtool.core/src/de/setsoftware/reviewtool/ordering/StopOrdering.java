@@ -25,15 +25,19 @@ public class StopOrdering implements IStopOrdering {
     public List<? extends TourElement> groupAndSort(List<Stop> stops, CancelCallback isCanceled)
         throws InterruptedException {
 
+        final List<ChangePart> changeParts = ChangePart.groupToMinimumGranularity(stops);
+
+        TourCalculator.checkInterruption(isCanceled);
+
         final List<OrderingInfo> orderingInfos = new ArrayList<>();
         for (final RelationMatcher m : getRelationMatchers()) {
-            orderingInfos.addAll(m.determineMatches(stops));
+            orderingInfos.addAll(m.determineMatches(changeParts));
             TourCalculator.checkInterruption(isCanceled);
         }
 
-        final TourCalculator<Stop> calculator = TourCalculator.calculateFor(
-                stops, getMatchSets(orderingInfos), getPositionRequests(orderingInfos), isCanceled);
-        final List<Stop> sorted = calculator.getTour();
+        final TourCalculator<ChangePart> calculator = TourCalculator.calculateFor(
+                changeParts, getMatchSets(orderingInfos), getPositionRequests(orderingInfos), isCanceled);
+        final List<ChangePart> sorted = calculator.getTour();
 
         final TourHierarchyBuilder hierarchyBuilder = new TourHierarchyBuilder(sorted);
         for (final OrderingInfo o : orderingInfos) {
@@ -52,16 +56,16 @@ public class StopOrdering implements IStopOrdering {
                 new TokenSimilarityRelation());
     }
 
-    private static List<MatchSet<Stop>> getMatchSets(List<OrderingInfo> orderingInfos) {
-        final List<MatchSet<Stop>> ret = new ArrayList<>();
+    private static List<MatchSet<ChangePart>> getMatchSets(List<OrderingInfo> orderingInfos) {
+        final List<MatchSet<ChangePart>> ret = new ArrayList<>();
         for (final OrderingInfo o : orderingInfos) {
             ret.add(o.getMatchSet());
         }
         return ret;
     }
 
-    private static List<PositionRequest<Stop>> getPositionRequests(List<OrderingInfo> orderingInfos) {
-        final List<PositionRequest<Stop>> ret = new ArrayList<>();
+    private static List<PositionRequest<ChangePart>> getPositionRequests(List<OrderingInfo> orderingInfos) {
+        final List<PositionRequest<ChangePart>> ret = new ArrayList<>();
         for (final OrderingInfo o : orderingInfos) {
             ret.addAll(o.getPositionRequests());
         }

@@ -25,15 +25,15 @@ class TokenSimilarityRelation implements RelationMatcher {
     private static final double JACCARD_THRESHOLD = 0.7;
 
     @Override
-    public Collection<? extends OrderingInfo> determineMatches(List<Stop> stops) {
-        final List<Pair<Stop, Set<String>>> tokenSets = new ArrayList<>(stops.size());
-        for (final Stop s : stops) {
-            if (s.isIrrelevantForReview()) {
+    public Collection<? extends OrderingInfo> determineMatches(List<ChangePart> changeParts) {
+        final List<Pair<ChangePart, Set<String>>> tokenSets = new ArrayList<>(changeParts.size());
+        for (final ChangePart c : changeParts) {
+            if (c.isFullyIrrelevantForReview()) {
                 continue;
             }
-            final Set<String> tokens = this.determineTokenSet(s);
+            final Set<String> tokens = this.determineTokenSet(c);
             if (!tokens.isEmpty()) {
-                tokenSets.add(Pair.create(s, tokens));
+                tokenSets.add(Pair.create(c, tokens));
             }
         }
 
@@ -67,21 +67,23 @@ class TokenSimilarityRelation implements RelationMatcher {
         return ret;
     }
 
-    private Set<String> determineTokenSet(Stop s) {
-        final IFragment fragment = s.getOriginalMostRecentFragment();
-        if (fragment == null) {
-            return Collections.emptySet();
-        }
-
+    private Set<String> determineTokenSet(ChangePart changePart) {
         final Set<String> tokens = new HashSet<>();
-        this.parseTokens(tokens, fragment.getContent());
+        for (final Stop s : changePart.getStops()) {
+            final IFragment fragment = s.getOriginalMostRecentFragment();
+            if (fragment == null) {
+                continue;
+            }
 
-        //also consider the old content, so that code moves are regarded as similar
-        //  not 100% accurate for complex structures, but hopefully sufficient
-        final IRevisionedFile oldestFile = this.determineOldestFile(s);
-        if (oldestFile != null) {
-            for (final Hunk hunk : s.getContentFor(oldestFile)) {
-                this.parseTokens(tokens, hunk.getSource().getContent());
+            this.parseTokens(tokens, fragment.getContent());
+
+            //also consider the old content, so that code moves are regarded as similar
+            //  not 100% accurate for complex structures, but hopefully sufficient
+            final IRevisionedFile oldestFile = this.determineOldestFile(s);
+            if (oldestFile != null) {
+                for (final Hunk hunk : s.getContentFor(oldestFile)) {
+                    this.parseTokens(tokens, hunk.getSource().getContent());
+                }
             }
         }
 

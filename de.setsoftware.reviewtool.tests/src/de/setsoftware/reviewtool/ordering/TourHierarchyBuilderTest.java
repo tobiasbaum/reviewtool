@@ -2,9 +2,11 @@ package de.setsoftware.reviewtool.ordering;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -38,7 +40,15 @@ public class TourHierarchyBuilderTest {
     }
 
     private static TourHierarchyBuilder builder(Stop... stops) {
-        return new TourHierarchyBuilder(Arrays.asList(stops));
+        return new TourHierarchyBuilder(wrap(stops));
+    }
+
+    private static List<ChangePart> wrap(Stop... stops) {
+        final List<ChangePart> changeParts = new ArrayList<>();
+        for (final Stop s : stops) {
+            changeParts.add(new ChangePart(Collections.singletonList(s)));
+        }
+        return changeParts;
     }
 
     private static OrderingInfo oi(final String description, final Stop... stops) {
@@ -49,12 +59,12 @@ public class TourHierarchyBuilderTest {
             }
 
             @Override
-            public MatchSet<Stop> getMatchSet() {
-                return new MatchSet<Stop>(Arrays.asList(stops));
+            public MatchSet<ChangePart> getMatchSet() {
+                return new MatchSet<ChangePart>(wrap(stops));
             }
 
             @Override
-            public Collection<? extends PositionRequest<Stop>> getPositionRequests() {
+            public Collection<? extends PositionRequest<ChangePart>> getPositionRequests() {
                 return Collections.emptyList();
             }
 

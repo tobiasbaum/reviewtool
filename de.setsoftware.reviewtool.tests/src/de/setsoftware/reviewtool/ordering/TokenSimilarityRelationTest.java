@@ -2,9 +2,11 @@ package de.setsoftware.reviewtool.ordering;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -46,11 +48,23 @@ public class TokenSimilarityRelationTest {
     }
 
     private static OrderingInfo oi(Stop s1, Stop s2) {
-        return new SimpleUnorderedMatch(false, null, Arrays.asList(s1, s2));
+        return new SimpleUnorderedMatch(false, null, Arrays.asList(wrap(s1), wrap(s2)));
+    }
+
+    private static ChangePart wrap(Stop s) {
+        return new ChangePart(Collections.singletonList(s));
+    }
+
+    private static List<ChangePart> wrap(Stop[] stops) {
+        final List<ChangePart> ret = new ArrayList<>();
+        for (final Stop s : stops) {
+            ret.add(wrap(s));
+        }
+        return ret;
     }
 
     private static Collection<? extends OrderingInfo> determineRelations(Stop... stops) {
-        return new TokenSimilarityRelation().determineMatches(Arrays.asList(stops));
+        return new TokenSimilarityRelation().determineMatches(wrap(stops));
     }
 
     @Test
