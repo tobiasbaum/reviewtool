@@ -41,6 +41,7 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.CancelCallback;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
@@ -127,7 +128,7 @@ public class ToursInReview {
      */
     public static ToursInReview create(
             IChangeSource src,
-            IChangeSourceUi changeSourceUi,
+            final IChangeSourceUi changeSourceUi,
             List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
             List<? extends ITourRestructuring> tourRestructuringStrategies,
             IStopOrdering orderingAlgorithm,
@@ -155,7 +156,16 @@ public class ToursInReview {
             return null;
         }
 
-        final List<? extends Tour> toursToShow = groupAndSort(userSelection, orderingAlgorithm);
+        changeSourceUi.subTask("Ordering stops...");
+        final List<? extends Tour> toursToShow = groupAndSort(
+                userSelection,
+                orderingAlgorithm,
+                new CancelCallback() {
+                    @Override
+                    public boolean isCanceled() {
+                        return changeSourceUi.isCanceled();
+                    }
+                });
 
         final ToursInReview result = new ToursInReview(toursToShow, changes);
         result.createLocalTour(null, changeSourceUi, null);
@@ -163,12 +173,16 @@ public class ToursInReview {
     }
 
     private static List<? extends Tour> groupAndSort(
-            List<? extends Tour> userSelection, IStopOrdering orderingAlgorithm) {
-        final List<Tour> ret = new ArrayList<>();
-        for (final Tour t : userSelection) {
-            ret.add(new Tour(t.getDescription(), orderingAlgorithm.groupAndSort(t.getStops())));
+            List<? extends Tour> userSelection, IStopOrdering orderingAlgorithm, CancelCallback isCanceled) {
+        try {
+            final List<Tour> ret = new ArrayList<>();
+            for (final Tour t : userSelection) {
+                ret.add(new Tour(t.getDescription(), orderingAlgorithm.groupAndSort(t.getStops(), isCanceled)));
+            }
+            return ret;
+        } catch (final InterruptedException e) {
+            throw new OperationCanceledException();
         }
-        return ret;
     }
 
     /**

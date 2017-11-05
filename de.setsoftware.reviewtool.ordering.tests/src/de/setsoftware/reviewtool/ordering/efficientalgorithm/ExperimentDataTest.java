@@ -65,8 +65,17 @@ public class ExperimentDataTest {
             return this;
         }
 
-        public TourCalculator<String> calculate() {
-            return TourCalculator.calculateFor(this.parts, this.matchSets, this.positionRequests);
+        public TourCalculator<String> calculate() throws Exception {
+            return TourCalculator.calculateFor(
+                    this.parts,
+                    this.matchSets,
+                    this.positionRequests,
+                    new CancelCallback() {
+                        @Override
+                        public boolean isCanceled() {
+                            return false;
+                        }
+                    });
         }
     }
 

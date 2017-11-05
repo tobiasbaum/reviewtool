@@ -7,6 +7,7 @@ import java.util.List;
 import de.setsoftware.reviewtool.model.changestructure.IStopOrdering;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.TourElement;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.CancelCallback;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculator;
@@ -21,14 +22,17 @@ public class StopOrdering implements IStopOrdering {
      * and returns the result.
      */
     @Override
-    public List<? extends TourElement> groupAndSort(List<Stop> stops) {
+    public List<? extends TourElement> groupAndSort(List<Stop> stops, CancelCallback isCanceled)
+        throws InterruptedException {
+
         final List<OrderingInfo> orderingInfos = new ArrayList<>();
         for (final RelationMatcher m : getRelationMatchers()) {
             orderingInfos.addAll(m.determineMatches(stops));
+            TourCalculator.checkInterruption(isCanceled);
         }
 
         final TourCalculator<Stop> calculator = TourCalculator.calculateFor(
-                stops, getMatchSets(orderingInfos), getPositionRequests(orderingInfos));
+                stops, getMatchSets(orderingInfos), getPositionRequests(orderingInfos), isCanceled);
         final List<Stop> sorted = calculator.getTour();
 
         final TourHierarchyBuilder hierarchyBuilder = new TourHierarchyBuilder(sorted);
@@ -37,6 +41,7 @@ public class StopOrdering implements IStopOrdering {
                 hierarchyBuilder.createSubtourIfPossible(o);
             }
         }
+        TourCalculator.checkInterruption(isCanceled);
         return hierarchyBuilder.getTopmostElements();
     }
 

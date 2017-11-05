@@ -57,13 +57,22 @@ public class TourCalculatorTest {
             return this;
         }
 
-        public TourCalculator<String> calculate() {
-            return TourCalculator.calculateFor(this.parts, this.matchSets, this.positionRequests);
+        public TourCalculator<String> calculate() throws Exception {
+            return TourCalculator.calculateFor(
+                    this.parts,
+                    this.matchSets,
+                    this.positionRequests,
+                    new CancelCallback() {
+                        @Override
+                        public boolean isCanceled() {
+                            return false;
+                        }
+                    });
         }
     }
 
     @Test
-    public void testRelatedTogether() {
+    public void testRelatedTogether() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("callee", "other", "caller")
                 .match("callee", TargetPosition.SECOND, "caller")
@@ -73,7 +82,7 @@ public class TourCalculatorTest {
     }
 
     @Test
-    public void testRelatedTogether2() {
+    public void testRelatedTogether2() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("callee", "other1", "caller", "other2")
                 .match("callee", TargetPosition.SECOND, "caller")
@@ -83,7 +92,7 @@ public class TourCalculatorTest {
     }
 
     @Test
-    public void testDeclUseAndCallFlow() {
+    public void testDeclUseAndCallFlow() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("useAndCallee", "decl", "caller")
                 .match("decl", TargetPosition.FIRST, "useAndCallee")
@@ -94,7 +103,7 @@ public class TourCalculatorTest {
     }
 
     @Test
-    public void testMatchingWithClustering() {
+    public void testMatchingWithClustering() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("declA", "useA", "declB", "useB", "declC", "useC", "commonCallee", "other")
                 .match("declA", TargetPosition.FIRST, "useA")
@@ -109,7 +118,7 @@ public class TourCalculatorTest {
     }
 
     @Test
-    public void testMatchingWithClustering2() {
+    public void testMatchingWithClustering2() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor(
                         "f1_A", "f1_B", "f1_C",
@@ -135,7 +144,7 @@ public class TourCalculatorTest {
     }
 
     @Test
-    public void testFurther() {
+    public void testFurther() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("declA", "useA1", "useA2", "declB", "useB1", "useB2")
                 .match("declA", TargetPosition.FIRST, "useA1", "useA2")
@@ -149,7 +158,7 @@ public class TourCalculatorTest {
     }
 
     @Test
-    public void testGraphFromInterviews() {
+    public void testGraphFromInterviews() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("Maus", "Birne", "Stern", "Homer", "Baum", "Strasse", "Buch")
                 //addRelationStar(g, TestRelationTypes.SAME_METHOD, "determineChange()", "Strasse", "Baum");
@@ -175,13 +184,13 @@ public class TourCalculatorTest {
                 actual.getTour());
     }
 
-    private static void doTestWithGeneratedData(Random r) {
+    private static void doTestWithGeneratedData(Random r) throws Exception {
         final int size = r.nextInt(30) + 3;
         final int matches = r.nextInt(2 * size) + 1;
         doTestWithGeneratedData(r, size, matches);
     }
 
-    private static void doTestWithGeneratedData(Random r, final int size, final int matches) {
+    private static void doTestWithGeneratedData(Random r, final int size, final int matches) throws Exception {
         final List<String> ints = new ArrayList<>();
         for (int i = 1; i <= size; i++) {
             ints.add(Integer.toString(i));
@@ -212,7 +221,7 @@ public class TourCalculatorTest {
     }
 
     @Test
-    public void testSmokeTest() {
+    public void testSmokeTest() throws Exception {
         for (int i = 0; i < 100; i++) {
             try {
                 doTestWithGeneratedData(new Random(i));

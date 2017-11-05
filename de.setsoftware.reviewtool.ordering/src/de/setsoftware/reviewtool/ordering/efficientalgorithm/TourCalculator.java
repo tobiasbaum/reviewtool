@@ -48,7 +48,9 @@ public class TourCalculator<T> {
             this.matchedWithFolds = new LinkedHashMap<>();
         }
 
-        public void addPotentialFolds(Collection<MatchSet<S>> matches) {
+        public void addPotentialFolds(Collection<MatchSet<S>> matches, CancelCallback isCanceled)
+            throws InterruptedException {
+
             this.todoQueue.addAll(matches);
             while (!this.todoQueue.isEmpty()) {
                 //assign the next batch of folds to try to the unsatisfied matches they might help to satisfy
@@ -67,6 +69,8 @@ public class TourCalculator<T> {
                         }
                     }
                 }
+
+                checkInterruption(isCanceled);
 
                 //check for matches that can now be satisfied
                 for (final MatchSet<S> toMatch : unsatisfiedMatchesThatCouldNowMatch) {
@@ -163,7 +167,8 @@ public class TourCalculator<T> {
     public static<S> TourCalculator<S> calculateFor(
             List<S> allChangeParts,
             List<MatchSet<S>> matchSets,
-            List<PositionRequest<S>> positionRequests) {
+            List<PositionRequest<S>> positionRequests,
+            CancelCallback isCanceled) throws InterruptedException {
         assert new HashSet<>(allChangeParts).size() == allChangeParts.size() : "there are duplicate change parts";
 
         final TourCalculator<S> ret = new TourCalculator<>();
@@ -185,8 +190,10 @@ public class TourCalculator<T> {
             }
         }
 
+        checkInterruption(isCanceled);
+
         final FoldMatchingHelper<S> foldedBundler = new FoldMatchingHelper<>(bundler, unsatisfiedMatches);
-        foldedBundler.addPotentialFolds(ret.successfulMatches);
+        foldedBundler.addPotentialFolds(ret.successfulMatches, isCanceled);
         bundler = foldedBundler.getBundler();
 
 
@@ -212,6 +219,8 @@ public class TourCalculator<T> {
                 list.add(pr);
             }
         }
+
+        checkInterruption(isCanceled);
 
         //TODO positions in folded graphs are currently not implemented in accordance with the paper
         for (final List<PositionRequest<S>> list : positionRequestsForFolds.values()) {
@@ -241,6 +250,17 @@ public class TourCalculator<T> {
 
     public List<T> getTour() {
         return this.resultingTour;
+    }
+
+    /**
+     * Helper method to check for the cancellation flag and throw an InterruptedException if needed.
+     */
+    public static void checkInterruption(CancelCallback isCanceled) throws InterruptedException {
+        if (Thread.interrupted() || isCanceled.isCanceled()) {
+            //we use InterruptedException so that the sorting code is not depended on Eclipse
+            //  to avoid surprises, we also check for Thread.interrupted()
+            throw new InterruptedException();
+        }
     }
 
 }
