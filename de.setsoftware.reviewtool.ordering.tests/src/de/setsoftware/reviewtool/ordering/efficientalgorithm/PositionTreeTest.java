@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -19,6 +20,13 @@ import org.junit.Test;
  * Tests for the positioning tree.
  */
 public class PositionTreeTest {
+
+    private static final Comparator<String> NO_CMP = new Comparator<String>() {
+        @Override
+        public int compare(String o1, String o2) {
+            return 0;
+        }
+    };
 
     private static PositionTreeTestHelper create(PositionTreeNode<String> tree) {
         return new PositionTreeTestHelper(tree);
@@ -128,9 +136,10 @@ public class PositionTreeTest {
                         + " to " + this.current + " (history=" + this.historySuccess + ")",
                         historyItem.changedValue().replay(this.current));
                 //the returned order contains the item at the correct position
-                assertTrue("matched but not contained in order " + historyItem + ", " + this.current.getPossibleOrder()
+                assertTrue("matched but not contained in order " + historyItem + ", "
+                        + this.current.getPossibleOrder(NO_CMP)
                         + " of tree " + this.current + " (history=" + this.historySuccess + ")",
-                        this.containsAtCorrectPosition(this.current.getPossibleOrder(), historyItem));
+                        this.containsAtCorrectPosition(this.current.getPossibleOrder(NO_CMP), historyItem));
             }
 
             for (final HistoryItem historyItem : this.historyConflict) {
@@ -141,8 +150,8 @@ public class PositionTreeTest {
                         addedAgain);
                 //the returned order does not contain the item at the correct position
                 assertFalse("not matched but contained in order " + historyItem + ", "
-                        + this.current.getPossibleOrder(),
-                        this.containsAtCorrectPosition(this.current.getPossibleOrder(), historyItem));
+                        + this.current.getPossibleOrder(NO_CMP),
+                        this.containsAtCorrectPosition(this.current.getPossibleOrder(NO_CMP), historyItem));
             }
         }
 
@@ -193,7 +202,7 @@ public class PositionTreeTest {
     @Test
     public void testWithoutRestrictions() {
         final PositionTreeTestHelper b = create(tf(tl("a"), tl("b"), tl("c")));
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -201,7 +210,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(tf(tl("a"), tl("b"), tl("c")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.FIRST);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "c", TargetPosition.LAST);
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -211,28 +220,28 @@ public class PositionTreeTest {
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "b", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "b", TargetPosition.LAST);
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "c", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testReverseFixedOrderFirst() {
         final PositionTreeTestHelper b = create(tf(tl("a"), tl("b"), tl("c"), tl("d")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "d", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testReverseFixedOrderSecond() {
         final PositionTreeTestHelper b = create(tf(tl("a"), tl("b"), tl("c"), tl("d")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "c", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testReverseFixedOrderLast() {
         final PositionTreeTestHelper b = create(tf(tl("a"), tl("b"), tl("c"), tl("d")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "a", TargetPosition.LAST);
-        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -240,7 +249,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(tf(tl("a"), tl("b"), tl("c"), tl("d")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "c", TargetPosition.SECOND);
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d"), "a", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("d", "c", "b", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -248,7 +257,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(tf(tl("a"), tl("b"), tl("c")));
         b.fixPositionAndCheckSuccess(set("b", "c"), "b", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("b", "c"), "b", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -256,7 +265,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(ta(tl("a"), tl("b"), tl("c")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.LAST);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "c", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -265,14 +274,14 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.FIRST);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "b", TargetPosition.SECOND);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "c", TargetPosition.LAST);
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testSimpleReorderableTree3() {
         final PositionTreeTestHelper b = create(ta(tl("a"), tl("b"), tl("c"), tl("d")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "c", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("c", "a", "b", "d"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("c", "a", "b", "d"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -280,7 +289,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(ta(tl("a"), tl("b"), tl("c")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.LAST);
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "a", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -288,7 +297,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(ta(tl("a"), tl("b"), tl("c")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.LAST);
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "c", TargetPosition.LAST);
-        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -296,21 +305,21 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(ta(tl("a"), ta(tl("b"), tl("c"))));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "b", TargetPosition.LAST);
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "c", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("a", "c", "b"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "c", "b"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testHierarchical2() {
         final PositionTreeTestHelper b = create(ta(tl("a"), ta(tl("b"), tl("c"))));
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "a", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testHierarchical3() {
         final PositionTreeTestHelper b = create(ta(tl("a"), ta(tl("b"), tl("c"))));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "c", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("c", "b", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("c", "b", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -318,7 +327,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(ta(tl("a"), ta(tl("b"), tl("c"))));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "c", TargetPosition.SECOND);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "b", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -326,7 +335,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(ta(tl("a"), ta(tl("b"), tl("c"))));
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "c", TargetPosition.SECOND);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.LAST);
-        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "c", "a"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -335,7 +344,7 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("b", "c"), "c", TargetPosition.SECOND);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "c", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -344,28 +353,28 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("b", "c"), "c", TargetPosition.SECOND);
         b.fixPositionAndCheckSuccess(set("a", "b", "c"), "a", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c"), "b", TargetPosition.LAST);
-        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testHierarchical8() {
         final PositionTreeTestHelper b = create(ta(ta(tl("a"), tl("b")), tl("c"), tl("d")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "d", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("c", "d", "a", "b"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("c", "d", "a", "b"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testHierarchical9() {
         final PositionTreeTestHelper b = create(ta(ta(tl("a"), tl("b")), ta(tl("c"), tl("d")), tl("e")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d", "e"), "c", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("d", "c", "a", "b", "e"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("d", "c", "a", "b", "e"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testHierarchical10() {
         final PositionTreeTestHelper b = create(ta(ta(tl("a"), tl("b")), tl("c"), ta(tl("d"), tl("e"))));
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d", "e"), "c", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("a", "b", "c", "d", "e"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c", "d", "e"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -373,7 +382,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(ta(ta(ta(tl("a"), tl("b")), ta(tl("c"), tl("d"))), tl("e")));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d", "e"), "c", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d", "e"), "a", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("c", "d", "a", "b", "e"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("c", "d", "a", "b", "e"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -381,7 +390,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(tf(ta(tl("a"), tl("b")), ta(tl("c"), tl("d"))));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "b", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d"), "a", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("b", "a", "c", "d"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "a", "c", "d"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -390,14 +399,14 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "b", TargetPosition.FIRST);
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "a", TargetPosition.SECOND);
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "c", TargetPosition.LAST);
-        assertEquals(Arrays.asList("b", "a", "d", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "a", "d", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
     public void testReorderablesInFixed3() {
         final PositionTreeTestHelper b = create(tf(ta(tl("a"), tl("b")), ta(tl("c"), tl("d"))));
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d"), "c", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("d", "c", "a", "b"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("d", "c", "a", "b"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -405,7 +414,7 @@ public class PositionTreeTest {
         final PositionTreeTestHelper b = create(tf(ta(tl("a"), tl("b")), ta(tl("c"), tl("d"))));
         b.fixPositionAndCheckSuccess(set("a", "b"), "b", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d"), "a", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("b", "a", "c", "d"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("b", "a", "c", "d"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -417,7 +426,7 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("d", "e", "f", "g", "h", "i"), "h", TargetPosition.LAST);
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d", "e", "f"), "c", TargetPosition.SECOND);
         b.fixPositionAndCheckSuccess(set("d", "e", "f", "g", "h", "i"), "f", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("a", "c", "b", "f", "d", "e", "g", "i", "h"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "c", "b", "f", "d", "e", "g", "i", "h"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -427,7 +436,7 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d", "e", "f"), "d", TargetPosition.LAST);
         b.fixPositionAndCheckSuccess(set("d", "e", "f"), "f", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d", "e", "f"), "d", TargetPosition.SECOND);
-        assertEquals(Arrays.asList("c", "b", "a", "f", "e", "d"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("c", "b", "a", "f", "e", "d"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -437,7 +446,7 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d", "e", "f"), "c", TargetPosition.LAST);
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d", "e", "f"), "d", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d", "e", "f"), "d", TargetPosition.LAST);
-        assertEquals(Arrays.asList("d", "e", "f", "a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("d", "e", "f", "a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -446,7 +455,7 @@ public class PositionTreeTest {
         b.fixPositionAndCheckSuccess(set("d", "e", "f"), "f", TargetPosition.FIRST);
         b.fixPositionAndCheckSuccess(set("a", "b", "c", "d", "e", "f"), "c", TargetPosition.LAST);
         b.fixPositionAndCheckConflict(set("a", "b", "c", "d", "e", "f"), "d", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("f", "e", "d", "a", "b", "c"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("f", "e", "d", "a", "b", "c"), b.get().getPossibleOrder(NO_CMP));
     }
 
     @Test
@@ -470,6 +479,6 @@ public class PositionTreeTest {
                 ));
         b.fixPositionAndCheckSuccess(set("a", "b"), "a", TargetPosition.FIRST);
         b.fixPositionAndCheckConflict(set("f", "g"), "g", TargetPosition.FIRST);
-        assertEquals(Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h"), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList("a", "b", "c", "d", "e", "f", "g", "h"), b.get().getPossibleOrder(NO_CMP));
     }
 }

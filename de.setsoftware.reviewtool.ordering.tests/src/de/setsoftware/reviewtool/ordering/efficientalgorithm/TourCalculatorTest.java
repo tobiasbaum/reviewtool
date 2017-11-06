@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -24,6 +25,12 @@ public class TourCalculatorTest {
         private final List<String> parts = new ArrayList<>();
         private final List<MatchSet<String>> matchSets = new ArrayList<>();
         private final List<PositionRequest<String>> positionRequests = new ArrayList<>();
+        private Comparator<String> comparator = new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return 0;
+            }
+        };
 
         public static TourCalculatorInput tourCalculatorFor(String... parts) {
             final TourCalculatorInput ret = new TourCalculatorInput();
@@ -57,11 +64,17 @@ public class TourCalculatorTest {
             return this;
         }
 
+        public TourCalculatorInput comparator(Comparator<String> c) {
+            this.comparator = c;
+            return this;
+        }
+
         public TourCalculator<String> calculate() throws Exception {
             return TourCalculator.calculateFor(
                     this.parts,
                     this.matchSets,
                     this.positionRequests,
+                    this.comparator,
                     new TourCalculatorControl() {
                         @Override
                         public boolean isCanceled() {
@@ -186,6 +199,141 @@ public class TourCalculatorTest {
 
         assertEquals(
                 Arrays.asList("Buch", "Maus", "Stern", "Birne", "Strasse", "Baum", "Homer"),
+                actual.getTour());
+    }
+
+    private static Comparator<String> naturalComparator() {
+        return new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return o1.compareTo(o2);
+            }
+        };
+    }
+
+    private static Comparator<String> inverseNaturalComparator() {
+        return new Comparator<String>() {
+            @Override
+            public int compare(String o1, String o2) {
+                return o2.compareTo(o1);
+            }
+        };
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequests1() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "C", "D", "B")
+                .comparator(naturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("A", "B", "C", "D"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequests2() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "C", "D", "B")
+                .matchSymmetric("A", "C")
+                .matchSymmetric("D", "B")
+                .comparator(naturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("A", "C", "B", "D"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequests3() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "C", "D", "B")
+                .matchSymmetric("A", "C")
+                .matchSymmetric("D", "B")
+                .comparator(inverseNaturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("D", "B", "C", "A"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequestsWithFullyFixed1() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "C", "D", "B")
+                .matchSymmetric("A", "C")
+                .matchSymmetric("C", "D")
+                .matchSymmetric("D", "B")
+                .comparator(naturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("A", "C", "D", "B"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequestsWithFullyFixed2() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "C", "D", "B")
+                .matchSymmetric("A", "C")
+                .matchSymmetric("C", "D")
+                .matchSymmetric("D", "B")
+                .comparator(inverseNaturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("B", "D", "C", "A"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequestsWithFullyFixed3() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F")
+                .matchSymmetric("A", "B", "C", "D")
+                .matchSymmetric("C", "D", "E", "F")
+                .comparator(naturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("A", "B", "C", "D", "E", "F"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequestsWithFullyFixed4() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F")
+                .matchSymmetric("A", "B", "C", "D")
+                .matchSymmetric("C", "D", "E", "F")
+                .comparator(inverseNaturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("F", "E", "D", "C", "B", "A"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequestsWithFullyFixed5() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F")
+                .matchSymmetric("A", "B", "E", "F")
+                .matchSymmetric("C", "D", "E", "F")
+                .comparator(naturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("A", "B", "E", "F", "C", "D"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testWithTieBreakingWithoutPositionRequestsWithFullyFixed6() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F")
+                .matchSymmetric("A", "B", "E", "F")
+                .matchSymmetric("C", "D", "E", "F")
+                .comparator(inverseNaturalComparator())
+                .calculate();
+        assertEquals(
+                Arrays.asList("D", "C", "F", "E", "B", "A"),
                 actual.getTour());
     }
 

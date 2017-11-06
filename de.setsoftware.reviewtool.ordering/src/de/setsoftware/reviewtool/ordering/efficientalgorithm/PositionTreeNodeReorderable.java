@@ -1,8 +1,11 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -238,6 +241,34 @@ public class PositionTreeNodeReorderable<T> extends PositionTreeNode<T> {
     public String toString() {
         final String ts = Arrays.toString(this.getChildren());
         return '{' + ts.substring(1, ts.length() - 1) + '}';
+    }
+
+    @Override
+    public List<T> getPossibleOrder(final Comparator<T> tieBreakingComparator) {
+        if (!this.fixedPositions.isEmpty()) {
+            //TODO implement properly when there are fixations
+            final List<T> ret = new ArrayList<>();
+            this.addItemsInOrder(ret);
+            return ret;
+        }
+
+        final List<List<T>> subItems = new ArrayList<>();
+        for (final PositionTreeElement<T> child : this.getChildren()) {
+            subItems.add(child.getPossibleOrder(tieBreakingComparator));
+        }
+
+        Collections.sort(subItems, new Comparator<List<T>>() {
+            @Override
+            public int compare(List<T> o1, List<T> o2) {
+                return tieBreakingComparator.compare(o1.get(0), o2.get(0));
+            }
+        });
+
+        final List<T> ret = new ArrayList<>();
+        for (final List<T> sublist : subItems) {
+            ret.addAll(sublist);
+        }
+        return ret;
     }
 
 }

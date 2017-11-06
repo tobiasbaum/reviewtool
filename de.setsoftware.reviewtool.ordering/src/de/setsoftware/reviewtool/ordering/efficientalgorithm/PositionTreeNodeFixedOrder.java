@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -184,6 +185,40 @@ public class PositionTreeNodeFixedOrder<T> extends PositionTreeNode<T> {
     @Override
     public String toString() {
         return Arrays.toString(this.getChildren());
+    }
+
+    @Override
+    public List<T> getPossibleOrder(final Comparator<T> tieBreakingComparator) {
+        if (!this.fixedPositions.isEmpty()) {
+            //TODO implement properly when there are fixations
+            final List<T> ret = new ArrayList<>();
+            this.addItemsInOrder(ret);
+            return ret;
+        }
+
+        final List<List<T>> subItems = new ArrayList<>();
+        for (final PositionTreeElement<T> child : this.getChildren()) {
+            subItems.add(child.getPossibleOrder(tieBreakingComparator));
+        }
+
+        final int comparisonResult = tieBreakingComparator.compare(
+                subItems.get(0).get(0),
+                subItems.get(subItems.size() - 1).get(0));
+
+        final List<T> ret = new ArrayList<>();
+        if (comparisonResult <= 0) {
+            //already in correct order, just add
+            for (final List<T> sublist : subItems) {
+                ret.addAll(sublist);
+            }
+        } else {
+            //add in reverse order
+            final ListIterator<List<T>> iter = subItems.listIterator(subItems.size());
+            while (iter.hasPrevious()) {
+                ret.addAll(iter.previous());
+            }
+        }
+        return ret;
     }
 
 }

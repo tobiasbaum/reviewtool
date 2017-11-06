@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -175,6 +176,7 @@ public class TourCalculator<T> {
             List<S> allChangeParts,
             List<MatchSet<S>> matchSets,
             List<PositionRequest<S>> positionRequests,
+            Comparator<S> tieBreakingComparator,
             TourCalculatorControl isCanceled) throws InterruptedException {
         assert new HashSet<>(allChangeParts).size() == allChangeParts.size() : "there are duplicate change parts";
 
@@ -243,7 +245,7 @@ public class TourCalculator<T> {
             }
         }
 
-        ret.resultingTour = positioner.getPossibleOrder();
+        ret.resultingTour = positioner.getPossibleOrder(tieBreakingComparator);
         return ret;
     }
 

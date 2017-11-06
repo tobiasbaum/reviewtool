@@ -1,7 +1,7 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -44,7 +44,7 @@ public abstract class PositionTreeNode<T> extends PositionTreeElement<T> {
             Set<T> match, T toFix, TargetPosition position, boolean alsoFix);
 
     @Override
-    protected void addItemsInOrder(List<T> buffer) {
+    protected void addItemsInOrder(Collection<T> buffer) {
         for (final PositionTreeElement<T> e : this.children) {
             e.addItemsInOrder(buffer);
         }
@@ -61,7 +61,9 @@ public abstract class PositionTreeNode<T> extends PositionTreeElement<T> {
 
     @Override
     protected Set<T> getValuesInSubtree() {
-        return new HashSet<T>(this.getPossibleOrder());
+        final Set<T> ret = new HashSet<T>();
+        this.addItemsInOrder(ret);
+        return ret;
     }
 
     protected final PositionTreeElement<T>[] getChildren() {

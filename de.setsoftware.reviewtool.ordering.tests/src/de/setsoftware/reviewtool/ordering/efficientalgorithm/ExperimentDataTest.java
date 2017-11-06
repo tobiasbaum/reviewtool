@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -70,6 +71,12 @@ public class ExperimentDataTest {
                     this.parts,
                     this.matchSets,
                     this.positionRequests,
+                    new Comparator<String>() {
+                        @Override
+                        public int compare(String o1, String o2) {
+                            return 0;
+                        }
+                    },
                     new TourCalculatorControl() {
                         @Override
                         public boolean isCanceled() {

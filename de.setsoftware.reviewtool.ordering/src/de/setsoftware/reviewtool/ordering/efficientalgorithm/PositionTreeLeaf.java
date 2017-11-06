@@ -1,6 +1,8 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
@@ -23,7 +25,7 @@ public class PositionTreeLeaf<T> extends PositionTreeElement<T> {
     }
 
     @Override
-    protected void addItemsInOrder(List<T> buffer) {
+    protected void addItemsInOrder(Collection<T> buffer) {
         buffer.add(this.value);
     }
 
@@ -47,5 +49,10 @@ public class PositionTreeLeaf<T> extends PositionTreeElement<T> {
     @Override
     protected boolean satisfiesCurrently(T t, TargetPosition pos) {
         return this.value.equals(t) && pos != TargetPosition.SECOND;
+    }
+
+    @Override
+    public List<T> getPossibleOrder(Comparator<T> tieBreakingComparator) {
+        return Collections.singletonList(this.value);
     }
 }
