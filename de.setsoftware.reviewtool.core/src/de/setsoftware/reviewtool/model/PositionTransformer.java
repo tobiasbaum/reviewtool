@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -229,6 +230,14 @@ public class PositionTransformer {
         for (final IProject project : projects) {
             ret.add(project.getLocation().removeLastSegments(1));
         }
+        //with nested projects, the set now contains a parent as well as its children. remove the children
+        final Set<IPath> childProjects = new HashSet<>();
+        for (final IPath cur : ret) {
+            if (ret.contains(cur.removeLastSegments(1))) {
+                childProjects.add(cur);
+            }
+        }
+        ret.removeAll(childProjects);
         return ret;
     }
 
