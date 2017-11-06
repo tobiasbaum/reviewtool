@@ -158,6 +158,30 @@ public class ChangePartTest {
     }
 
     @Test
+    public void testSpecialHandlingOnlyForJavaFiles() throws Exception {
+        final IRevisionedFile file = file("Testklasse.txt", 4,
+                "package x.y.z;\r\n"
+                + "\r\n"
+                + "public class Testclass {\r\n"
+                + "    public void foo() {\r\n"
+                + "        System.out.println(\"foo\");\r\n"
+                + "    }\r\n"
+                + "    public void bar() {\r\n"
+                + "        System.out.println(\"bar\");\r\n"
+                + "    }\r\n"
+                + "}\r\n");
+        final Stop s1 = singleLineStop(file, 7);
+        final Stop s2 = singleLineStop(file, 8);
+        assertEquals(
+                Arrays.asList(
+                        cp(s1),
+                        cp(s2)),
+                ChangePart.groupToMinimumGranularity(Arrays.asList(
+                        s1,
+                        s2)));
+    }
+
+    @Test
     public void testGroupVariousSituations() throws Exception {
         final IRevisionedFile file = file("Testklasse.java", 4,
                 "package x.y.z;\r\n"

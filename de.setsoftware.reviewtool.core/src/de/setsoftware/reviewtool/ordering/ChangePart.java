@@ -109,14 +109,26 @@ public class ChangePart {
             return;
         }
         if (stopsInCurrentFile.get(0).isBinaryChange()) {
-            for (final Stop s : stopsInCurrentFile) {
-                resultBuffer.add(new ChangePart(Collections.singletonList(s)));
-            }
+            dontGroup(resultBuffer, stopsInCurrentFile);
             return;
         }
 
-        //TODO check if java file
+        final String filename = stopsInCurrentFile.get(0).getOriginalMostRecentFile().getPath().toLowerCase();
+        if (filename.endsWith(".java") || filename.endsWith(".jav")) {
+            groupForJava(resultBuffer, stopsInCurrentFile);
+        } else {
+            dontGroup(resultBuffer, stopsInCurrentFile);
+        }
 
+    }
+
+    private static void dontGroup(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile) {
+        for (final Stop s : stopsInCurrentFile) {
+            resultBuffer.add(new ChangePart(Collections.singletonList(s)));
+        }
+    }
+
+    private static void groupForJava(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile) {
         final byte[] contents;
         try {
             contents = stopsInCurrentFile.get(0).getOriginalMostRecentFile().getContents();
@@ -127,9 +139,7 @@ public class ChangePart {
             throw new ReviewtoolException(e);
         }
         if (contents == null) {
-            for (final Stop s : stopsInCurrentFile) {
-                resultBuffer.add(new ChangePart(Collections.singletonList(s)));
-            }
+            dontGroup(resultBuffer, stopsInCurrentFile);
             return;
         }
 
