@@ -158,6 +158,9 @@
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextUnvisitedStopAction"
         id="de.setsoftware.reviewtool.commands.nextunvisitedstop" name="Jump to next review stop">
      </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.ShowInReviewContentAction"
+        id="de.setsoftware.reviewtool.commands.showinreviewcontent" name="Show current position in Review content">
+     </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction"
         id="de.setsoftware.reviewtool.commands.startreview" name="Start review">
      </command>
@@ -224,6 +227,12 @@
           contextId="org.eclipse.ui.contexts.window"
           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
           sequence="M3+5">
+    </key>
+    <key
+          commandId="de.setsoftware.reviewtool.commands.showinreviewcontent"
+          contextId="org.eclipse.ui.contexts.window"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M3+6">
     </key>
  </extension>
  <extension
