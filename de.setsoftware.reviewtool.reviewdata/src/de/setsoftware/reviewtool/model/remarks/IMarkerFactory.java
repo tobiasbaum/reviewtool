@@ -10,9 +10,4 @@ public interface IMarkerFactory {
      */
     public abstract IReviewMarker createMarker(Position pos) throws ReviewRemarkException;
 
-    /**
-     * Creates a marker with the given type, attached to the given resource.
-     */
-    public abstract IReviewMarker createMarker(IReviewResource resource) throws ReviewRemarkException;
-
 }

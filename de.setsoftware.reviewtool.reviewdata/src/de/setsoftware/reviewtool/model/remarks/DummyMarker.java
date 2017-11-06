@@ -12,11 +12,6 @@ public class DummyMarker implements IReviewMarker {
         public IReviewMarker createMarker(Position pos) {
             return new DummyMarker();
         }
-
-        @Override
-        public IReviewMarker createMarker(IReviewResource resource) {
-            return new DummyMarker();
-        }
     };
 
     private final HashMap<String, Object> attributes = new HashMap<>();

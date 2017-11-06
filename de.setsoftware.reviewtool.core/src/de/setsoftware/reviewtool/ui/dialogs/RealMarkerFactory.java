@@ -10,7 +10,6 @@ import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.changestructure.IStopMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
-import de.setsoftware.reviewtool.model.remarks.IReviewResource;
 import de.setsoftware.reviewtool.model.remarks.Position;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 
@@ -26,12 +25,6 @@ public class RealMarkerFactory implements IStopMarkerFactory, IMarkerFactory {
         } catch (final CoreException e) {
             throw new ReviewRemarkException(e);
         }
-    }
-
-    @Override
-    public IReviewMarker createMarker(IReviewResource resource) throws ReviewRemarkException {
-        //TEST TODO ist diese Operation noch nötig?
-        return resource.createReviewMarker();
     }
 
     @Override
