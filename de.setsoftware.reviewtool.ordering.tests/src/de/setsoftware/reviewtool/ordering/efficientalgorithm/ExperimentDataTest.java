@@ -70,9 +70,14 @@ public class ExperimentDataTest {
                     this.parts,
                     this.matchSets,
                     this.positionRequests,
-                    new CancelCallback() {
+                    new TourCalculatorControl() {
                         @Override
                         public boolean isCanceled() {
+                            return false;
+                        }
+
+                        @Override
+                        public boolean isFastModeNeeded() {
                             return false;
                         }
                     });

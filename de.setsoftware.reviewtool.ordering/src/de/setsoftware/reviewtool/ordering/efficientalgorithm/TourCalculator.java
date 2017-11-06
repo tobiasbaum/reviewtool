@@ -48,7 +48,7 @@ public class TourCalculator<T> {
             this.matchedWithFolds = new LinkedHashMap<>();
         }
 
-        public void addPotentialFolds(Collection<MatchSet<S>> matches, CancelCallback isCanceled)
+        public void addPotentialFolds(Collection<MatchSet<S>> matches, TourCalculatorControl control)
             throws InterruptedException {
 
             this.todoQueue.addAll(matches);
@@ -70,11 +70,14 @@ public class TourCalculator<T> {
                     }
                 }
 
-                checkInterruption(isCanceled);
+                checkInterruption(control);
 
                 //check for matches that can now be satisfied
                 for (final MatchSet<S> toMatch : unsatisfiedMatchesThatCouldNowMatch) {
-                    this.matchWithNewFold(toMatch, this.unsatisfiedMatchesWithPotentiallyRelevantFolds.get(toMatch));
+                    this.matchWithNewFold(
+                            toMatch,
+                            this.unsatisfiedMatchesWithPotentiallyRelevantFolds.get(toMatch),
+                            control);
                 }
             }
         }
@@ -108,7 +111,8 @@ public class TourCalculator<T> {
             }
         }
 
-        private void matchWithNewFold(MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds) {
+        private void matchWithNewFold(
+                MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds, TourCalculatorControl control) {
             final SubsettingSet<S> activeFolds = new SubsettingSet<>(toMatch, potentialFolds);
             final boolean matchesWithFullSet = this.matchesWithFoldSubset(toMatch, activeFolds);
             if (!matchesWithFullSet) {
@@ -117,15 +121,18 @@ public class TourCalculator<T> {
             }
 
             //determine a minimal subset that still allows the match to happen
-            for (final Integer index : activeFolds.potentialRemovals()) {
-                //try without a fold
-                activeFolds.preliminaryRemove(index);
-                if (this.matchesWithFoldSubset(toMatch, activeFolds)) {
-                    //still matches => fold is unnecessary
-                    activeFolds.commitRemoval();
-                } else {
-                    //does not match any more => fold is necessary
-                    activeFolds.rollbackRemoval();
+            //when the calculation already took quite long, don't go for minimality
+            if (!control.isFastModeNeeded()) {
+                for (final Integer index : activeFolds.potentialRemovals()) {
+                    //try without a fold
+                    activeFolds.preliminaryRemove(index);
+                    if (this.matchesWithFoldSubset(toMatch, activeFolds)) {
+                        //still matches => fold is unnecessary
+                        activeFolds.commitRemoval();
+                    } else {
+                        //does not match any more => fold is necessary
+                        activeFolds.rollbackRemoval();
+                    }
                 }
             }
 
@@ -168,7 +175,7 @@ public class TourCalculator<T> {
             List<S> allChangeParts,
             List<MatchSet<S>> matchSets,
             List<PositionRequest<S>> positionRequests,
-            CancelCallback isCanceled) throws InterruptedException {
+            TourCalculatorControl isCanceled) throws InterruptedException {
         assert new HashSet<>(allChangeParts).size() == allChangeParts.size() : "there are duplicate change parts";
 
         final TourCalculator<S> ret = new TourCalculator<>();
@@ -255,7 +262,7 @@ public class TourCalculator<T> {
     /**
      * Helper method to check for the cancellation flag and throw an InterruptedException if needed.
      */
-    public static void checkInterruption(CancelCallback isCanceled) throws InterruptedException {
+    public static void checkInterruption(TourCalculatorControl isCanceled) throws InterruptedException {
         if (Thread.interrupted() || isCanceled.isCanceled()) {
             //we use InterruptedException so that the sorting code is not depended on Eclipse
             //  to avoid surprises, we also check for Thread.interrupted()

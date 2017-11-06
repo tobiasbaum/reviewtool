@@ -7,7 +7,7 @@ import java.util.List;
 import de.setsoftware.reviewtool.model.changestructure.IStopOrdering;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.TourElement;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.CancelCallback;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculator;
@@ -22,7 +22,7 @@ public class StopOrdering implements IStopOrdering {
      * and returns the result.
      */
     @Override
-    public List<? extends TourElement> groupAndSort(List<Stop> stops, CancelCallback isCanceled)
+    public List<? extends TourElement> groupAndSort(List<Stop> stops, TourCalculatorControl isCanceled)
         throws InterruptedException {
 
         final List<ChangePart> changeParts = ChangePart.groupToMinimumGranularity(stops);

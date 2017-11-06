@@ -41,7 +41,7 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.CancelCallback;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
@@ -160,10 +160,17 @@ public class ToursInReview {
         final List<? extends Tour> toursToShow = groupAndSort(
                 userSelection,
                 orderingAlgorithm,
-                new CancelCallback() {
+                new TourCalculatorControl() {
+                    private static final long FAST_MODE_THRESHOLD = 20000;
+                    private final long startTime = System.currentTimeMillis();
                     @Override
                     public boolean isCanceled() {
                         return changeSourceUi.isCanceled();
+                    }
+
+                    @Override
+                    public boolean isFastModeNeeded() {
+                        return System.currentTimeMillis() - this.startTime > FAST_MODE_THRESHOLD;
                     }
                 });
 
@@ -173,7 +180,7 @@ public class ToursInReview {
     }
 
     private static List<? extends Tour> groupAndSort(
-            List<? extends Tour> userSelection, IStopOrdering orderingAlgorithm, CancelCallback isCanceled) {
+            List<? extends Tour> userSelection, IStopOrdering orderingAlgorithm, TourCalculatorControl isCanceled) {
         try {
             final List<Tour> ret = new ArrayList<>();
             for (final Tour t : userSelection) {
