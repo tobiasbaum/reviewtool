@@ -33,6 +33,9 @@ import de.setsoftware.reviewtool.model.remarks.Position;
 /**
  * Is able to transform short filenames into paths and positions with short filenames into positions
  * for Eclipse. Reverse transformation is also supported.
+ *
+ * <p>In older versions of CoRT, shortening the filename could also mean stripping its extension. This is still
+ * supported for convenience and to be able to transform old positions, but will not be generated for new positions.
  */
 public class PositionTransformer {
 
@@ -94,7 +97,7 @@ public class PositionTransformer {
             return new GlobalPosition();
         }
         if (possiblePaths.size() == 1) {
-            return createPos(filename, line);
+            return createPos(path.lastSegment(), line);
         }
         return createPos(getShortestUniqueName(path, possiblePaths), line);
     }
