@@ -32,7 +32,7 @@ public class ChangePart {
 
     @Override
     public int hashCode() {
-        return this.stops.hashCode();
+        return this.stops.get(0).hashCode();
     }
 
     @Override
