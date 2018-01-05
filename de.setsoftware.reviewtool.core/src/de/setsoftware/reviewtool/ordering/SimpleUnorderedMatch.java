@@ -11,11 +11,12 @@ import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
  */
 public class SimpleUnorderedMatch implements OrderingInfo {
 
-    private final boolean explicit;
+    private final HierarchyExplicitness explicit;
     private final String description;
     private final MatchSet<ChangePart> matchSet;
 
-    public SimpleUnorderedMatch(boolean explicit, String description, Collection<ChangePart> changeParts) {
+    public SimpleUnorderedMatch(
+            HierarchyExplicitness explicit, String description, Collection<ChangePart> changeParts) {
         this.explicit = explicit;
         this.description = description;
         this.matchSet = new MatchSet<>(changeParts);
@@ -32,7 +33,7 @@ public class SimpleUnorderedMatch implements OrderingInfo {
     }
 
     @Override
-    public boolean shallBeExplicit() {
+    public HierarchyExplicitness getExplicitness() {
         return this.explicit;
     }
 
@@ -55,7 +56,7 @@ public class SimpleUnorderedMatch implements OrderingInfo {
         if (this.explicit != m.explicit) {
             return false;
         }
-        if (this.explicit && !this.description.equals(m.description)) {
+        if (this.explicit != HierarchyExplicitness.NONE && !this.description.equals(m.description)) {
             return false;
         }
         return this.matchSet.equals(m.matchSet);

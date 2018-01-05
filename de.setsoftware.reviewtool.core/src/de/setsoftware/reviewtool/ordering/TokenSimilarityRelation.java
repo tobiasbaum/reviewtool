@@ -44,7 +44,7 @@ class TokenSimilarityRelation implements RelationMatcher {
                         tokenSets.get(i).getSecond(),
                         tokenSets.get(j).getSecond());
                 if (sim > JACCARD_THRESHOLD) {
-                    similarities.add(Pair.create(sim, new SimpleUnorderedMatch(false, null,
+                    similarities.add(Pair.create(sim, new SimpleUnorderedMatch(HierarchyExplicitness.NONE, null,
                             Arrays.asList(tokenSets.get(i).getFirst(), tokenSets.get(j).getFirst()))));
                 }
             }

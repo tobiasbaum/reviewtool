@@ -48,7 +48,7 @@ public class TokenSimilarityRelationTest {
     }
 
     private static OrderingInfo oi(Stop s1, Stop s2) {
-        return new SimpleUnorderedMatch(false, null, Arrays.asList(wrap(s1), wrap(s2)));
+        return new SimpleUnorderedMatch(HierarchyExplicitness.NONE, null, Arrays.asList(wrap(s1), wrap(s2)));
     }
 
     private static ChangePart wrap(Stop s) {

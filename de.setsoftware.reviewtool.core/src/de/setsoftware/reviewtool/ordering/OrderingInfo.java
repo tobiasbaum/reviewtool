@@ -22,9 +22,9 @@ public interface OrderingInfo {
     public abstract Collection<? extends PositionRequest<ChangePart>> getPositionRequests();
 
     /**
-     * Returns true iff this group shall be shown explicitly as a node in the tree view.
+     * Returns the setting for determining whether this group shall be shown explicitly as a node in the tree view.
      */
-    public abstract boolean shallBeExplicit();
+    public abstract HierarchyExplicitness getExplicitness();
 
     /**
      * The text for the tree node. Is ignored when not shown in the tree.

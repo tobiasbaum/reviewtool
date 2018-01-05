@@ -35,7 +35,7 @@ class TourHierarchyBuilder {
         }
 
         public boolean isLeaf() {
-            return this.minIndex == this.maxIndex;
+            return this.firstChild == null;
         }
     }
 
@@ -59,6 +59,11 @@ class TourHierarchyBuilder {
     }
 
     public void createSubtourIfPossible(OrderingInfo o) {
+        if (o.getExplicitness() == HierarchyExplicitness.NONE) {
+            //don't group if the grouping shall not be made explicit
+            return;
+        }
+
         int minIndex = Integer.MAX_VALUE;
         int maxIndex = Integer.MIN_VALUE;
         int stopCountInMatchSet = 0;
@@ -82,6 +87,21 @@ class TourHierarchyBuilder {
         while (cur != null) {
             if (cur.minIndex <= minIndex && cur.maxIndex >= maxIndex) {
                 //match is fully contained in current node, step down in tree
+                if (cur.firstChild == null) {
+                    //no children, wrap as a whole if wanted
+                    if (o.getExplicitness() == HierarchyExplicitness.ALWAYS) {
+                        final TreeNode newNode = new TreeNode(minIndex, maxIndex, cur.sibling, cur, o.getDescription());
+                        cur.sibling = null;
+                        if (prev != null) {
+                            prev.sibling = newNode;
+                        } else if (upper != null) {
+                            upper.firstChild = newNode;
+                        } else {
+                            this.firstRoot = newNode;
+                        }
+                        return;
+                    }
+                }
                 upper = cur;
                 prev = null;
                 cur = cur.firstChild;
@@ -93,8 +113,10 @@ class TourHierarchyBuilder {
                     return;
                 }
                 if (prev == null && end.sibling == null) {
-                    //don't create trivial nestings
-                    return;
+                    if (o.getExplicitness() != HierarchyExplicitness.ALWAYS) {
+                        //don't create trivial nestings
+                        return;
+                    }
                 }
                 final TreeNode newNode = new TreeNode(minIndex, maxIndex, end.sibling, cur, o.getDescription());
                 end.sibling = null;

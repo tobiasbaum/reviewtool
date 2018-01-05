@@ -13,6 +13,12 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
  */
 class InSameFileRelation implements RelationMatcher {
 
+    private final HierarchyExplicitness explicitness;
+
+    public InSameFileRelation(HierarchyExplicitness explicitness) {
+        this.explicitness = explicitness;
+    }
+
     @Override
     public Collection<? extends OrderingInfo> determineMatches(List<ChangePart> changeParts) {
         final Multimap<IRevisionedFile, ChangePart> grouping = new Multimap<>();
@@ -22,7 +28,7 @@ class InSameFileRelation implements RelationMatcher {
 
         final List<OrderingInfo> ret = new ArrayList<>();
         for (final Entry<IRevisionedFile, List<ChangePart>> e : grouping.entrySet()) {
-            ret.add(new SimpleUnorderedMatch(true, e.getKey().toLocalPath().lastSegment(), e.getValue()));
+            ret.add(new SimpleUnorderedMatch(this.explicitness, e.getKey().toLocalPath().lastSegment(), e.getValue()));
         }
         return ret;
     }

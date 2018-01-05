@@ -47,9 +47,7 @@ public class StopOrdering implements IStopOrdering {
 
         final TourHierarchyBuilder hierarchyBuilder = new TourHierarchyBuilder(sorted);
         for (final OrderingInfo o : orderingInfos) {
-            if (o.shallBeExplicit()) {
-                hierarchyBuilder.createSubtourIfPossible(o);
-            }
+            hierarchyBuilder.createSubtourIfPossible(o);
         }
         TourCalculator.checkInterruption(isCanceled);
         return hierarchyBuilder.getTopmostElements();
@@ -79,7 +77,7 @@ public class StopOrdering implements IStopOrdering {
     private static List<? extends RelationMatcher> getRelationMatchers() {
         //TODO make loading of relation matchers more dynamic
         return Arrays.asList(
-                new InSameFileRelation(),
+                new InSameFileRelation(HierarchyExplicitness.ONLY_NONTRIVIAL),
                 new TokenSimilarityRelation());
     }
 

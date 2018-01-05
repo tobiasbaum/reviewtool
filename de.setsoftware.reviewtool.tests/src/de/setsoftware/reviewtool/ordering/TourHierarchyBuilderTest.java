@@ -60,10 +60,15 @@ public class TourHierarchyBuilderTest {
     }
 
     private static OrderingInfo oi(final String description, final List<ChangePart> changeParts) {
+        return oi(description, changeParts, HierarchyExplicitness.ONLY_NONTRIVIAL);
+    }
+
+    private static OrderingInfo oi(
+            final String description, final List<ChangePart> changeParts, final HierarchyExplicitness explicitness) {
         return new OrderingInfo() {
             @Override
-            public boolean shallBeExplicit() {
-                return true;
+            public HierarchyExplicitness getExplicitness() {
+                return explicitness;
             }
 
             @Override
@@ -254,6 +259,54 @@ public class TourHierarchyBuilderTest {
         builder.createSubtourIfPossible(oi("t2", Arrays.asList(cp(e), cp(f, g))));
         assertEquals(
                 Arrays.asList(tour("t1", a, b, c, d), tour("t2", e, f, g)),
+                builder.getTopmostElements());
+    }
+
+    @Test
+    public void testGroupWithOneChangePartButTwoStops() {
+        final Stop a = stop("a");
+        final Stop b = stop("b");
+        final Stop c = stop("c");
+
+        final TourHierarchyBuilder builder = builder(a, b, c);
+        builder.createSubtourIfPossible(oi("t1", Arrays.asList(cp(b, c))));
+        assertEquals(
+                Arrays.asList(a, tour("t1", b, c)),
+                builder.getTopmostElements());
+    }
+
+    @Test
+    public void testExplicitSingle() {
+        final Stop a = stop("a");
+        final TourHierarchyBuilder builder = builder(a);
+        builder.createSubtourIfPossible(oi("t1", wrap(a), HierarchyExplicitness.ALWAYS));
+        assertEquals(
+                Arrays.asList(tour("t1", a)),
+                builder.getTopmostElements());
+    }
+
+    @Test
+    public void testExplicitSingles() {
+        final Stop a = stop("a");
+        final Stop b = stop("b");
+        final TourHierarchyBuilder builder = builder(a, b);
+        builder.createSubtourIfPossible(oi("t1", wrap(a), HierarchyExplicitness.ALWAYS));
+        builder.createSubtourIfPossible(oi("t2", wrap(b), HierarchyExplicitness.ALWAYS));
+        assertEquals(
+                Arrays.asList(tour("t1", a), tour("t2", b)),
+                builder.getTopmostElements());
+    }
+
+    @Test
+    public void testNestedExplicitSingles() {
+        final Stop a = stop("a");
+        final Stop b = stop("b");
+        final TourHierarchyBuilder builder = builder(a, b);
+        builder.createSubtourIfPossible(oi("t1", wrap(a), HierarchyExplicitness.ALWAYS));
+        builder.createSubtourIfPossible(oi("t2", wrap(a, b), HierarchyExplicitness.ALWAYS));
+        builder.createSubtourIfPossible(oi("t3", wrap(a, b), HierarchyExplicitness.ALWAYS));
+        assertEquals(
+                Arrays.asList(tour("t2", tour("t3", tour("t1", a), b))),
                 builder.getTopmostElements());
     }
 }
