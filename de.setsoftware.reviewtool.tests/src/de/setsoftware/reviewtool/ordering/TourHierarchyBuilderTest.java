@@ -43,15 +43,23 @@ public class TourHierarchyBuilderTest {
         return new TourHierarchyBuilder(wrap(stops));
     }
 
+    private static ChangePart cp(Stop... stops) {
+        return new ChangePart(Arrays.asList(stops));
+    }
+
     private static List<ChangePart> wrap(Stop... stops) {
         final List<ChangePart> changeParts = new ArrayList<>();
         for (final Stop s : stops) {
-            changeParts.add(new ChangePart(Collections.singletonList(s)));
+            changeParts.add(cp(s));
         }
         return changeParts;
     }
 
     private static OrderingInfo oi(final String description, final Stop... stops) {
+        return oi(description, wrap(stops));
+    }
+
+    private static OrderingInfo oi(final String description, final List<ChangePart> changeParts) {
         return new OrderingInfo() {
             @Override
             public boolean shallBeExplicit() {
@@ -60,7 +68,7 @@ public class TourHierarchyBuilderTest {
 
             @Override
             public MatchSet<ChangePart> getMatchSet() {
-                return new MatchSet<ChangePart>(wrap(stops));
+                return new MatchSet<ChangePart>(changeParts);
             }
 
             @Override
@@ -204,4 +212,48 @@ public class TourHierarchyBuilderTest {
         assertEquals(Arrays.asList(tour("t1", tour("t2", a, b), c), d), builder.getTopmostElements());
     }
 
+    @Test
+    public void testLargerTour() {
+        final Stop a = stop("a");
+        final Stop b = stop("b");
+        final Stop c = stop("c");
+        final Stop d = stop("d");
+        final Stop e = stop("e");
+        final Stop f = stop("f");
+        final Stop g = stop("g");
+        final Stop h = stop("h");
+        final Stop i = stop("i");
+        final Stop j = stop("j");
+        final Stop k = stop("k");
+        final Stop l = stop("l");
+        final Stop m = stop("m");
+        final Stop n = stop("n");
+
+        final TourHierarchyBuilder builder = builder(a, b, c, d, e, f, g, h, i, j, k, l, m, n);
+        builder.createSubtourIfPossible(oi("t3", i, j, k));
+        builder.createSubtourIfPossible(oi("t1", a, b, c));
+        builder.createSubtourIfPossible(oi("t4", l, m, n));
+        builder.createSubtourIfPossible(oi("t2", e, f, g, h));
+        assertEquals(
+                Arrays.asList(tour("t1", a, b, c), d, tour("t2", e, f, g, h), tour("t3", i, j, k), tour("t4", l, m, n)),
+                builder.getTopmostElements());
+    }
+
+    @Test
+    public void testWithChangePartsConsistingOfMultipleStops() {
+        final Stop a = stop("a");
+        final Stop b = stop("b");
+        final Stop c = stop("c");
+        final Stop d = stop("d");
+        final Stop e = stop("e");
+        final Stop f = stop("f");
+        final Stop g = stop("g");
+
+        final TourHierarchyBuilder builder = builder(a, b, c, d, e, f, g);
+        builder.createSubtourIfPossible(oi("t1", Arrays.asList(cp(a, b), cp(c, d))));
+        builder.createSubtourIfPossible(oi("t2", Arrays.asList(cp(e), cp(f, g))));
+        assertEquals(
+                Arrays.asList(tour("t1", a, b, c, d), tour("t2", e, f, g)),
+                builder.getTopmostElements());
+    }
 }

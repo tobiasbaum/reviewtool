@@ -61,15 +61,17 @@ class TourHierarchyBuilder {
     public void createSubtourIfPossible(OrderingInfo o) {
         int minIndex = Integer.MAX_VALUE;
         int maxIndex = Integer.MIN_VALUE;
+        int stopCountInMatchSet = 0;
 
         for (final ChangePart c : o.getMatchSet().getChangeParts()) {
             for (final Stop s : c.getStops()) {
                 minIndex = Math.min(minIndex, this.indexMap.get(s));
                 maxIndex = Math.max(maxIndex, this.indexMap.get(s));
             }
+            stopCountInMatchSet += c.getStops().size();
         }
 
-        if (maxIndex - minIndex != o.getMatchSet().getChangeParts().size() - 1) {
+        if (maxIndex - minIndex != stopCountInMatchSet - 1) {
             //match is not adjacent
             return;
         }
