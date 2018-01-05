@@ -86,12 +86,12 @@ public class CreateRemarkDialog extends Dialog {
         layout.numColumns = 1;
 
         this.typeCombo = new Combo(comp, SWT.BORDER | SWT.READ_ONLY);
-        this.typeCombo.add(ReviewRound.MUST_FIX_HEADER);
-        this.typeCombo.add(ReviewRound.CAN_FIX_HEADER);
-        this.typeCombo.add(ReviewRound.ALREADY_FIXED_HEADER);
-        this.typeCombo.add(ReviewRound.POSITIVE_HEADER);
-        this.typeCombo.add(ReviewRound.TEMPORARY_HEADER);
-        this.typeCombo.add(ReviewRound.OTHER_REMARK_HEADER);
+        this.typeCombo.add(ReviewRound.MUST_FIX_HEADER[0]);
+        this.typeCombo.add(ReviewRound.CAN_FIX_HEADER[0]);
+        this.typeCombo.add(ReviewRound.ALREADY_FIXED_HEADER[0]);
+        this.typeCombo.add(ReviewRound.POSITIVE_HEADER[0]);
+        this.typeCombo.add(ReviewRound.TEMPORARY_HEADER[0]);
+        this.typeCombo.add(ReviewRound.OTHER_REMARK_HEADER[0]);
 
         this.textField = new Text(comp, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.RESIZE);
 

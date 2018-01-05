@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.remarks;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -13,12 +14,12 @@ import java.util.List;
  */
 public class ReviewRound {
 
-    public static final String POSITIVE_HEADER = "positiv";
-    public static final String MUST_FIX_HEADER = "muss";
-    public static final String CAN_FIX_HEADER = "kann";
-    public static final String ALREADY_FIXED_HEADER = "direkt eingepflegt";
-    public static final String TEMPORARY_HEADER = "temporärer Marker";
-    public static final String OTHER_REMARK_HEADER = "sonstige Anmerkungen";
+    public static final String[] POSITIVE_HEADER = {"positiv"};
+    public static final String[] MUST_FIX_HEADER = {"muss", "wichtig"};
+    public static final String[] CAN_FIX_HEADER = {"kann", "optional / weniger wichtig"};
+    public static final String[] ALREADY_FIXED_HEADER = {"direkt eingepflegt"};
+    public static final String[] TEMPORARY_HEADER = {"temporärer Marker"};
+    public static final String[] OTHER_REMARK_HEADER = {"sonstige Anmerkungen"};
 
     private final int nbr;
     private final List<ReviewRemark> remarks = new ArrayList<>();
@@ -69,12 +70,12 @@ public class ReviewRound {
     public String serialize() throws ReviewRemarkException {
         final StringBuilder ret = new StringBuilder();
         ret.append("Review ").append(this.nbr).append(":\n");
-        this.serializeRemarksWithType(OTHER_REMARK_HEADER, ret, RemarkType.OTHER);
-        this.serializeRemarksWithType(POSITIVE_HEADER, ret, RemarkType.POSITIVE);
-        this.serializeRemarksWithType(MUST_FIX_HEADER, ret, RemarkType.MUST_FIX);
-        this.serializeRemarksWithType(CAN_FIX_HEADER, ret, RemarkType.CAN_FIX);
-        this.serializeRemarksWithType(ALREADY_FIXED_HEADER, ret, RemarkType.ALREADY_FIXED);
-        this.serializeRemarksWithType(TEMPORARY_HEADER, ret, RemarkType.TEMPORARY);
+        this.serializeRemarksWithType(OTHER_REMARK_HEADER[0], ret, RemarkType.OTHER);
+        this.serializeRemarksWithType(POSITIVE_HEADER[0], ret, RemarkType.POSITIVE);
+        this.serializeRemarksWithType(MUST_FIX_HEADER[0], ret, RemarkType.MUST_FIX);
+        this.serializeRemarksWithType(CAN_FIX_HEADER[0], ret, RemarkType.CAN_FIX);
+        this.serializeRemarksWithType(ALREADY_FIXED_HEADER[0], ret, RemarkType.ALREADY_FIXED);
+        this.serializeRemarksWithType(TEMPORARY_HEADER[0], ret, RemarkType.TEMPORARY);
         return ret.toString();
     }
 
@@ -96,20 +97,19 @@ public class ReviewRound {
      * Parses the string representation of the remark type.
      */
     public static RemarkType parseType(String string) {
-        switch (string) {
-        case ALREADY_FIXED_HEADER:
+        if (Arrays.asList(ALREADY_FIXED_HEADER).contains(string)) {
             return RemarkType.ALREADY_FIXED;
-        case CAN_FIX_HEADER:
+        } else if (Arrays.asList(CAN_FIX_HEADER).contains(string)) {
             return RemarkType.CAN_FIX;
-        case MUST_FIX_HEADER:
+        } else if (Arrays.asList(MUST_FIX_HEADER).contains(string)) {
             return RemarkType.MUST_FIX;
-        case POSITIVE_HEADER:
+        } else if (Arrays.asList(POSITIVE_HEADER).contains(string)) {
             return RemarkType.POSITIVE;
-        case TEMPORARY_HEADER:
+        } else if (Arrays.asList(TEMPORARY_HEADER).contains(string)) {
             return RemarkType.TEMPORARY;
-        case OTHER_REMARK_HEADER:
+        } else if (Arrays.asList(OTHER_REMARK_HEADER).contains(string)) {
             return RemarkType.OTHER;
-        default:
+        } else {
             throw new ReviewRemarkException("parse exception: " + string);
         }
     }
