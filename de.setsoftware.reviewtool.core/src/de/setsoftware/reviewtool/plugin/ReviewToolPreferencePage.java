@@ -102,13 +102,13 @@ public class ReviewToolPreferencePage extends PreferencePage
                             public void handleEvent(Event e) {
                                 switch (e.type) {
                                 case SWT.FocusOut:
-                                    item.setText(1, text.getText());
+                                    this.setDataAndText(item, text);
                                     text.dispose();
                                     break;
                                 case SWT.Traverse:
                                     switch (e.detail) {
                                         case SWT.TRAVERSE_RETURN:
-                                            item.setText(1, text.getText());
+                                        this.setDataAndText(item, text);
                                             text.dispose();
                                             e.doit = false;
                                             break;
@@ -124,11 +124,20 @@ public class ReviewToolPreferencePage extends PreferencePage
                                     break;
                                 }
                             }
+
+                            private void setDataAndText(final TableItem item, final Text text) {
+                                item.setData(text.getText());
+                                if (isPassword(item.getText(0))) {
+                                    item.setText(1, text.getText().replaceAll(".", "*"));
+                                } else {
+                                    item.setText(1, text.getText());
+                                }
+                            }
                         };
                         text.addListener(SWT.FocusOut, textListener);
                         text.addListener(SWT.Traverse, textListener);
                         editor.setEditor(text, item, 1);
-                        text.setText(item.getText(1));
+                        text.setText((String) item.getData());
                         text.selectAll();
                         text.setFocus();
                         return;
@@ -151,6 +160,10 @@ public class ReviewToolPreferencePage extends PreferencePage
         return parentComposite;
     }
 
+    private static boolean isPassword(String fieldName) {
+        return fieldName.toLowerCase().contains("password") || fieldName.toLowerCase().contains("passwort");
+    }
+
     static ISecurePreferences getSecurePreferences() throws StorageException {
         final ISecurePreferences pref = SecurePreferencesFactory.getDefault().node("de.setsoftware.reviewtool");
         if (getPref(pref, ConfigurationInterpreter.USER_PARAM_NAME).equals("")) {
@@ -165,8 +178,11 @@ public class ReviewToolPreferencePage extends PreferencePage
                     ConfigurationInterpreter.load(this.getFilename()));
             for (final String userFieldName : userFieldNames) {
                 final TableItem item1 = new TableItem(this.userParamTable, SWT.NONE);
-                item1.setText(new String[] { userFieldName,
-                        getSecurePreferences().get(USER_PARAM_PREFIX + userFieldName, "") });
+                final String data = getSecurePreferences().get(USER_PARAM_PREFIX + userFieldName, "");
+                item1.setText(new String[] {
+                        userFieldName,
+                        isPassword(userFieldName) ? data.replaceAll(".", "*") : data });
+                item1.setData(data);
             }
         } catch (final IOException | SAXException | ParserConfigurationException
                 | ReviewtoolException | StorageException e) {
@@ -230,7 +246,7 @@ public class ReviewToolPreferencePage extends PreferencePage
         try {
             final ISecurePreferences prefs = getSecurePreferences();
             for (final TableItem item : this.userParamTable.getItems()) {
-                putPref(prefs, item.getText(0), item.getText(1));
+                putPref(prefs, item.getText(0), (String) item.getData());
             }
         } catch (final StorageException e) {
             MessageDialog.openError(this.getShell(), "Error while storing user config",
