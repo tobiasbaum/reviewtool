@@ -14,12 +14,12 @@ import java.util.List;
  */
 public class ReviewRound {
 
-    public static final String[] POSITIVE_HEADER = {"positiv"};
-    public static final String[] MUST_FIX_HEADER = {"muss", "wichtig"};
-    public static final String[] CAN_FIX_HEADER = {"kann", "optional / weniger wichtig"};
-    public static final String[] ALREADY_FIXED_HEADER = {"direkt eingepflegt"};
-    public static final String[] TEMPORARY_HEADER = {"temporärer Marker"};
-    public static final String[] OTHER_REMARK_HEADER = {"sonstige Anmerkungen"};
+    public static final String[] POSITIVE_HEADER = new String[] {"positiv"};
+    public static final String[] MUST_FIX_HEADER = new String[] {"muss", "wichtig"};
+    public static final String[] CAN_FIX_HEADER = new String[] {"kann", "optional / weniger wichtig"};
+    public static final String[] ALREADY_FIXED_HEADER = new String[] {"direkt eingepflegt"};
+    public static final String[] TEMPORARY_HEADER = new String[] {"temporärer Marker"};
+    public static final String[] OTHER_REMARK_HEADER = new String[] {"sonstige Anmerkungen"};
 
     private final int nbr;
     private final List<ReviewRemark> remarks = new ArrayList<>();

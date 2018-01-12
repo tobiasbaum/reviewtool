@@ -85,23 +85,22 @@ class TourHierarchyBuilder {
         TreeNode prev = null;
         TreeNode cur = this.firstRoot;
         while (cur != null) {
-            if (cur.minIndex <= minIndex && cur.maxIndex >= maxIndex) {
-                //match is fully contained in current node, step down in tree
-                if (cur.firstChild == null) {
-                    //no children, wrap as a whole if wanted
-                    if (o.getExplicitness() == HierarchyExplicitness.ALWAYS) {
-                        final TreeNode newNode = new TreeNode(minIndex, maxIndex, cur.sibling, cur, o.getDescription());
-                        cur.sibling = null;
-                        if (prev != null) {
-                            prev.sibling = newNode;
-                        } else if (upper != null) {
-                            upper.firstChild = newNode;
-                        } else {
-                            this.firstRoot = newNode;
-                        }
-                        return;
+            if (cur.minIndex == minIndex && cur.maxIndex == maxIndex) {
+                //exact match => wrap whole node if wanted
+                if (o.getExplicitness() == HierarchyExplicitness.ALWAYS) {
+                    final TreeNode newNode = new TreeNode(minIndex, maxIndex, cur.sibling, cur, o.getDescription());
+                    cur.sibling = null;
+                    if (prev != null) {
+                        prev.sibling = newNode;
+                    } else if (upper != null) {
+                        upper.firstChild = newNode;
+                    } else {
+                        this.firstRoot = newNode;
                     }
                 }
+                return;
+            } else if (cur.minIndex <= minIndex && cur.maxIndex >= maxIndex) {
+                //match is fully contained in current node, step down in tree
                 upper = cur;
                 prev = null;
                 cur = cur.firstChild;

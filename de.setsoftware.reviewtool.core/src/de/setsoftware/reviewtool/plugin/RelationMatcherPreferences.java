@@ -13,6 +13,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 
 import de.setsoftware.reviewtool.ordering.HierarchyExplicitness;
 import de.setsoftware.reviewtool.ordering.InSameFileRelation;
+import de.setsoftware.reviewtool.ordering.InSameSourceFolderRelation;
 import de.setsoftware.reviewtool.ordering.RelationMatcher;
 import de.setsoftware.reviewtool.ordering.TokenSimilarityRelation;
 
@@ -38,13 +39,19 @@ public class RelationMatcherPreferences {
      * Contains the known relation types and their properties.
      */
     private enum Types {
-        SAME_FILE("In same file", HierarchyExplicitness.ALWAYS, true) {
+        SAME_FILE("In same file", HierarchyExplicitness.ALWAYS, HierarchyExplicitness.ONLY_NONTRIVIAL, true) {
             @Override
             public RelationMatcher create(HierarchyExplicitness explicitness) {
                 return new InSameFileRelation(explicitness);
             }
         },
-        SIMILARITY("Similar content", HierarchyExplicitness.NONE, true) {
+        SOURCEFOLDER("Source folder (test vs src)", HierarchyExplicitness.ALWAYS, HierarchyExplicitness.ALWAYS, true) {
+            @Override
+            public RelationMatcher create(HierarchyExplicitness explicitness) {
+                return new InSameSourceFolderRelation(explicitness);
+            }
+        },
+        SIMILARITY("Similar content", HierarchyExplicitness.NONE, HierarchyExplicitness.NONE, true) {
             @Override
             public RelationMatcher create(HierarchyExplicitness explicitness) {
                 return new TokenSimilarityRelation();
@@ -53,19 +60,20 @@ public class RelationMatcherPreferences {
 
         private final String description;
         private final HierarchyExplicitness maximumExplicitness;
+        private final HierarchyExplicitness defaultExplicitness;
         private final boolean defaultActive;
 
-        private Types(String description, HierarchyExplicitness maximumExplicitness, boolean defaultActive) {
+        private Types(String description,
+                HierarchyExplicitness maximumExplicitness,
+                HierarchyExplicitness defaultExplicitness,
+                boolean defaultActive) {
             this.description = description;
             this.maximumExplicitness = maximumExplicitness;
+            this.defaultExplicitness = defaultExplicitness;
             this.defaultActive = defaultActive;
         }
 
         public abstract RelationMatcher create(HierarchyExplicitness explicitness);
-
-        public HierarchyExplicitness getMaximumExplicitness() {
-            return this.maximumExplicitness;
-        }
 
         public boolean isActiveByDefault() {
             return this.defaultActive;
@@ -215,10 +223,7 @@ public class RelationMatcherPreferences {
     }
 
     private static SettingForType createDefault(Types relationType) {
-        return new SettingForType(relationType,
-                relationType.getMaximumExplicitness() == HierarchyExplicitness.NONE
-                ? HierarchyExplicitness.NONE
-                : HierarchyExplicitness.ONLY_NONTRIVIAL);
+        return new SettingForType(relationType, relationType.defaultExplicitness);
     }
 
     /**

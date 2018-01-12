@@ -306,7 +306,7 @@ public class TourHierarchyBuilderTest {
         builder.createSubtourIfPossible(oi("t2", wrap(a, b), HierarchyExplicitness.ALWAYS));
         builder.createSubtourIfPossible(oi("t3", wrap(a, b), HierarchyExplicitness.ALWAYS));
         assertEquals(
-                Arrays.asList(tour("t2", tour("t3", tour("t1", a), b))),
+                Arrays.asList(tour("t3", tour("t2", tour("t1", a), b))),
                 builder.getTopmostElements());
     }
 }
