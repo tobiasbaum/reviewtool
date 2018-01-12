@@ -19,12 +19,19 @@ import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorContr
  */
 public class StopOrdering implements IStopOrdering {
 
+    private final List<RelationMatcher> relationTypes;
+
+    public StopOrdering(List<RelationMatcher> relationTypes) {
+        this.relationTypes = new ArrayList<>(relationTypes);
+    }
+
     /**
      * Determines a good ordering of the given stops, groups them into sub-tours if applicable
      * and returns the result.
      */
     @Override
-    public List<? extends TourElement> groupAndSort(List<Stop> stops, TourCalculatorControl isCanceled)
+    public List<? extends TourElement> groupAndSort(
+            List<Stop> stops, TourCalculatorControl isCanceled)
         throws InterruptedException {
 
         final List<ChangePart> changeParts = ChangePart.groupToMinimumGranularity(stops);
@@ -32,7 +39,7 @@ public class StopOrdering implements IStopOrdering {
         TourCalculator.checkInterruption(isCanceled);
 
         final List<OrderingInfo> orderingInfos = new ArrayList<>();
-        for (final RelationMatcher m : getRelationMatchers()) {
+        for (final RelationMatcher m : this.relationTypes) {
             orderingInfos.addAll(m.determineMatches(changeParts));
             TourCalculator.checkInterruption(isCanceled);
         }

@@ -11,7 +11,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 /**
  * Groups stops that belong to the same file.
  */
-class InSameFileRelation implements RelationMatcher {
+public class InSameFileRelation implements RelationMatcher {
 
     private final HierarchyExplicitness explicitness;
 

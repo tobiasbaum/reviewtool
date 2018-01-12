@@ -20,6 +20,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.TableEditor;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -50,6 +51,7 @@ public class ReviewToolPreferencePage extends PreferencePage
 
     private FileFieldEditor fileField;
     private Table userParamTable;
+    private RelationMatcherPreferenceEditor relationEditor;
 
     public ReviewToolPreferencePage() {
         super();
@@ -65,8 +67,9 @@ public class ReviewToolPreferencePage extends PreferencePage
         parentComposite.setLayout(layout);
         parentComposite.setFont(parent.getFont());
 
+        final Composite wrapper = new Composite(parentComposite, SWT.NONE);
         this.fileField = new FileFieldEditor(
-                TEAM_CONFIG_FILE, "File with team config", parentComposite);
+                TEAM_CONFIG_FILE, "File with team config", wrapper);
         this.initField(this.fileField);
 
         this.userParamTable = new Table(parentComposite, SWT.BORDER);
@@ -77,6 +80,7 @@ public class ReviewToolPreferencePage extends PreferencePage
         tc1.setWidth(100);
         tc2.setWidth(100);
         this.userParamTable.setHeaderVisible(true);
+        this.userParamTable.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         final TableEditor editor = new TableEditor(this.userParamTable);
         editor.horizontalAlignment = SWT.LEFT;
@@ -138,6 +142,11 @@ public class ReviewToolPreferencePage extends PreferencePage
         });
 
         this.createUserTableItems();
+
+        final RelationMatcherPreferences relations =
+                RelationMatcherPreferences.load(Activator.getDefault().getPreferenceStore());
+        this.relationEditor = new RelationMatcherPreferenceEditor(parentComposite, SWT.FILL, relations);
+        this.relationEditor.setLayoutData(new GridData(GridData.FILL_BOTH));
 
         return parentComposite;
     }
@@ -210,11 +219,13 @@ public class ReviewToolPreferencePage extends PreferencePage
         for (final TableItem item : this.userParamTable.getItems()) {
             item.setText(1, "");
         }
+        this.relationEditor.performDefaults();
         super.performDefaults();
     }
 
     @Override
     public boolean performOk() {
+        this.relationEditor.save(this.getPreferenceStore());
         this.fileField.store();
         try {
             final ISecurePreferences prefs = getSecurePreferences();
@@ -241,6 +252,7 @@ public class ReviewToolPreferencePage extends PreferencePage
         super.dispose();
         this.deinitField(this.fileField);
         this.userParamTable.dispose();
+        this.relationEditor.dispose();
     }
 
     /**

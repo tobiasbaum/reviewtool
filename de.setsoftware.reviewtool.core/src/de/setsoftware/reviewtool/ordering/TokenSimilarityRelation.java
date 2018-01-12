@@ -20,7 +20,7 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
  * Groups stops that are similar to each other. Similarity is defined based on the
  * Jaccard similarity of the stops' token sets.
  */
-class TokenSimilarityRelation implements RelationMatcher {
+public class TokenSimilarityRelation implements RelationMatcher {
 
     private static final double JACCARD_THRESHOLD = 0.7;
 

@@ -77,6 +77,7 @@ import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateTour
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.ReviewData;
+import de.setsoftware.reviewtool.ordering.RelationMatcher;
 import de.setsoftware.reviewtool.ordering.StopOrdering;
 import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
 import de.setsoftware.reviewtool.preferredtransitions.basicstrategies.PathRegexStrategyConfigurator;
@@ -380,6 +381,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final List<IIrrelevanceDetermination> relevanceFilters = new ArrayList<>();
     private final List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
     private final List<IPreferredTransitionStrategy> preferredTransitionStrategies = new ArrayList<>();
+    private final List<RelationMatcher> relationTypes = new ArrayList<>();
     private IStopViewer stopViewer = new CombinedDiffStopViewer();
     private final List<Runnable> postInitTasks = new ArrayList<>();
 
@@ -459,6 +461,12 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         this.enqueuePostInitTasks();
+
+
+        //configure relation types for tour ordering; they are user specific, not team specific
+        this.relationTypes.clear();
+        this.relationTypes.addAll(
+                RelationMatcherPreferences.load(Activator.getDefault().getPreferenceStore()).createMatchers());
     }
 
     @Override
@@ -941,7 +949,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                     this.relevanceFilters,
                     Arrays.asList(
                             new OneStopPerPartOfFileRestructuring()),
-                    new StopOrdering(),
+                    new StopOrdering(this.relationTypes),
                     createUi,
                     ticketKey);
             if (this.toursInReview == null) {
