@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.ui.views;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
@@ -50,7 +51,7 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
 
         final Composite scrollContent = new Composite(scroll, SWT.NULL);
 
-        final FillLayout layout = new FillLayout();
+        final GridLayout layout = new GridLayout(2, true);
         scrollContent.setLayout(layout);
 
         ViewDataSource.get().getStopViewer().createStopView(this, scrollContent, stop);
