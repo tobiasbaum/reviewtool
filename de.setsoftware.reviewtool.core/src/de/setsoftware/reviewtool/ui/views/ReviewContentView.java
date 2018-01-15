@@ -209,7 +209,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
             @Override
             public void widgetDefaultSelected(SelectionEvent e) {
-                ReviewContentView.this.jumpToStopForItem(tours, (TreeItem) e.item);
+                ReviewContentView.this.jumpToStopForItem(tours, (TreeItem) e.item, tv);
             }
         });
 
@@ -223,11 +223,16 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         return panel;
     }
 
-    private void jumpToStopForItem(final ToursInReview tours, final TreeItem item) {
+    private void jumpToStopForItem(final ToursInReview tours, final TreeItem item, TreeViewer tv) {
         if (item.getData() instanceof Stop) {
             final Stop stop = (Stop) item.getData();
             final Tour tour = (Tour) item.getParentItem().getData();
             jumpTo(tours, tour, stop, "tree");
+        } else {
+            tv.expandToLevel(item.getData(), 1);
+            if (item.getItemCount() > 0) {
+                this.jumpToStopForItem(tours, item.getItem(0), tv);
+            }
         }
     }
 
