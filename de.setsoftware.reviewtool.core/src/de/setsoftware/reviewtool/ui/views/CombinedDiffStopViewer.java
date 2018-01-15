@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.ui.views;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
@@ -7,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.compare.CompareConfiguration;
 import org.eclipse.compare.contentmergeviewer.TextMergeViewer;
@@ -22,18 +22,19 @@ import org.eclipse.jface.viewers.ContentViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.LineSequence;
+import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IFragment;
-import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -50,22 +51,24 @@ public class CombinedDiffStopViewer implements IStopViewer {
      */
     private static final class ChangeHighlighter implements ITextPresentationListener {
 
-        private final Position range;
+        private final List<Position> ranges;
         private Color hunkColor;
 
         /**
          * Constructor.
-         * @param range The range to highlight.
+         * @param ranges The ranges to highlight.
          */
-        ChangeHighlighter(final Position range) {
-            this.range = range;
+        ChangeHighlighter(final List<Position> ranges) {
+            this.ranges = ranges;
         }
 
         @Override
         public void applyTextPresentation(final TextPresentation textPresentation) {
             final Color fgColor = this.getTextColor();
-            final StyleRange range = new StyleRange(this.range.getOffset(), this.range.getLength(), fgColor, null);
-            textPresentation.mergeStyleRange(range);
+            for (final Position r : this.ranges) {
+                final StyleRange range = new StyleRange(r.getOffset(), r.getLength(), fgColor, null);
+                textPresentation.mergeStyleRange(range);
+            }
         }
 
         /**
@@ -83,10 +86,52 @@ public class CombinedDiffStopViewer implements IStopViewer {
     }
 
     /**
+     * Highlights a range by choosing a different background colour.
+     */
+    private static final class BackgroundHighlighter implements ITextPresentationListener {
+
+        private final List<Position> ranges;
+        private final String colorKey;
+        private final RGB defaultColor;
+        private Color hunkColor;
+
+        /**
+         * Constructor.
+         * @param ranges The ranges to highlight.
+         */
+        BackgroundHighlighter(final List<Position> ranges, String colorKey, RGB defaultColor) {
+            this.ranges = ranges;
+            this.colorKey = colorKey;
+            this.defaultColor = defaultColor;
+        }
+
+        @Override
+        public void applyTextPresentation(final TextPresentation textPresentation) {
+            final Color bgColor = this.getTextColor();
+            for (final Position r : this.ranges) {
+                final StyleRange range = new StyleRange(r.getOffset(), r.getLength(), null, bgColor);
+                textPresentation.mergeStyleRange(range);
+            }
+        }
+
+        /**
+         * @return The color to use for the range.
+         */
+        private Color getTextColor() {
+            if (this.hunkColor == null) {
+                if (!JFaceResources.getColorRegistry().hasValueFor(this.colorKey)) {
+                    JFaceResources.getColorRegistry().put(this.colorKey, this.defaultColor);
+                }
+                this.hunkColor = JFaceResources.getColorRegistry().get(this.colorKey);
+            }
+            return this.hunkColor;
+        }
+    }
+
+    /**
      * Bridge implementation for SelectableMergeViewers.
      */
     private static final class SelectableMergeViewerImpl {
-        private static final int CONTEXT_LENGTH = 3;
 
         private static final int VIEWER_LEFT = 1;
         private static final int VIEWER_RIGHT = 2;
@@ -115,44 +160,12 @@ public class CombinedDiffStopViewer implements IStopViewer {
             }
         }
 
-        /**
-         * Marks some range of the left pane.
-         * @param range The range to mark.
-         * @param reveal If {@code true}, the range is made visible within the pane.
-         */
-        public void markLeft(final Position range, final boolean reveal) {
-            this.mark(this.viewers[VIEWER_LEFT], range, reveal);
+        public SourceViewer getLeft() {
+            return this.viewers[VIEWER_LEFT];
         }
 
-        /**
-         * Marks some range of the right pane.
-         * @param range The range to mark.
-         * @param reveal If {@code true}, the range is made visible within the pane.
-         */
-        public void markRight(final Position range, final boolean reveal) {
-            this.mark(this.viewers[VIEWER_RIGHT], range, reveal);
-        }
-
-        /**
-         * Marks some range of some pane.
-         * @param viewer The pane to use.
-         * @param range The range to mark.
-         * @param reveal If {@code true}, the range is made visible within the pane.
-         */
-        private void mark(final SourceViewer viewer, final Position range, final boolean reveal) {
-            if (viewer == null) {
-                return;
-            }
-
-            final ChangeHighlighter listener = new ChangeHighlighter(range);
-            viewer.addTextPresentationListener(listener);
-            viewer.invalidateTextPresentation();
-
-            if (reveal) {
-                viewer.revealRange(range.getOffset(), range.getLength());
-                final int top = viewer.getTopIndex();
-                viewer.setTopIndex(top < CONTEXT_LENGTH ? 0 : top - CONTEXT_LENGTH);
-            }
+        public SourceViewer getRight() {
+            return this.viewers[VIEWER_RIGHT];
         }
 
     }
@@ -168,29 +181,18 @@ public class CombinedDiffStopViewer implements IStopViewer {
         public abstract void clearSelections();
 
         /**
-         * Marks some range of the left pane.
-         * @param range The range to mark.
-         * @param reveal If {@code true}, the range is made visible within the pane.
-         */
-        public abstract void markLeft(final Position range, final boolean reveal);
-
-        /**
-         * Marks some range of the right pane.
-         * @param range The range to mark.
-         * @param reveal If {@code true}, the range is made visible within the pane.
-         */
-        public abstract void markRight(final Position range, final boolean reveal);
-
-        /**
          * Returns the used viewers.
          */
         public abstract SourceViewer[] getViewers();
+
+        public abstract SourceViewer getLeft();
+
+        public abstract SourceViewer getRight();
 
         /**
          * Corresponds to {@link ContentViewer#setInput}.
          */
         public abstract void setInput(Object input);
-
     }
 
     /**
@@ -229,13 +231,13 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
 
         @Override
-        public void markLeft(final Position range, final boolean reveal) {
-            this.getSelectableImpl().markLeft(range, reveal);
+        public SourceViewer getLeft() {
+            return this.getSelectableImpl().getLeft();
         }
 
         @Override
-        public void markRight(final Position range, final boolean reveal) {
-            this.getSelectableImpl().markRight(range, reveal);
+        public SourceViewer getRight() {
+            return this.getSelectableImpl().getRight();
         }
 
         @Override
@@ -280,13 +282,13 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
 
         @Override
-        public void markLeft(final Position range, final boolean reveal) {
-            this.getSelectableImpl().markLeft(range, reveal);
+        public SourceViewer getLeft() {
+            return this.getSelectableImpl().getLeft();
         }
 
         @Override
-        public void markRight(final Position range, final boolean reveal) {
-            this.getSelectableImpl().markRight(range, reveal);
+        public SourceViewer getRight() {
+            return this.getSelectableImpl().getRight();
         }
 
         @Override
@@ -295,53 +297,28 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
     }
 
+    /**
+     * Helper class to capture file contents as strings as well as bytes.
+     */
+    private static final class FileContent {
+        private final byte[] bytes;
+        private final LineSequence lines;
+        private final String charset;
+
+        public FileContent(byte[] data, String charset) throws IOException {
+            this.bytes = data;
+            this.lines = new LineSequence(data, charset);
+            this.charset = charset;
+        }
+    }
+
+    private static final int CONTEXT_LENGTH = 3;
+
     private void createBinaryHunkViewer(final ViewPart view, final Composite parent) {
         final Label label = new Label(parent, SWT.NULL);
         label.setText("binary");
         label.setFont(JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT));
         ViewHelper.createContextMenuWithoutSelectionProvider(view, label);
-    }
-
-    private void createTextHunkViewer(
-            final ViewPart viewPart,
-            final Composite parent,
-            final IRevisionedFile sourceRevision,
-            final IRevisionedFile targetRevision,
-            String sourceFileContent,
-            String targetFileContent,
-            final List<Position> rangesLeft,
-            final List<Position> rangesRight) {
-        final CompareConfiguration compareConfiguration = new CompareConfiguration();
-        compareConfiguration.setLeftLabel(toLabel(sourceRevision));
-        compareConfiguration.setRightLabel(toLabel(targetRevision));
-        final SelectableMergeViewer viewer;
-        if (this.isJava(targetRevision)) {
-            viewer = new SelectableJavaMergeViewer(parent, SWT.BORDER, compareConfiguration);
-        } else {
-            viewer = new SelectableTextMergeViewer(parent, SWT.BORDER, compareConfiguration);
-        }
-        viewer.setInput(new DiffNode(
-                new TextItem(sourceRevision.getRevision().toString(),
-                        sourceFileContent,
-                        System.currentTimeMillis()),
-                new TextItem(targetRevision.getRevision().toString(),
-                        targetFileContent,
-                        System.currentTimeMillis())));
-        viewer.clearSelections();
-
-        boolean reveal = true;
-        for (final Position rangeRight : rangesRight) {
-            viewer.markRight(rangeRight, reveal);
-            reveal = false;
-        }
-        reveal = true;
-        for (final Position rangeLeft : rangesLeft) {
-            viewer.markLeft(rangeLeft, reveal);
-            reveal = false;
-        }
-        for (final SourceViewer v : viewer.getViewers()) {
-            ViewHelper.createContextMenu(viewPart, v.getTextWidget(), v);
-        }
     }
 
     private boolean isJava(IRevisionedFile file) {
@@ -369,72 +346,146 @@ public class CombinedDiffStopViewer implements IStopViewer {
             if (stop.isBinaryChange()) {
                 this.createBinaryHunkViewer(view, scrollContent);
             } else {
-                final IFileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
-                final Set<? extends IFileDiff> diffs = node.buildHistories(ancestor);
-                // TODO: we currently cowardly refuse to display any history beyond the first merge parent
-                // TODO: it happened to me once that "diffs" was empty here; fix here or somewhere else?
-                final IFileDiff diff = diffs.iterator().next();
 
-                final List<IFragment> origins = new ArrayList<>();
-                for (final IRevisionedFile file : changes.keySet()) {
-                    for (final IHunk hunk : stop.getContentFor(file)) {
-                        origins.addAll(hunk.getTarget().getOrigins());
-                    }
-                }
-                final List<? extends IHunk> relevantHunks = diff.getHunksWithTargetChangesInOneOf(origins);
-
-                final LineSequence oldContents;
-                final LineSequence newContents;
+                final FileContent oldContents;
+                final FileContent newContents;
                 try {
-                    oldContents = fileToLineSequence(firstRevision);
-                    newContents = fileToLineSequence(lastRevision);
+                    oldContents = this.loadFile(firstRevision);
+                    newContents = this.loadFile(lastRevision);
                 } catch (final Exception e) {
                     throw new ReviewtoolException(e);
                 }
 
+                final List<Pair<IFragment, IFragment>> relevantHunks =
+                        DiffAlgorithmFactory.createDefault().determineDiff(
+                                firstRevision,
+                                oldContents.bytes,
+                                lastRevision,
+                                newContents.bytes,
+                                newContents.charset);
+
                 final List<Position> oldPositions = new ArrayList<>();
                 final List<Position> newPositions = new ArrayList<>();
+                final List<Position> oldLineRanges = new ArrayList<>();
+                final List<Position> newLineRanges = new ArrayList<>();
 
-                for (final IHunk hunk : relevantHunks) {
-                    final IFragment sourceFragment = hunk.getSource();
-                    final IFragment targetFragment = hunk.getTarget();
+                for (final Pair<IFragment, IFragment> hunk : relevantHunks) {
+                    final IFragment sourceFragment = hunk.getFirst();
+                    final IFragment targetFragment = hunk.getSecond();
 
-                    final int oldStartOffset =
-                            oldContents.getStartPositionOfLine(sourceFragment.getFrom().getLine() - 1)
-                                    + (sourceFragment.getFrom().getColumn() - 1);
-                    final int oldEndOffset =
-                            oldContents.getStartPositionOfLine(sourceFragment.getTo().getLine() - 1)
-                                    + (sourceFragment.getTo().getColumn() - 1);
-                    final int newStartOffset =
-                            newContents.getStartPositionOfLine(targetFragment.getFrom().getLine() - 1)
-                                    + (targetFragment.getFrom().getColumn() - 1);
-                    final int newEndOffset =
-                            newContents.getStartPositionOfLine(targetFragment.getTo().getLine() - 1)
-                                    + (targetFragment.getTo().getColumn() - 1);
-
-                    oldPositions.add(new Position(oldStartOffset, oldEndOffset - oldStartOffset));
-                    newPositions.add(new Position(newStartOffset, newEndOffset - newStartOffset));
+                    oldPositions.add(fragmentToPosition(oldContents.lines, sourceFragment));
+                    newPositions.add(fragmentToPosition(newContents.lines, targetFragment));
+                    oldLineRanges.add(fragmentToLineRange(oldContents.lines, sourceFragment));
+                    newLineRanges.add(fragmentToLineRange(newContents.lines, targetFragment));
                 }
 
-                this.createTextHunkViewer(view, scrollContent, firstRevision, lastRevision,
-                        oldContents.getLinesConcatenated(0, oldContents.getNumberOfLines()),
-                        newContents.getLinesConcatenated(0, newContents.getNumberOfLines()),
-                        oldPositions, newPositions);
+                final CompareConfiguration compareConfiguration = new CompareConfiguration();
+                compareConfiguration.setLeftLabel(toLabel(firstRevision));
+                compareConfiguration.setRightLabel(toLabel(lastRevision));
+                final SelectableMergeViewer viewer;
+                if (this.isJava(lastRevision)) {
+                    viewer = new SelectableJavaMergeViewer(scrollContent, SWT.BORDER, compareConfiguration);
+                } else {
+                    viewer = new SelectableTextMergeViewer(scrollContent, SWT.BORDER, compareConfiguration);
+                }
+                viewer.setInput(new DiffNode(
+                        this.createTextItem(firstRevision, oldContents.lines),
+                        this.createTextItem(lastRevision, newContents.lines)));
+                viewer.clearSelections();
+
+                markAndReveal(viewer.getLeft(), oldPositions, oldLineRanges,
+                        Constants.DIFF_BACKGROUND_OLD, new RGB(232, 153, 153));
+                markAndReveal(viewer.getRight(), newPositions, newLineRanges,
+                        Constants.DIFF_BACKGROUND_NEW, new RGB(148, 255, 157));
+                for (final SourceViewer v : viewer.getViewers()) {
+                    ViewHelper.createContextMenu(view, v.getTextWidget(), v);
+                }
             }
         }
     }
 
-    private static LineSequence fileToLineSequence(final IRevisionedFile file) throws Exception {
-        final byte[] data = file.getContents();
+    private TextItem createTextItem(final IRevisionedFile revision, final LineSequence contents) {
+        return new TextItem(revision.getRevision().toString(),
+                contents.getLinesConcatenated(0, contents.getNumberOfLines()),
+                System.currentTimeMillis());
+    }
 
+    private static Position fragmentToPosition(final LineSequence contents, final IFragment fragment) {
+        final int startOffset =
+                contents.getStartPositionOfLine(fragment.getFrom().getLine() - 1)
+                        + (fragment.getFrom().getColumn() - 1);
+        final int endOffset =
+                contents.getStartPositionOfLine(fragment.getTo().getLine() - 1)
+                        + (fragment.getTo().getColumn() - 1);
+        return new Position(startOffset, endOffset - startOffset);
+    }
+
+    private static Position fragmentToLineRange(final LineSequence contents, final IFragment fragment) {
+        final int startOffset = contents.getStartPositionOfLine(fragment.getFrom().getLine() - 1);
+        final int endOffset;
+        if (fragment.getTo().getColumn() <= 1) {
+            endOffset = contents.getStartPositionOfLine(fragment.getTo().getLine() - 1);
+        } else {
+            endOffset = contents.getStartPositionOfLine(fragment.getTo().getLine());
+        }
+        return new Position(startOffset, endOffset - startOffset);
+    }
+
+    private FileContent loadFile(IRevisionedFile revision) throws Exception {
+        final byte[] data = revision.getContents();
         try {
             StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)
                 .onUnmappableCharacter(CodingErrorAction.REPORT)
                 .decode(ByteBuffer.wrap(data));
-            return new LineSequence(data, "UTF-8");
+            return new FileContent(data, "UTF-8");
         } catch (final CharacterCodingException e) {
-            return new LineSequence(data, "ISO-8859-1");
+            return new FileContent(data, "ISO-8859-1");
         }
     }
+
+    private static void markAndReveal(
+            final SourceViewer viewer,
+            final List<Position> ranges,
+            final List<Position> lineRanges,
+            String backgroundColorKey,
+            RGB defaultBackgroundColor) {
+        if (viewer == null) {
+            return;
+        }
+
+        markBackground(viewer, lineRanges, backgroundColorKey, defaultBackgroundColor);
+        mark(viewer, ranges);
+        if (!ranges.isEmpty()) {
+            reveal(viewer, ranges.iterator().next());
+        }
+    }
+
+    private static void mark(final SourceViewer viewer, final List<Position> ranges) {
+        final ChangeHighlighter listener = new ChangeHighlighter(ranges);
+        viewer.addTextPresentationListener(listener);
+        viewer.invalidateTextPresentation();
+    }
+
+    private static void markBackground(
+            final SourceViewer viewer,
+            final List<Position> ranges,
+            String backgroundColorKey,
+            RGB defaultBackgroundColor) {
+
+        final BackgroundHighlighter listener =
+                new BackgroundHighlighter(ranges, backgroundColorKey, defaultBackgroundColor);
+        viewer.addTextPresentationListener(listener);
+        viewer.invalidateTextPresentation();
+    }
+
+    /**
+     * Makes the given range visible within the pane.
+     */
+    private static void reveal(final SourceViewer viewer, final Position range) {
+        viewer.revealRange(range.getOffset(), range.getLength());
+        final int top = viewer.getTopIndex();
+        viewer.setTopIndex(top < CONTEXT_LENGTH ? 0 : top - CONTEXT_LENGTH);
+    }
+
 }

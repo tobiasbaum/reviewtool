@@ -13,5 +13,7 @@ public final class Constants {
     public static final String INACTIVESTOPMARKER_ID = "de.setsoftware.reviewtool.inactiveTourStopMarker";
 
     public static final String INCOMING_COLOR = "INCOMING_COLOR";
+    public static final String DIFF_BACKGROUND_OLD = "CORT_DIFF_BG_OLD";
+    public static final String DIFF_BACKGROUND_NEW = "CORT_DIFF_BG_NEW";
 
 }
