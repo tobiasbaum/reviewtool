@@ -13,11 +13,13 @@ import java.util.Set;
 import org.eclipse.compare.CompareConfiguration;
 import org.eclipse.compare.contentmergeviewer.TextMergeViewer;
 import org.eclipse.compare.structuremergeviewer.DiffNode;
+import org.eclipse.jdt.internal.ui.compare.JavaMergeViewer;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.jface.text.ITextPresentationListener;
 import org.eclipse.jface.text.Position;
 import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.source.SourceViewer;
+import org.eclipse.jface.viewers.ContentViewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.graphics.Color;
@@ -83,10 +85,9 @@ public class CombinedDiffStopViewer implements IStopViewer {
     }
 
     /**
-     * Subclass of TextMergeViewer which allows to access the left and right merge panes.
+     * Bridge implementation for SelectableMergeViewers.
      */
-    private static final class SelectableTextMergeViewer extends TextMergeViewer {
-
+    private static final class SelectableMergeViewerImpl {
         private static final int CONTEXT_LENGTH = 3;
 
         private static final int VIEWER_LEFT = 1;
@@ -96,24 +97,15 @@ public class CombinedDiffStopViewer implements IStopViewer {
         private SourceViewer[] viewers;
         private int nextViewer;
 
-        /**
-         * Constructor.
-         */
-        public SelectableTextMergeViewer(final Composite parent, final int style,
-                final CompareConfiguration configuration) {
-            super(parent, style, configuration);
-        }
-
-        @Override
-        protected SourceViewer createSourceViewer(final Composite parent, final int textOrientation) {
-            final SourceViewer viewer = super.createSourceViewer(parent, textOrientation);
+        protected SourceViewer createSourceViewer(
+                SourceViewer superResult, final Composite parent, final int textOrientation) {
             if (this.viewers == null) {
                 this.viewers = new SourceViewer[NUM_VIEWERS];
             }
             if (this.nextViewer < this.viewers.length) {
-                this.viewers[this.nextViewer++] = viewer;
+                this.viewers[this.nextViewer++] = superResult;
             }
-            return viewer;
+            return superResult;
         }
 
         /**
@@ -163,6 +155,145 @@ public class CombinedDiffStopViewer implements IStopViewer {
                 final int top = viewer.getTopIndex();
                 viewer.setTopIndex(top < CONTEXT_LENGTH ? 0 : top - CONTEXT_LENGTH);
             }
+        }
+
+    }
+
+    /**
+     * Interface for the addition behavior we need for merge viewers.
+     */
+    public static interface SelectableMergeViewer {
+
+        /**
+         * Remove any text selections as those hide in-line differences.
+         */
+        public abstract void clearSelections();
+
+        /**
+         * Marks some range of the left pane.
+         * @param range The range to mark.
+         * @param reveal If {@code true}, the range is made visible within the pane.
+         */
+        public abstract void markLeft(final Position range, final boolean reveal);
+
+        /**
+         * Marks some range of the right pane.
+         * @param range The range to mark.
+         * @param reveal If {@code true}, the range is made visible within the pane.
+         */
+        public abstract void markRight(final Position range, final boolean reveal);
+
+        /**
+         * Returns the used viewers.
+         */
+        public abstract SourceViewer[] getViewers();
+
+        /**
+         * Corresponds to {@link ContentViewer#setInput}.
+         */
+        public abstract void setInput(Object input);
+
+    }
+
+    /**
+     * Subclass of TextMergeViewer which allows to access the left and right merge panes.
+     */
+    private static final class SelectableTextMergeViewer extends TextMergeViewer implements SelectableMergeViewer {
+
+        private SelectableMergeViewerImpl selectableImpl;
+
+        /**
+         * Constructor.
+         */
+        public SelectableTextMergeViewer(final Composite parent, final int style,
+                final CompareConfiguration configuration) {
+            super(parent, style, configuration);
+        }
+
+        private SelectableMergeViewerImpl getSelectableImpl() {
+            //the constructor of the super class calls virtual methods, therefore we cannot
+            //  initialize the field in the constructor
+            if (this.selectableImpl == null) {
+                this.selectableImpl = new SelectableMergeViewerImpl();
+            }
+            return this.selectableImpl;
+        }
+
+        @Override
+        protected SourceViewer createSourceViewer(final Composite parent, final int textOrientation) {
+            final SourceViewer viewer = super.createSourceViewer(parent, textOrientation);
+            return this.getSelectableImpl().createSourceViewer(viewer, parent, textOrientation);
+        }
+
+        @Override
+        public void clearSelections() {
+            this.getSelectableImpl().clearSelections();
+        }
+
+        @Override
+        public void markLeft(final Position range, final boolean reveal) {
+            this.getSelectableImpl().markLeft(range, reveal);
+        }
+
+        @Override
+        public void markRight(final Position range, final boolean reveal) {
+            this.getSelectableImpl().markRight(range, reveal);
+        }
+
+        @Override
+        public SourceViewer[] getViewers() {
+            return this.getSelectableImpl().viewers;
+        }
+    }
+
+    /**
+     * Subclass of JavaMergeViewer which allows to access the left and right merge panes.
+     */
+    private static final class SelectableJavaMergeViewer extends JavaMergeViewer implements SelectableMergeViewer {
+
+        private SelectableMergeViewerImpl selectableImpl;
+
+        /**
+         * Constructor.
+         */
+        public SelectableJavaMergeViewer(final Composite parent, final int style,
+                final CompareConfiguration configuration) {
+            super(parent, style, configuration);
+        }
+
+        private SelectableMergeViewerImpl getSelectableImpl() {
+            //the constructor of the super class calls virtual methods, therefore we cannot
+            //  initialize the field in the constructor
+            if (this.selectableImpl == null) {
+                this.selectableImpl = new SelectableMergeViewerImpl();
+            }
+            return this.selectableImpl;
+        }
+
+        @Override
+        protected SourceViewer createSourceViewer(final Composite parent, final int textOrientation) {
+            final SourceViewer viewer = super.createSourceViewer(parent, textOrientation);
+            return this.getSelectableImpl().createSourceViewer(viewer, parent, textOrientation);
+        }
+
+        @Override
+        public void clearSelections() {
+            this.getSelectableImpl().clearSelections();
+        }
+
+        @Override
+        public void markLeft(final Position range, final boolean reveal) {
+            this.getSelectableImpl().markLeft(range, reveal);
+        }
+
+        @Override
+        public void markRight(final Position range, final boolean reveal) {
+            this.getSelectableImpl().markRight(range, reveal);
+        }
+
+        @Override
+        public SourceViewer[] getViewers() {
+            return this.getSelectableImpl().viewers;
         }
     }
 
@@ -227,8 +358,12 @@ public class CombinedDiffStopViewer implements IStopViewer {
         final CompareConfiguration compareConfiguration = new CompareConfiguration();
         compareConfiguration.setLeftLabel(toLabel(sourceRevision));
         compareConfiguration.setRightLabel(toLabel(targetRevision));
-        final SelectableTextMergeViewer viewer = new SelectableTextMergeViewer(parent, SWT.BORDER,
-                compareConfiguration);
+        final SelectableMergeViewer viewer;
+        if (this.isJava(targetRevision)) {
+            viewer = new SelectableJavaMergeViewer(parent, SWT.BORDER, compareConfiguration);
+        } else {
+            viewer = new SelectableTextMergeViewer(parent, SWT.BORDER, compareConfiguration);
+        }
         viewer.setInput(new DiffNode(
                 new TextItem(sourceRevision.getRevision().toString(),
                         this.mapFragmentsToString(sourceFragments),
@@ -248,9 +383,13 @@ public class CombinedDiffStopViewer implements IStopViewer {
             viewer.markLeft(rangeLeft, reveal);
             reveal = false;
         }
-        for (final SourceViewer v : viewer.viewers) {
+        for (final SourceViewer v : viewer.getViewers()) {
             ViewHelper.createContextMenu(viewPart, v.getTextWidget(), v);
         }
+    }
+
+    private boolean isJava(IRevisionedFile file) {
+        return file.getPath().endsWith(".java");
     }
 
     private static String toLabel(IRevisionedFile revision) {
