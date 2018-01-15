@@ -5,7 +5,6 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +35,6 @@ import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -297,48 +295,6 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
     }
 
-    /**
-     * Builds a string containing the concatenated contents of the fragments passed.
-     * @param fragments The list of fragments.
-     * @return The concatenated contents of the fragments passed.
-     */
-    protected String mapFragmentsToString(final List<? extends IFragment> fragments) {
-        final StringBuilder text = new StringBuilder();
-        boolean first = true;
-        for (final IFragment f : fragments) {
-            if (first) {
-                first = false;
-            } else {
-                text.append("\n...\n\n");
-            }
-            text.append(f.getContentFullLines());
-        }
-        return text.toString();
-    }
-
-    /**
-     * Creates a difference viewer.
-     * @param view The {@link ViewPart} to use.
-     * @param parent The {@link Composite} to use as parent for the difference viewer.
-     * @param sourceRevision The source revision.
-     * @param targetRevision The target revision.
-     * @param sourceFragments The source fragments.
-     * @param targetFragments The target fragments.
-     */
-    protected void createDiffViewer(final ViewPart view, final Composite parent,
-            final IRevisionedFile sourceRevision, final IRevisionedFile targetRevision,
-            final List<? extends IFragment> sourceFragments,
-            final List<? extends IFragment> targetFragments,
-            final List<Position> rangesLeft,
-            final List<Position> rangesRight) {
-        if (sourceFragments.isEmpty() || targetFragments.isEmpty()) {
-            this.createBinaryHunkViewer(view, parent);
-        } else {
-            this.createTextHunkViewer(view, parent, sourceRevision, targetRevision, sourceFragments, targetFragments,
-                    rangesLeft, rangesRight);
-        }
-    }
-
     private void createBinaryHunkViewer(final ViewPart view, final Composite parent) {
         final Label label = new Label(parent, SWT.NULL);
         label.setText("binary");
@@ -351,8 +307,8 @@ public class CombinedDiffStopViewer implements IStopViewer {
             final Composite parent,
             final IRevisionedFile sourceRevision,
             final IRevisionedFile targetRevision,
-            final List<? extends IFragment> sourceFragments,
-            final List<? extends IFragment> targetFragments,
+            String sourceFileContent,
+            String targetFileContent,
             final List<Position> rangesLeft,
             final List<Position> rangesRight) {
         final CompareConfiguration compareConfiguration = new CompareConfiguration();
@@ -366,10 +322,10 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
         viewer.setInput(new DiffNode(
                 new TextItem(sourceRevision.getRevision().toString(),
-                        this.mapFragmentsToString(sourceFragments),
+                        sourceFileContent,
                         System.currentTimeMillis()),
                 new TextItem(targetRevision.getRevision().toString(),
-                        this.mapFragmentsToString(targetFragments),
+                        targetFileContent,
                         System.currentTimeMillis())));
         viewer.clearSelections();
 
@@ -411,9 +367,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         final IFileHistoryNode node = tours.getFileHistoryNode(lastRevision);
         if (node != null) {
             if (stop.isBinaryChange()) {
-                this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
-                        new ArrayList<IFragment>(), new ArrayList<IFragment>(),
-                        new ArrayList<Position>(), new ArrayList<Position>());
+                this.createBinaryHunkViewer(view, scrollContent);
             } else {
                 final IFileHistoryNode ancestor = tours.getFileHistoryNode(firstRevision);
                 final Set<? extends IFileDiff> diffs = node.buildHistories(ancestor);
@@ -462,21 +416,12 @@ public class CombinedDiffStopViewer implements IStopViewer {
                     newPositions.add(new Position(newStartOffset, newEndOffset - newStartOffset));
                 }
 
-                this.createDiffViewer(view, scrollContent, firstRevision, lastRevision,
-                        Arrays.asList(this.createFragmentForWholeFile(firstRevision, oldContents)),
-                        Arrays.asList(this.createFragmentForWholeFile(lastRevision, newContents)),
-                        oldPositions,
-                        newPositions);
+                this.createTextHunkViewer(view, scrollContent, firstRevision, lastRevision,
+                        oldContents.getLinesConcatenated(0, oldContents.getNumberOfLines()),
+                        newContents.getLinesConcatenated(0, newContents.getNumberOfLines()),
+                        oldPositions, newPositions);
             }
         }
-    }
-
-    private IFragment createFragmentForWholeFile(final IRevisionedFile revision, final LineSequence contents) {
-        final int numLines = contents.getNumberOfLines();
-        final IFragment fragment = ChangestructureFactory.createFragment(revision,
-                ChangestructureFactory.createPositionInText(1, 1),
-                ChangestructureFactory.createPositionInText(numLines + 1, 1));
-        return fragment;
     }
 
     private static LineSequence fileToLineSequence(final IRevisionedFile file) throws Exception {
