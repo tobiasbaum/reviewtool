@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -77,18 +78,43 @@ public class ToursInReview {
          * There always is at least one choice.
          * When the user cancels, null is returned.
          */
+        //TODO delete
         public abstract List<? extends Tour> selectInitialTours(
                 List<? extends Pair<String, List<? extends Tour>>> choices);
 
         /**
-         * Lets the user choose any subset (including the empty set) of the given sets of
-         * changes that shall be considered irrelevant for review. The given list contains
-         * pairs with a description of the filter strategy and the resulting filter candidates.
+         * Lets the user choose which subset of commits to review, which filters
+         * to apply and which of the commits to merge into a tour.
          * When the user cancels, null is returned.
+         *
+         * @param changes All commits belonging to the review.
+         * @param strategyResults Pairs with a description of the filter strategy and the resulting filter candidates
+         * @param suggestedMerges Tour merges as suggested by default.
          */
-        public abstract List<? extends Pair<String, Set<? extends IChange>>> selectIrrelevant(
-                List<? extends Pair<String, Set<? extends IChange>>> strategyResuls);
+        public abstract UserSelectedReductions selectIrrelevant(
+                List<? extends ICommit> changes,
+                List<Pair<String, Set<? extends IChange>>> strategyResults,
+                List<List<ICommit>> suggestedMerges);
 
+    }
+
+    /**
+     * Transfer object for the results of the user interaction to select
+     * subset of commits, filters, ...
+     */
+    public static final class UserSelectedReductions {
+        private final List<? extends ICommit> commitSubset;
+        private final List<? extends Pair<String, Set<? extends IChange>>> toMakeIrrelevant;
+        private final List<List<ICommit>> toMerge;
+
+        public UserSelectedReductions(
+                List<? extends ICommit> chosenCommitSubset,
+                List<Pair<String, Set<? extends IChange>>> chosenFilterSubset,
+                List<List<ICommit>> chosenMerges) {
+            this.commitSubset = chosenCommitSubset;
+            this.toMakeIrrelevant = chosenFilterSubset;
+            this.toMerge = chosenMerges;
+        }
     }
 
     private final VirtualFileHistoryGraph historyGraph;
@@ -253,7 +279,7 @@ public class ToursInReview {
             .param("relevant", countChanges(changes, true))
             .log();
 
-        final List<Pair<String, Set<? extends IChange>>> strategyResuls = new ArrayList<>();
+        final List<Pair<String, Set<? extends IChange>>> strategyResults = new ArrayList<>();
         for (final IIrrelevanceDetermination strategy : irrelevanceDeterminationStrategies) {
             try {
                 if (progressMonitor.isCanceled()) {
@@ -270,7 +296,7 @@ public class ToursInReview {
                     //skip strategies that won't result in further changes to irrelevant
                     continue;
                 }
-                strategyResuls.add(Pair.<String, Set<? extends IChange>>create(
+                strategyResults.add(Pair.<String, Set<? extends IChange>>create(
                         strategy.getDescription(),
                         irrelevantChanges));
             } catch (final Exception e) {
@@ -279,22 +305,32 @@ public class ToursInReview {
             }
         }
 
-        final List<? extends Pair<String, Set<? extends IChange>>> selected = createUi.selectIrrelevant(strategyResuls);
+        final List<List<ICommit>> suggestedMerges = Collections.emptyList();
+
+        final UserSelectedReductions selected =
+                createUi.selectIrrelevant(changes, strategyResults, suggestedMerges);
         if (selected == null) {
             return null;
         }
         final Set<IChange> toMakeIrrelevant = new HashSet<>();
         final Set<String> selectedDescriptions = new LinkedHashSet<>();
-        for (final Pair<String, Set<? extends IChange>> set : selected) {
+        for (final Pair<String, Set<? extends IChange>> set : selected.toMakeIrrelevant) {
             toMakeIrrelevant.addAll(set.getSecond());
             selectedDescriptions.add(set.getFirst());
         }
         Telemetry.event("selectedRelevanceFilter")
             .param("descriptions", selectedDescriptions)
             .log();
+        final Set<String> selectedCommits = new LinkedHashSet<>();
+        for (final ICommit commit : selected.commitSubset) {
+            selectedCommits.add(commit.getRevision().toString());
+        }
+        Telemetry.event("selectedCommitSubset")
+            .param("commits", selectedCommits)
+            .log();
 
         final List<ICommit> ret = new ArrayList<>();
-        for (final ICommit c : changes) {
+        for (final ICommit c : selected.commitSubset) {
             ret.add(c.makeChangesIrrelevant(toMakeIrrelevant));
         }
         return ret;
@@ -350,6 +386,7 @@ public class ToursInReview {
                 .log();
 
 
+        //TODO delete, not needed any more
         for (final ITourRestructuring restructuringStrategy : tourRestructuringStrategies) {
             if (progressMonitor.isCanceled()) {
                 throw new OperationCanceledException();

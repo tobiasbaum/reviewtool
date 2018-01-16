@@ -7,7 +7,6 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -70,10 +69,12 @@ import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview.UserSelectedReductions;
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.ReviewData;
@@ -920,21 +921,17 @@ public class ReviewPlugin implements IReviewConfigurable {
             }
 
             @Override
-            public List<? extends Pair<String, Set<? extends IChange>>> selectIrrelevant(
-                    final List<? extends Pair<String, Set<? extends IChange>>> choices) {
-                if (choices.isEmpty()) {
-                    return Collections.emptyList();
-                }
+            public UserSelectedReductions selectIrrelevant(
+                    final List<? extends ICommit> changes,
+                    final List<Pair<String, Set<? extends IChange>>> strategyResults,
+                    final List<List<ICommit>> suggestedMerges) {
                 return ReviewPlugin.this.callUiFromBackgroundJob(
-                        choices,
+                        null,
                         display,
-                        new Callback<
-                                List<? extends Pair<String, Set<? extends IChange>>>,
-                                List<? extends Pair<String, Set<? extends IChange>>>>() {
+                        new Callback<UserSelectedReductions, Void>() {
                             @Override
-                            public List<? extends Pair<String, Set<? extends IChange>>> run(
-                                    List<? extends Pair<String, Set<? extends IChange>>> choices) {
-                                return SelectIrrelevantDialog.selectIrrelevant(choices);
+                            public UserSelectedReductions run(Void v) {
+                                return SelectIrrelevantDialog.show(changes, strategyResults, suggestedMerges);
                             }
                         });
             }

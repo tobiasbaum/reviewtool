@@ -6,6 +6,10 @@ import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ScrolledComposite;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -17,28 +21,39 @@ import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview.UserSelectedReductions;
 
 /**
  * A dialog that let's the user choose which of several filters that mark changes as irrelevant to apply.
  */
 public class SelectIrrelevantDialog extends Dialog {
 
-    private final List<? extends Pair<String, Set<? extends IChange>>> choices;
-    private List<Button> checkboxes;
-    private List<Pair<String, Set<? extends IChange>>> chosenSubset;
+    private final List<? extends ICommit> allCommits;
+    private final List<? extends Pair<String, Set<? extends IChange>>> filterChoices;
+    private final List<List<ICommit>> suggestedMerges;
+    private List<CommitComposite> commitComposites;
+    private List<Button> filterCheckboxes;
+    private List<ICommit> chosenCommitSubset;
+    private List<Pair<String, Set<? extends IChange>>> chosenFilterSubset;
+    private List<List<ICommit>> chosenMerges;
 
     protected SelectIrrelevantDialog(
             Shell parentShell,
-            List<? extends Pair<String, Set<? extends IChange>>> choices) {
+            List<? extends ICommit> changes,
+            List<? extends Pair<String, Set<? extends IChange>>> filterChoices,
+            List<List<ICommit>> suggestedMerges) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
-        this.choices = choices;
+        this.allCommits = changes;
+        this.filterChoices = filterChoices;
+        this.suggestedMerges = suggestedMerges;
     }
 
     @Override
     protected void configureShell(Shell newShell) {
         super.configureShell(newShell);
-        newShell.setText("Choose change filters to apply");
+        newShell.setText("Select commits and choose filters to apply");
         DialogHelper.restoreSavedSize(newShell, this, 500, 400);
     }
 
@@ -49,6 +64,30 @@ public class SelectIrrelevantDialog extends Dialog {
         final GridLayout layout = (GridLayout) comp.getLayout();
         layout.numColumns = 1;
 
+        final Group commitGroup = new Group(comp, SWT.NONE);
+        commitGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
+        commitGroup.setText("Commits");
+        commitGroup.setLayout(new FillLayout());
+
+        final ScrolledComposite scroll = new ScrolledComposite(commitGroup, SWT.H_SCROLL | SWT.V_SCROLL);
+
+        final Composite scrollContent = new Composite(scroll, SWT.NONE);
+        scrollContent.setLayout(new GridLayout(1, false));
+
+        this.commitComposites = new ArrayList<>();
+        for (final ICommit commit : this.allCommits) {
+            final CommitComposite cc = new CommitComposite(scrollContent, SWT.NONE, commit, this.filterChoices);
+            this.commitComposites.add(cc);
+            cc.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+        }
+
+        scroll.setContent(scrollContent);
+        scroll.setExpandHorizontal(true);
+        scroll.setExpandVertical(true);
+        scroll.setMinWidth(300);
+        scroll.setMinHeight(scrollContent.computeSize(scroll.getMinWidth(), SWT.DEFAULT).y);
+
+
         final Group buttonGroup = new Group(comp, SWT.NONE);
         buttonGroup.setText("Filters to apply");
         final GridLayout gridLayout = new GridLayout();
@@ -56,17 +95,42 @@ public class SelectIrrelevantDialog extends Dialog {
         buttonGroup.setLayout(gridLayout);
         buttonGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
-        this.checkboxes = new ArrayList<>();
-        for (final Pair<String, Set<? extends IChange>> choice : this.choices) {
+        this.filterCheckboxes = new ArrayList<>();
+        final SelectionListener filterCheckboxListener = new SelectionListener() {
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                SelectIrrelevantDialog.this.updateCountsInCommits();
+            }
+            @Override
+            public void widgetDefaultSelected(SelectionEvent e) {
+                SelectIrrelevantDialog.this.updateCountsInCommits();
+            }
+        };
+        for (final Pair<String, Set<? extends IChange>> choice : this.filterChoices) {
             final Button b = new Button(buttonGroup, SWT.CHECK);
             b.setText(this.createText(choice));
             b.setData(choice);
-            this.checkboxes.add(b);
+            b.addSelectionListener(filterCheckboxListener);
+            this.filterCheckboxes.add(b);
         }
 
         this.restoreSavedSelection();
 
         return comp;
+    }
+
+    private void updateCountsInCommits() {
+        final List<Pair<String, Set<? extends IChange>>> activeFilters = new ArrayList<>();
+        for (final Button b : this.filterCheckboxes) {
+            final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
+            if (b.getSelection()) {
+                activeFilters.add(data);
+            }
+        }
+
+        for (final CommitComposite cc : this.commitComposites) {
+            cc.updateFilters(activeFilters);
+        }
     }
 
     private String createText(Pair<String, Set<? extends IChange>> choice) {
@@ -76,21 +140,29 @@ public class SelectIrrelevantDialog extends Dialog {
     }
 
     private void restoreSavedSelection() {
-        for (final Button b : this.checkboxes) {
+        for (final Button b : this.filterCheckboxes) {
             b.setSelection(this.getSavedSelectionState((Pair<String, Set<? extends IChange>>) b.getData()));
         }
     }
 
     @Override
     protected void okPressed() {
-        this.chosenSubset = new ArrayList<>();
-        for (final Button b : this.checkboxes) {
+        this.chosenCommitSubset = new ArrayList<>();
+        for (final CommitComposite c : this.commitComposites) {
+            if (c.isSelected()) {
+                this.chosenCommitSubset.add(c.getCommit());
+            }
+        }
+
+        this.chosenFilterSubset = new ArrayList<>();
+        for (final Button b : this.filterCheckboxes) {
             final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
             if (b.getSelection()) {
-                this.chosenSubset.add(data);
+                this.chosenFilterSubset.add(data);
             }
             this.saveSelectionState(data, b.getSelection());
         }
+
         DialogHelper.saveDialogSize(this);
         super.okPressed();
     }
@@ -117,17 +189,25 @@ public class SelectIrrelevantDialog extends Dialog {
      * Lets the user select the filters he wants to apply.
      * When the user cancels, null is returned.
      */
-    public static List<? extends Pair<String, Set<? extends IChange>>> selectIrrelevant(
-            List<? extends Pair<String, Set<? extends IChange>>> choices) {
+    public static UserSelectedReductions show(
+            List<? extends ICommit> changes,
+            List<Pair<String, Set<? extends IChange>>> filterChoices,
+            List<List<ICommit>> suggestedMerges) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
         final SelectIrrelevantDialog dialog =
-                new SelectIrrelevantDialog(s, choices);
+                new SelectIrrelevantDialog(s, changes, filterChoices, suggestedMerges);
         final int ret = dialog.open();
         if (ret != OK) {
             return null;
         }
-        return dialog.chosenSubset;
+        if (dialog.chosenFilterSubset == null) {
+            return null;
+        }
+        return new UserSelectedReductions(
+                dialog.chosenCommitSubset,
+                dialog.chosenFilterSubset,
+                dialog.chosenMerges);
     }
 
 }
