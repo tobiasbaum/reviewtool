@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -18,16 +19,19 @@ public class Commit implements ICommit {
     private final List<IChange> changes;
     private final boolean isVisible;
     private final IRevision revision;
+    private final long timestamp;
 
     Commit(
             final String message,
             final List<? extends IChange> changes,
             final boolean isVisible,
-            final IRevision revision) {
+            final IRevision revision,
+            final Date timestamp) {
         this.message = message;
         this.changes = new ArrayList<>(changes);
         this.isVisible = isVisible;
         this.revision = revision;
+        this.timestamp = timestamp.getTime();
     }
 
     @Override
@@ -57,12 +61,17 @@ public class Commit implements ICommit {
             }
             isVisible = isVisible || change.isVisible();
         }
-        return new Commit(this.message, adjustedChanges, isVisible, this.revision);
+        return new Commit(this.message, adjustedChanges, isVisible, this.revision, this.getTime());
     }
 
     @Override
     public boolean isVisible() {
         return this.isVisible;
+    }
+
+    @Override
+    public Date getTime() {
+        return new Date(this.timestamp);
     }
 
 }

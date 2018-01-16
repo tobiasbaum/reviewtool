@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.Date;
 import java.util.List;
 
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
@@ -25,8 +26,9 @@ public class ChangestructureFactory {
             final String message,
             final List<? extends IChange> changes,
             final boolean isVisible,
-            final IRevision revision) {
-        return new Commit(message, changes, isVisible, revision);
+            final IRevision revision,
+            final Date timestamp) {
+        return new Commit(message, changes, isVisible, revision, timestamp);
     }
 
     public static IBinaryChange createBinaryChange(

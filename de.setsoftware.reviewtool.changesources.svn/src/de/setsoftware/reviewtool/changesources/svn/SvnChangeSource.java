@@ -389,7 +389,8 @@ public class SvnChangeSource implements IChangeSource {
                     e.toPrettyString(),
                     changes,
                     e.isVisible(),
-                    this.revision(e)));
+                    this.revision(e),
+                    e.getDate()));
         }
     }
 

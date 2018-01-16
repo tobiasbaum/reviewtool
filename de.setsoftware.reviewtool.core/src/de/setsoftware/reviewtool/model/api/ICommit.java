@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -33,5 +34,10 @@ public interface ICommit {
      * @return {@code true} if this {@link ICommit} is visible, else false.
      */
     public abstract boolean isVisible();
+
+    /**
+     * @return the date and time of the commit.
+     */
+    public abstract Date getTime();
 
 }

@@ -1,7 +1,6 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.text.DateFormat;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -72,9 +71,8 @@ public class CommitComposite extends Composite {
             }
         }
 
-        final Date d = new Date();
         this.checkbox.setText(String.format("%s; %d file%s, %d stop%s (filtered: %d file%s, %d stop%s)",
-                DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(d),
+                DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(this.commit.getTime()),
                 files.size(),
                 this.pluralS(files.size()),
                 stopCount,
