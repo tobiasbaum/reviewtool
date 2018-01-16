@@ -36,7 +36,7 @@ public interface ICommit {
     public abstract boolean isVisible();
 
     /**
-     * @return the date and time of the commit.
+     * @return The date and time of the commit.
      */
     public abstract Date getTime();
 
