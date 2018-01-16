@@ -1,7 +1,9 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -16,12 +18,14 @@ import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ReviewRoundInfo;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.UserSelectedReductions;
 
 /**
@@ -32,6 +36,7 @@ public class SelectIrrelevantDialog extends Dialog {
     private final List<? extends ICommit> allCommits;
     private final List<? extends Pair<String, Set<? extends IChange>>> filterChoices;
     private final List<List<ICommit>> suggestedMerges;
+    private final List<ReviewRoundInfo> reviewRounds;
     private List<CommitComposite> commitComposites;
     private List<Button> filterCheckboxes;
     private List<ICommit> chosenCommitSubset;
@@ -42,12 +47,14 @@ public class SelectIrrelevantDialog extends Dialog {
             Shell parentShell,
             List<? extends ICommit> changes,
             List<? extends Pair<String, Set<? extends IChange>>> filterChoices,
-            List<List<ICommit>> suggestedMerges) {
+            List<List<ICommit>> suggestedMerges,
+            List<ReviewRoundInfo> reviewRounds) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.allCommits = changes;
         this.filterChoices = filterChoices;
         this.suggestedMerges = suggestedMerges;
+        this.reviewRounds = reviewRounds;
     }
 
     @Override
@@ -74,11 +81,19 @@ public class SelectIrrelevantDialog extends Dialog {
         final Composite scrollContent = new Composite(scroll, SWT.NONE);
         scrollContent.setLayout(new GridLayout(1, false));
 
+        final PriorityQueue<ReviewRoundInfo> reviewRoundQueue = new PriorityQueue<>(this.reviewRounds);
         this.commitComposites = new ArrayList<>();
         for (final ICommit commit : this.allCommits) {
+            while (!reviewRoundQueue.isEmpty() && reviewRoundQueue.peek().getTime().compareTo(commit.getTime()) < 0) {
+                this.createReviewRoundWidget(reviewRoundQueue.remove(), scrollContent);
+            }
+
             final CommitComposite cc = new CommitComposite(scrollContent, SWT.NONE, commit, this.filterChoices);
             this.commitComposites.add(cc);
             cc.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
+        }
+        while (!reviewRoundQueue.isEmpty()) {
+            this.createReviewRoundWidget(reviewRoundQueue.remove(), scrollContent);
         }
 
         scroll.setContent(scrollContent);
@@ -101,6 +116,7 @@ public class SelectIrrelevantDialog extends Dialog {
             public void widgetSelected(SelectionEvent e) {
                 SelectIrrelevantDialog.this.updateCountsInCommits();
             }
+
             @Override
             public void widgetDefaultSelected(SelectionEvent e) {
                 SelectIrrelevantDialog.this.updateCountsInCommits();
@@ -117,6 +133,15 @@ public class SelectIrrelevantDialog extends Dialog {
         this.restoreSavedSelection();
 
         return comp;
+    }
+
+    private void createReviewRoundWidget(ReviewRoundInfo round, Composite scrollContent) {
+        final Label label = new Label(scrollContent, SWT.NONE);
+        label.setText(String.format("----------------- End of Review %d: %s, %s -----------------",
+                round.getNumber(),
+                DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(round.getTime()),
+                round.getReviewer()));
+        label.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, false));
     }
 
     private void updateCountsInCommits() {
@@ -192,11 +217,12 @@ public class SelectIrrelevantDialog extends Dialog {
     public static UserSelectedReductions show(
             List<? extends ICommit> changes,
             List<Pair<String, Set<? extends IChange>>> filterChoices,
-            List<List<ICommit>> suggestedMerges) {
+            List<List<ICommit>> suggestedMerges,
+            List<ReviewRoundInfo> reviewRounds) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
         final SelectIrrelevantDialog dialog =
-                new SelectIrrelevantDialog(s, changes, filterChoices, suggestedMerges);
+                new SelectIrrelevantDialog(s, changes, filterChoices, suggestedMerges, reviewRounds);
         final int ret = dialog.open();
         if (ret != OK) {
             return null;

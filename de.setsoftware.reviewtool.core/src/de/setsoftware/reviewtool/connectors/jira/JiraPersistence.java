@@ -75,6 +75,21 @@ public class JiraPersistence implements IReviewPersistence {
         }
 
         @Override
+        public Date getEndTimeForRound(int number) {
+            final JsonArray histories = JiraPersistence.this.getHistories(this.ticket);
+            int count = 0;
+            for (final JsonValue v : histories) {
+                if (JiraPersistence.this.isToReview(v)) {
+                    count++;
+                    if (count == number) {
+                        return JiraPersistence.this.getTimeOfHistoryItem(v);
+                    }
+                }
+            }
+            return new Date();
+        }
+
+        @Override
         public int getCurrentRound() {
             final JsonArray histories = JiraPersistence.this.getHistories(this.ticket);
             int count = 0;
@@ -306,15 +321,19 @@ public class JiraPersistence implements IReviewPersistence {
         for (final JsonValue v : histories) {
             final String fromStatus = this.getFromStatus(v);
             if (fromStatus != null) {
-                final String dateString = v.asObject().get("created").asString();
-                try {
-                    ret = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX").parse(dateString);
-                } catch (final java.text.ParseException e) {
-                    throw new ReviewtoolException(e);
-                }
+                ret = this.getTimeOfHistoryItem(v);
             }
         }
         return ret;
+    }
+
+    private Date getTimeOfHistoryItem(final JsonValue v) {
+        final String dateString = v.asObject().get("created").asString();
+        try {
+            return new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX").parse(dateString);
+        } catch (final java.text.ParseException e) {
+            throw new ReviewtoolException(e);
+        }
     }
 
     private String getFromStatus(JsonValue v) {

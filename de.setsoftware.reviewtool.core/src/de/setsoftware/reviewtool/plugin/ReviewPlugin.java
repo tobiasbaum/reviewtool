@@ -64,6 +64,7 @@ import de.setsoftware.reviewtool.model.FileReviewDataCache;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.ISyntaxFixer;
 import de.setsoftware.reviewtool.model.ITicketChooser;
+import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.IChange;
@@ -74,6 +75,7 @@ import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ReviewRoundInfo;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.UserSelectedReductions;
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
@@ -924,14 +926,16 @@ public class ReviewPlugin implements IReviewConfigurable {
             public UserSelectedReductions selectIrrelevant(
                     final List<? extends ICommit> changes,
                     final List<Pair<String, Set<? extends IChange>>> strategyResults,
-                    final List<List<ICommit>> suggestedMerges) {
+                    final List<List<ICommit>> suggestedMerges,
+                    final List<ReviewRoundInfo> reviewRounds) {
                 return ReviewPlugin.this.callUiFromBackgroundJob(
                         null,
                         display,
                         new Callback<UserSelectedReductions, Void>() {
                             @Override
                             public UserSelectedReductions run(Void v) {
-                                return SelectIrrelevantDialog.show(changes, strategyResults, suggestedMerges);
+                                return SelectIrrelevantDialog.show(
+                                        changes, strategyResults, suggestedMerges, reviewRounds);
                             }
                         });
             }
@@ -948,7 +952,8 @@ public class ReviewPlugin implements IReviewConfigurable {
                             new OneStopPerPartOfFileRestructuring()),
                     new StopOrdering(this.relationTypes),
                     createUi,
-                    ticketKey);
+                    ticketKey,
+                    this.getReviewRounds(this.persistence.getCurrentTicketData()));
             if (this.toursInReview == null) {
                 return false;
             }
@@ -958,6 +963,17 @@ public class ReviewPlugin implements IReviewConfigurable {
         } finally {
             sourceUi.done();
         }
+    }
+
+    private List<ReviewRoundInfo> getReviewRounds(ITicketData ticket) {
+        final List<ReviewRoundInfo> ret = new ArrayList<>();
+        for (int round = 1; round <= ticket.getCurrentRound(); round++) {
+            ret.add(new ReviewRoundInfo(
+                    round,
+                    ticket.getEndTimeForRound(round),
+                    ticket.getReviewerForRound(round)));
+        }
+        return ret;
     }
 
     @Override

@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.model;
 
+import java.util.Date;
+
 /**
  * Decorates {@link ITicketData} and provides other review data.
  */
@@ -36,6 +38,11 @@ class LocalReviewDataDecorator implements ITicketData {
     @Override
     public String getId() {
         return this.decorated.getId();
+    }
+
+    @Override
+    public Date getEndTimeForRound(int number) {
+        return this.decorated.getEndTimeForRound(number);
     }
 
 }

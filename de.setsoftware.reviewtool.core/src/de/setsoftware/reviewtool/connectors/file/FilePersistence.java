@@ -85,6 +85,12 @@ public class FilePersistence implements IReviewPersistence {
         }
 
         @Override
+        public Date getEndTimeForRound(int number) {
+            //not implemented
+            return new Date();
+        }
+
+        @Override
         public int getCurrentRound() {
             return this.readReviewHistory().size();
         }

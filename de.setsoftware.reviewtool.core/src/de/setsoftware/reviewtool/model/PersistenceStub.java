@@ -66,6 +66,11 @@ public class PersistenceStub implements IReviewPersistence {
             public String getId() {
                 return ticketKey;
             }
+
+            @Override
+            public Date getEndTimeForRound(int number) {
+                return new Date(123456789L);
+            }
         };
     }
 

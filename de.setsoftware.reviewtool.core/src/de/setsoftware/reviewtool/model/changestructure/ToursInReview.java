@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -90,11 +91,13 @@ public class ToursInReview {
          * @param changes All commits belonging to the review.
          * @param strategyResults Pairs with a description of the filter strategy and the resulting filter candidates
          * @param suggestedMerges Tour merges as suggested by default.
+         * @param reviewRounds The review rounds conducted so far (to show them to the user).
          */
         public abstract UserSelectedReductions selectIrrelevant(
                 List<? extends ICommit> changes,
                 List<Pair<String, Set<? extends IChange>>> strategyResults,
-                List<List<ICommit>> suggestedMerges);
+                List<List<ICommit>> suggestedMerges,
+                List<ReviewRoundInfo> reviewRounds);
 
     }
 
@@ -114,6 +117,51 @@ public class ToursInReview {
             this.commitSubset = chosenCommitSubset;
             this.toMakeIrrelevant = chosenFilterSubset;
             this.toMerge = chosenMerges;
+        }
+    }
+
+    /**
+     * Infos on a review round.
+     */
+    public static final class ReviewRoundInfo implements Comparable<ReviewRoundInfo> {
+        private final int number;
+        private final Date date;
+        private final String user;
+
+        public ReviewRoundInfo(int number, Date date, String user) {
+            this.number = number;
+            this.date = date;
+            this.user = user;
+        }
+
+        @Override
+        public int compareTo(ReviewRoundInfo o) {
+            return Integer.compare(this.number, o.number);
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (!(o instanceof ReviewRoundInfo)) {
+                return false;
+            }
+            return this.compareTo((ReviewRoundInfo) o) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return this.number;
+        }
+
+        public Date getTime() {
+            return this.date;
+        }
+
+        public String getReviewer() {
+            return this.user;
+        }
+
+        public int getNumber() {
+            return this.number;
         }
     }
 
@@ -159,13 +207,14 @@ public class ToursInReview {
             List<? extends ITourRestructuring> tourRestructuringStrategies,
             IStopOrdering orderingAlgorithm,
             ICreateToursUi createUi,
-            String ticketKey) {
+            String ticketKey,
+            List<ReviewRoundInfo> reviewRounds) {
         changeSourceUi.subTask("Determining relevant changes...");
         final IChangeData changes = src.getRepositoryChanges(ticketKey, changeSourceUi);
         changeSourceUi.subTask("Filtering changes...");
         final List<? extends ICommit> filteredChanges =
                 filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(),
-                        createUi, changeSourceUi);
+                        createUi, changeSourceUi, reviewRounds);
         if (filteredChanges == null) {
             return null;
         }
@@ -272,7 +321,8 @@ public class ToursInReview {
             final List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
             final List<? extends ICommit> changes,
             final ICreateToursUi createUi,
-            final IProgressMonitor progressMonitor) {
+            final IProgressMonitor progressMonitor,
+            final List<ReviewRoundInfo> reviewRounds) {
 
         Telemetry.event("originalChanges")
             .param("count", countChanges(changes, false))
@@ -308,7 +358,7 @@ public class ToursInReview {
         final List<List<ICommit>> suggestedMerges = Collections.emptyList();
 
         final UserSelectedReductions selected =
-                createUi.selectIrrelevant(changes, strategyResults, suggestedMerges);
+                createUi.selectIrrelevant(changes, strategyResults, suggestedMerges, reviewRounds);
         if (selected == null) {
             return null;
         }
@@ -333,6 +383,9 @@ public class ToursInReview {
         for (final ICommit c : selected.commitSubset) {
             ret.add(c.makeChangesIrrelevant(toMakeIrrelevant));
         }
+
+
+
         return ret;
     }
 

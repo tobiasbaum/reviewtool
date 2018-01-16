@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.model;
 
+import java.util.Date;
+
 /**
  * Interface for things that can provide the review data of a ticket and further ticket information.
  */
@@ -11,7 +13,7 @@ public interface ITicketData {
     public abstract String getId();
 
     /**
-     * Returns the string represenation of the review remarks.
+     * Returns the string representation of the review remarks.
      */
     public abstract String getReviewData();
 
@@ -21,6 +23,13 @@ public interface ITicketData {
      * When there is no review round with the given number, returns the current user.
      */
     public abstract String getReviewerForRound(int number);
+
+    /**
+     * Returns the end timestamp for the review round with the given number.
+     * number starts with 1.
+     * When there is no review round with the given number, returns the current date.
+     */
+    public abstract Date getEndTimeForRound(int number);
 
     /**
      * Returns the current review round number, including running reviews.
