@@ -197,9 +197,16 @@ public class TourCalculator<T> {
             } else {
                 unsatisfiedMatches.add(matchSet);
             }
+            checkInterruption(isCanceled);
         }
 
-        checkInterruption(isCanceled);
+        if (isCanceled.isFastModeNeeded()) {
+            //if the calculation already took too much time here, just give up with
+            //  the results we have so far
+            ret.resultingTour = bundler.getPossibleOrder();
+            return ret;
+        }
+
 
         final FoldMatchingHelper<S> foldedBundler = new FoldMatchingHelper<>(bundler, unsatisfiedMatches);
         foldedBundler.addPotentialFolds(ret.successfulMatches, isCanceled);
@@ -227,9 +234,9 @@ public class TourCalculator<T> {
                 }
                 list.add(pr);
             }
+            checkInterruption(isCanceled);
         }
 
-        checkInterruption(isCanceled);
 
         //TODO positions in folded graphs are currently not implemented in accordance with the paper
         for (final List<PositionRequest<S>> list : positionRequestsForFolds.values()) {

@@ -232,7 +232,7 @@ public class ToursInReview {
                     private static final long FAST_MODE_THRESHOLD = 20000;
                     private final long startTime = System.currentTimeMillis();
                     @Override
-                    public boolean isCanceled() {
+                    public synchronized boolean isCanceled() {
                         return changeSourceUi.isCanceled();
                     }
 

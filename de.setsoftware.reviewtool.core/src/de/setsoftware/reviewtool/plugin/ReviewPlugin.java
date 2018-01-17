@@ -926,7 +926,6 @@ public class ReviewPlugin implements IReviewConfigurable {
             public UserSelectedReductions selectIrrelevant(
                     final List<? extends ICommit> changes,
                     final List<Pair<String, Set<? extends IChange>>> strategyResults,
-                    final List<List<ICommit>> suggestedMerges,
                     final List<ReviewRoundInfo> reviewRounds) {
                 return ReviewPlugin.this.callUiFromBackgroundJob(
                         null,
@@ -935,7 +934,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                             @Override
                             public UserSelectedReductions run(Void v) {
                                 return SelectIrrelevantDialog.show(
-                                        changes, strategyResults, suggestedMerges, reviewRounds);
+                                        changes, strategyResults, reviewRounds);
                             }
                         });
             }
