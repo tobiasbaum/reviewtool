@@ -3,7 +3,6 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -79,7 +78,6 @@ public class ToursInReview {
          * There always is at least one choice.
          * When the user cancels, null is returned.
          */
-        //TODO delete
         public abstract List<? extends Tour> selectInitialTours(
                 List<? extends Pair<String, List<? extends Tour>>> choices);
 
@@ -90,13 +88,11 @@ public class ToursInReview {
          *
          * @param changes All commits belonging to the review.
          * @param strategyResults Pairs with a description of the filter strategy and the resulting filter candidates
-         * @param suggestedMerges Tour merges as suggested by default.
          * @param reviewRounds The review rounds conducted so far (to show them to the user).
          */
         public abstract UserSelectedReductions selectIrrelevant(
                 List<? extends ICommit> changes,
                 List<Pair<String, Set<? extends IChange>>> strategyResults,
-                List<List<ICommit>> suggestedMerges,
                 List<ReviewRoundInfo> reviewRounds);
 
     }
@@ -108,15 +104,12 @@ public class ToursInReview {
     public static final class UserSelectedReductions {
         private final List<? extends ICommit> commitSubset;
         private final List<? extends Pair<String, Set<? extends IChange>>> toMakeIrrelevant;
-        private final List<List<ICommit>> toMerge;
 
         public UserSelectedReductions(
                 List<? extends ICommit> chosenCommitSubset,
-                List<Pair<String, Set<? extends IChange>>> chosenFilterSubset,
-                List<List<ICommit>> chosenMerges) {
+                List<Pair<String, Set<? extends IChange>>> chosenFilterSubset) {
             this.commitSubset = chosenCommitSubset;
             this.toMakeIrrelevant = chosenFilterSubset;
-            this.toMerge = chosenMerges;
         }
     }
 
@@ -355,10 +348,8 @@ public class ToursInReview {
             }
         }
 
-        final List<List<ICommit>> suggestedMerges = Collections.emptyList();
-
         final UserSelectedReductions selected =
-                createUi.selectIrrelevant(changes, strategyResults, suggestedMerges, reviewRounds);
+                createUi.selectIrrelevant(changes, strategyResults, reviewRounds);
         if (selected == null) {
             return null;
         }
@@ -438,8 +429,6 @@ public class ToursInReview {
                 .params(Tour.determineSize(originalTours))
                 .log();
 
-
-        //TODO delete, not needed any more
         for (final ITourRestructuring restructuringStrategy : tourRestructuringStrategies) {
             if (progressMonitor.isCanceled()) {
                 throw new OperationCanceledException();

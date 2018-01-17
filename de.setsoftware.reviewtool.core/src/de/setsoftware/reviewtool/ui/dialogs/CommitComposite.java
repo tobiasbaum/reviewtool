@@ -10,7 +10,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Canvas;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
@@ -32,17 +31,10 @@ public class CommitComposite extends Composite {
     public CommitComposite(Composite parent, int style, ICommit commit,
             List<? extends Pair<String, Set<? extends IChange>>> filterChoices) {
         super(parent, style);
-        this.setLayout(new GridLayout(2, false));
+        this.setLayout(new GridLayout(1, false));
 
         this.commit = commit;
         this.filters = filterChoices;
-
-        final Canvas tourCanvas = new Canvas(this, SWT.NONE);
-        final GridData tcd = new GridData(SWT.LEFT, SWT.FILL, false, true, 1, 2);
-        tcd.minimumWidth = 10;
-        tcd.widthHint = 10;
-        tcd.heightHint = 20;
-        tourCanvas.setLayoutData(tcd);
 
         this.checkbox = new Button(this, SWT.CHECK);
         this.checkbox.setSelection(true);

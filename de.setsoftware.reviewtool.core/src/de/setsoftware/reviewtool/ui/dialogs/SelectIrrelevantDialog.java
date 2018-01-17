@@ -35,25 +35,21 @@ public class SelectIrrelevantDialog extends Dialog {
 
     private final List<? extends ICommit> allCommits;
     private final List<? extends Pair<String, Set<? extends IChange>>> filterChoices;
-    private final List<List<ICommit>> suggestedMerges;
     private final List<ReviewRoundInfo> reviewRounds;
     private List<CommitComposite> commitComposites;
     private List<Button> filterCheckboxes;
     private List<ICommit> chosenCommitSubset;
     private List<Pair<String, Set<? extends IChange>>> chosenFilterSubset;
-    private List<List<ICommit>> chosenMerges;
 
     protected SelectIrrelevantDialog(
             Shell parentShell,
             List<? extends ICommit> changes,
             List<? extends Pair<String, Set<? extends IChange>>> filterChoices,
-            List<List<ICommit>> suggestedMerges,
             List<ReviewRoundInfo> reviewRounds) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.allCommits = changes;
         this.filterChoices = filterChoices;
-        this.suggestedMerges = suggestedMerges;
         this.reviewRounds = reviewRounds;
     }
 
@@ -217,12 +213,11 @@ public class SelectIrrelevantDialog extends Dialog {
     public static UserSelectedReductions show(
             List<? extends ICommit> changes,
             List<Pair<String, Set<? extends IChange>>> filterChoices,
-            List<List<ICommit>> suggestedMerges,
             List<ReviewRoundInfo> reviewRounds) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 
         final SelectIrrelevantDialog dialog =
-                new SelectIrrelevantDialog(s, changes, filterChoices, suggestedMerges, reviewRounds);
+                new SelectIrrelevantDialog(s, changes, filterChoices, reviewRounds);
         final int ret = dialog.open();
         if (ret != OK) {
             return null;
@@ -232,8 +227,7 @@ public class SelectIrrelevantDialog extends Dialog {
         }
         return new UserSelectedReductions(
                 dialog.chosenCommitSubset,
-                dialog.chosenFilterSubset,
-                dialog.chosenMerges);
+                dialog.chosenFilterSubset);
     }
 
 }
