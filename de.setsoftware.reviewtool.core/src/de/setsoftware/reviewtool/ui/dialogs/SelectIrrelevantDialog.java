@@ -189,7 +189,12 @@ public class SelectIrrelevantDialog extends Dialog {
     }
 
     private boolean getSavedSelectionState(Pair<String, Set<? extends IChange>> data) {
-        return Boolean.parseBoolean(DialogHelper.getSetting(this.makeSettingId(data)));
+        final String s = DialogHelper.getSetting(this.makeSettingId(data));
+        if (s.isEmpty()) {
+            //default: activate filter
+            return true;
+        }
+        return Boolean.parseBoolean(s);
     }
 
     private void saveSelectionState(Pair<String, Set<? extends IChange>> data, boolean selection) {
