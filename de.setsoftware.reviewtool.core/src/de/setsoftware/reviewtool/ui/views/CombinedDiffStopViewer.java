@@ -55,7 +55,7 @@ import de.setsoftware.reviewtool.ui.IStopViewer;
 public class CombinedDiffStopViewer implements IStopViewer {
 
     /**
-     * Highlights a range by choosing a different colour.
+     * Highlights a range by choosing a different color.
      */
     private static final class ChangeHighlighter implements ITextPresentationListener {
 
@@ -353,6 +353,8 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
     }
 
+
+
     private static final int CONTEXT_LENGTH = 3;
 
     private List<? extends IRevisionedFile> allRevisions;
@@ -376,7 +378,13 @@ public class CombinedDiffStopViewer implements IStopViewer {
     }
 
     private static String toLabel(IRevisionedFile revision) {
-        return revision.toString();
+        final String original = revision.toString();
+        String shortened = original;
+        while (shortened.length() > 100 && shortened.contains("/")) {
+            final int index = shortened.indexOf('/');
+            shortened = shortened.substring(index + 1);
+        }
+        return shortened.equals(original) ? shortened : (".../" + shortened);
     }
 
     @Override
@@ -407,7 +415,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
                     @Override
                     public void widgetDefaultSelected(SelectionEvent e) {
-                        CombinedDiffStopViewer.this.refreshShownContents();
+                        this.widgetSelected(e);
                     }
                 };
 
@@ -422,6 +430,8 @@ public class CombinedDiffStopViewer implements IStopViewer {
                 this.addAll(this.comboRight, this.allRevisions.subList(1, this.allRevisions.size()));
                 this.comboRight.select(this.allRevisions.indexOf(lastRevision) - 1);
                 this.comboRight.addSelectionListener(fileChangedListener);
+
+                this.setTooltips(firstRevision, lastRevision);
 
                 final Composite viewerWrapper = new Composite(scrollContent, SWT.NONE);
                 viewerWrapper.setLayout(new FillLayout());
@@ -439,6 +449,11 @@ public class CombinedDiffStopViewer implements IStopViewer {
                 }
             }
         }
+    }
+
+    private void setTooltips(IRevisionedFile leftFile, IRevisionedFile rightFile) {
+        this.comboLeft.setToolTipText(leftFile.toString());
+        this.comboRight.setToolTipText(rightFile.toString());
     }
 
     private void initDiffViewerContent(final IRevisionedFile leftRevision, final IRevisionedFile rightRevision) {
@@ -491,6 +506,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         final IRevisionedFile fileLeft = this.allRevisions.get(this.comboLeft.getSelectionIndex());
         final IRevisionedFile fileRight = this.allRevisions.get(this.comboRight.getSelectionIndex() + 1);
         this.initDiffViewerContent(fileLeft, fileRight);
+        this.setTooltips(fileLeft, fileRight);
     }
 
     private void addAll(Combo combo, List<? extends IRevisionedFile> subList) {
