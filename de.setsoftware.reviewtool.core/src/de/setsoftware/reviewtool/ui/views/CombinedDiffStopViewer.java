@@ -45,6 +45,7 @@ import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
+import de.setsoftware.reviewtool.model.changestructure.Hunk;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.IStopViewer;
@@ -444,6 +445,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
                 }
 
                 this.initDiffViewerContent(firstRevision, lastRevision);
+                this.moveToLineForStop(tours, stop, node, firstRevision, lastRevision);
                 for (final SourceViewer v : this.viewer.getViewers()) {
                     ViewHelper.createContextMenu(view, v.getTextWidget(), v);
                 }
@@ -494,19 +496,41 @@ public class CombinedDiffStopViewer implements IStopViewer {
                 this.createTextItem(rightRevision, newContents.lines)));
         this.viewer.clearSelections();
 
-        this.highlightsLeft = markAndReveal(
+        this.highlightsLeft = mark(
                 this.viewer.getLeft(), this.highlightsLeft, oldPositions, oldLineRanges,
                 Constants.DIFF_BACKGROUND_OLD, new RGB(232, 153, 153));
-        this.highlightsRight = markAndReveal(
+        this.highlightsRight = mark(
                 this.viewer.getRight(), this.highlightsRight, newPositions, newLineRanges,
                 Constants.DIFF_BACKGROUND_NEW, new RGB(148, 255, 157));
     }
 
+    private void moveToLineForStop(
+            ToursInReview tours,
+            Stop stop,
+            IFileHistoryNode node,
+            IRevisionedFile leftRevision,
+            IRevisionedFile rightRevision) {
+
+        reveal(this.viewer.getLeft(), this.getLineFor(stop, leftRevision, false));
+        reveal(this.viewer.getLeft(), this.getLineFor(stop, leftRevision, true));
+    }
+
+    private int getLineFor(Stop stop, IRevisionedFile revision, boolean right) {
+        for (final Hunk hunk : stop.getContentFor(revision)) {
+            return (right ? hunk.getTarget() : hunk.getSource()).getFrom().getLine();
+        }
+        return stop.getMostRecentFragment().getFrom().getLine();
+    }
+
     private void refreshShownContents() {
+        final int oldLineLeft = this.viewer.getLeft().getTopIndex();
+        final int oldLineRight = this.viewer.getRight().getTopIndex();
         final IRevisionedFile fileLeft = this.allRevisions.get(this.comboLeft.getSelectionIndex());
         final IRevisionedFile fileRight = this.allRevisions.get(this.comboRight.getSelectionIndex() + 1);
         this.initDiffViewerContent(fileLeft, fileRight);
         this.setTooltips(fileLeft, fileRight);
+        this.viewer.getLeft().setTopIndex(oldLineLeft);
+        this.viewer.getRight().setTopIndex(oldLineRight);
     }
 
     private void addAll(Combo combo, List<? extends IRevisionedFile> subList) {
@@ -573,7 +597,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
     }
 
-    private static Highlights markAndReveal(
+    private static Highlights mark(
             final SourceViewer viewer,
             Highlights oldHighlights,
             final List<Position> ranges,
@@ -589,20 +613,15 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
         final Highlights newHighlights = new Highlights(ranges, lineRanges, backgroundColorKey, defaultBackgroundColor);
         newHighlights.apply(viewer);
-        if (!ranges.isEmpty()) {
-            reveal(viewer, ranges.iterator().next());
-        }
         return newHighlights;
     }
 
 
     /**
-     * Makes the given range visible within the pane.
+     * Makes the line visible in the given viewer and includes context lines above if possible.
      */
-    private static void reveal(final SourceViewer viewer, final Position range) {
-        viewer.revealRange(range.getOffset(), range.getLength());
-        final int top = viewer.getTopIndex();
-        viewer.setTopIndex(top < CONTEXT_LENGTH ? 0 : top - CONTEXT_LENGTH);
+    private static void reveal(final SourceViewer viewer, final int line) {
+        viewer.setTopIndex(line < CONTEXT_LENGTH ? 0 : line - CONTEXT_LENGTH);
     }
 
 }

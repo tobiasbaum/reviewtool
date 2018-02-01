@@ -144,6 +144,9 @@ public class Stop extends TourElement {
         return Collections.unmodifiableMap(this.historyOrder);
     }
 
+    /**
+     * Returns the hunks with the given source file/revision.
+     */
     public List<Hunk> getContentFor(final IRevisionedFile revision) {
         return this.history.get(revision);
     }
