@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.compare.CompareConfiguration;
@@ -395,60 +394,58 @@ public class CombinedDiffStopViewer implements IStopViewer {
             return;
         }
 
-        final Map<IRevisionedFile, IRevisionedFile> changes = stop.getHistory();
-        final List<? extends IRevisionedFile> sortedRevs = FileInRevision.sortByRevision(changes.keySet());
-        final IRevisionedFile firstRevision = sortedRevs.get(0);
-        final IRevisionedFile lastRevision = changes.get(sortedRevs.get(sortedRevs.size() - 1));
+        this.allRevisions = this.determineAllRevisionsOfFile(tours, stop.getOriginalMostRecentFile());
+        final Set<IRevisionedFile> revisionsForStop = new LinkedHashSet<>();
+        revisionsForStop.addAll(stop.getHistory().keySet());
+        revisionsForStop.addAll(stop.getHistory().values());
+        final List<? extends IRevisionedFile> sortedStopRevisions = FileInRevision.sortByRevision(revisionsForStop);
+        final IRevisionedFile initialLeftRevision = sortedStopRevisions.get(0);
+        final IRevisionedFile initialRightRevision = sortedStopRevisions.get(sortedStopRevisions.size() - 1);
 
-        this.allRevisions = this.determineAllRevisionsOfFile(tours, lastRevision);
+        if (stop.isBinaryChange()) {
+            this.createBinaryHunkViewer(view, scrollContent);
+        } else {
 
-        final IFileHistoryNode node = tours.getFileHistoryNode(lastRevision);
-        if (node != null) {
-            if (stop.isBinaryChange()) {
-                this.createBinaryHunkViewer(view, scrollContent);
+            final SelectionListener fileChangedListener = new SelectionListener() {
+                @Override
+                public void widgetSelected(SelectionEvent e) {
+                    CombinedDiffStopViewer.this.refreshShownContents();
+                }
+
+                @Override
+                public void widgetDefaultSelected(SelectionEvent e) {
+                    this.widgetSelected(e);
+                }
+            };
+
+            this.comboLeft = new Combo(scrollContent, SWT.READ_ONLY);
+            this.comboLeft.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+            this.addAll(this.comboLeft, this.allRevisions.subList(0, this.allRevisions.size() - 1));
+            this.comboLeft.select(this.allRevisions.indexOf(initialLeftRevision));
+            this.comboLeft.addSelectionListener(fileChangedListener);
+
+            this.comboRight = new Combo(scrollContent, SWT.READ_ONLY);
+            this.comboRight.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+            this.addAll(this.comboRight, this.allRevisions.subList(1, this.allRevisions.size()));
+            this.comboRight.select(this.allRevisions.indexOf(initialRightRevision) - 1);
+            this.comboRight.addSelectionListener(fileChangedListener);
+
+            this.setTooltips(initialLeftRevision, initialRightRevision);
+
+            final Composite viewerWrapper = new Composite(scrollContent, SWT.NONE);
+            viewerWrapper.setLayout(new FillLayout());
+            viewerWrapper.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
+            final CompareConfiguration compareConfiguration = new CompareConfiguration();
+            if (this.isJava(initialRightRevision)) {
+                this.viewer = new SelectableJavaMergeViewer(viewerWrapper, SWT.BORDER, compareConfiguration);
             } else {
+                this.viewer = new SelectableTextMergeViewer(viewerWrapper, SWT.BORDER, compareConfiguration);
+            }
 
-                final SelectionListener fileChangedListener = new SelectionListener() {
-                    @Override
-                    public void widgetSelected(SelectionEvent e) {
-                        CombinedDiffStopViewer.this.refreshShownContents();
-                    }
-
-                    @Override
-                    public void widgetDefaultSelected(SelectionEvent e) {
-                        this.widgetSelected(e);
-                    }
-                };
-
-                this.comboLeft = new Combo(scrollContent, SWT.READ_ONLY);
-                this.comboLeft.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-                this.addAll(this.comboLeft, this.allRevisions.subList(0, this.allRevisions.size() - 1));
-                this.comboLeft.select(this.allRevisions.indexOf(firstRevision));
-                this.comboLeft.addSelectionListener(fileChangedListener);
-
-                this.comboRight = new Combo(scrollContent, SWT.READ_ONLY);
-                this.comboRight.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
-                this.addAll(this.comboRight, this.allRevisions.subList(1, this.allRevisions.size()));
-                this.comboRight.select(this.allRevisions.indexOf(lastRevision) - 1);
-                this.comboRight.addSelectionListener(fileChangedListener);
-
-                this.setTooltips(firstRevision, lastRevision);
-
-                final Composite viewerWrapper = new Composite(scrollContent, SWT.NONE);
-                viewerWrapper.setLayout(new FillLayout());
-                viewerWrapper.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1));
-                final CompareConfiguration compareConfiguration = new CompareConfiguration();
-                if (this.isJava(lastRevision)) {
-                    this.viewer = new SelectableJavaMergeViewer(viewerWrapper, SWT.BORDER, compareConfiguration);
-                } else {
-                    this.viewer = new SelectableTextMergeViewer(viewerWrapper, SWT.BORDER, compareConfiguration);
-                }
-
-                this.initDiffViewerContent(firstRevision, lastRevision);
-                this.moveToLineForStop(tours, stop, node, firstRevision, lastRevision);
-                for (final SourceViewer v : this.viewer.getViewers()) {
-                    ViewHelper.createContextMenu(view, v.getTextWidget(), v);
-                }
+            this.initDiffViewerContent(initialLeftRevision, initialRightRevision);
+            this.moveToLineForStop(stop, initialLeftRevision, initialRightRevision);
+            for (final SourceViewer v : this.viewer.getViewers()) {
+                ViewHelper.createContextMenu(view, v.getTextWidget(), v);
             }
         }
     }
@@ -505,9 +502,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
     }
 
     private void moveToLineForStop(
-            ToursInReview tours,
             Stop stop,
-            IFileHistoryNode node,
             IRevisionedFile leftRevision,
             IRevisionedFile rightRevision) {
 
