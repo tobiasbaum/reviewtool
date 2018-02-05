@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Reviewdata
 Bundle-SymbolicName: de.setsoftware.reviewtool.reviewdata
-Bundle-Version: 1.19.0.qualifier
+Bundle-Version: 1.20.0.qualifier
 Bundle-Vendor: Tobias Baum
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Export-Package: de.setsoftware.reviewtool.model.remarks
