@@ -510,7 +510,7 @@ public class ToursInReview {
         for (int i = 0; i < this.topmostTours.size(); i++) {
             final Tour s = this.topmostTours.get(i);
             for (final Stop f : s.getStops()) {
-                if (progressMonitor != null && progressMonitor.isCanceled()) {
+                if (progressMonitor.isCanceled()) {
                     throw new OperationCanceledException();
                 }
                 this.createMarkerFor(markerFactory, lookupTables, f, i == this.currentTourIndex);
@@ -586,15 +586,21 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(Tour t, IStopMarkerFactory markerFactory, boolean notify)
+    public void ensureTourActive(Tour t, final IStopMarkerFactory markerFactory, boolean notify)
         throws CoreException {
 
         final int index = this.topmostTours.indexOf(t);
         if (index != this.currentTourIndex) {
-            this.clearMarkers();
             final Tour oldActive = this.getActiveTour();
             this.currentTourIndex = index;
-            this.createMarkers(markerFactory, null);
+            new WorkspaceJob("Review marker update") {
+                @Override
+                public IStatus runInWorkspace(IProgressMonitor progressMonitor) throws CoreException {
+                    ToursInReview.this.clearMarkers();
+                    ToursInReview.this.createMarkers(markerFactory, progressMonitor);
+                    return Status.OK_STATUS;
+                }
+            }.schedule();
             if (notify) {
                 for (final IToursInReviewChangeListener l : this.listeners) {
                     l.activeTourChanged(oldActive, this.getActiveTour());
