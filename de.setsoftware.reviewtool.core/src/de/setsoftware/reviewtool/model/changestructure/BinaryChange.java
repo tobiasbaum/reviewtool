@@ -15,9 +15,8 @@ public class BinaryChange extends Change implements IBinaryChange {
     BinaryChange(
             final IRevisionedFile from,
             final IRevisionedFile to,
-            final boolean irrelevantForReview,
-            final boolean isVisible) {
-        super(irrelevantForReview, isVisible);
+            final boolean irrelevantForReview) {
+        super(irrelevantForReview);
         this.from = from;
         this.to = to;
     }
@@ -42,6 +41,6 @@ public class BinaryChange extends Change implements IBinaryChange {
         if (this.isIrrelevantForReview()) {
             return this;
         }
-        return new BinaryChange(this.from, this.to, true, this.isVisible());
+        return new BinaryChange(this.from, this.to, true);
     }
 }

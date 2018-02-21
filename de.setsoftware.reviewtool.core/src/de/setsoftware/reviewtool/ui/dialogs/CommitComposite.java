@@ -80,7 +80,7 @@ public class CommitComposite extends Composite {
     }
 
     private boolean isRelevant(IChange change) {
-        if (change.isIrrelevantForReview() || !change.isVisible()) {
+        if (change.isIrrelevantForReview()) {
             return false;
         }
         for (final Pair<String, Set<? extends IChange>> filter : this.filters) {

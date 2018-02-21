@@ -69,8 +69,7 @@ final class SvnRevision implements ISvnRevision {
         return this.logEntry.getChangedPaths();
     }
 
-    @Override
-    public boolean isVisible() {
+    boolean isVisible() {
         return this.isVisible;
     }
 

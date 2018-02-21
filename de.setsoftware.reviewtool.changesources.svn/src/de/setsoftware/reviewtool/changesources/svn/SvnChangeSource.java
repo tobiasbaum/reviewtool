@@ -251,9 +251,8 @@ public class SvnChangeSource implements IChangeSource {
                     null); /* no change lists */
 
             final WorkingCopyRevision wcRevision = new WorkingCopyRevision(repo, paths);
-            if (RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph)) {
-                revisions.add(wcRevision);
-            }
+            RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph);
+            revisions.add(wcRevision);
         }
 
         return revisions;
@@ -276,9 +275,8 @@ public class SvnChangeSource implements IChangeSource {
 
         for (final Map.Entry<SvnRepo, SortedMap<String, CachedLogEntryPath>> entry : changeMap.entrySet()) {
             final WorkingCopyRevision wcRevision = new WorkingCopyRevision(entry.getKey(), entry.getValue());
-            if (RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph)) {
-                revisions.add(wcRevision);
-            }
+            RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph);
+            revisions.add(wcRevision);
         }
 
         return revisions;
@@ -384,7 +382,6 @@ public class SvnChangeSource implements IChangeSource {
             result.add(ChangestructureFactory.createCommit(
                     e.toPrettyString(),
                     changes,
-                    e.isVisible(),
                     this.revision(e),
                     e.getDate()));
         }
@@ -449,7 +446,7 @@ public class SvnChangeSource implements IChangeSource {
             final IMutableFileHistoryNode node = historyGraph.getNodeFor(fileInfo);
             if (node != null) {
                 try {
-                    ret.addAll(this.determineChangesInFile(node, e.isVisible()));
+                    ret.addAll(this.determineChangesInFile(node));
                 } catch (final Exception ex) {
                     IStatus status = new Status(
                             IStatus.ERROR,
@@ -464,8 +461,7 @@ public class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private IBinaryChange createBinaryChange(final IFileHistoryNode node, final IFileHistoryNode ancestor,
-            final boolean isVisible) {
+    private IBinaryChange createBinaryChange(final IFileHistoryNode node, final IFileHistoryNode ancestor) {
 
         final IRevisionedFile oldFileInfo = ChangestructureFactory.createFileInRevision(ancestor.getFile().getPath(),
                         ancestor.getFile().getRevision());
@@ -473,8 +469,7 @@ public class SvnChangeSource implements IChangeSource {
         return ChangestructureFactory.createBinaryChange(
                 oldFileInfo,
                 node.getFile(),
-                false,
-                isVisible);
+                false);
     }
 
     private IRevision revision(final ISvnRevision revision) {
@@ -495,9 +490,7 @@ public class SvnChangeSource implements IChangeSource {
         return result.get();
     }
 
-    private List<? extends IChange> determineChangesInFile(
-            final IMutableFileHistoryNode node,
-            final boolean isVisible) throws Exception {
+    private List<? extends IChange> determineChangesInFile(final IMutableFileHistoryNode node) throws Exception {
 
         final byte[] newFileContents = node.getFile().getContents();
         final boolean newFileContentsUseTextualDiff = this.isUseTextualDiff(newFileContents);
@@ -515,11 +508,10 @@ public class SvnChangeSource implements IChangeSource {
                     changes.add(ChangestructureFactory.createTextualChangeHunk(
                             hunk.getSource(),
                             hunk.getTarget(),
-                            false,
-                            isVisible));
+                            false));
                 }
             } else {
-                changes.add(this.createBinaryChange(node, ancestor, isVisible));
+                changes.add(this.createBinaryChange(node, ancestor));
             }
         }
         return changes;

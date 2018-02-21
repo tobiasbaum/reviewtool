@@ -31,12 +31,7 @@ public interface ICommit {
     public abstract ICommit makeChangesIrrelevant(Set<? extends IChange> toMakeIrrelevant);
 
     /**
-     * Returns {@code true} if this {@link ICommit} is visible, else false.
-     */
-    public abstract boolean isVisible();
-
-    /**
-     * Returns The date and time of the commit.
+     * Returns the date and time of the commit.
      */
     public abstract Date getTime();
 

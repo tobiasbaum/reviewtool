@@ -1,7 +1,7 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -17,7 +17,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 public class SvnChangeData implements IChangeData {
 
     private final IChangeSource source;
-    private final List<ICommit> commits;
+    private final List<? extends ICommit> commits;
     private final Map<File, IRevisionedFile> localPathMap;
     private final IFileHistoryGraph fileHistoryGraph;
 
@@ -27,7 +27,7 @@ public class SvnChangeData implements IChangeData {
             final Map<File, IRevisionedFile> localPathMap,
             final IFileHistoryGraph fileHistoryGraph) {
         this.source = source;
-        this.commits = new ArrayList<>(commits);
+        this.commits = commits;
         this.localPathMap = localPathMap;
         this.fileHistoryGraph = fileHistoryGraph;
     }
@@ -39,13 +39,7 @@ public class SvnChangeData implements IChangeData {
 
     @Override
     public List<? extends ICommit> getMatchedCommits() {
-        final List<ICommit> ret = new ArrayList<>();
-        for (final ICommit c : this.commits) {
-            if (c.isVisible()) {
-                ret.add(c);
-            }
-        }
-        return ret;
+        return Collections.unmodifiableList(this.commits);
     }
 
     @Override

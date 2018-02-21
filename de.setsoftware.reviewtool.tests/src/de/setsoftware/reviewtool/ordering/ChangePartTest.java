@@ -69,7 +69,7 @@ public class ChangePartTest {
 
     private static Stop binaryStop(String filename) {
         return new Stop(
-                ChangestructureFactory.createBinaryChange(file(filename, 1), file(filename, 3), false, true),
+                ChangestructureFactory.createBinaryChange(file(filename, 1), file(filename, 3), false),
                 file(filename, 4));
     }
 
@@ -80,8 +80,7 @@ public class ChangePartTest {
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(file(file.getPath(), 1), posFrom, posTo),
                         ChangestructureFactory.createFragment(file, posFrom, posTo),
-                        false,
-                        true),
+                        false),
                 ChangestructureFactory.createFragment(file, posFrom, posTo));
     }
 

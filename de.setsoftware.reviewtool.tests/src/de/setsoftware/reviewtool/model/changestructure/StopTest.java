@@ -25,10 +25,10 @@ public class StopTest {
     @Test
     public void testRevisionsInHistoryAreSortedAfterMerge() {
         final Stop s1 = new Stop(
-                ChangestructureFactory.createBinaryChange(file("a.java", 1), file("a.java", 3), false, true),
+                ChangestructureFactory.createBinaryChange(file("a.java", 1), file("a.java", 3), false),
                 file("a.java", 4));
         final Stop s2 = new Stop(
-                ChangestructureFactory.createBinaryChange(file("a.java", 2), file("a.java", 4), false, true),
+                ChangestructureFactory.createBinaryChange(file("a.java", 2), file("a.java", 4), false),
                 file("a.java", 4));
         final Stop merged = s1.merge(s2);
         final Stop merged2 = s2.merge(s1);
@@ -46,8 +46,7 @@ public class StopTest {
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
-                        false,
-                        true),
+                        false),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(8), line(13)));
         assertEquals(2, s.getNumberOfFragments());
         assertEquals(5, s.getNumberOfAddedLines());
@@ -60,15 +59,13 @@ public class StopTest {
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
-                        false,
-                        true),
+                        false),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(8), line(13)));
         final Stop s2 = new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(file("a.java", 1), line(23), line(26)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(13), line(17)),
-                        false,
-                        true),
+                        false),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(13), line(17)));
         final Stop merged = s1.merge(s2);
         assertEquals(3, merged.getNumberOfFragments());
@@ -82,15 +79,13 @@ public class StopTest {
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
-                        false,
-                        true),
+                        false),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)));
         final Stop s2 = new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
                         ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)),
-                        false,
-                        true),
+                        false),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)));
         final Stop merged = s1.merge(s2);
         assertEquals(3, merged.getNumberOfFragments());

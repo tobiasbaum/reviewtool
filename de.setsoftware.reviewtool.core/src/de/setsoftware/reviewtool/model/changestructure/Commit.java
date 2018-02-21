@@ -17,19 +17,17 @@ public class Commit implements ICommit {
 
     private final String message;
     private final List<IChange> changes;
-    private final boolean isVisible;
     private final IRevision revision;
     private final long timestamp;
 
     Commit(
             final String message,
             final List<? extends IChange> changes,
-            final boolean isVisible,
             final IRevision revision,
             final Date timestamp) {
+
         this.message = message;
         this.changes = new ArrayList<>(changes);
-        this.isVisible = isVisible;
         this.revision = revision;
         this.timestamp = timestamp.getTime();
     }
@@ -52,21 +50,14 @@ public class Commit implements ICommit {
     @Override
     public Commit makeChangesIrrelevant(Set<? extends IChange> toMakeIrrelevant) {
         final List<IChange> adjustedChanges = new ArrayList<>();
-        boolean isVisible = false;
         for (final IChange change : this.changes) {
             if (toMakeIrrelevant.contains(change)) {
                 adjustedChanges.add(change.makeIrrelevant());
             } else {
                 adjustedChanges.add(change);
             }
-            isVisible = isVisible || change.isVisible();
         }
-        return new Commit(this.message, adjustedChanges, isVisible, this.revision, this.getTime());
-    }
-
-    @Override
-    public boolean isVisible() {
-        return this.isVisible;
+        return new Commit(this.message, adjustedChanges, this.revision, this.getTime());
     }
 
     @Override

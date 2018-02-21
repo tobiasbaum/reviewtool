@@ -463,7 +463,6 @@ public class ToursInReview {
             if (progressMonitor.isCanceled()) {
                 throw new OperationCanceledException();
             }
-            assert c.isVisible();
             ret.add(new Tour(
                     c.getMessage(),
                     toSliceFragments(c.getChanges(), tracer)));

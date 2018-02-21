@@ -14,8 +14,8 @@ public class TextualChangeHunk extends Change implements ITextualChange {
     private final IFragment to;
 
     TextualChangeHunk(
-            final IFragment from, final IFragment to, final boolean irrelevantForReview, final boolean isVisible) {
-        super(irrelevantForReview, isVisible);
+            final IFragment from, final IFragment to, final boolean irrelevantForReview) {
+        super(irrelevantForReview);
         this.from = from;
         this.to = to;
     }
@@ -40,7 +40,7 @@ public class TextualChangeHunk extends Change implements ITextualChange {
         if (this.isIrrelevantForReview()) {
             return this;
         }
-        return new TextualChangeHunk(this.from, this.to, true, this.isVisible());
+        return new TextualChangeHunk(this.from, this.to, true);
     }
 
     @Override
