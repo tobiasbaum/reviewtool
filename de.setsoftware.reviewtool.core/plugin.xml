@@ -216,6 +216,10 @@
 	</extension>
  <extension
        point="org.eclipse.ui.bindings">
+    <sequenceModifier
+          find="M3"
+          replace="M1"
+          platforms="cocoa,carbon" />
     <key
           commandId="de.setsoftware.reviewtool.commands.addremark"
           contextId="org.eclipse.ui.contexts.window"
