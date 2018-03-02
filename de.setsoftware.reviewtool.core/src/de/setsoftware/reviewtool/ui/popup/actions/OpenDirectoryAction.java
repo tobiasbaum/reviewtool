@@ -28,6 +28,7 @@ public class OpenDirectoryAction extends AbstractHandler {
         }
         final TreeSelection ts = (TreeSelection) selection;
 
+        @SuppressWarnings("unchecked")
         final List<Stop> stops = new ArrayList<>(ts.toList());
         for (final Stop stop : stops) {
             try {

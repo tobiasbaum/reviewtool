@@ -29,6 +29,7 @@ public class MarkAsCheckedAction extends AbstractHandler {
         }
         final TreeSelection ts = (TreeSelection) selection;
 
+        @SuppressWarnings("unchecked")
         final List<Stop> stops = new ArrayList<>(ts.toList());
         final ViewStatistics statistics = TrackerManager.get().getStatistics();
         statistics.toggleExplicitlyCheckedMark(stops);

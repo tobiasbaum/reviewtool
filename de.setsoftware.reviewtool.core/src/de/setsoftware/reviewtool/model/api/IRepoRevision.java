@@ -6,7 +6,7 @@ package de.setsoftware.reviewtool.model.api;
 public interface IRepoRevision extends IRevision {
 
     /**
-     * @return The ID of the repository revision.
+     * Returns the ID of the repository revision.
      */
     public abstract Object getId();
 

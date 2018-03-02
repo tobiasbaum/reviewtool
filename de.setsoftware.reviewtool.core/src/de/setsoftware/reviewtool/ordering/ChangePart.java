@@ -158,7 +158,8 @@ public class ChangePart {
                 }
                 do {
                     currentBlockEnd = scanner.getNextRegionEndLineNumber();
-                } while (stopStartLine > currentBlockEnd);
+                }
+                while (stopStartLine > currentBlockEnd);
                 stopsInCurrentBlock = new ArrayList<>();
                 stopsInCurrentBlock.add(s);
             }
@@ -232,6 +233,10 @@ public class ChangePart {
                     case SEMI:
                         hadPotentialEnd = true;
                         break;
+                    case MULTILINE_COMMENT_START:
+                    case MULTILINE_COMMENT_END:
+                    case SEA:
+                    case SINGLE_LINE_COMMENT:
                     default:
                         //other token types not needed
                         break;

@@ -109,7 +109,8 @@ public class ReviewStateManager {
                     return null;
                 }
                 data = this.persistence.loadTicket(this.ticketKey);
-            } while (data == null);
+            }
+            while (data == null);
             return this.decorateIfNeeded(data);
         } else {
             ITicketData data = this.persistence.loadTicket(this.ticketKey);

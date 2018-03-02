@@ -6,12 +6,12 @@ package de.setsoftware.reviewtool.model.api;
 public interface ITextualChange extends IChange {
 
     /**
-     * @return The source fragment.
+     * Returns the source fragment.
      */
     public abstract IFragment getFromFragment();
 
     /**
-     * @return The target fragment.
+     * Returns the target fragment.
      */
     public abstract IFragment getToFragment();
 

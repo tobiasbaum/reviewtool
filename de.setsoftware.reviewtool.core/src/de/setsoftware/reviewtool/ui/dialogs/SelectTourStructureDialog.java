@@ -83,6 +83,7 @@ public class SelectTourStructureDialog extends Dialog {
         Button bestButton = null;
 
         for (final Button b : this.radioButtons) {
+            @SuppressWarnings("unchecked")
             final List<? extends Tour> toursInStructure = (List<? extends Tour>) b.getData();
             final int curStopCount = this.countStops(toursInStructure);
             final int curTourCount = toursInStructure.size();
@@ -93,7 +94,10 @@ public class SelectTourStructureDialog extends Dialog {
                 bestButton = b;
             }
         }
-        bestButton.setSelection(true);
+
+        if (bestButton != null) {
+            bestButton.setSelection(true);
+        }
     }
 
     private int countStops(List<? extends Tour> toursInStructure) {
@@ -108,7 +112,9 @@ public class SelectTourStructureDialog extends Dialog {
     protected void okPressed() {
         for (final Button b : this.radioButtons) {
             if (b.getSelection()) {
-                this.chosenTours = (List<? extends Tour>) b.getData();
+                @SuppressWarnings("unchecked")
+                final List<? extends Tour> data = (List<? extends Tour>) b.getData();
+                this.chosenTours = data;
                 break;
             }
         }

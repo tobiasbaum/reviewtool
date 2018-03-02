@@ -8,22 +8,22 @@ package de.setsoftware.reviewtool.model.api;
 public interface IHunk extends Comparable<IHunk> {
 
     /**
-     * @return The source fragment.
+     * Returns the source fragment.
      */
     public abstract IFragment getSource();
 
     /**
-     * @return The target fragment.
+     * Returns the target fragment.
      */
     public abstract IFragment getTarget();
 
     /**
-     * @return The hunk delta.
+     * Returns the hunk delta.
      */
     public abstract IDelta getDelta();
 
     /**
-     * @return {@code true} if this is an in-line hunk.
+     * Returns {@code true} if this is an in-line hunk.
      */
     public abstract boolean isInline();
 

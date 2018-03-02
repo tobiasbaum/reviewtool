@@ -143,6 +143,7 @@ public class SelectIrrelevantDialog extends Dialog {
     private void updateCountsInCommits() {
         final List<Pair<String, Set<? extends IChange>>> activeFilters = new ArrayList<>();
         for (final Button b : this.filterCheckboxes) {
+            @SuppressWarnings("unchecked")
             final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
             if (b.getSelection()) {
                 activeFilters.add(data);
@@ -162,7 +163,9 @@ public class SelectIrrelevantDialog extends Dialog {
 
     private void restoreSavedSelection() {
         for (final Button b : this.filterCheckboxes) {
-            b.setSelection(this.getSavedSelectionState((Pair<String, Set<? extends IChange>>) b.getData()));
+            @SuppressWarnings("unchecked")
+            final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
+            b.setSelection(this.getSavedSelectionState(data));
         }
     }
 
@@ -177,6 +180,7 @@ public class SelectIrrelevantDialog extends Dialog {
 
         this.chosenFilterSubset = new ArrayList<>();
         for (final Button b : this.filterCheckboxes) {
+            @SuppressWarnings("unchecked")
             final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
             if (b.getSelection()) {
                 this.chosenFilterSubset.add(data);

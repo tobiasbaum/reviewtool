@@ -6,17 +6,17 @@ package de.setsoftware.reviewtool.model.api;
 public interface IPositionInText extends Comparable<IPositionInText> {
 
     /**
-     * @return The one-based line number this {@link IPositionInText} refers to.
+     * Returns the one-based line number this {@link IPositionInText} refers to.
      */
     public abstract int getLine();
 
     /**
-     * @return The one-based column number this {@link IPositionInText} refers to.
+     * Returns the one-based column number this {@link IPositionInText} refers to.
      */
     public abstract int getColumn();
 
     /**
-     * @return {@code true} if this {@link IPositionInText} is before the passed one, else {@code false}.
+     * Returns {@code true} if this {@link IPositionInText} is before the passed one, else {@code false}.
      */
     public abstract boolean lessThan(IPositionInText other);
 

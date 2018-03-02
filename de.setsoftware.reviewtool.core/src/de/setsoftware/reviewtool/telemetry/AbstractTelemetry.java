@@ -45,7 +45,7 @@ public abstract class AbstractTelemetry {
     /**
      * Generic log method.
      * Instead of using this method, its better to use a {@link TelemetryEventBuilder} (created by
-     * {@link de.setsoftware.reviewtool.telemetry.Telemetry.#event(type)}).
+     * {@link de.setsoftware.reviewtool.telemetry.Telemetry#event(String)}).
      */
     public void log(String eventType, Map<String, String> params) {
         this.putData(

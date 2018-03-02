@@ -16,7 +16,7 @@ public interface IDelta {
     public abstract int getColumnOffset();
 
     /**
-     * @return {@code true} if this is an in-line delta, i.e. if the line offset is zero.
+     *Returns {@code true} if this is an in-line delta, i.e. if the line offset is zero.
      */
     public abstract boolean isInline();
 
@@ -35,18 +35,18 @@ public interface IDelta {
     public abstract IDelta minus(IDelta other);
 
     /**
-     * @return This delta with negated line and column offsets.
+     * Returns this delta with negated line and column offsets.
      */
     public abstract IDelta negate();
 
     /**
-     * @return A copy of {@code this} with the column offset set to zero.
+     * Returns a copy of {@code this} with the column offset set to zero.
      */
     public abstract IDelta ignoreColumnOffset();
 
     /**
-     * @return If {@code ignore} is set to true, a copy of {@code this} with the column offset set to zero,
-     *      {@code this} otherwise.
+     * Returns a copy of {@code this} with the column offset set to zero if {@code ignore} is {@code true},
+     * {@code this} otherwise.
      */
     public abstract IDelta ignoreColumnOffset(boolean ignore);
 
