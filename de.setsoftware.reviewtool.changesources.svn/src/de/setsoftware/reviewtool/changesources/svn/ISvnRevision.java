@@ -11,47 +11,47 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 public interface ISvnRevision {
 
     /**
-     * @return The associated repository.
+     * Returns the associated repository.
      */
     public abstract SvnRepo getRepository();
 
     /**
-     * @return The associated revision number.
+     * Returns the associated revision number.
      */
     public abstract long getRevisionNumber();
 
     /**
-     * @return The associated revision number as a readable string.
+     * Returns the associated revision number as a readable string.
      */
     public abstract String getRevisionString();
 
     /**
-     * @return The {@link IRevision} for this Subversion revision.
+     * Returns the {@link IRevision} for this Subversion revision.
      */
     public abstract IRevision toRevision();
 
     /**
-     * @return The associated commit date.
+     * Returns the associated commit date.
      */
     public abstract Date getDate();
 
     /**
-     * @return The associated commit author.
+     * Returns the associated commit author.
      */
     public abstract String getAuthor();
 
     /**
-     * @return The associated commit message.
+     * Returns the associated commit message.
      */
     public abstract String getMessage();
 
     /**
-     * @return The associated commit paths.
+     * Returns the associated commit paths.
      */
     public abstract Map<String, CachedLogEntryPath> getChangedPaths();
 
     /**
-     * @return True if the revision is visible, else false.
+     * Returns true if the revision is visible, else false.
      */
     public abstract boolean isVisible();
 
@@ -66,7 +66,7 @@ public interface ISvnRevision {
     public abstract <E extends Exception> void accept(ISvnRevisionVisitorE<E> visitor) throws E;
 
     /**
-     * @return A pretty description of this revision.
+     * Returns a pretty description of this revision.
      */
     public abstract String toPrettyString();
 

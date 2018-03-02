@@ -24,9 +24,6 @@ final class WorkingCopyRevision implements ISvnRevision {
         this.paths = paths;
     }
 
-    /**
-     * @return The associated repository.
-     */
     @Override
     public SvnRepo getRepository() {
         return this.repository;
