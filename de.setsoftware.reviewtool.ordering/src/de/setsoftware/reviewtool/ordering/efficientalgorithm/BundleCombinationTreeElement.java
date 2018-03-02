@@ -156,6 +156,7 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
         if (asList.size() == 1) {
             return new BundleCombinationTreeLeaf<S>(asList.iterator().next());
         } else {
+            @SuppressWarnings("unchecked")
             final BundleCombinationTreeElement<S>[] items = new BundleCombinationTreeElement[asList.size()];
             final Iterator<S> iter = asList.iterator();
             int i = 0;

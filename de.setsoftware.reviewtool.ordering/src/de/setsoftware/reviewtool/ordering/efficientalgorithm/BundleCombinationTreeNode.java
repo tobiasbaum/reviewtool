@@ -290,8 +290,9 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         if (children.size() == 1) {
             return children.get(0);
         } else {
-            return new BundleCombinationTreeNode<>(
-                    children.toArray(new BundleCombinationTreeElement[children.size()]), true);
+            @SuppressWarnings("unchecked")
+            final BundleCombinationTreeElement<S>[] elements = new BundleCombinationTreeElement[children.size()];
+            return new BundleCombinationTreeNode<>(children.toArray(elements), true);
         }
     }
 
@@ -310,8 +311,9 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         if (children.size() == 1) {
             return children.get(0);
         } else {
-            return new BundleCombinationTreeNode<>(
-                    children.toArray(new BundleCombinationTreeElement[children.size()]), false);
+            @SuppressWarnings("unchecked")
+            final BundleCombinationTreeElement<S>[] elements = new BundleCombinationTreeElement[children.size()];
+            return new BundleCombinationTreeNode<>(children.toArray(elements), false);
         }
     }
 
@@ -405,6 +407,7 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
 
     @Override
     protected BundleCombinationTreeElement<T> reverse() {
+        @SuppressWarnings("unchecked")
         final BundleCombinationTreeElement<T>[] copy = new BundleCombinationTreeElement[this.children.length];
         final int lastIndex = copy.length - 1;
         for (int i = 0; i <= lastIndex; i++) {
@@ -415,6 +418,7 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
 
     @Override
     public PositionTreeNode<T> toPositionTree() {
+        @SuppressWarnings("unchecked")
         final PositionTreeElement<T>[] positionChildren = new PositionTreeElement[this.children.length];
         for (int i = 0; i < this.children.length; i++) {
             positionChildren[i] = this.children[i].toPositionTree();
