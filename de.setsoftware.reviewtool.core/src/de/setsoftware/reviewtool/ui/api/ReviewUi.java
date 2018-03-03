@@ -1,13 +1,19 @@
 package de.setsoftware.reviewtool.ui.api;
 
+import java.util.List;
+
 import org.eclipse.core.commands.ExecutionException;
 
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction;
+import de.setsoftware.reviewtool.ui.views.CurrentCommitsInReview;
+import de.setsoftware.reviewtool.ui.views.ViewDataSource;
 
 /**
  * Access to the review UI and related things for other plugins.
@@ -43,4 +49,26 @@ public class ReviewUi {
         new StartReviewAction().execute(null);
     }
 
+	/**
+	 * Registers a new listener for selected commits in review. The listeners are
+	 * stored in {@link WeakReference} objects and also removed if they are not
+	 * strongly or softly reachable.
+	 */
+	public static void registerCommitsInReviewListener(CommitsInReviewListener l) {
+		CurrentCommitsInReview.registerListener(l);
+	}
+
+	/**
+	 * Returns commits under review. Only meaningful in review mode.
+	 */
+	public static List<? extends ICommit> getCommitsInReview() {
+		return CurrentCommitsInReview.getCommits();
+	}
+	
+	/**
+	 * Returns review tours. Only meaningful in review mode.
+	 */
+	public static ToursInReview getToursInReview() {
+		return ViewDataSource.get().getToursInReview();
+	}
 }
