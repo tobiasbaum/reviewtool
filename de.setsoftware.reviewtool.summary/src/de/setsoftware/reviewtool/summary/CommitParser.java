@@ -36,16 +36,16 @@ import de.setsoftware.reviewtool.summary.ChangePart.Kind;
  * summarize techniques.
  */
 public class CommitParser {
-	public final static String MEMBER_SEPARATOR = "..";
+	public final static String MEMBER_SEPARATOR = ".";
 
 	private ICommit commit;
 
 	private File tmpDir = new File("");
-	private File previousDir;
-	private File currentDir;
+	public File previousDir;
+	public File currentDir;
 
-	private Set<String> previousDirFiles = new HashSet<>();
-	private Set<String> currentDirFiles = new HashSet<>();
+	public Set<String> previousDirFiles = new HashSet<>();
+	public Set<String> currentDirFiles = new HashSet<>();
 
 	private List<ChangePart> previousMethods = new ArrayList<>();
 	private Map<ChangePart, String> previousMethodsCode = new HashMap<>();
@@ -150,9 +150,10 @@ public class CommitParser {
 		return methodDeclaration.getName() + parameters.replaceAll("\\<.*\\>", "");
 	}
 
-	private String getParent(ASTNode node, String parent) {
+	private String getParent(ASTNode node, String path) {
+		// path = path.replaceFirst("\\.java$", "");
 		// replace generics
-		return getParent2(node.getParent(), parent).replaceAll("\\<.*\\>", "");
+		return getParent2(node, path).replaceAll("\\<.*\\>", "");
 	}
 
 	private String getParent2(ASTNode node, String parent) {
@@ -160,11 +161,11 @@ public class CommitParser {
 			return parent;
 		if (node instanceof AbstractTypeDeclaration) {
 			String name = ((AbstractTypeDeclaration) node).getName().toString();
-			String fileName = parent.replaceAll(".*/", "").replaceFirst(".java", "");
-			if (name.equals(fileName))
-				return parent;
-			else
-				return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
+			// String fileName = parent.replaceAll(".*/", "").replaceFirst(".java", "");
+			// if (name.equals(fileName))
+			// return parent;
+			// else
+			return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
 		}
 
 		if (node instanceof ClassInstanceCreation) {
@@ -183,7 +184,8 @@ public class CommitParser {
 		FileASTRequestor requestor = new FileASTRequestor() {
 			@Override
 			public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-				String path = sourceFilePath.replaceFirst(previousDir.getPath(), "");
+				// String path = sourceFilePath.replaceFirst(previousDir.getPath(), "");
+				String path = compilationUnit.getPackage().getName().toString();
 
 				ASTVisitor visitor = new ASTVisitor() {
 					@Override
@@ -208,7 +210,8 @@ public class CommitParser {
 		FileASTRequestor requestor = new FileASTRequestor() {
 			@Override
 			public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-				String path = sourceFilePath.replaceFirst(currentDir.getPath(), "");
+				// String path = sourceFilePath.replaceFirst(currentDir.getPath(), "");
+				String path = compilationUnit.getPackage().getName().toString();
 
 				ASTVisitor visitor = new ASTVisitor() {
 					@Override

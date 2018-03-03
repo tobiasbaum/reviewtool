@@ -5,6 +5,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.eclipse.jdt.internal.core.util.ToStringSorter;
+
 import de.setsoftware.reviewtool.summary.ChangePart.Kind;
 
 class ChangePart {
@@ -34,6 +36,14 @@ class ChangePart {
 
 	public Kind getType() {
 		return type;
+	}
+	
+	@Override
+	public String toString() {
+		if(type == Kind.NON_SOURCE_FILE)
+			return name;
+		else
+			return name + " in " + parent;
 	}
 
 	@Override
@@ -83,6 +93,16 @@ class ChangeParts {
 			files.add(part);
 		if (part.getType().equals(Kind.TYPE))
 			types.add(part);
+	}
+	
+
+	public void removePart(ChangePart part) {
+		if (part.getType().equals(Kind.METHOD))
+			methods.remove(part);
+		if (part.getType().equals(Kind.NON_SOURCE_FILE))
+			files.remove(part);
+		if (part.getType().equals(Kind.TYPE))
+			types.remove(part);
 	}
 
 	public void sort() {

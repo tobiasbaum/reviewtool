@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.eclipse.jface.text.IRegion;
 
+import de.setsoftware.reviewtool.summary.ChangePart.Kind;
+
 class SummaryPart implements IRegion {
 	String text;
 	String textFolded;
@@ -12,18 +14,19 @@ class SummaryPart implements IRegion {
 	int linesFolded;
 	int maxLinesFolded = 4;
 	boolean folded = true;
+	boolean hasLink = false; // No hyper-link, if content is short enough
 
-	int offset; // Character offset of whole summary text, used for displaying links
-	int length = 7; // Link length (more.. or less...)
+	int linkOffset = 0; // Character offset of whole summary text, used for displaying links
+	int linkLength = 0;
 
 	@Override
 	public int getLength() {
-		return length;
+		return linkLength;
 	}
 
 	@Override
 	public int getOffset() {
-		return offset;
+		return linkOffset;
 	}
 }
 
@@ -43,9 +46,9 @@ public class TextGenerator {
 		addPart(getDeletedFiles(model), summary);
 
 		for (SummaryPart part : summary) {
-			addLinkText(part);
+			addLinkIfNeeded(part);
 		}
-		updateLinkRegion(summary);
+		updateLinkRegions(summary);
 
 		return summary;
 	}
@@ -61,16 +64,15 @@ public class TextGenerator {
 		return text;
 	}
 
-	static public void updateLinkRegion(List<SummaryPart> summary) {
+	static public void updateLinkRegions(List<SummaryPart> summary) {
 		int offset = 0;
 		for (SummaryPart part : summary) {
-			if (part.lines > part.linesFolded) {
-				if (part.folded)
-					offset = offset + part.textFolded.length();
-				else
-					offset = offset + part.text.length();
-				part.offset = offset - part.length - 2;
-			}
+			if (part.folded)
+				offset = offset + part.textFolded.length();
+			else
+				offset = offset + part.text.length();
+			if (part.hasLink)
+				part.linkOffset = offset - part.linkLength - 2;
 		}
 	}
 
@@ -79,13 +81,17 @@ public class TextGenerator {
 			summary.add(part);
 	}
 
-	private static void addLinkText(SummaryPart part) {
-		if (part.lines > part.linesFolded) {
+	private static void addLinkIfNeeded(SummaryPart part) {
+		if (part.lines > part.linesFolded + 1) {
+			part.hasLink = true;
+			part.linkLength = 7; // Link length (more.. or less...)
 			part.text = part.text + "less..." + "\n\n";
 			part.textFolded = part.textFolded + "(other " + (part.lines - part.linesFolded) + " items) show...\n\n";
 		} else {
-			part.offset = -1;
-			part.length = 0;
+			part.hasLink = false;
+			part.linkOffset = 0;
+			part.linkLength = 0; // Links with length 0 are not presented 
+			part.textFolded = part.textFolded + "\n";
 		}
 	}
 
@@ -139,7 +145,7 @@ public class TextGenerator {
 
 	private static void addChangeParts(SummaryPart part, List<ChangePart> changes) {
 		for (ChangePart change : changes) {
-			part.text = part.text + change.getName() + "   " + change.getParent() + "\n";
+			part.text = part.text + change.toString() + "\n";
 			part.lines++;
 			if (part.lines <= part.maxLinesFolded - 1) {
 				part.textFolded = part.text;

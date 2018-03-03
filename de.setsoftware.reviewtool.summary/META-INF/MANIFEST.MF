@@ -9,9 +9,11 @@ Require-Bundle: org.eclipse.core.runtime,
  de.setsoftware.reviewtool.core;bundle-version="1.19.0",
  org.eclipse.core.resources,
  org.eclipse.jdt.core;bundle-version="3.13.100",
- org.eclipse.swt
+ org.eclipse.swt,
+ org.eclipse.jgit;bundle-version="4.9.2"
 Import-Package: de.setsoftware.reviewtool.model.remarks,
  org.eclipse.jface.text,
  org.eclipse.jface.text.hyperlink,
  org.eclipse.jface.text.source
-Bundle-ClassPath: .
+Bundle-ClassPath: .,
+ refdiff-core.jar

@@ -24,6 +24,10 @@ import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.ui.api.CommitsInReviewListener;
 import de.setsoftware.reviewtool.ui.api.ReviewUi;
 
+/**
+ * Basic text summary presentation with hyper-links to expand and shrink some
+ * summary parts or for trigger actions.
+ */
 public class ReviewContentSummaryView extends ViewPart {
 
 	/**
@@ -41,7 +45,6 @@ public class ReviewContentSummaryView extends ViewPart {
 		viewer.setDocument(new Document());
 		viewer.setEditable(false);
 
-		// Links are used for expand and shrink some summary parts or for triggering actions.
 		IHyperlinkDetector linkDetector = new IHyperlinkDetector() {
 			@Override
 			public IHyperlink[] detectHyperlinks(ITextViewer textViewer, IRegion region,

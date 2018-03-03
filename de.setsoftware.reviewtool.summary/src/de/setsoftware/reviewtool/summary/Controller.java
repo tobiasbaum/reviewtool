@@ -21,23 +21,32 @@ public class Controller {
 
 	public void processCommits(List<? extends ICommit> commits) {
 		model = new ChangePartsModel();
+		String refDiff = "";
 		for (ICommit commit : commits) {
 			try {
 				CommitParser parser = new CommitParser(commit, model);
 				parser.processCommit();
+				refDiff = refDiff + RefDiffTechnique.process(parser.previousDir, parser.currentDir,
+						parser.previousDirFiles, parser.currentDirFiles, model);
 				parser.clean();
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
 		summary = TextGenerator.generateText(model);
+		if (!refDiff.equals("")) {
+			refDiff = "Detected refactorings:\n" + refDiff;
+			SummaryPart part = new SummaryPart();
+			part.textFolded = refDiff;
+			summary.add(part);
+		}
 		updateText();
 	}
 
 	public void onClick(IRegion link) {
 		SummaryPart part = (SummaryPart) link;
 		part.folded = !part.folded;
-		TextGenerator.updateLinkRegion(summary);
+		TextGenerator.updateLinkRegions(summary);
 		updateText();
 	}
 
