@@ -19,7 +19,7 @@ public class Controller {
 		this.view = view;
 	}
 
-	public void processCommits(List<? extends ICommit> commits) {
+	synchronized public void processCommits(List<? extends ICommit> commits) {
 		model = new ChangePartsModel();
 		String refDiff = "";
 		for (ICommit commit : commits) {
@@ -43,7 +43,7 @@ public class Controller {
 		updateText();
 	}
 
-	public void onClick(IRegion link) {
+	synchronized public void onClick(IRegion link) {
 		SummaryPart part = (SummaryPart) link;
 		part.folded = !part.folded;
 		TextGenerator.updateLinkRegions(summary);

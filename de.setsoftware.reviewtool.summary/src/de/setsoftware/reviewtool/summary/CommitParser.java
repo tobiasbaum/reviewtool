@@ -24,6 +24,7 @@ import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FileASTRequestor;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;
@@ -52,6 +53,12 @@ public class CommitParser {
 
 	private List<ChangePart> currentMethods = new ArrayList<>();
 	private Map<ChangePart, String> currentMethodsCode = new HashMap<>();
+	
+	private List<ChangePart> previousTypes = new ArrayList<>();
+	private Map<ChangePart, String> previousTypesCode = new HashMap<>();
+
+	private List<ChangePart> currentTypes = new ArrayList<>();
+	private Map<ChangePart, String> currentTypesCode = new HashMap<>();
 
 	private ChangePartsModel model;
 
@@ -136,9 +143,9 @@ public class CommitParser {
 		}
 	}
 
-	private String getName(MethodDeclaration methodDeclaration) {
+	private String getName(MethodDeclaration node) {
 		String parameters = "(";
-		for (Object parameter : methodDeclaration.parameters()) {
+		for (Object parameter : node.parameters()) {
 			if (parameters.equals("("))
 				parameters = parameters + parameter;
 			else
@@ -147,7 +154,11 @@ public class CommitParser {
 		// replace parameter names
 		parameters = parameters.replaceAll(" .*", "") + ")";
 		// replace generics
-		return methodDeclaration.getName() + parameters.replaceAll("\\<.*\\>", "");
+		return node.getName() + parameters.replaceAll("\\<.*\\>", "");
+	}
+	
+	private String getName(TypeDeclaration node) {
+		return node.getName().toString();
 	}
 
 	private String getParent(ASTNode node, String path) {
@@ -175,10 +186,6 @@ public class CommitParser {
 		return getParent2(node.getParent(), parent);
 	}
 
-	private String getKey(String name, String parent) {
-		return parent + MEMBER_SEPARATOR + name;
-	}
-
 	private void parseTmpFilesFrom() throws IOException {
 		ASTParser parser = makeASTParser(new String[0]);
 		FileASTRequestor requestor = new FileASTRequestor() {
@@ -189,12 +196,21 @@ public class CommitParser {
 
 				ASTVisitor visitor = new ASTVisitor() {
 					@Override
-					public boolean visit(MethodDeclaration methodDeclaration) {
-						String name = getName(methodDeclaration);
-						String parent = getParent(methodDeclaration.getParent(), path);
+					public boolean visit(MethodDeclaration node) {
+						String name = getName(node);
+						String parent = getParent(node.getParent(), path);
 						ChangePart part = new ChangePart(name, parent, Kind.METHOD);
 						previousMethods.add(part);
-						previousMethodsCode.put(part, methodDeclaration.toString());
+						previousMethodsCode.put(part, node.toString());
+						return true;
+					}
+					@Override
+					public boolean visit(TypeDeclaration node) {
+						String name = getName(node);
+						String parent = getParent(node.getParent(), path);
+						ChangePart part = new ChangePart(name, parent, Kind.TYPE);
+						previousTypes.add(part);
+						previousTypesCode.put(part, node.toString());
 						return true;
 					}
 				};
@@ -215,12 +231,21 @@ public class CommitParser {
 
 				ASTVisitor visitor = new ASTVisitor() {
 					@Override
-					public boolean visit(MethodDeclaration methodDeclaration) {
-						String name = getName(methodDeclaration);
-						String parent = getParent(methodDeclaration.getParent(), path);
+					public boolean visit(MethodDeclaration node) {
+						String name = getName(node);
+						String parent = getParent(node.getParent(), path);
 						ChangePart part = new ChangePart(name, parent, Kind.METHOD);
 						currentMethods.add(part);
-						currentMethodsCode.put(part, methodDeclaration.toString());
+						currentMethodsCode.put(part, node.toString());
+						return true;
+					}
+					@Override
+					public boolean visit(TypeDeclaration node) {
+						String name = node.getName().toString();
+						String parent = getParent(node.getParent(), path);
+						ChangePart part = new ChangePart(name, parent, Kind.TYPE);
+						currentTypes.add(part);
+						currentTypesCode.put(part, node.toString());
 						return true;
 					}
 				};
@@ -242,8 +267,13 @@ public class CommitParser {
 		// parser.setEnvironment(new String[0], sourceFolders, null, true);
 		return parser;
 	}
-
+	
 	private void processParsedData() {
+		processParsedMethodData();
+		processParsedTypesData();
+	}
+
+	private void processParsedMethodData() {
 		for (ChangePart part : previousMethods) {
 			if (currentMethods.contains(part)) {
 				if (!previousMethodsCode.get(part).equals(currentMethodsCode.get(part))) {
@@ -254,6 +284,20 @@ public class CommitParser {
 				model.deletedParts.addPart(part);
 		}
 		for (ChangePart part : currentMethods)
+			model.newParts.addPart(part);
+	}
+	
+	private void processParsedTypesData() {
+		for (ChangePart part : previousTypes) {
+			if (currentTypes.contains(part)) {
+				if (!previousTypesCode.get(part).equals(currentTypesCode.get(part))) {
+					model.changedParts.addPart(part);
+				}
+				currentTypes.remove(part);
+			} else
+				model.deletedParts.addPart(part);
+		}
+		for (ChangePart part : currentTypes)
 			model.newParts.addPart(part);
 	}
 

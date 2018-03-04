@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.summary;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -57,6 +59,10 @@ public class RefDiffTechnique {
 
 		model.deletedParts.removePart(before);
 		model.newParts.removePart(after);
+		removeChildren(before, model.deletedParts.methods);
+		removeChildren(before, model.deletedParts.types);
+		removeChildren(after, model.newParts.methods);
+		removeChildren(after, model.newParts.types);
 
 		return ref.getRefactoringType().getDisplayName() + ": " + before.toString() + " --> " + after.toString();
 	}
@@ -67,19 +73,37 @@ public class RefDiffTechnique {
 
 		model.deletedParts.removePart(before);
 		model.newParts.removePart(after);
+		removeChildren(before, model.deletedParts.methods);
+		removeChildren(before, model.deletedParts.types);
+		removeChildren(after, model.newParts.methods);
+		removeChildren(after, model.newParts.types);
 
 		return ref.getRefactoringType().getDisplayName() + ": " + before.toString() + " --> " + after.toString();
 	}
 
 	private static ChangePart getTypePart(SDEntity entity) {
 		String name = entity.simpleName();
-		String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("\\..*$", "");
+		String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("\\.[^.]*$", "");
 		return new ChangePart(name, parent, Kind.TYPE);
 	}
 
 	private static ChangePart getMethodPart(SDEntity entity) {
 		String name = entity.simpleName();
-		String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("#.*$", "");
+		String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("#[^#]*$", "");
 		return new ChangePart(name, parent, Kind.METHOD);
+	}
+	
+	private static void removeChildren(ChangePart parent, List<ChangePart> parts) {
+		Iterator<ChangePart> partsIterator = parts.iterator();
+		while(partsIterator.hasNext()) {
+			ChangePart part = partsIterator.next();
+			if(isChild(part, parent))
+				partsIterator.remove();
+		}
+	}
+	
+	private static boolean isChild(ChangePart part, ChangePart parent) {
+		String parentString = parent.getParent() + CommitParser.MEMBER_SEPARATOR + parent.getName();
+		return part.getParent().contains(parentString);
 	}
 }

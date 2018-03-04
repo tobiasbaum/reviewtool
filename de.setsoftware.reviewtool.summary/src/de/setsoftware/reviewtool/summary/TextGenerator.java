@@ -36,6 +36,10 @@ class SummaryPart implements IRegion {
 public class TextGenerator {
 	static public List<SummaryPart> generateText(ChangePartsModel model) {
 		List<SummaryPart> summary = new ArrayList<>();
+		
+		addPart(getNewTypes(model), summary);
+		addPart(getChangedTypes(model), summary);
+		addPart(getDeletedTypes(model), summary);
 
 		addPart(getNewMethods(model), summary);
 		addPart(getChangedMethods(model), summary);
@@ -93,6 +97,30 @@ public class TextGenerator {
 			part.linkLength = 0; // Links with length 0 are not presented 
 			part.textFolded = part.textFolded + "\n";
 		}
+	}
+	
+	private static SummaryPart getNewTypes(ChangePartsModel model) {
+		SummaryPart part = new SummaryPart();
+		part.text = "New types:\n";
+		part.lines++;
+		addChangeParts(part, model.newParts.types);
+		return part;
+	}
+
+	private static SummaryPart getChangedTypes(ChangePartsModel model) {
+		SummaryPart part = new SummaryPart();
+		part.text = "Changed types:\n";
+		part.lines++;
+		addChangeParts(part, model.changedParts.types);
+		return part;
+	}
+
+	private static SummaryPart getDeletedTypes(ChangePartsModel model) {
+		SummaryPart part = new SummaryPart();
+		part.text = "Deleted types:\n";
+		part.lines++;
+		addChangeParts(part, model.deletedParts.types);
+		return part;
 	}
 
 	private static SummaryPart getNewMethods(ChangePartsModel model) {

@@ -37,10 +37,10 @@ class ChangePart {
 	public Kind getType() {
 		return type;
 	}
-	
+
 	@Override
 	public String toString() {
-		if(type == Kind.NON_SOURCE_FILE)
+		if (type == Kind.NON_SOURCE_FILE)
 			return name;
 		else
 			return name + " in " + parent;
@@ -82,19 +82,25 @@ class ChangePart {
 }
 
 class ChangeParts {
+	// TODO change to sets
 	List<ChangePart> methods = new ArrayList<>();
 	List<ChangePart> files = new ArrayList<>();
 	List<ChangePart> types = new ArrayList<>();
 
 	public void addPart(ChangePart part) {
-		if (part.getType().equals(Kind.METHOD))
-			methods.add(part);
-		if (part.getType().equals(Kind.NON_SOURCE_FILE))
-			files.add(part);
-		if (part.getType().equals(Kind.TYPE))
-			types.add(part);
+		if (part.getType().equals(Kind.METHOD)) {
+			if (!methods.contains(part))
+				methods.add(part);
+		}
+		if (part.getType().equals(Kind.NON_SOURCE_FILE)) {
+			if (!files.contains(part))
+				files.add(part);
+		}
+		if (part.getType().equals(Kind.TYPE)) {
+			if (!types.contains(part))
+				types.add(part);
+		}
 	}
-	
 
 	public void removePart(ChangePart part) {
 		if (part.getType().equals(Kind.METHOD))
