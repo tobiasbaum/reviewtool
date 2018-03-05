@@ -6,16 +6,16 @@ import java.util.List;
 import org.eclipse.jface.text.IRegion;
 
 class SummaryPart implements IRegion {
-    String text;
-    String textFolded;
-    int lines;
-    int linesFolded;
+    String text = "";
+    String textFolded = "";
+    int lines = 0;
+    int linesFolded = 0;
     int maxLinesFolded = 4;
-    boolean folded = true;
+    boolean folded = false;
     boolean hasLink = false; // No hyper-link, if content is short enough
 
     int linkOffset = 0; // Character offset of whole summary text, used for displaying links
-    int linkLength = 0;
+    int linkLength = 0; // Links with length 0 are not presented
 
     @Override
     public int getLength() {
@@ -88,16 +88,19 @@ public class TextGenerator {
     }
 
     private static void addLinkIfNeeded(SummaryPart part) {
-        if (part.lines > part.linesFolded + 1) {
+        if (part.lines > part.maxLinesFolded) {
+            String[] text = part.text.split("\n");
+            for (int i = 0; i < part.maxLinesFolded - 1; i++) {
+                part.textFolded = part.textFolded + text[i] + "\n";
+                part.linesFolded++;
+            }
             part.hasLink = true;
+            part.folded = true;
             part.linkLength = 7; // Link length (more.. or less...)
             part.text = part.text + "less..." + "\n\n";
             part.textFolded = part.textFolded + "(other " + (part.lines - part.linesFolded) + " items) show...\n\n";
         } else {
-            part.hasLink = false;
-            part.linkOffset = 0;
-            part.linkLength = 0; // Links with length 0 are not presented
-            part.textFolded = part.textFolded + "\n";
+            part.text = part.text + "\n";
         }
     }
 
@@ -177,10 +180,6 @@ public class TextGenerator {
         for (ChangePart change : changes) {
             part.text = part.text + change.toString() + "\n";
             part.lines++;
-            if (part.lines <= part.maxLinesFolded - 1) {
-                part.textFolded = part.text;
-                part.linesFolded = part.lines;
-            }
         }
     }
 }

@@ -16,14 +16,14 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FileASTRequestor;
+import org.eclipse.jdt.core.dom.IMethodBinding;
+import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 
 import de.setsoftware.reviewtool.model.api.IChange;
@@ -38,6 +38,7 @@ import de.setsoftware.reviewtool.summary.ChangePart.Kind;
  */
 public class CommitParser {
     public final static String MEMBER_SEPARATOR = ".";
+    public final static String ANONYMOUS_SUFFIX = "$";
 
     private ICommit commit;
 
@@ -47,6 +48,9 @@ public class CommitParser {
 
     public Set<Path> previousDirFiles = new HashSet<>();
     public Set<Path> currentDirFiles = new HashSet<>();
+
+    public String[] previousDirFilesArray;
+    public String[] currentDirFilesArray;
 
     private List<ChangePart> previousMethods = new ArrayList<>();
     private Map<ChangePart, String> previousMethodsCode = new HashMap<>();
@@ -80,9 +84,25 @@ public class CommitParser {
                 processNonSourceChange(change);
             }
         }
+
+        previousDirFilesArray = new String[previousDirFiles.size()];
+        Iterator<Path> i1 = previousDirFiles.iterator();
+        for (int i = 0; i < previousDirFiles.size(); i++) {
+            previousDirFilesArray[i] = i1.next().toString();
+        }
+
+        currentDirFilesArray = new String[currentDirFiles.size()];
+        Iterator<Path> i2 = currentDirFiles.iterator();
+        for (int i = 0; i < currentDirFiles.size(); i++) {
+            currentDirFilesArray[i] = i2.next().toString();
+        }
+
         parseTmpFilesFrom();
         parseTmpFilesTo();
         processParsedData();
+
+        parseTmpFilesFromForRelevance();
+        parseTmpFilesToForRelevance();
     }
 
     private boolean isSourceFile(IChange change) throws Exception {
@@ -144,49 +164,39 @@ public class CommitParser {
         }
     }
 
-    private String getName(MethodDeclaration node) {
+    private String getName(IMethodBinding node) {
         String parameters = "(";
-        for (Object parameter : node.parameters()) {
+        for (ITypeBinding parameter : node.getParameterTypes()) {
             if (parameters.equals("(")) {
-                parameters = parameters + parameter;
+                parameters = parameters + parameter.getName();
             } else {
-                parameters = parameters + ", " + parameter;
+                parameters = parameters + ", " + parameter.getName();
             }
         }
-        // replace parameter names
-        parameters = parameters.replaceAll(" .*", "") + ")";
+        parameters = parameters + ")";
         // replace generics
         return node.getName() + parameters.replaceAll("\\<.*\\>", "");
     }
 
-    private String getName(TypeDeclaration node) {
+    private String getName(ITypeBinding node) {
         return node.getName().toString();
     }
 
-    private String getParent(ASTNode node, String path) {
-        // path = path.replaceFirst("\\.java$", "");
-        // replace generics
-        return getParent2(node, path).replaceAll("\\<.*\\>", "");
+    private String getParent(IMethodBinding method) {
+        ITypeBinding parent = method.getDeclaringClass();
+        if (parent.isAnonymous()) {
+            return getParent(parent.getDeclaringClass()) + MEMBER_SEPARATOR + parent.getSuperclass().getName()
+                    + ANONYMOUS_SUFFIX;
+        }
+        return parent.getPackage().getName() + MEMBER_SEPARATOR + parent.getName();
     }
 
-    private String getParent2(ASTNode node, String parent) {
-        if (node == null) {
-            return parent;
+    private String getParent(ITypeBinding type) {
+        if (type.isAnonymous()) {
+            return getParent(type.getDeclaringClass()) + MEMBER_SEPARATOR + type.getSuperclass().getName()
+                    + ANONYMOUS_SUFFIX;
         }
-        if (node instanceof AbstractTypeDeclaration) {
-            String name = ((AbstractTypeDeclaration) node).getName().toString();
-            // String fileName = parent.replaceAll(".*/", "").replaceFirst(".java", "");
-            // if (name.equals(fileName))
-            // return parent;
-            // else
-            return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
-        }
-
-        if (node instanceof ClassInstanceCreation) {
-            String name = ((ClassInstanceCreation) node).getType().toString();
-            return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
-        }
-        return getParent2(node.getParent(), parent);
+        return type.getPackage().getName();
     }
 
     private void parseTmpFilesFrom() throws IOException {
@@ -194,14 +204,12 @@ public class CommitParser {
         FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-                // String path = sourceFilePath.replaceFirst(previousDir.getPath(), "");
-                String path = compilationUnit.getPackage().getName().toString();
 
                 ASTVisitor visitor = new ASTVisitor() {
                     @Override
                     public boolean visit(MethodDeclaration node) {
-                        String name = getName(node);
-                        String parent = getParent(node.getParent(), path);
+                        String name = getName(node.resolveBinding());
+                        String parent = getParent(node.resolveBinding());
                         ChangePart part = new ChangePart(name, parent, Kind.METHOD);
                         previousMethods.add(part);
                         previousMethodsCode.put(part, node.toString());
@@ -210,8 +218,8 @@ public class CommitParser {
 
                     @Override
                     public boolean visit(TypeDeclaration node) {
-                        String name = getName(node);
-                        String parent = getParent(node.getParent(), path);
+                        String name = getName(node.resolveBinding());
+                        String parent = getParent(node.resolveBinding());
                         ChangePart part = new ChangePart(name, parent, Kind.TYPE);
                         previousTypes.add(part);
                         previousTypesCode.put(part, node.toString());
@@ -221,13 +229,7 @@ public class CommitParser {
                 compilationUnit.accept(visitor);
             }
         };
-        String[] filesArray = new String[previousDirFiles.size()];
-        Iterator<Path> iterator = previousDirFiles.iterator();
-        for (int i = 0; i < previousDirFiles.size(); i++) {
-            filesArray[i] = iterator.next().toString();
-        }
-
-        parser.createASTs(filesArray, null, new String[0], requestor, null);
+        parser.createASTs(previousDirFilesArray, null, new String[0], requestor, null);
     }
 
     private void parseTmpFilesTo() throws IOException {
@@ -235,14 +237,12 @@ public class CommitParser {
         FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-                // String path = sourceFilePath.replaceFirst(currentDir.getPath(), "");
-                String path = compilationUnit.getPackage().getName().toString();
 
                 ASTVisitor visitor = new ASTVisitor() {
                     @Override
                     public boolean visit(MethodDeclaration node) {
-                        String name = getName(node);
-                        String parent = getParent(node.getParent(), path);
+                        String name = getName(node.resolveBinding());
+                        String parent = getParent(node.resolveBinding());
                         ChangePart part = new ChangePart(name, parent, Kind.METHOD);
                         currentMethods.add(part);
                         currentMethodsCode.put(part, node.toString());
@@ -251,8 +251,8 @@ public class CommitParser {
 
                     @Override
                     public boolean visit(TypeDeclaration node) {
-                        String name = node.getName().toString();
-                        String parent = getParent(node.getParent(), path);
+                        String name = getName(node.resolveBinding());
+                        String parent = getParent(node.resolveBinding());
                         ChangePart part = new ChangePart(name, parent, Kind.TYPE);
                         currentTypes.add(part);
                         currentTypesCode.put(part, node.toString());
@@ -262,13 +262,7 @@ public class CommitParser {
                 compilationUnit.accept(visitor);
             }
         };
-        String[] filesArray = new String[currentDirFiles.size()];
-        Iterator<Path> iterator = currentDirFiles.iterator();
-        for (int i = 0; i < currentDirFiles.size(); i++) {
-            filesArray[i] = iterator.next().toString();
-        }
-
-        parser.createASTs(filesArray, null, new String[0], requestor, null);
+        parser.createASTs(currentDirFilesArray, null, new String[0], requestor, null);
     }
 
     private ASTParser makeASTParser(String[] sourceFolders) {
@@ -277,9 +271,9 @@ public class CommitParser {
         Map<String, String> options = JavaCore.getOptions();
         JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
         parser.setCompilerOptions(options);
-        // parser.setResolveBindings(true);
-        // parser.setBindingsRecovery(true);
-        // parser.setEnvironment(new String[0], sourceFolders, null, true);
+        parser.setResolveBindings(true);
+        parser.setBindingsRecovery(true);
+        parser.setEnvironment(new String[0], sourceFolders, null, true);
         return parser;
     }
 
@@ -338,5 +332,68 @@ public class CommitParser {
                 }
             }
         });
+    }
+
+    private void parseTmpFilesFromForRelevance() throws IOException {
+        ASTParser parser = makeASTParser(new String[0]);
+        FileASTRequestor requestor = new FileASTRequestor() {
+            @Override
+            public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+
+                ASTVisitor visitor = new ASTVisitor() {
+                    @Override
+                    public boolean visit(MethodInvocation node) {
+                        IMethodBinding method = node.resolveMethodBinding();
+                        if (method != null) {
+                            String name = getName(method);
+                            String parent = getParent(method);
+                            ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+
+                            int i = model.deletedParts.methods.indexOf(part);
+                            if (i != -1) {
+                                model.deletedParts.methods.get(i).relevance++;
+                            }
+                        }
+                        return true;
+                    }
+                };
+                compilationUnit.accept(visitor);
+            }
+        };
+        parser.createASTs(previousDirFilesArray, null, new String[0], requestor, null);
+    }
+
+    private void parseTmpFilesToForRelevance() throws IOException {
+        ASTParser parser = makeASTParser(new String[0]);
+        FileASTRequestor requestor = new FileASTRequestor() {
+            @Override
+            public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+
+                ASTVisitor visitor = new ASTVisitor() {
+                    @Override
+                    public boolean visit(MethodInvocation node) {
+                        IMethodBinding method = node.resolveMethodBinding();
+                        if (method != null) {
+                            String name = getName(method);
+                            String parent = getParent(method);
+                            ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+
+                            int i1 = model.changedParts.methods.indexOf(part);
+                            if (i1 != -1) {
+                                model.changedParts.methods.get(i1).relevance++;
+                            }
+
+                            int i2 = model.newParts.methods.indexOf(part);
+                            if (i2 != -1) {
+                                model.newParts.methods.get(i2).relevance++;
+                            }
+                        }
+                        return true;
+                    }
+                };
+                compilationUnit.accept(visitor);
+            }
+        };
+        parser.createASTs(currentDirFilesArray, null, new String[0], requestor, null);
     }
 }

@@ -38,7 +38,7 @@ public class Controller {
         if (!refDiff.equals("")) {
             refDiff = "Detected refactorings:\n" + refDiff;
             SummaryPart part = new SummaryPart();
-            part.textFolded = refDiff;
+            part.text = refDiff;
             summary.add(part);
         }
         updateText();

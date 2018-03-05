@@ -16,7 +16,7 @@ class ChangePart {
     private String parent;
     private Kind type;
 
-    public int relevance = -1;
+    public int relevance = 0;
 
     public ChangePart(String name, String parent, Kind type) {
         this.name = name;
@@ -89,7 +89,6 @@ class ChangePart {
 }
 
 class ChangeParts {
-    // TODO change to sets
     List<ChangePart> methods = new ArrayList<>();
     List<ChangePart> files = new ArrayList<>();
     List<ChangePart> types = new ArrayList<>();
@@ -125,16 +124,28 @@ class ChangeParts {
     }
 
     public void sort() {
+        Collections.sort(types, new Comparator<ChangePart>() {
+            @Override
+            public int compare(ChangePart part1, ChangePart part2) {
+                if (part2.relevance - part1.relevance == 0) {
+                    (part1.getParent() + part1.getName()).compareTo((part2.getParent() + part2.getName()));
+                }
+                return part2.relevance - part1.relevance;
+            }
+        });
         Collections.sort(methods, new Comparator<ChangePart>() {
             @Override
             public int compare(ChangePart part1, ChangePart part2) {
-                return part1.relevance - part2.relevance;
+                if (part2.relevance - part1.relevance == 0) {
+                    (part1.getParent() + part1.getName()).compareTo((part2.getParent() + part2.getName()));
+                }
+                return part2.relevance - part1.relevance;
             }
         });
         Collections.sort(files, new Comparator<ChangePart>() {
             @Override
             public int compare(ChangePart part1, ChangePart part2) {
-                return part1.getName().compareTo(part2.getName());
+                return (part1.getParent() + part1.getName()).compareTo((part2.getParent() + part2.getName()));
             }
         });
     }
