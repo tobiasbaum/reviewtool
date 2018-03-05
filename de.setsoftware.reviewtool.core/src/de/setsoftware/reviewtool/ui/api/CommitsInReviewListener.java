@@ -9,8 +9,8 @@ import de.setsoftware.reviewtool.model.api.ICommit;
  */
 public interface CommitsInReviewListener {
 
-	/**
-	 * Is called when new commits are selected.
-	 */
-	public abstract void notifyCommits(List<ICommit> currentCommits);
+    /**
+     * Is called when new commits are selected.
+     */
+    public abstract void notifyCommits(List<ICommit> currentCommits);
 }

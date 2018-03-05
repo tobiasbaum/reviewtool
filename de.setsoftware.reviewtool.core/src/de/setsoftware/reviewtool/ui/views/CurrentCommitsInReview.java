@@ -12,28 +12,32 @@ import de.setsoftware.reviewtool.ui.api.CommitsInReviewListener;
  */
 public class CurrentCommitsInReview {
 
-	private static List<ICommit> currentCommits = new ArrayList<>();
-	private static WeakListeners<CommitsInReviewListener> listeners = new WeakListeners<>();
+    private static List<ICommit> currentCommits = new ArrayList<>();
+    private static WeakListeners<CommitsInReviewListener> listeners = new WeakListeners<>();
 
-	public static void setCommits(List<ICommit> commits) {
-		if (commits == null)
-			currentCommits = new ArrayList<>();
-		else
-			currentCommits = commits;
-		notifyListener();
-	}
+    /**
+     * Set the currently selected commits for review.
+     */
+    public static void setCommits(List<ICommit> commits) {
+        if (commits == null) {
+            currentCommits = new ArrayList<>();
+        } else {
+            currentCommits = commits;
+        }
+        notifyListener();
+    }
 
-	private static void notifyListener() {
-		for (CommitsInReviewListener l : listeners) {
-			l.notifyCommits(currentCommits);
-		}
-	}
+    private static void notifyListener() {
+        for (CommitsInReviewListener l : listeners) {
+            l.notifyCommits(currentCommits);
+        }
+    }
 
-	public static List<ICommit> getCommits() {
-		return currentCommits;
-	}
+    public static List<ICommit> getCommits() {
+        return currentCommits;
+    }
 
-	public static void registerListener(CommitsInReviewListener l) {
-		listeners.add(l);
-	}
+    public static void registerListener(CommitsInReviewListener l) {
+        listeners.add(l);
+    }
 }

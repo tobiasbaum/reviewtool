@@ -5,126 +5,139 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.eclipse.jdt.internal.core.util.ToStringSorter;
-
 import de.setsoftware.reviewtool.summary.ChangePart.Kind;
 
 class ChangePart {
-	public enum Kind {
-		TYPE, ATTRIBUTE, METHOD, NON_SOURCE_FILE;
-	}
+    public enum Kind {
+        TYPE, ATTRIBUTE, METHOD, NON_SOURCE_FILE;
+    }
 
-	private String name;
-	private String parent;
-	private Kind type;
+    private String name;
+    private String parent;
+    private Kind type;
 
-	public int relevance = -1;
+    public int relevance = -1;
 
-	public ChangePart(String name, String parent, Kind type) {
-		this.name = name;
-		this.parent = parent;
-		this.type = type;
-	}
+    public ChangePart(String name, String parent, Kind type) {
+        this.name = name;
+        this.parent = parent;
+        this.type = type;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getParent() {
-		return parent;
-	}
+    public String getParent() {
+        return parent;
+    }
 
-	public Kind getType() {
-		return type;
-	}
+    public Kind getType() {
+        return type;
+    }
 
-	@Override
-	public String toString() {
-		if (type == Kind.NON_SOURCE_FILE)
-			return name;
-		else
-			return name + " in " + parent;
-	}
+    @Override
+    public String toString() {
+        if (type == Kind.NON_SOURCE_FILE) {
+            return name;
+        } else {
+            return name + " in " + parent;
+        }
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		result = prime * result + ((parent == null) ? 0 : parent.hashCode());
-		result = prime * result + ((type == null) ? 0 : type.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((name == null) ? 0 : name.hashCode());
+        result = prime * result + ((parent == null) ? 0 : parent.hashCode());
+        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        return result;
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		ChangePart other = (ChangePart) obj;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
-			return false;
-		if (parent == null) {
-			if (other.parent != null)
-				return false;
-		} else if (!parent.equals(other.parent))
-			return false;
-		if (type != other.type)
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        ChangePart other = (ChangePart) obj;
+        if (name == null) {
+            if (other.name != null) {
+                return false;
+            }
+        } else if (!name.equals(other.name)) {
+            return false;
+        }
+        if (parent == null) {
+            if (other.parent != null) {
+                return false;
+            }
+        } else if (!parent.equals(other.parent)) {
+            return false;
+        }
+        if (type != other.type) {
+            return false;
+        }
+        return true;
+    }
 }
 
 class ChangeParts {
-	// TODO change to sets
-	List<ChangePart> methods = new ArrayList<>();
-	List<ChangePart> files = new ArrayList<>();
-	List<ChangePart> types = new ArrayList<>();
+    // TODO change to sets
+    List<ChangePart> methods = new ArrayList<>();
+    List<ChangePart> files = new ArrayList<>();
+    List<ChangePart> types = new ArrayList<>();
 
-	public void addPart(ChangePart part) {
-		if (part.getType().equals(Kind.METHOD)) {
-			if (!methods.contains(part))
-				methods.add(part);
-		}
-		if (part.getType().equals(Kind.NON_SOURCE_FILE)) {
-			if (!files.contains(part))
-				files.add(part);
-		}
-		if (part.getType().equals(Kind.TYPE)) {
-			if (!types.contains(part))
-				types.add(part);
-		}
-	}
+    public void addPart(ChangePart part) {
+        if (part.getType().equals(Kind.METHOD)) {
+            if (!methods.contains(part)) {
+                methods.add(part);
+            }
+        }
+        if (part.getType().equals(Kind.NON_SOURCE_FILE)) {
+            if (!files.contains(part)) {
+                files.add(part);
+            }
+        }
+        if (part.getType().equals(Kind.TYPE)) {
+            if (!types.contains(part)) {
+                types.add(part);
+            }
+        }
+    }
 
-	public void removePart(ChangePart part) {
-		if (part.getType().equals(Kind.METHOD))
-			methods.remove(part);
-		if (part.getType().equals(Kind.NON_SOURCE_FILE))
-			files.remove(part);
-		if (part.getType().equals(Kind.TYPE))
-			types.remove(part);
-	}
+    public void removePart(ChangePart part) {
+        if (part.getType().equals(Kind.METHOD)) {
+            methods.remove(part);
+        }
+        if (part.getType().equals(Kind.NON_SOURCE_FILE)) {
+            files.remove(part);
+        }
+        if (part.getType().equals(Kind.TYPE)) {
+            types.remove(part);
+        }
+    }
 
-	public void sort() {
-		Collections.sort(methods, new Comparator<ChangePart>() {
-			@Override
-			public int compare(ChangePart part1, ChangePart part2) {
-				return part1.relevance - part2.relevance;
-			}
-		});
-		Collections.sort(files, new Comparator<ChangePart>() {
-			@Override
-			public int compare(ChangePart part1, ChangePart part2) {
-				return part1.getName().compareTo(part2.getName());
-			}
-		});
-	}
+    public void sort() {
+        Collections.sort(methods, new Comparator<ChangePart>() {
+            @Override
+            public int compare(ChangePart part1, ChangePart part2) {
+                return part1.relevance - part2.relevance;
+            }
+        });
+        Collections.sort(files, new Comparator<ChangePart>() {
+            @Override
+            public int compare(ChangePart part1, ChangePart part2) {
+                return part1.getName().compareTo(part2.getName());
+            }
+        });
+    }
 }
 
 /**
@@ -136,13 +149,13 @@ class ChangeParts {
  * redundancies in generated summary.
  */
 public class ChangePartsModel {
-	ChangeParts newParts = new ChangeParts();
-	ChangeParts deletedParts = new ChangeParts();
-	ChangeParts changedParts = new ChangeParts();
+    ChangeParts newParts = new ChangeParts();
+    ChangeParts deletedParts = new ChangeParts();
+    ChangeParts changedParts = new ChangeParts();
 
-	public void sort() {
-		newParts.sort();
-		deletedParts.sort();
-		changedParts.sort();
-	}
+    public void sort() {
+        newParts.sort();
+        deletedParts.sort();
+        changedParts.sort();
+    }
 }

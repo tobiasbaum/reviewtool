@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.summary;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -10,6 +9,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,287 +37,306 @@ import de.setsoftware.reviewtool.summary.ChangePart.Kind;
  * summarize techniques.
  */
 public class CommitParser {
-	public final static String MEMBER_SEPARATOR = ".";
+    public final static String MEMBER_SEPARATOR = ".";
 
-	private ICommit commit;
+    private ICommit commit;
 
-	private File tmpDir = new File("");
-	public File previousDir;
-	public File currentDir;
+    private Path tmpDir;
+    public Path previousDir;
+    public Path currentDir;
 
-	public Set<String> previousDirFiles = new HashSet<>();
-	public Set<String> currentDirFiles = new HashSet<>();
+    public Set<Path> previousDirFiles = new HashSet<>();
+    public Set<Path> currentDirFiles = new HashSet<>();
 
-	private List<ChangePart> previousMethods = new ArrayList<>();
-	private Map<ChangePart, String> previousMethodsCode = new HashMap<>();
+    private List<ChangePart> previousMethods = new ArrayList<>();
+    private Map<ChangePart, String> previousMethodsCode = new HashMap<>();
 
-	private List<ChangePart> currentMethods = new ArrayList<>();
-	private Map<ChangePart, String> currentMethodsCode = new HashMap<>();
-	
-	private List<ChangePart> previousTypes = new ArrayList<>();
-	private Map<ChangePart, String> previousTypesCode = new HashMap<>();
+    private List<ChangePart> currentMethods = new ArrayList<>();
+    private Map<ChangePart, String> currentMethodsCode = new HashMap<>();
 
-	private List<ChangePart> currentTypes = new ArrayList<>();
-	private Map<ChangePart, String> currentTypesCode = new HashMap<>();
+    private List<ChangePart> previousTypes = new ArrayList<>();
+    private Map<ChangePart, String> previousTypesCode = new HashMap<>();
 
-	private ChangePartsModel model;
+    private List<ChangePart> currentTypes = new ArrayList<>();
+    private Map<ChangePart, String> currentTypesCode = new HashMap<>();
 
-	public CommitParser(ICommit commit, ChangePartsModel model) {
-		this.commit = commit;
-		this.model = model;
-	}
+    private ChangePartsModel model;
 
-	public void processCommit() throws Exception {
-		tmpDir = Files.createTempDirectory("CORT").toFile();
-		previousDir = new File(tmpDir, "prev");
-		currentDir = new File(tmpDir, "cur");
+    public CommitParser(ICommit commit, ChangePartsModel model) {
+        this.commit = commit;
+        this.model = model;
+    }
 
-		for (IChange change : commit.getChanges()) {
-			if (isSourceFile(change)) {
-				writeTmpFileFrom(change);
-				writeTmpFileTo(change);
-			} else {
-				processNonSourceChange(change);
-			}
-		}
-		parseTmpFilesFrom();
-		parseTmpFilesTo();
-		processParsedData();
-		model.sort();
-	}
+    public void processCommit() throws Exception {
+        tmpDir = Files.createTempDirectory("CORT");
+        previousDir = tmpDir.resolve("prev");
+        currentDir = tmpDir.resolve("cur");
 
-	private boolean isSourceFile(IChange change) throws Exception {
-		if (getRelPathFrom(change).replaceAll(".*\\.", "").equals("java"))
-			return true;
-		return false;
-	}
+        for (IChange change : commit.getChanges()) {
+            if (isSourceFile(change)) {
+                writeTmpFileFrom(change);
+                writeTmpFileTo(change);
+            } else {
+                processNonSourceChange(change);
+            }
+        }
+        parseTmpFilesFrom();
+        parseTmpFilesTo();
+        processParsedData();
+    }
 
-	private String getRelPathFrom(IChange change) {
-		String root = commit.getRevision().getRepository().getLocalRoot().getPath();
-		IRevisionedFile revFileFrom = change.getFrom();
-		return revFileFrom.toLocalPath().toString().replaceFirst(root, "");
-	}
+    private boolean isSourceFile(IChange change) throws Exception {
+        if (getRelPathFrom(change).toString().replaceAll(".*\\.", "").equals("java")) {
+            return true;
+        }
+        return false;
+    }
 
-	private String getRelPathTo(IChange change) {
-		String root = commit.getRevision().getRepository().getLocalRoot().getPath();
-		IRevisionedFile revFileTo = change.getTo();
-		return revFileTo.toLocalPath().toString().replaceFirst(root, "");
-	}
+    private Path getRelPathFrom(IChange change) {
+        Path root = commit.getRevision().getRepository().getLocalRoot().toPath();
+        Path file = change.getFrom().toLocalPath().toFile().toPath();
+        return root.relativize(file);
+    }
 
-	private void processNonSourceChange(IChange change) throws Exception {
-		if (isNewFile(change))
-			model.newParts.addPart(new ChangePart(getRelPathTo(change), "", Kind.NON_SOURCE_FILE));
-		else if (isDeletedFile(change))
-			model.deletedParts.addPart(new ChangePart(getRelPathFrom(change), "", Kind.NON_SOURCE_FILE));
-		else
-			model.changedParts.addPart(new ChangePart(getRelPathFrom(change), "", Kind.NON_SOURCE_FILE));
-	}
+    private Path getRelPathTo(IChange change) {
+        Path root = commit.getRevision().getRepository().getLocalRoot().toPath();
+        Path file = change.getTo().toLocalPath().toFile().toPath();
+        return root.relativize(file);
+    }
 
-	private boolean isNewFile(IChange change) throws Exception {
-		IRevisionedFile revFileFrom = change.getFrom();
-		IRevisionedFile revFileTo = change.getTo();
-		return (revFileFrom.getContents().length == 0 && revFileTo.getContents().length != 0);
-	}
+    private void processNonSourceChange(IChange change) throws Exception {
+        if (isNewFile(change)) {
+            model.newParts.addPart(new ChangePart(getRelPathTo(change).toString(), "", Kind.NON_SOURCE_FILE));
+        } else if (isDeletedFile(change)) {
+            model.deletedParts.addPart(new ChangePart(getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
+        } else {
+            model.changedParts.addPart(new ChangePart(getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
+        }
+    }
 
-	private boolean isDeletedFile(IChange change) throws Exception {
-		IRevisionedFile revFileFrom = change.getFrom();
-		IRevisionedFile revFileTo = change.getTo();
-		return (revFileFrom.getContents().length != 0 && revFileTo.getContents().length == 0);
-	}
+    private boolean isNewFile(IChange change) throws Exception {
+        IRevisionedFile revFileFrom = change.getFrom();
+        IRevisionedFile revFileTo = change.getTo();
+        return (revFileFrom.getContents().length == 0 && revFileTo.getContents().length != 0);
+    }
 
-	private void writeTmpFileFrom(IChange change) throws Exception {
-		IRevisionedFile revFile = change.getFrom();
-		File file = new File(previousDir, getRelPathFrom(change));
-		if (revFile.getContents().length != 0 && previousDirFiles.add(file.getPath())) {
-			Files.createDirectories(file.getParentFile().toPath());
-			Files.write(file.toPath(), revFile.getContents());
-		}
-	}
+    private boolean isDeletedFile(IChange change) throws Exception {
+        IRevisionedFile revFileFrom = change.getFrom();
+        IRevisionedFile revFileTo = change.getTo();
+        return (revFileFrom.getContents().length != 0 && revFileTo.getContents().length == 0);
+    }
 
-	private void writeTmpFileTo(IChange change) throws Exception {
-		IRevisionedFile revFile = change.getTo();
-		File file = new File(currentDir, getRelPathTo(change));
-		if (revFile.getContents().length != 0 && currentDirFiles.add(file.getPath())) {
-			Files.createDirectories(file.getParentFile().toPath());
-			Files.write(file.toPath(), revFile.getContents());
-		}
-	}
+    private void writeTmpFileFrom(IChange change) throws Exception {
+        IRevisionedFile revFile = change.getFrom();
+        Path file = previousDir.resolve(getRelPathFrom(change));
+        if (revFile.getContents().length != 0 && previousDirFiles.add(file)) {
+            Files.createDirectories(file.getParent());
+            Files.write(file, revFile.getContents());
+        }
+    }
 
-	private String getName(MethodDeclaration node) {
-		String parameters = "(";
-		for (Object parameter : node.parameters()) {
-			if (parameters.equals("("))
-				parameters = parameters + parameter;
-			else
-				parameters = parameters + ", " + parameter;
-		}
-		// replace parameter names
-		parameters = parameters.replaceAll(" .*", "") + ")";
-		// replace generics
-		return node.getName() + parameters.replaceAll("\\<.*\\>", "");
-	}
-	
-	private String getName(TypeDeclaration node) {
-		return node.getName().toString();
-	}
+    private void writeTmpFileTo(IChange change) throws Exception {
+        IRevisionedFile revFile = change.getTo();
+        Path file = currentDir.resolve(getRelPathFrom(change));
+        if (revFile.getContents().length != 0 && currentDirFiles.add(file)) {
+            Files.createDirectories(file.getParent());
+            Files.write(file, revFile.getContents());
+        }
+    }
 
-	private String getParent(ASTNode node, String path) {
-		// path = path.replaceFirst("\\.java$", "");
-		// replace generics
-		return getParent2(node, path).replaceAll("\\<.*\\>", "");
-	}
+    private String getName(MethodDeclaration node) {
+        String parameters = "(";
+        for (Object parameter : node.parameters()) {
+            if (parameters.equals("(")) {
+                parameters = parameters + parameter;
+            } else {
+                parameters = parameters + ", " + parameter;
+            }
+        }
+        // replace parameter names
+        parameters = parameters.replaceAll(" .*", "") + ")";
+        // replace generics
+        return node.getName() + parameters.replaceAll("\\<.*\\>", "");
+    }
 
-	private String getParent2(ASTNode node, String parent) {
-		if (node == null)
-			return parent;
-		if (node instanceof AbstractTypeDeclaration) {
-			String name = ((AbstractTypeDeclaration) node).getName().toString();
-			// String fileName = parent.replaceAll(".*/", "").replaceFirst(".java", "");
-			// if (name.equals(fileName))
-			// return parent;
-			// else
-			return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
-		}
+    private String getName(TypeDeclaration node) {
+        return node.getName().toString();
+    }
 
-		if (node instanceof ClassInstanceCreation) {
-			String name = ((ClassInstanceCreation) node).getType().toString();
-			return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
-		}
-		return getParent2(node.getParent(), parent);
-	}
+    private String getParent(ASTNode node, String path) {
+        // path = path.replaceFirst("\\.java$", "");
+        // replace generics
+        return getParent2(node, path).replaceAll("\\<.*\\>", "");
+    }
 
-	private void parseTmpFilesFrom() throws IOException {
-		ASTParser parser = makeASTParser(new String[0]);
-		FileASTRequestor requestor = new FileASTRequestor() {
-			@Override
-			public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-				// String path = sourceFilePath.replaceFirst(previousDir.getPath(), "");
-				String path = compilationUnit.getPackage().getName().toString();
+    private String getParent2(ASTNode node, String parent) {
+        if (node == null) {
+            return parent;
+        }
+        if (node instanceof AbstractTypeDeclaration) {
+            String name = ((AbstractTypeDeclaration) node).getName().toString();
+            // String fileName = parent.replaceAll(".*/", "").replaceFirst(".java", "");
+            // if (name.equals(fileName))
+            // return parent;
+            // else
+            return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
+        }
 
-				ASTVisitor visitor = new ASTVisitor() {
-					@Override
-					public boolean visit(MethodDeclaration node) {
-						String name = getName(node);
-						String parent = getParent(node.getParent(), path);
-						ChangePart part = new ChangePart(name, parent, Kind.METHOD);
-						previousMethods.add(part);
-						previousMethodsCode.put(part, node.toString());
-						return true;
-					}
-					@Override
-					public boolean visit(TypeDeclaration node) {
-						String name = getName(node);
-						String parent = getParent(node.getParent(), path);
-						ChangePart part = new ChangePart(name, parent, Kind.TYPE);
-						previousTypes.add(part);
-						previousTypesCode.put(part, node.toString());
-						return true;
-					}
-				};
-				compilationUnit.accept(visitor);
-			}
-		};
-		String[] filesArray = previousDirFiles.toArray(new String[0]);
-		parser.createASTs(filesArray, null, new String[0], requestor, null);
-	}
+        if (node instanceof ClassInstanceCreation) {
+            String name = ((ClassInstanceCreation) node).getType().toString();
+            return getParent2(node.getParent(), parent) + MEMBER_SEPARATOR + name;
+        }
+        return getParent2(node.getParent(), parent);
+    }
 
-	private void parseTmpFilesTo() throws IOException {
-		ASTParser parser = makeASTParser(new String[0]);
-		FileASTRequestor requestor = new FileASTRequestor() {
-			@Override
-			public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
-				// String path = sourceFilePath.replaceFirst(currentDir.getPath(), "");
-				String path = compilationUnit.getPackage().getName().toString();
+    private void parseTmpFilesFrom() throws IOException {
+        ASTParser parser = makeASTParser(new String[0]);
+        FileASTRequestor requestor = new FileASTRequestor() {
+            @Override
+            public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+                // String path = sourceFilePath.replaceFirst(previousDir.getPath(), "");
+                String path = compilationUnit.getPackage().getName().toString();
 
-				ASTVisitor visitor = new ASTVisitor() {
-					@Override
-					public boolean visit(MethodDeclaration node) {
-						String name = getName(node);
-						String parent = getParent(node.getParent(), path);
-						ChangePart part = new ChangePart(name, parent, Kind.METHOD);
-						currentMethods.add(part);
-						currentMethodsCode.put(part, node.toString());
-						return true;
-					}
-					@Override
-					public boolean visit(TypeDeclaration node) {
-						String name = node.getName().toString();
-						String parent = getParent(node.getParent(), path);
-						ChangePart part = new ChangePart(name, parent, Kind.TYPE);
-						currentTypes.add(part);
-						currentTypesCode.put(part, node.toString());
-						return true;
-					}
-				};
-				compilationUnit.accept(visitor);
-			}
-		};
-		String[] filesArray = currentDirFiles.toArray(new String[0]);
-		parser.createASTs(filesArray, null, new String[0], requestor, null);
-	}
+                ASTVisitor visitor = new ASTVisitor() {
+                    @Override
+                    public boolean visit(MethodDeclaration node) {
+                        String name = getName(node);
+                        String parent = getParent(node.getParent(), path);
+                        ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+                        previousMethods.add(part);
+                        previousMethodsCode.put(part, node.toString());
+                        return true;
+                    }
 
-	private ASTParser makeASTParser(String[] sourceFolders) {
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		Map<String, String> options = JavaCore.getOptions();
-		JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
-		parser.setCompilerOptions(options);
-		// parser.setResolveBindings(true);
-		// parser.setBindingsRecovery(true);
-		// parser.setEnvironment(new String[0], sourceFolders, null, true);
-		return parser;
-	}
-	
-	private void processParsedData() {
-		processParsedMethodData();
-		processParsedTypesData();
-	}
+                    @Override
+                    public boolean visit(TypeDeclaration node) {
+                        String name = getName(node);
+                        String parent = getParent(node.getParent(), path);
+                        ChangePart part = new ChangePart(name, parent, Kind.TYPE);
+                        previousTypes.add(part);
+                        previousTypesCode.put(part, node.toString());
+                        return true;
+                    }
+                };
+                compilationUnit.accept(visitor);
+            }
+        };
+        String[] filesArray = new String[previousDirFiles.size()];
+        Iterator<Path> iterator = previousDirFiles.iterator();
+        for (int i = 0; i < previousDirFiles.size(); i++) {
+            filesArray[i] = iterator.next().toString();
+        }
 
-	private void processParsedMethodData() {
-		for (ChangePart part : previousMethods) {
-			if (currentMethods.contains(part)) {
-				if (!previousMethodsCode.get(part).equals(currentMethodsCode.get(part))) {
-					model.changedParts.addPart(part);
-				}
-				currentMethods.remove(part);
-			} else
-				model.deletedParts.addPart(part);
-		}
-		for (ChangePart part : currentMethods)
-			model.newParts.addPart(part);
-	}
-	
-	private void processParsedTypesData() {
-		for (ChangePart part : previousTypes) {
-			if (currentTypes.contains(part)) {
-				if (!previousTypesCode.get(part).equals(currentTypesCode.get(part))) {
-					model.changedParts.addPart(part);
-				}
-				currentTypes.remove(part);
-			} else
-				model.deletedParts.addPart(part);
-		}
-		for (ChangePart part : currentTypes)
-			model.newParts.addPart(part);
-	}
+        parser.createASTs(filesArray, null, new String[0], requestor, null);
+    }
 
-	public void clean() throws IOException {
-		Files.walkFileTree(tmpDir.toPath(), new SimpleFileVisitor<Path>() {
-			@Override
-			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-				Files.delete(file);
-				return FileVisitResult.CONTINUE;
-			}
+    private void parseTmpFilesTo() throws IOException {
+        ASTParser parser = makeASTParser(new String[0]);
+        FileASTRequestor requestor = new FileASTRequestor() {
+            @Override
+            public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+                // String path = sourceFilePath.replaceFirst(currentDir.getPath(), "");
+                String path = compilationUnit.getPackage().getName().toString();
 
-			@Override
-			public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
-				if (e == null) {
-					Files.delete(dir);
-					return FileVisitResult.CONTINUE;
-				} else {
-					throw e;
-				}
-			}
-		});
-	}
+                ASTVisitor visitor = new ASTVisitor() {
+                    @Override
+                    public boolean visit(MethodDeclaration node) {
+                        String name = getName(node);
+                        String parent = getParent(node.getParent(), path);
+                        ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+                        currentMethods.add(part);
+                        currentMethodsCode.put(part, node.toString());
+                        return true;
+                    }
+
+                    @Override
+                    public boolean visit(TypeDeclaration node) {
+                        String name = node.getName().toString();
+                        String parent = getParent(node.getParent(), path);
+                        ChangePart part = new ChangePart(name, parent, Kind.TYPE);
+                        currentTypes.add(part);
+                        currentTypesCode.put(part, node.toString());
+                        return true;
+                    }
+                };
+                compilationUnit.accept(visitor);
+            }
+        };
+        String[] filesArray = new String[currentDirFiles.size()];
+        Iterator<Path> iterator = currentDirFiles.iterator();
+        for (int i = 0; i < currentDirFiles.size(); i++) {
+            filesArray[i] = iterator.next().toString();
+        }
+
+        parser.createASTs(filesArray, null, new String[0], requestor, null);
+    }
+
+    private ASTParser makeASTParser(String[] sourceFolders) {
+        ASTParser parser = ASTParser.newParser(AST.JLS8);
+        parser.setKind(ASTParser.K_COMPILATION_UNIT);
+        Map<String, String> options = JavaCore.getOptions();
+        JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
+        parser.setCompilerOptions(options);
+        // parser.setResolveBindings(true);
+        // parser.setBindingsRecovery(true);
+        // parser.setEnvironment(new String[0], sourceFolders, null, true);
+        return parser;
+    }
+
+    private void processParsedData() {
+        processParsedMethodData();
+        processParsedTypesData();
+    }
+
+    private void processParsedMethodData() {
+        for (ChangePart part : previousMethods) {
+            if (currentMethods.contains(part)) {
+                if (!previousMethodsCode.get(part).equals(currentMethodsCode.get(part))) {
+                    model.changedParts.addPart(part);
+                }
+                currentMethods.remove(part);
+            } else {
+                model.deletedParts.addPart(part);
+            }
+        }
+        for (ChangePart part : currentMethods) {
+            model.newParts.addPart(part);
+        }
+    }
+
+    private void processParsedTypesData() {
+        for (ChangePart part : previousTypes) {
+            if (currentTypes.contains(part)) {
+                if (!previousTypesCode.get(part).equals(currentTypesCode.get(part))) {
+                    model.changedParts.addPart(part);
+                }
+                currentTypes.remove(part);
+            } else {
+                model.deletedParts.addPart(part);
+            }
+        }
+        for (ChangePart part : currentTypes) {
+            model.newParts.addPart(part);
+        }
+    }
+
+    public void clean() throws IOException {
+        Files.walkFileTree(tmpDir, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException e) throws IOException {
+                if (e == null) {
+                    Files.delete(dir);
+                    return FileVisitResult.CONTINUE;
+                } else {
+                    throw e;
+                }
+            }
+        });
+    }
 }

@@ -49,26 +49,19 @@ public class ReviewUi {
         new StartReviewAction().execute(null);
     }
 
-	/**
-	 * Registers a new listener for selected commits in review. The listeners are
-	 * stored in {@link WeakReference} objects and also removed if they are not
-	 * strongly or softly reachable.
-	 */
-	public static void registerCommitsInReviewListener(CommitsInReviewListener l) {
-		CurrentCommitsInReview.registerListener(l);
-	}
+    /**
+     * Registers a new listener for selected commits in review. The listeners are
+     * stored in {@link WeakReference} objects and also removed if they are not
+     * strongly or softly reachable.
+     */
+    public static void registerCommitsInReviewListener(CommitsInReviewListener l) {
+        CurrentCommitsInReview.registerListener(l);
+    }
 
-	/**
-	 * Returns commits under review. Only meaningful in review mode.
-	 */
-	public static List<? extends ICommit> getCommitsInReview() {
-		return CurrentCommitsInReview.getCommits();
-	}
-	
-	/**
-	 * Returns review tours. Only meaningful in review mode.
-	 */
-	public static ToursInReview getToursInReview() {
-		return ViewDataSource.get().getToursInReview();
-	}
+    /**
+     * Returns commits under review. Only meaningful in review mode.
+     */
+    public static List<? extends ICommit> getCommitsInReview() {
+        return CurrentCommitsInReview.getCommits();
+    }
 }
