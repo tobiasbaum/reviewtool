@@ -44,7 +44,6 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
-import de.setsoftware.reviewtool.ui.views.CurrentCommitsInReview;
 
 /**
  * Manages the current state regarding the changes/tours under review.
@@ -376,7 +375,7 @@ public class ToursInReview {
             ret.add(c.makeChangesIrrelevant(toMakeIrrelevant));
         }
 
-        CurrentCommitsInReview.setCommits(ret);
+        CommitsInReview.setCommits(ret);
 
         return ret;
     }

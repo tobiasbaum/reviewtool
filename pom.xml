@@ -145,5 +145,6 @@
         <module>de.setsoftware.reviewtool.reminder</module>
         <module>de.setsoftware.reviewtool.feature</module>
         <module>de.setsoftware.reviewtool.updatesite</module>
+	<module>de.setsoftware.reviewtool.summary</module>
     </modules>
 </project>

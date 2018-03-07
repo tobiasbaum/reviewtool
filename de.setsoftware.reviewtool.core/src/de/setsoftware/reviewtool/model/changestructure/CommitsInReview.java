@@ -1,16 +1,25 @@
-package de.setsoftware.reviewtool.ui.views;
+package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.api.ICommit;
-import de.setsoftware.reviewtool.ui.api.CommitsInReviewListener;
 
 /**
  * Manages the currently selected commits for review.
  */
-public class CurrentCommitsInReview {
+public class CommitsInReview {
+    /**
+     * Observer interface for classes listening for selected commits.
+     */
+    public static interface CommitsInReviewListener {
+
+        /**
+         * Is called when new commits are selected.
+         */
+        public abstract void notifyCommits(List<ICommit> currentCommits);
+    }
 
     private static List<ICommit> currentCommits = new ArrayList<>();
     private static WeakListeners<CommitsInReviewListener> listeners = new WeakListeners<>();

@@ -3,37 +3,15 @@ package de.setsoftware.reviewtool.summary;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jface.text.IRegion;
-
-class SummaryPart implements IRegion {
-    String text = "";
-    String textFolded = "";
-    int lines = 0;
-    int linesFolded = 0;
-    int maxLinesFolded = 4;
-    boolean folded = false;
-    boolean hasLink = false; // No hyper-link, if content is short enough
-
-    int linkOffset = 0; // Character offset of whole summary text, used for displaying links
-    int linkLength = 0; // Links with length 0 are not presented
-
-    @Override
-    public int getLength() {
-        return linkLength;
-    }
-
-    @Override
-    public int getOffset() {
-        return linkOffset;
-    }
-}
-
 /**
  * Generates text from default representation of a commits and manages links.
  */
-public class TextGenerator {
-    static public List<SummaryPart> generateText(ChangePartsModel model) {
-        List<SummaryPart> summary = new ArrayList<>();
+public class SummaryTextGenerator {
+    /**
+     * Generate text parts for the given model.
+     */
+    public static List<SummaryTextPart> generateSummary(ChangePartsModel model) {
+        List<SummaryTextPart> summary = new ArrayList<>();
 
         addPart(getNewTypes(model), summary);
         addPart(getChangedTypes(model), summary);
@@ -47,17 +25,16 @@ public class TextGenerator {
         addPart(getChangedFiles(model), summary);
         addPart(getDeletedFiles(model), summary);
 
-        for (SummaryPart part : summary) {
-            addLinkIfNeeded(part);
-        }
-        updateLinkRegions(summary);
-
         return summary;
     }
 
-    static public String getText(List<SummaryPart> summary) {
+    /**
+     * Generate text from a list of summary parts with respect of folding status.
+     */
+    public static String getText(List<SummaryTextPart> summary) {
+        updateLinkRegions(summary);
         String text = "";
-        for (SummaryPart part : summary) {
+        for (SummaryTextPart part : summary) {
             if (part.folded) {
                 text = text + part.textFolded;
             } else {
@@ -67,9 +44,9 @@ public class TextGenerator {
         return text;
     }
 
-    static public void updateLinkRegions(List<SummaryPart> summary) {
+    private static void updateLinkRegions(List<SummaryTextPart> summary) {
         int offset = 0;
-        for (SummaryPart part : summary) {
+        for (SummaryTextPart part : summary) {
             if (part.folded) {
                 offset = offset + part.textFolded.length();
             } else {
@@ -81,13 +58,22 @@ public class TextGenerator {
         }
     }
 
-    private static void addPart(SummaryPart part, List<SummaryPart> summary) {
+    private static void addPart(SummaryTextPart part, List<SummaryTextPart> summary) {
         if (part.lines != 1) {
             summary.add(part);
         }
     }
 
-    private static void addLinkIfNeeded(SummaryPart part) {
+    /**
+     * Add hyperlinks regions to and fold summary parts whose text is to long.
+     */
+    public static void addLinks(List<SummaryTextPart> summary) {
+        for (SummaryTextPart part : summary) {
+            addLinkIfNeeded(part);
+        }
+    }
+
+    private static void addLinkIfNeeded(SummaryTextPart part) {
         if (part.lines > part.maxLinesFolded) {
             String[] text = part.text.split("\n");
             for (int i = 0; i < part.maxLinesFolded - 1; i++) {
@@ -98,85 +84,85 @@ public class TextGenerator {
             part.folded = true;
             part.linkLength = 7; // Link length (more.. or less...)
             part.text = part.text + "less..." + "\n\n";
-            part.textFolded = part.textFolded + "(other " + (part.lines - part.linesFolded) + " items) show...\n\n";
+            part.textFolded = part.textFolded + "(" + (part.lines - part.linesFolded) + " more lines) show...\n\n";
         } else {
             part.text = part.text + "\n";
         }
     }
 
-    private static SummaryPart getNewTypes(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getNewTypes(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "New types:\n";
         part.lines++;
         addChangeParts(part, model.newParts.types);
         return part;
     }
 
-    private static SummaryPart getChangedTypes(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getChangedTypes(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "Changed types:\n";
         part.lines++;
         addChangeParts(part, model.changedParts.types);
         return part;
     }
 
-    private static SummaryPart getDeletedTypes(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getDeletedTypes(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "Deleted types:\n";
         part.lines++;
         addChangeParts(part, model.deletedParts.types);
         return part;
     }
 
-    private static SummaryPart getNewMethods(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getNewMethods(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "New methods:\n";
         part.lines++;
         addChangeParts(part, model.newParts.methods);
         return part;
     }
 
-    private static SummaryPart getChangedMethods(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getChangedMethods(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "Changed methods:\n";
         part.lines++;
         addChangeParts(part, model.changedParts.methods);
         return part;
     }
 
-    private static SummaryPart getDeletedMethods(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getDeletedMethods(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "Deleted methods:\n";
         part.lines++;
         addChangeParts(part, model.deletedParts.methods);
         return part;
     }
 
-    private static SummaryPart getNewFiles(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getNewFiles(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "New non source files:\n";
         part.lines++;
         addChangeParts(part, model.newParts.files);
         return part;
     }
 
-    private static SummaryPart getChangedFiles(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getChangedFiles(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "Changed non source files:\n";
         part.lines++;
         addChangeParts(part, model.changedParts.files);
         return part;
     }
 
-    private static SummaryPart getDeletedFiles(ChangePartsModel model) {
-        SummaryPart part = new SummaryPart();
+    private static SummaryTextPart getDeletedFiles(ChangePartsModel model) {
+        SummaryTextPart part = new SummaryTextPart();
         part.text = "Deleted non source files:\n";
         part.lines++;
         addChangeParts(part, model.deletedParts.files);
         return part;
     }
 
-    private static void addChangeParts(SummaryPart part, List<ChangePart> changes) {
+    private static void addChangeParts(SummaryTextPart part, List<ChangePart> changes) {
         for (ChangePart change : changes) {
             part.text = part.text + change.toString() + "\n";
             part.lines++;

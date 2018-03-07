@@ -37,8 +37,8 @@ import de.setsoftware.reviewtool.summary.ChangePart.Kind;
  * summarize techniques.
  */
 public class CommitParser {
-    public final static String MEMBER_SEPARATOR = ".";
-    public final static String ANONYMOUS_SUFFIX = "$";
+    public static final String MEMBER_SEPARATOR = ".";
+    public static final String ANONYMOUS_SUFFIX = "$";
 
     private ICommit commit;
 
@@ -71,6 +71,10 @@ public class CommitParser {
         this.model = model;
     }
 
+    /**
+     * Parse commit, populate model with detected change parts, compute change parts
+     * relevance and create temporary file copies of changed files.
+     */
     public void processCommit() throws Exception {
         tmpDir = Files.createTempDirectory("CORT");
         previousDir = tmpDir.resolve("prev");
@@ -200,7 +204,7 @@ public class CommitParser {
     }
 
     private void parseTmpFilesFrom() throws IOException {
-        ASTParser parser = makeASTParser(new String[0]);
+        ASTParser parser = makeAstParser(new String[0]);
         FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
@@ -233,7 +237,7 @@ public class CommitParser {
     }
 
     private void parseTmpFilesTo() throws IOException {
-        ASTParser parser = makeASTParser(new String[0]);
+        ASTParser parser = makeAstParser(new String[0]);
         FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
@@ -265,7 +269,7 @@ public class CommitParser {
         parser.createASTs(currentDirFilesArray, null, new String[0], requestor, null);
     }
 
-    private ASTParser makeASTParser(String[] sourceFolders) {
+    private ASTParser makeAstParser(String[] sourceFolders) {
         ASTParser parser = ASTParser.newParser(AST.JLS8);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         Map<String, String> options = JavaCore.getOptions();
@@ -314,6 +318,9 @@ public class CommitParser {
         }
     }
 
+    /**
+     * Remove temporary files.
+     */
     public void clean() throws IOException {
         Files.walkFileTree(tmpDir, new SimpleFileVisitor<Path>() {
             @Override
@@ -335,7 +342,7 @@ public class CommitParser {
     }
 
     private void parseTmpFilesFromForRelevance() throws IOException {
-        ASTParser parser = makeASTParser(new String[0]);
+        ASTParser parser = makeAstParser(new String[0]);
         FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
@@ -364,7 +371,7 @@ public class CommitParser {
     }
 
     private void parseTmpFilesToForRelevance() throws IOException {
-        ASTParser parser = makeASTParser(new String[0]);
+        ASTParser parser = makeAstParser(new String[0]);
         FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {

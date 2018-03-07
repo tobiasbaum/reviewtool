@@ -16,7 +16,14 @@ import refdiff.core.rm2.model.SDEntity;
 import refdiff.core.rm2.model.SDModel;
 import refdiff.core.rm2.model.refactoring.SDRefactoring;
 
+/**
+ * RefDiff summary technique.
+ */
 public class RefDiffTechnique {
+    /**
+     * Detect refactorings summary using RefDiff and remove recognized refactorings
+     * from default model.
+     */
     public static String process(Path previousDir, Path currentDir, Set<Path> previousDirFiles,
             Set<Path> currentDirFiles, ChangePartsModel model) {
         ArrayList<String> filesBefore = new ArrayList<>();

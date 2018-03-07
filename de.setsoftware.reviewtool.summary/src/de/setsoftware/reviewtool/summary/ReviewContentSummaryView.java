@@ -21,7 +21,7 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.model.api.ICommit;
-import de.setsoftware.reviewtool.ui.api.CommitsInReviewListener;
+import de.setsoftware.reviewtool.model.changestructure.CommitsInReview.CommitsInReviewListener;
 import de.setsoftware.reviewtool.ui.api.ReviewUi;
 
 /**
@@ -117,12 +117,18 @@ public class ReviewContentSummaryView extends ViewPart {
         viewer.getControl().setFocus();
     }
 
+    /**
+     * Update text to show.
+     */
     public void setText(String text) {
         int i = viewer.getTopIndex();
         viewer.getDocument().set(text);
         viewer.setTopIndex(i);
     }
 
+    /**
+     * Set and mark up hyperlinks regions.
+     */
     public void setHyperLinks(List<? extends IRegion> links) {
         this.links = links;
 
