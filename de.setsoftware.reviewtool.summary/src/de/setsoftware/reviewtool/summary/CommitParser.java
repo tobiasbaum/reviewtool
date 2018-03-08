@@ -107,6 +107,7 @@ public class CommitParser {
 
         parseTmpFilesFromForRelevance();
         parseTmpFilesToForRelevance();
+        addCodeLengthToRelevance();
     }
 
     private boolean isSourceFile(IChange change) throws Exception {
@@ -402,5 +403,17 @@ public class CommitParser {
             }
         };
         parser.createASTs(currentDirFilesArray, null, new String[0], requestor, null);
+    }
+
+    private void addCodeLengthToRelevance() {
+        for (ChangePart part : model.deletedParts.methods) {
+            part.relevance = (part.relevance + previousMethodsCode.get(part).length()) / 2;
+        }
+        for (ChangePart part : model.changedParts.methods) {
+            part.relevance = (part.relevance + currentMethodsCode.get(part).length()) / 2;
+        }
+        for (ChangePart part : model.newParts.methods) {
+            part.relevance = (part.relevance + currentMethodsCode.get(part).length()) / 2;
+        }
     }
 }
