@@ -121,15 +121,29 @@ public class ReviewContentSummaryView extends ViewPart {
      * Update text to show.
      */
     public void setText(String text) {
-        int i = viewer.getTopIndex();
-        viewer.getDocument().set(text);
-        viewer.setTopIndex(i);
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                int i = viewer.getTopIndex();
+                viewer.getDocument().set(text);
+                viewer.setTopIndex(i);
+            }
+        });
     }
 
     /**
      * Set and mark up hyperlinks regions.
      */
     public void setHyperLinks(List<? extends IRegion> links) {
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                setHyperLinksInternal(links);
+            }
+        });
+    }
+
+    private void setHyperLinksInternal(List<? extends IRegion> links) {
         this.links = links;
 
         StyledText text = viewer.getTextWidget();

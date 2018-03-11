@@ -16,4 +16,5 @@ Import-Package: de.setsoftware.reviewtool.model.remarks,
  org.eclipse.jface.text.hyperlink,
  org.eclipse.jface.text.source
 Bundle-ClassPath: .,
- refdiff-core.jar
+ refdiff-core.jar,
+ deltadoc.jar
