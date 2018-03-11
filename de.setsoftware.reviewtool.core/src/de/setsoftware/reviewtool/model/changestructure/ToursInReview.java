@@ -375,7 +375,7 @@ public class ToursInReview {
             ret.add(c.makeChangesIrrelevant(toMakeIrrelevant));
         }
 
-
+        CommitsInReview.setCommits(ret);
 
         return ret;
     }

@@ -1,8 +1,14 @@
 package de.setsoftware.reviewtool.ui.api;
 
+import java.lang.ref.WeakReference;
+import java.util.List;
+
 import org.eclipse.core.commands.ExecutionException;
 
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.changestructure.CommitsInReview;
+import de.setsoftware.reviewtool.model.changestructure.CommitsInReview.CommitsInReviewListener;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
@@ -43,4 +49,19 @@ public class ReviewUi {
         new StartReviewAction().execute(null);
     }
 
+    /**
+     * Registers a new listener for selected commits in review. The listeners are
+     * stored in {@link WeakReference} objects and also removed if they are not
+     * strongly or softly reachable.
+     */
+    public static void registerCommitsInReviewListener(CommitsInReviewListener l) {
+        CommitsInReview.registerListener(l);
+    }
+
+    /**
+     * Returns commits under review. Only meaningful in review mode.
+     */
+    public static List<? extends ICommit> getCommitsInReview() {
+        return CommitsInReview.getCommits();
+    }
 }
