@@ -96,12 +96,21 @@ public class ReviewContentSummaryView extends ViewPart {
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
-                        controller.processCommits(ReviewUi.getCommitsInReview());
+                        controller.processCommits(currentCommits);
                     }
                 });
             }
         };
         ReviewUi.registerCommitsInReviewListener(commitsListener);
+
+        if (!ReviewUi.isIdle()) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    controller.processCommits(ReviewUi.getCommitsInReview());
+                }
+            });
+        }
     }
 
     private void hookContextMenu() {

@@ -63,10 +63,12 @@ public class Controller {
                 };
                 Thread t = new Thread(r);
                 t.start();
-                Thread.sleep(5000);
-                if (t.isAlive()) {
-                    t.stop();
+                int sleeps = 10;
+                while (t.isAlive() && sleeps > 0) {
+                    sleeps--;
+                    Thread.sleep(1000);
                 }
+                t.stop();
 
                 parser.clean();
             } catch (Exception e) {

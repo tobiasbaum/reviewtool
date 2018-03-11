@@ -5,6 +5,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
 
 import raykernel.apps.deltadoc2.DeltaDoc;
 import raykernel.apps.deltadoc2.PreProcess;
@@ -49,8 +50,8 @@ public class DeltaDocTechnique {
             // File.separator))
             // .resolve(type.getName() + ".java");
 
-            String relFile = type.getParent().replaceAll("\\.", File.separator) + File.separator + type.getName()
-                    + ".java";
+            String relFile = type.getParent().replaceAll("\\.", Matcher.quoteReplacement(File.separator)) + File.separator + type.getName()
+            + ".java";
 
             File f1 = null;
             File f2 = null;
@@ -94,7 +95,7 @@ public class DeltaDocTechnique {
                     if (!out.contains("No Appreciable Change")) {
                         out = out.replaceFirst(".*\n", "").replaceFirst(".*\n", "");
                         text.append("DeltaDoc for " + type.toString() + "\n");
-                        text.append(out);
+                        text.append(out + "\n");
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
