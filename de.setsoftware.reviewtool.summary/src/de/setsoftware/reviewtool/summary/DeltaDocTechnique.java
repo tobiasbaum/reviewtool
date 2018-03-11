@@ -50,18 +50,18 @@ public class DeltaDocTechnique {
             // File.separator))
             // .resolve(type.getName() + ".java");
 
-            String relFile = type.getParent().replaceAll("\\.", Matcher.quoteReplacement(File.separator)) + File.separator + type.getName()
-            + ".java";
+            String parentPath = type.getParent().replaceAll("\\.", Matcher.quoteReplacement(File.separator));
+            String relFilePath = parentPath + File.separator + type.getName() + ".java";
 
             File f1 = null;
             File f2 = null;
             for (String file : filesBefore) {
-                if (file.contains(relFile)) {
+                if (file.contains(relFilePath)) {
                     f1 = new File(previousDir.toFile(), file);
                 }
             }
             for (String file : filesCurrent) {
-                if (file.contains(relFile)) {
+                if (file.contains(relFilePath)) {
                     f2 = new File(currentDir.toFile(), file);
                 }
             }
