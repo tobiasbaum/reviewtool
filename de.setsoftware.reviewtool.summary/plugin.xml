@@ -6,7 +6,6 @@
       <view
             class="de.setsoftware.reviewtool.summary.ReviewContentSummaryView"
             id="de.setsoftware.reviewtool.summary.ReviewContentSummaryView"
-            inject="true"
             name="Summary of review content">
       </view>
    </extension>
