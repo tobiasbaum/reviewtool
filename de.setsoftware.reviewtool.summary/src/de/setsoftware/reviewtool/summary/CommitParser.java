@@ -39,8 +39,8 @@ import de.setsoftware.reviewtool.summary.ChangePart.Kind;
 public class CommitParser {
     public static final String MEMBER_SEPARATOR = ".";
     public static final String ANONYMOUS_SUFFIX = "$";
-    
-    // 10 5-character words equals 1 method call 
+
+    // 10 5-character words equals 1 method call
     public static final Double CODE_LENGHT_RELEVANCE_FACTOR = 0.02;
 
     private ICommit commit;
@@ -299,7 +299,7 @@ public class CommitParser {
                 }
                 currentMethods.remove(part);
             } else {
-                if(!model.newParts.methods.contains(part)) {
+                if (!model.newParts.methods.contains(part)) {
                     model.deletedParts.addPart(part);
                 } else {
                     model.newParts.methods.remove(part);
@@ -320,7 +320,7 @@ public class CommitParser {
                 }
                 currentTypes.remove(part);
             } else {
-                if(!model.newParts.types.contains(part)) {
+                if (!model.newParts.types.contains(part)) {
                     model.deletedParts.addPart(part);
                 } else {
                     model.newParts.types.remove(part);

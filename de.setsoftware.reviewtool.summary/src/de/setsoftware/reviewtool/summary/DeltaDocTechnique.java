@@ -88,14 +88,18 @@ public class DeltaDocTechnique {
 
                     // *** format / distill hierarchical documentation ***
                     DocNode output = HierarchicalDoc.makeDoc(doc);
-                    CombinePredicates.process(output);
-
+                    CombinePredicates.process(output);      
+                    
                     // *** print it ***
                     String out = print.print(output);
                     if (!out.contains("No Appreciable Change")) {
                         out = out.replaceFirst(".*\n", "").replaceFirst(".*\n", "");
-                        text.append("DeltaDoc for " + type.toString() + "\n");
-                        text.append(out + "\n");
+                        out = out.replaceAll(".*added method :.*\n", "");
+                        out = out.replaceAll(".*removed method :.*\n", "");
+                        if (!out.isEmpty()) {
+                            text.append("DeltaDoc for " + type.toString() + "\n");
+                            text.append(out + "\n");
+                        }
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
