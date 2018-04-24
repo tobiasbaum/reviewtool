@@ -293,12 +293,17 @@ public class CommitParser {
     private void processParsedMethodData() {
         for (ChangePart part : previousMethods) {
             if (currentMethods.contains(part)) {
-                if (!previousMethodsCode.get(part).equals(currentMethodsCode.get(part))) {
+                if (!previousMethodsCode.get(part).equals(currentMethodsCode.get(part))
+                        && !model.newParts.methods.contains(part)) {
                     model.changedParts.addPart(part);
                 }
                 currentMethods.remove(part);
             } else {
-                model.deletedParts.addPart(part);
+                if(!model.newParts.methods.contains(part)) {
+                    model.deletedParts.addPart(part);
+                } else {
+                    model.newParts.methods.remove(part);
+                }
             }
         }
         for (ChangePart part : currentMethods) {
@@ -309,12 +314,17 @@ public class CommitParser {
     private void processParsedTypesData() {
         for (ChangePart part : previousTypes) {
             if (currentTypes.contains(part)) {
-                if (!previousTypesCode.get(part).equals(currentTypesCode.get(part))) {
+                if (!previousTypesCode.get(part).equals(currentTypesCode.get(part))
+                        && !model.newParts.types.contains(part)) {
                     model.changedParts.addPart(part);
                 }
                 currentTypes.remove(part);
             } else {
-                model.deletedParts.addPart(part);
+                if(!model.newParts.types.contains(part)) {
+                    model.deletedParts.addPart(part);
+                } else {
+                    model.newParts.types.remove(part);
+                }
             }
         }
         for (ChangePart part : currentTypes) {
@@ -411,15 +421,15 @@ public class CommitParser {
     private void addCodeLengthToRelevance() {
         for (ChangePart part : model.deletedParts.methods) {
             part.relevance = (int) ((part.relevance
-                    + (double) previousMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
+                    + previousMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
         for (ChangePart part : model.changedParts.methods) {
             part.relevance = (int) ((part.relevance
-                    + (double) currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
+                    + currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
         for (ChangePart part : model.newParts.methods) {
             part.relevance = (int) ((part.relevance
-                    + (double) currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
+                    + currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
     }
 }
