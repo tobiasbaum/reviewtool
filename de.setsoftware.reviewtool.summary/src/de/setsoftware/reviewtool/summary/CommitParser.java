@@ -39,6 +39,9 @@ import de.setsoftware.reviewtool.summary.ChangePart.Kind;
 public class CommitParser {
     public static final String MEMBER_SEPARATOR = ".";
     public static final String ANONYMOUS_SUFFIX = "$";
+    
+    // 10 5-character words equals 1 method call 
+    public static final Double CODE_LENGHT_RELEVANCE_FACTOR = 0.02;
 
     private ICommit commit;
 
@@ -407,13 +410,16 @@ public class CommitParser {
 
     private void addCodeLengthToRelevance() {
         for (ChangePart part : model.deletedParts.methods) {
-            part.relevance = (part.relevance + previousMethodsCode.get(part).length()) / 2;
+            part.relevance = (int) ((part.relevance
+                    + (double) previousMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
         for (ChangePart part : model.changedParts.methods) {
-            part.relevance = (part.relevance + currentMethodsCode.get(part).length()) / 2;
+            part.relevance = (int) ((part.relevance
+                    + (double) currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
         for (ChangePart part : model.newParts.methods) {
-            part.relevance = (part.relevance + currentMethodsCode.get(part).length()) / 2;
+            part.relevance = (int) ((part.relevance
+                    + (double) currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
     }
 }
