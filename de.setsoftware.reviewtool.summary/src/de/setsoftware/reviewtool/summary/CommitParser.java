@@ -40,6 +40,9 @@ public class CommitParser {
     public static final String MEMBER_SEPARATOR = ".";
     public static final String ANONYMOUS_SUFFIX = "$";
 
+    // 10 5-character words equals 1 method call
+    public static final Double CODE_LENGHT_RELEVANCE_FACTOR = 0.02;
+
     private ICommit commit;
 
     private Path tmpDir;
@@ -290,12 +293,17 @@ public class CommitParser {
     private void processParsedMethodData() {
         for (ChangePart part : previousMethods) {
             if (currentMethods.contains(part)) {
-                if (!previousMethodsCode.get(part).equals(currentMethodsCode.get(part))) {
+                if (!previousMethodsCode.get(part).equals(currentMethodsCode.get(part))
+                        && !model.newParts.methods.contains(part)) {
                     model.changedParts.addPart(part);
                 }
                 currentMethods.remove(part);
             } else {
-                model.deletedParts.addPart(part);
+                if (!model.newParts.methods.contains(part)) {
+                    model.deletedParts.addPart(part);
+                } else {
+                    model.newParts.methods.remove(part);
+                }
             }
         }
         for (ChangePart part : currentMethods) {
@@ -306,12 +314,17 @@ public class CommitParser {
     private void processParsedTypesData() {
         for (ChangePart part : previousTypes) {
             if (currentTypes.contains(part)) {
-                if (!previousTypesCode.get(part).equals(currentTypesCode.get(part))) {
+                if (!previousTypesCode.get(part).equals(currentTypesCode.get(part))
+                        && !model.newParts.types.contains(part)) {
                     model.changedParts.addPart(part);
                 }
                 currentTypes.remove(part);
             } else {
-                model.deletedParts.addPart(part);
+                if (!model.newParts.types.contains(part)) {
+                    model.deletedParts.addPart(part);
+                } else {
+                    model.newParts.types.remove(part);
+                }
             }
         }
         for (ChangePart part : currentTypes) {
@@ -407,13 +420,16 @@ public class CommitParser {
 
     private void addCodeLengthToRelevance() {
         for (ChangePart part : model.deletedParts.methods) {
-            part.relevance = (part.relevance + previousMethodsCode.get(part).length()) / 2;
+            part.relevance = (int) ((part.relevance
+                    + previousMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
         for (ChangePart part : model.changedParts.methods) {
-            part.relevance = (part.relevance + currentMethodsCode.get(part).length()) / 2;
+            part.relevance = (int) ((part.relevance
+                    + currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
         for (ChangePart part : model.newParts.methods) {
-            part.relevance = (part.relevance + currentMethodsCode.get(part).length()) / 2;
+            part.relevance = (int) ((part.relevance
+                    + currentMethodsCode.get(part).length() * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
     }
 }
