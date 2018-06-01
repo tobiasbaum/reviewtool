@@ -19,6 +19,13 @@
 /de.setsoftware.reviewtool.changesources.svn.tests/.settings
 /de.setsoftware.reviewtool.changesources.svn.tests/bin
 /de.setsoftware.reviewtool.reminder/target
+/de.setsoftware.reviewtool.reminder/.settings
 /de.setsoftware.reviewtool.reviewdata/target
+/de.setsoftware.reviewtool.reviewdata/.settings
 /de.setsoftware.reviewtool.ordering/target
+/de.setsoftware.reviewtool.ordering/.settings
+/de.setsoftware.reviewtool.ordering/bin
 /de.setsoftware.reviewtool.ordering.tests/target
+/de.setsoftware.reviewtool.ordering.tests/.settings
+/de.setsoftware.reviewtool.ordering.tests/bin
+/de.setsoftware.reviewtool.summary/target
