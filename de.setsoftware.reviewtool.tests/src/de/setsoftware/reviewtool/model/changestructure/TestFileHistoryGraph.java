@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.List;
 
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
@@ -14,6 +15,13 @@ import de.setsoftware.reviewtool.model.api.IUnknownRevision;
  * Implements {@link IFileHistoryGraph} for this test case. (Code borrowed from the SVN change source code.)
  */
 final class TestFileHistoryGraph extends FileHistoryGraph {
+
+    /**
+     * Constructor.
+     */
+    public TestFileHistoryGraph() {
+        super(DiffAlgorithmFactory.createDefault());
+    }
 
     @Override
     public FileHistoryNode findAncestorFor(final IRevisionedFile file) {

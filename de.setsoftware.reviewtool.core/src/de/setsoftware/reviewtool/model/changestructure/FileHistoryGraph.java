@@ -7,6 +7,7 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
@@ -19,7 +20,16 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
  */
 public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implements IMutableFileHistoryGraph {
 
+    private final IDiffAlgorithm diffAlgorithm;
     private final Multimap<Pair<String, IRepository>, FileHistoryNode> index = new Multimap<>();
+
+    /**
+     * Constructor.
+     * @param diffAlgorithm The algorithm to be used for computing differences between file revisions.
+     */
+    protected FileHistoryGraph(final IDiffAlgorithm diffAlgorithm) {
+        this.diffAlgorithm = diffAlgorithm;
+    }
 
     @Override
     public final boolean contains(final String path, final IRepository repo) {
@@ -180,7 +190,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final FileHistoryNode ancestor,
             final FileHistoryNode descendant,
             final IFileHistoryEdge.Type type) {
-        ancestor.addDescendant(descendant, type, new FileDiff(ancestor.getFile(), descendant.getFile()));
+        ancestor.addDescendant(descendant, type);
     }
 
     /**
@@ -451,8 +461,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                 descendantOfAncestor.removeAncestor(descendantOfAncestorEdge);
                 interiorNode.addDescendant(
                         descendantOfAncestor,
-                        descendantOfAncestorEdge.getType(), // always IFileHistoryEdge.Type.NORMAL
-                        descendantOfAncestorEdge.getDiff());
+                        descendantOfAncestorEdge.getType()); // always IFileHistoryEdge.Type.NORMAL
             }
         }
     }
@@ -488,6 +497,11 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * if no suitable node exists. To be suitable, the ancestor node must not be deleted.
      */
     public abstract FileHistoryNode findAncestorFor(IRevisionedFile file);
+
+    @Override
+    public IDiffAlgorithm getDiffAlgorithm() {
+        return this.diffAlgorithm;
+    }
 
     @Override
     public String toString() {

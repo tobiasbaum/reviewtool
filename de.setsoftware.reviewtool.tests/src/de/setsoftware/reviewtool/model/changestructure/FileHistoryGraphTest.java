@@ -29,8 +29,7 @@ public final class FileHistoryGraphTest {
         final FileHistoryNode alphaNode = g.getNodeFor(
                 ChangestructureFactory.createFileInRevision(node.getFile().getPath(),
                         ChangestructureFactory.createUnknownRevision(repo)));
-        final FileHistoryEdge alphaEdge = new FileHistoryEdge(g, alphaNode, node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(alphaNode.getFile(), node.getFile()));
+        final FileHistoryEdge alphaEdge = new FileHistoryEdge(g, alphaNode, node, IFileHistoryEdge.Type.NORMAL);
         return alphaEdge;
     }
 
@@ -77,8 +76,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNode), trunk2Node.getChildren());
         assertEquals(trunk2Node, aNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
     }
@@ -194,8 +192,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(a2Node), trunkNode2.getChildren());
         assertEquals(trunkNode2, a2Node.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunkRev2));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkNode2.getAncestors());
     }
@@ -232,8 +229,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeDel.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeDel.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevPrev, aRevDel));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeDel.getAncestors());
 
@@ -253,8 +249,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNodeDel), trunk2Node.getChildren());
         assertEquals(trunk2Node, aNodeDel.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
     }
@@ -284,8 +279,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodePrev.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodePrev.getAncestors());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNodePrev, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevPrev, aRevDel));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNodePrev, aNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNodePrev.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeDel.getAncestors());
     }
@@ -345,13 +339,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(xNodeDel), aNodeDel.getChildren());
         assertEquals(aNodeDel, xNodeDel.getParent());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevPrev, aRevDel));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeDel.getAncestors());
 
-        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRevPrev, xRevDel));
+        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(xEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xEdge), xNodeDel.getAncestors());
 
@@ -371,8 +363,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNodeDel), trunk2Node.getChildren());
         assertEquals(trunk2Node, aNodeDel.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
     }
@@ -438,13 +429,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(xNodeDel), aNodePrev.getChildren());
         assertEquals(aNodePrev, xNodeDel.getParent());
 
-        final FileHistoryEdge aEdgePrev = new FileHistoryEdge(g, aNode, aNodePrev, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRevPrev));
+        final FileHistoryEdge aEdgePrev = new FileHistoryEdge(g, aNode, aNodePrev, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdgePrev), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdgePrev), aNodePrev.getAncestors());
 
-        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRevOrig, xRevDel));
+        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(xEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xEdge), xNodeDel.getAncestors());
 
@@ -454,8 +443,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeDel.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeDel.getDescendants());
 
-        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aNodePrev, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevPrev, aRevDel));
+        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aNodePrev, aNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdgeDel), aNodePrev.getDescendants());
         assertEquals(Collections.singleton(aEdgeDel), aNodeDel.getAncestors());
 
@@ -482,13 +470,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNodeDel), trunk3Node.getChildren());
         assertEquals(trunk3Node, aNodeDel.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
 
-        final FileHistoryEdge trunk2Edge = new FileHistoryEdge(g, trunk2Node, trunk3Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunk2Rev, trunk3Rev));
+        final FileHistoryEdge trunk2Edge = new FileHistoryEdge(g, trunk2Node, trunk3Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunk2Edge), trunk2Node.getDescendants());
         assertEquals(Collections.singleton(trunk2Edge), trunk3Node.getAncestors());
     }
@@ -577,13 +563,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(xNodeDel), aNode2.getChildren());
         assertEquals(aNode2, xNodeDel.getParent());
 
-        final FileHistoryEdge aEdge1 = new FileHistoryEdge(g, aNode, aNode2, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRev2));
+        final FileHistoryEdge aEdge1 = new FileHistoryEdge(g, aNode, aNode2, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge1), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge1), aNode2.getAncestors());
 
-        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRevOrig, xRevDel));
+        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(xEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xEdge), xNodeDel.getAncestors());
 
@@ -601,18 +585,15 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(yNodeChange), aNode3.getChildren());
         assertEquals(aNode3, yNodeChange.getParent());
 
-        final FileHistoryEdge aEdge2 = new FileHistoryEdge(g, aNode2, aNode3, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRev2, aRev3));
+        final FileHistoryEdge aEdge2 = new FileHistoryEdge(g, aNode2, aNode3, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge2), aNode2.getDescendants());
         assertEquals(Collections.singleton(aEdge2), aNode3.getAncestors());
 
-        final FileHistoryEdge xEdgeDel = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRevOrig, xRevDel));
+        final FileHistoryEdge xEdgeDel = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(xEdgeDel), xNode.getDescendants());
         assertEquals(Collections.singleton(xEdgeDel), xNodeDel.getAncestors());
 
-        final FileHistoryEdge yEdgeChange = new FileHistoryEdge(g, yNode, yNodeChange, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(yRevOrig, yRevChange));
+        final FileHistoryEdge yEdgeChange = new FileHistoryEdge(g, yNode, yNodeChange, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(yEdgeChange), yNode.getDescendants());
         assertEquals(Collections.singleton(yEdgeChange), yNodeChange.getAncestors());
 
@@ -631,8 +612,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(yNodeDel), aNodeDel.getChildren());
         assertEquals(aNodeDel, yNodeDel.getParent());
 
-        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aNode3, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRev3, aRevDel));
+        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aNode3, aNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdgeDel), aNode3.getDescendants());
         assertEquals(Collections.singleton(aEdgeDel), aNodeDel.getAncestors());
 
@@ -666,18 +646,15 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNodeDel), trunk4Node.getChildren());
         assertEquals(trunk4Node, aNodeDel.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
 
-        final FileHistoryEdge trunk2Edge = new FileHistoryEdge(g, trunk2Node, trunk3Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunk2Rev, trunk3Rev));
+        final FileHistoryEdge trunk2Edge = new FileHistoryEdge(g, trunk2Node, trunk3Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunk2Edge), trunk2Node.getDescendants());
         assertEquals(Collections.singleton(trunk2Edge), trunk3Node.getAncestors());
 
-        final FileHistoryEdge trunk3Edge = new FileHistoryEdge(g, trunk3Node, trunk4Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunk3Rev, trunk4Rev));
+        final FileHistoryEdge trunk3Edge = new FileHistoryEdge(g, trunk3Node, trunk4Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunk3Edge), trunk3Node.getDescendants());
         assertEquals(Collections.singleton(trunk3Edge), trunk4Node.getAncestors());
     }
@@ -779,13 +756,11 @@ public final class FileHistoryGraphTest {
         assertEquals(aNode2, xNodeDel.getParent());
         assertEquals(aNode2, yNode2.getParent());
 
-        final FileHistoryEdge aEdge1 = new FileHistoryEdge(g, aNode, aNode2, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRev2));
+        final FileHistoryEdge aEdge1 = new FileHistoryEdge(g, aNode, aNode2, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge1), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge1), aNode2.getAncestors());
 
-        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRevOrig, xRevDel));
+        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xNode, xNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(xEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xEdge), xNodeDel.getAncestors());
 
@@ -815,18 +790,14 @@ public final class FileHistoryGraphTest {
         assertEquals(IFileHistoryNode.Type.CHANGED, yNodeCopy.getType());
         assertEquals(true, yNodeCopy.isCopyTarget());
 
-        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aNode2, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRev2, aRevDel));
-        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aNode2, bNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRev2, bRevOrig));
+        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aNode2, aNodeDel, IFileHistoryEdge.Type.NORMAL);
+        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aNode2, bNode, IFileHistoryEdge.Type.COPY);
         assertEquals(new HashSet<>(Arrays.asList(aEdgeCopy, aEdgeDel)), aNode2.getDescendants());
         assertEquals(Collections.singleton(aEdgeDel), aNodeDel.getAncestors());
         assertEquals(Collections.singleton(aEdgeCopy), bNode.getAncestors());
 
-        final FileHistoryEdge yEdgeDel = new FileHistoryEdge(g, yNode2, yNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(yRev2, yRevDel));
-        final FileHistoryEdge yEdgeCopy = new FileHistoryEdge(g, yNode2, yNodeCopy, IFileHistoryEdge.Type.COPY,
-                new FileDiff(yRev2, yRevCopy));
+        final FileHistoryEdge yEdgeDel = new FileHistoryEdge(g, yNode2, yNodeDel, IFileHistoryEdge.Type.NORMAL);
+        final FileHistoryEdge yEdgeCopy = new FileHistoryEdge(g, yNode2, yNodeCopy, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(yEdgeDel), yNodeDel.getAncestors());
         assertEquals(Collections.singleton(yEdgeCopy), yNodeCopy.getAncestors());
         assertEquals(new HashSet<>(Arrays.asList(yEdgeDel, yEdgeCopy)), yNode2.getDescendants());
@@ -847,12 +818,11 @@ public final class FileHistoryGraphTest {
         assertEquals(bNodeDel, yNodeCopyDel.getParent());
 
         final FileHistoryEdge yEdgeCopyDel = new FileHistoryEdge(g, yNodeCopy, yNodeCopyDel,
-                IFileHistoryEdge.Type.NORMAL, new FileDiff(yRevCopy, yRevDel));
+                IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(yEdgeCopyDel), yNodeCopyDel.getAncestors());
         assertEquals(Collections.singleton(yEdgeCopyDel), yNodeCopy.getDescendants());
 
-        final FileHistoryEdge bEdgeDel = new FileHistoryEdge(g, bNode, bNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(bRevOrig, bRevDel));
+        final FileHistoryEdge bEdgeDel = new FileHistoryEdge(g, bNode, bNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(bEdgeDel), bNode.getDescendants());
         assertEquals(Collections.singleton(bEdgeDel), bNodeDel.getAncestors());
 
@@ -887,18 +857,15 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(bNodeDel), trunk4Node.getChildren());
         assertEquals(trunk4Node, bNodeDel.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
 
-        final FileHistoryEdge trunk2Edge = new FileHistoryEdge(g, trunk2Node, trunk3Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunk2Rev, trunk3Rev));
+        final FileHistoryEdge trunk2Edge = new FileHistoryEdge(g, trunk2Node, trunk3Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunk2Edge), trunk2Node.getDescendants());
         assertEquals(Collections.singleton(trunk2Edge), trunk3Node.getAncestors());
 
-        final FileHistoryEdge trunk3Edge = new FileHistoryEdge(g, trunk3Node, trunk4Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunk3Rev, trunk4Rev));
+        final FileHistoryEdge trunk3Edge = new FileHistoryEdge(g, trunk3Node, trunk4Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunk3Edge), trunk3Node.getDescendants());
         assertEquals(Collections.singleton(trunk3Edge), trunk4Node.getAncestors());
     }
@@ -935,8 +902,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeReplaced.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeReplaced.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeReplaced, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevPrev, aRevReplaced));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeReplaced, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeReplaced.getAncestors());
 
@@ -956,8 +922,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNodeReplaced), trunk2Node.getChildren());
         assertEquals(trunk2Node, aNodeReplaced.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
     }
@@ -987,8 +952,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeReplaced.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeReplaced.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNodePrev, aNodeReplaced, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevPrev, aRevReplaced));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNodePrev, aNodeReplaced, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNodePrev.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeReplaced.getAncestors());
     }
@@ -1031,8 +995,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeReplaced.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeReplaced.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeReplaced, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevPrev, aRevReplaced));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeReplaced, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeReplaced.getAncestors());
 
@@ -1052,8 +1015,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNodeReplaced), xNewNode.getChildren());
         assertEquals(xNewNode, aNodeReplaced.getParent());
 
-        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xOldNode, xNewNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRevPrev, xRevReplaced));
+        final FileHistoryEdge xEdge = new FileHistoryEdge(g, xOldNode, xNewNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(xEdge), xOldNode.getDescendants());
         assertEquals(Collections.singleton(xEdge), xNewNode.getAncestors());
 
@@ -1073,8 +1035,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(xNewNode), trunk2Node.getChildren());
         assertEquals(trunk2Node, xNewNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
     }
@@ -1149,8 +1110,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(xNewNode), trunk2Node.getChildren());
         assertEquals(trunk2Node, xNewNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunk2Rev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunk2Node, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunk2Node.getAncestors());
     }
@@ -1180,8 +1140,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeDel.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeDel.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevNew, aRevDel));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeDel.getAncestors());
     }
@@ -1226,8 +1185,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aNodeDel.isCopyTarget());
         assertEquals(Collections.emptySet(), aNodeDel.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevNew, aRevDel));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNodeDel.getAncestors());
 
@@ -1239,8 +1197,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNodeDel), trunkDelNode.getChildren());
         assertEquals(trunkDelNode, aNodeDel.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkDelNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRevNew, trunkRevDel));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkDelNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkDelNode.getAncestors());
     }
@@ -1278,8 +1235,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aChangedNode.isCopyTarget());
         assertEquals(Collections.emptySet(), aChangedNode.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aChangedNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRevChanged));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aChangedNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aChangedNode.getAncestors());
 
@@ -1300,7 +1256,7 @@ public final class FileHistoryGraphTest {
         assertEquals(trunkChangedNode, aChangedNode.getParent());
 
         final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkOrigNode, trunkChangedNode,
-                IFileHistoryEdge.Type.NORMAL, new FileDiff(trunkRevOrig, trunkRevChanged));
+                IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkOrigNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkChangedNode.getAncestors());
     }
@@ -1388,7 +1344,7 @@ public final class FileHistoryGraphTest {
         assertEquals(trunkChangedNode, aChangedNode.getParent());
 
         final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkOrigNode, trunkChangedNode,
-                IFileHistoryEdge.Type.NORMAL, new FileDiff(trunkRevOrig, trunkRevChanged));
+                IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkOrigNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkChangedNode.getAncestors());
     }
@@ -1420,8 +1376,7 @@ public final class FileHistoryGraphTest {
         assertNull(g.getNodeFor(
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), aRevCopy.getRevision())));
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevCopy));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aCopyNode.getAncestors());
 
@@ -1438,8 +1393,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aCopyNode), trunkNode2.getChildren());
         assertEquals(trunkNode2, aCopyNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunkRev2));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkNode2.getAncestors());
     }
@@ -1472,8 +1426,7 @@ public final class FileHistoryGraphTest {
         assertNull(g.getNodeFor(
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), aRevCopy.getRevision())));
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevCopy));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aCopyNode.getAncestors());
 
@@ -1490,8 +1443,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aCopyNode), trunkNode2.getChildren());
         assertEquals(trunkNode2, aCopyNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunkRev2));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkNode2.getAncestors());
     }
@@ -1554,17 +1506,16 @@ public final class FileHistoryGraphTest {
         assertEquals(true, aCopy2Node.isCopyTarget());
         assertEquals(Collections.emptySet(), aCopy2Node.getDescendants());
 
-        final FileHistoryEdge aSourceEdge = new FileHistoryEdge(g, aOrigNode, aSourceNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRevChanged));
+        final FileHistoryEdge aSourceEdge =
+                new FileHistoryEdge(g, aOrigNode, aSourceNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aSourceEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aSourceEdge), aSourceNode.getAncestors());
 
         final FileHistoryEdge aCopy1Edge = new FileHistoryEdge(g, aSourceNode, aSource2Node,
-                IFileHistoryEdge.Type.NORMAL, new FileDiff(aRevChanged, aRevSource2));
-        final FileHistoryEdge aCopy2Edge = new FileHistoryEdge(g, aSourceNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevChanged, aRevCopy));
+                IFileHistoryEdge.Type.NORMAL);
+        final FileHistoryEdge aCopy2Edge = new FileHistoryEdge(g, aSourceNode, aCopyNode, IFileHistoryEdge.Type.COPY);
         final FileHistoryEdge aCopy3Edge = new FileHistoryEdge(g, aSource2Node, aCopy2Node,
-                IFileHistoryEdge.Type.COPY, new FileDiff(aRevSource2, aRevCopy2));
+                IFileHistoryEdge.Type.COPY);
         assertEquals(new HashSet<>(Arrays.asList(aCopy1Edge, aCopy2Edge)), aSourceNode.getDescendants());
         assertEquals(Collections.singleton(aCopy3Edge), aSource2Node.getDescendants());
         assertEquals(Collections.singleton(aCopy2Edge), aCopyNode.getAncestors());
@@ -1604,10 +1555,8 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aDelNode.isCopyTarget());
         assertEquals(Collections.emptySet(), aDelNode.getDescendants());
 
-        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevCopy));
-        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRevDel));
+        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
+        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(new HashSet<>(Arrays.asList(aEdgeCopy, aEdgeDel)), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdgeCopy), aCopyNode.getAncestors());
         assertEquals(Collections.singleton(aEdgeDel), aDelNode.getAncestors());
@@ -1626,8 +1575,7 @@ public final class FileHistoryGraphTest {
         assertEquals(trunkNode2, aCopyNode.getParent());
         assertEquals(trunkNode2, aDelNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(trunkRev, trunkRev2));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkNode2.getAncestors());
     }
@@ -1665,8 +1613,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aDelNode.isCopyTarget());
         assertEquals(Collections.emptySet(), aDelNode.getDescendants());
 
-        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevCopy));
+        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdgeCopy), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdgeCopy), aCopyNode.getAncestors());
         assertEquals(Collections.singleton(createAlphaNode(repo, g, aDelNode)), aDelNode.getAncestors());
@@ -1724,8 +1671,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision(aRevOrig.getPath(), yRev.getRevision());
         assertNull(g.getNodeFor(aRevDel));
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevCopy));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aCopyNode.getAncestors());
 
@@ -1738,8 +1684,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aCopyNode), yNode.getChildren());
         assertEquals(yNode, aCopyNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRev, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
     }
@@ -1780,8 +1725,7 @@ public final class FileHistoryGraphTest {
         assertEquals(false, aDelNode.isCopyTarget());
         assertEquals(Collections.emptySet(), aDelNode.getDescendants());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRevDel));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aDelNode.getAncestors());
 
@@ -1797,13 +1741,11 @@ public final class FileHistoryGraphTest {
 
         assertEquals(Collections.emptySet(), yNode.getChildren());
 
-        final FileHistoryEdge xxEdge = new FileHistoryEdge(g, xOrigNode, xNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRevOrig, xRev));
+        final FileHistoryEdge xxEdge = new FileHistoryEdge(g, xOrigNode, xNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(xxEdge), xOrigNode.getDescendants());
         assertEquals(Collections.singleton(xxEdge), xNode.getAncestors());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRev, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
     }
@@ -1848,8 +1790,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNode), yNode.getChildren());
         assertEquals(yNode, aNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(trunkEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), yNode.getAncestors());
     }
@@ -1892,8 +1833,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aNode), yNode.getChildren());
         assertEquals(yNode, aNode.getParent());
 
-        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(trunkEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), yNode.getAncestors());
     }
@@ -1944,13 +1884,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aDelNode), yNode.getChildren());
         assertEquals(yNode, aDelNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.COPY_DELETED,
-                new FileDiff(aRevOrig, aRevDel));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.COPY_DELETED);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aDelNode.getAncestors());
     }
@@ -1997,8 +1935,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aDelNode), yNode.getChildren());
         assertEquals(yNode, aDelNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
     }
@@ -2071,20 +2008,18 @@ public final class FileHistoryGraphTest {
         assertEquals(yNode, aReplacedNode.getParent());
         assertEquals(yNode, bReplacedNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
         final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aReplacedNode,
-                IFileHistoryEdge.Type.COPY_DELETED, new FileDiff(aRevOrig, aRevReplaced));
+                IFileHistoryEdge.Type.COPY_DELETED);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aReplacedNode.getAncestors());
 
         final FileHistoryEdge b1Edge = new FileHistoryEdge(g, bOrigNode, bReplacedNode,
-                IFileHistoryEdge.Type.COPY_DELETED, new FileDiff(bRevOrig, bRevReplaced));
-        final FileHistoryEdge b2Edge = new FileHistoryEdge(g, bOrigNode, bReplacedNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(bRevOrig, bRevReplaced));
+                IFileHistoryEdge.Type.COPY_DELETED);
+        final FileHistoryEdge b2Edge = new FileHistoryEdge(g, bOrigNode, bReplacedNode, IFileHistoryEdge.Type.COPY);
         assertEquals(new HashSet<>(Arrays.asList(b1Edge, b2Edge)), bOrigNode.getDescendants());
         assertEquals(new HashSet<>(Arrays.asList(b1Edge, b2Edge)), bReplacedNode.getAncestors());
     }
@@ -2153,15 +2088,14 @@ public final class FileHistoryGraphTest {
         assertEquals(yNode, aReplacedNode.getParent());
         assertEquals(yNode, bReplacedNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
         final FileHistoryEdge b1Edge = new FileHistoryEdge(g, bOrigNode, bReplacedNode,
-                IFileHistoryEdge.Type.COPY_DELETED, new FileDiff(bRevOrig, bRevReplaced));
+                IFileHistoryEdge.Type.COPY_DELETED);
         final FileHistoryEdge b2Edge = new FileHistoryEdge(g, bOrigNode, bReplacedNode,
-                IFileHistoryEdge.Type.COPY, new FileDiff(bRevOrig, bRevReplaced));
+                IFileHistoryEdge.Type.COPY);
         assertEquals(new HashSet<>(Arrays.asList(b1Edge, b2Edge)), bOrigNode.getDescendants());
         assertEquals(new HashSet<>(Arrays.asList(b1Edge, b2Edge)), bReplacedNode.getAncestors());
     }
@@ -2212,13 +2146,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aChangedNode), yNode.getChildren());
         assertEquals(yNode, aChangedNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aChangedNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevChanged));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aChangedNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aChangedNode.getAncestors());
     }
@@ -2265,13 +2197,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aChangedNode), yNode.getChildren());
         assertEquals(yNode, aChangedNode.getParent());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aChangedNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevChanged));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aChangedNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aChangedNode.getAncestors());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
     }
@@ -2326,8 +2256,7 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aChangedNode), yChangedNode.getChildren());
         assertEquals(yChangedNode, aChangedNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
     }
@@ -2397,18 +2326,15 @@ public final class FileHistoryGraphTest {
         assertEquals(yNode, aNode.getParent());
         assertEquals(yNode, bNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRev));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNode.getAncestors());
 
-        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(bRevOrig, bRev));
+        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(bEdge), bOrigNode.getDescendants());
         assertEquals(Collections.singleton(bEdge), bNode.getAncestors());
     }
@@ -2456,13 +2382,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(bNode), yNode.getChildren());
         assertEquals(yNode, bNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
-        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(bRevOrig, bRev));
+        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(bEdge), bOrigNode.getDescendants());
         assertEquals(Collections.singleton(bEdge), bNode.getAncestors());
     }
@@ -2519,13 +2443,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(bNode), yNode2.getChildren());
         assertEquals(yNode2, bNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
-        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(bRevOrig, bRev));
+        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(bEdge), bOrigNode.getDescendants());
         assertEquals(Collections.singleton(bEdge), bNode.getAncestors());
     }
@@ -2596,18 +2518,15 @@ public final class FileHistoryGraphTest {
         assertEquals(yNode, aNode.getParent());
         assertEquals(yNode, bNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
-        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRev));
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aOrigNode, aNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(aEdge), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdge), aNode.getAncestors());
 
-        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(bRevOrig, bRev));
+        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(bEdge), bOrigNode.getDescendants());
         assertEquals(Collections.singleton(bEdge), bNode.getAncestors());
     }
@@ -2656,13 +2575,11 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(bNode), yNode.getChildren());
         assertEquals(yNode, bNode.getParent());
 
-        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRevOrig, yRev));
+        final FileHistoryEdge xyEdge = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(xyEdge), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
 
-        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(bRevOrig, bRev));
+        final FileHistoryEdge bEdge = new FileHistoryEdge(g, bOrigNode, bNode, IFileHistoryEdge.Type.COPY);
         assertEquals(Collections.singleton(bEdge), bOrigNode.getDescendants());
         assertEquals(Collections.singleton(bEdge), bNode.getAncestors());
     }
@@ -2715,10 +2632,8 @@ public final class FileHistoryGraphTest {
         assertEquals(false, xDelNode.isCopyTarget());
         assertEquals(Collections.emptySet(), xDelNode.getDescendants());
 
-        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRevDel));
-        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevCopy));
+        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL);
+        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
         assertEquals(new HashSet<>(Arrays.asList(aEdgeDel, aEdgeCopy)), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdgeDel), aDelNode.getAncestors());
         assertEquals(Collections.singleton(aEdgeCopy), aCopyNode.getAncestors());
@@ -2739,10 +2654,8 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aCopyNode), yNode.getChildren());
         assertEquals(yNode, aCopyNode.getParent());
 
-        final FileHistoryEdge xyEdgeCopy = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRev, yRev));
-        final FileHistoryEdge xyEdgeDel = new FileHistoryEdge(g, xNode, xDelNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRev, xRevDel));
+        final FileHistoryEdge xyEdgeCopy = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
+        final FileHistoryEdge xyEdgeDel = new FileHistoryEdge(g, xNode, xDelNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(new HashSet<>(Arrays.asList(xyEdgeCopy, xyEdgeDel)), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdgeCopy), yNode.getAncestors());
         assertEquals(Collections.singleton(xyEdgeDel), xDelNode.getAncestors());
@@ -2796,10 +2709,8 @@ public final class FileHistoryGraphTest {
         assertEquals(false, xDelNode.isCopyTarget());
         assertEquals(Collections.emptySet(), xDelNode.getDescendants());
 
-        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(aRevOrig, aRevDel));
-        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(aRevOrig, aRevCopy));
+        final FileHistoryEdge aEdgeDel = new FileHistoryEdge(g, aOrigNode, aDelNode, IFileHistoryEdge.Type.NORMAL);
+        final FileHistoryEdge aEdgeCopy = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
         assertEquals(new HashSet<>(Arrays.asList(aEdgeDel, aEdgeCopy)), aOrigNode.getDescendants());
         assertEquals(Collections.singleton(aEdgeDel), aDelNode.getAncestors());
         assertEquals(Collections.singleton(aEdgeCopy), aCopyNode.getAncestors());
@@ -2820,10 +2731,8 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aCopyNode), yNode.getChildren());
         assertEquals(yNode, aCopyNode.getParent());
 
-        final FileHistoryEdge xyEdgeCopy = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY,
-                new FileDiff(xRev, yRev));
-        final FileHistoryEdge xyEdgeDel = new FileHistoryEdge(g, xNode, xDelNode, IFileHistoryEdge.Type.NORMAL,
-                new FileDiff(xRev, xRevDel));
+        final FileHistoryEdge xyEdgeCopy = new FileHistoryEdge(g, xNode, yNode, IFileHistoryEdge.Type.COPY);
+        final FileHistoryEdge xyEdgeDel = new FileHistoryEdge(g, xNode, xDelNode, IFileHistoryEdge.Type.NORMAL);
         assertEquals(new HashSet<>(Arrays.asList(xyEdgeCopy, xyEdgeDel)), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdgeCopy), yNode.getAncestors());
         assertEquals(Collections.singleton(xyEdgeDel), xDelNode.getAncestors());

@@ -9,8 +9,8 @@ import java.util.Set;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
  * Contains behaviour common to all {@link IFileHistoryGraph} implementations.

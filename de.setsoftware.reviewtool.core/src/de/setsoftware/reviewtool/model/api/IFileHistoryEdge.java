@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.model.api;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
+
 /**
  * An edge in a {@link IFileHistoryGraph} between an ancestor and a descendant {@link IFileHistoryNode}.
  * An edge has a {@link Type type}. An edge contains a {@link IFileDiff}.
@@ -47,6 +49,7 @@ public interface IFileHistoryEdge {
 
     /**
      * Returns the {@link IFileDiff} between ancestor and descendant.
+     * @throws ReviewtoolException if some exception computing the difference occurred.
      */
     public abstract IFileDiff getDiff();
 

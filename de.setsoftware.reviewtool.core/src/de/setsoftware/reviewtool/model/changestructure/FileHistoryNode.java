@@ -5,7 +5,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
@@ -131,8 +130,8 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     /**
      * Adds a descendant {@link FileHistoryNode} of this node.
      */
-    void addDescendant(final FileHistoryNode descendant, final IFileHistoryEdge.Type type, final IFileDiff diff) {
-        final FileHistoryEdge edge = new FileHistoryEdge(this.graph, this, descendant, type, diff);
+    void addDescendant(final FileHistoryNode descendant, final IFileHistoryEdge.Type type) {
+        final FileHistoryEdge edge = new FileHistoryEdge(this.graph, this, descendant, type);
         this.descendants.add(edge);
         descendant.addAncestor(edge);
     }

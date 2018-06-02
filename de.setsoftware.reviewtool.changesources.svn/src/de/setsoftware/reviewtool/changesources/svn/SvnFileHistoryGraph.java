@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.List;
 
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
@@ -15,6 +16,13 @@ import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
 final class SvnFileHistoryGraph extends FileHistoryGraph {
+
+    /**
+     * Constructor.
+     */
+    public SvnFileHistoryGraph() {
+        super(DiffAlgorithmFactory.createDefault());
+    }
 
     @Override
     public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
