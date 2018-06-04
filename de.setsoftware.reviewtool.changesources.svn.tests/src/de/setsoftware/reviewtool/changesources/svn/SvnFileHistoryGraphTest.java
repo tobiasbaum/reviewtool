@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -67,6 +68,11 @@ public class SvnFileHistoryGraphTest {
         @Override
         public byte[] getFileContents(String path, IRepoRevision revision) {
             return new byte[0];
+        }
+
+        @Override
+        public IMutableFileHistoryGraph getFileHistoryGraph() {
+            return null;
         }
     };
 

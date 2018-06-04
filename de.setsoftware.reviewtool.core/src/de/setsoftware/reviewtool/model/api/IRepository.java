@@ -51,4 +51,8 @@ public interface IRepository {
      */
     public abstract byte[] getFileContents(String path, IRepoRevision revision) throws Exception;
 
+    /**
+     * Returns the associated file history graph.
+     */
+    public abstract IFileHistoryGraph getFileHistoryGraph();
 }

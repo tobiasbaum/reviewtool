@@ -116,6 +116,11 @@ public class SvnRepo extends AbstractRepository {
     }
 
     @Override
+    public IFileHistoryGraph getFileHistoryGraph() {
+        return null;
+    }
+
+    @Override
     public String toString() {
         return this.remoteUrl.toString();
     }
