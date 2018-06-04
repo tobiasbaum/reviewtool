@@ -507,7 +507,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
             IRevisionedFile rightRevision) {
 
         reveal(this.viewer.getLeft(), this.getLineFor(stop, leftRevision, false));
-        reveal(this.viewer.getLeft(), this.getLineFor(stop, leftRevision, true));
+        reveal(this.viewer.getRight(), this.getLineFor(stop, rightRevision, true));
     }
 
     private int getLineFor(Stop stop, IRevisionedFile revision, boolean right) {
