@@ -148,8 +148,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         private SourceViewer[] viewers;
         private int nextViewer;
 
-        protected SourceViewer createSourceViewer(
-                SourceViewer superResult, final Composite parent, final int textOrientation) {
+        protected SourceViewer createSourceViewer(SourceViewer superResult) {
             if (this.viewers == null) {
                 this.viewers = new SourceViewer[NUM_VIEWERS];
             }
@@ -230,7 +229,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         @Override
         protected SourceViewer createSourceViewer(final Composite parent, final int textOrientation) {
             final SourceViewer viewer = super.createSourceViewer(parent, textOrientation);
-            return this.getSelectableImpl().createSourceViewer(viewer, parent, textOrientation);
+            return this.getSelectableImpl().createSourceViewer(viewer);
         }
 
         @Override
@@ -281,7 +280,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         @Override
         protected SourceViewer createSourceViewer(final Composite parent, final int textOrientation) {
             final SourceViewer viewer = super.createSourceViewer(parent, textOrientation);
-            return this.getSelectableImpl().createSourceViewer(viewer, parent, textOrientation);
+            return this.getSelectableImpl().createSourceViewer(viewer);
         }
 
         @Override
