@@ -8,6 +8,7 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
 
 /**
@@ -63,6 +64,11 @@ public class Commit implements ICommit {
     @Override
     public Date getTime() {
         return new Date(this.timestamp);
+    }
+
+    @Override
+    public IRepository getRepository() {
+        return this.revision.getRepository();
     }
 
 }

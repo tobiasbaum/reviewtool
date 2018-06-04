@@ -35,4 +35,9 @@ public interface ICommit {
      */
     public abstract Date getTime();
 
+    /**
+     * @return The associated {@link IRepository}.
+     */
+    public abstract IRepository getRepository();
+
 }

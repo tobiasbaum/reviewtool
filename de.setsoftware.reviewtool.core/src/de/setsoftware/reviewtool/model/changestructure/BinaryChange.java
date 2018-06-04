@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
@@ -42,5 +43,10 @@ public class BinaryChange extends Change implements IBinaryChange {
             return this;
         }
         return new BinaryChange(this.from, this.to, true);
+    }
+
+    @Override
+    public IRepository getRepository() {
+        return this.from.getRepository();
     }
 }
