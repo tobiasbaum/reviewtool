@@ -2,13 +2,15 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.ICommit;
-import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
@@ -19,22 +21,38 @@ public class SvnChangeData implements IChangeData {
     private final IChangeSource source;
     private final List<? extends ICommit> commits;
     private final Map<File, IRevisionedFile> localPathMap;
-    private final IFileHistoryGraph fileHistoryGraph;
+    private final Set<IRepository> repositories;
+
+    public SvnChangeData(
+            final IChangeSource source,
+            final List<? extends ICommit> commits) {
+
+        this(source, commits, Collections.<File, IRevisionedFile> emptyMap());
+    }
 
     public SvnChangeData(
             final IChangeSource source,
             final List<? extends ICommit> commits,
-            final Map<File, IRevisionedFile> localPathMap,
-            final IFileHistoryGraph fileHistoryGraph) {
+            final Map<File, IRevisionedFile> localPathMap) {
+
         this.source = source;
         this.commits = commits;
         this.localPathMap = localPathMap;
-        this.fileHistoryGraph = fileHistoryGraph;
+
+        this.repositories = new LinkedHashSet<>();
+        for (final ICommit commit : this.commits) {
+            this.repositories.add(commit.getRevision().getRepository());
+        }
     }
 
     @Override
     public IChangeSource getSource() {
         return this.source;
+    }
+
+    @Override
+    public Set<? extends IRepository> getRepositories() {
+        return Collections.unmodifiableSet(this.repositories);
     }
 
     @Override
@@ -44,12 +62,7 @@ public class SvnChangeData implements IChangeData {
 
     @Override
     public Map<File, IRevisionedFile> getLocalPathMap() {
-        return this.localPathMap;
-    }
-
-    @Override
-    public IFileHistoryGraph getHistoryGraph() {
-        return this.fileHistoryGraph;
+        return Collections.unmodifiableMap(this.localPathMap);
     }
 
 }

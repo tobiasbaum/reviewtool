@@ -11,13 +11,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -46,49 +42,58 @@ public class CachedLog {
      */
     private static final class RepoDataCache {
 
-        private final String relPath;
         private final SvnRepo repo;
+        private final List<CachedLogEntry> entries;
 
-        public RepoDataCache(String relPath, SvnRepo repo) {
-            this.relPath = relPath;
+        public RepoDataCache(final SvnRepo repo) {
             this.repo = repo;
+            this.entries = new ArrayList<>();
         }
 
         public SvnRepo getRepo() {
             return this.repo;
+        }
+
+        public List<CachedLogEntry> getEntries() {
+            return this.entries;
         }
     }
 
     private static final CachedLog INSTANCE = new CachedLog();
 
     private final Map<String, RepoDataCache> repoDataPerWcRoot;
-    private final Map<String, List<CachedLogEntry>> entriesPerWcRoot;
+    private SVNClientManager mgr;
     private int minCount;
     private int maxCount;
 
+    /**
+     * Constructor.
+     */
     private CachedLog() {
         this.repoDataPerWcRoot = new HashMap<>();
-        this.entriesPerWcRoot = new HashMap<>();
         this.minCount = 1000;
         this.maxCount = 1000;
-
-        try {
-            this.readCacheFromFile();
-        } catch (final ClassNotFoundException | IOException | ClassCastException e) {
-            Logger.error("problem while loading svn cache", e);
-        }
     }
 
+    /**
+     * Returns the singleton instance of this class.
+     */
     public static CachedLog getInstance() {
         return INSTANCE;
     }
 
     /**
-     * Changes the default values for minimum and maximum size of the log.
+     * Initializes the cache.
+     * @param mgr The {@link SVNClientManager} for retrieving information about working copies.
+     * @param minCount minimum size of the log
+     * @param maxCount maximum size of the log
      */
-    public void setSizeLimits(int minCount, int maxCount) {
+    public void init(final SVNClientManager mgr, final int minCount, final int maxCount) {
+        this.mgr = mgr;
         this.minCount = Math.min(minCount, maxCount);
         this.maxCount = Math.max(minCount, maxCount);
+
+        this.tryToReadCacheFromFile();
     }
 
     /**
@@ -106,12 +111,13 @@ public class CachedLog {
      * Calls the given handler for all recent log entries of the given working copy root.
      */
     public void traverseRecentEntries(
-            final SVNClientManager mgr, final File workingCopyRoot, final CachedLogLookupHandler handler,
+            final File workingCopyRoot,
+            final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
-        final RepoDataCache repoCache = this.getRepoCache(mgr, workingCopyRoot);
+        final RepoDataCache repoCache = this.getRepoCache(workingCopyRoot);
         handler.startNewRepo(repoCache.getRepo());
-        for (final CachedLogEntry entry : this.getEntries(mgr, repoCache)) {
+        for (final CachedLogEntry entry : this.getEntries(repoCache)) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
@@ -124,22 +130,27 @@ public class CachedLog {
      * @param workingCopyRoot The path pointing at the root of some working copy.
      * @return A suitable {@link SvnRepo} object or {@code null} if the path passed is unknown.
      */
-    public SvnRepo mapWorkingCopyRootToRepository(final SVNClientManager mgr, final File workingCopyRoot)
+    public SvnRepo mapWorkingCopyRootToRepository(final File workingCopyRoot)
             throws SVNException {
-        final RepoDataCache cache = this.getRepoCache(mgr, workingCopyRoot);
-        return cache == null ? null : cache.getRepo();
+        final RepoDataCache cache = this.getRepoCache(workingCopyRoot);
+        return cache.getRepo();
     }
 
-    private synchronized RepoDataCache getRepoCache(SVNClientManager mgr, File workingCopyRoot) throws SVNException {
+    /**
+     * Returns a {@link RepoDataCache} object for a working copy root.
+     * @param workingCopyRoot The working copy root.
+     * @throws SVNException if the working copy does not exist or is corrupt
+     */
+    private synchronized RepoDataCache getRepoCache(final File workingCopyRoot) throws SVNException {
         RepoDataCache c = this.repoDataPerWcRoot.get(workingCopyRoot.toString());
         if (c == null) {
-            final SVNWCClient wcClient = mgr.getWCClient();
+            final SVNWCClient wcClient = this.mgr.getWCClient();
             final SVNURL rootUrl = wcClient.getReposRoot(workingCopyRoot, null, SVNRevision.WORKING);
             final SVNInfo wcInfo = wcClient.doInfo(workingCopyRoot, SVNRevision.WORKING);
             final SVNURL wcUrl = wcInfo.getURL();
             final String relPath = wcUrl.toString().substring(rootUrl.toString().length());
-            c = new RepoDataCache(relPath, new SvnRepo(
-                    mgr,
+            c = new RepoDataCache(new SvnRepo(
+                    this.mgr,
                     wcInfo.getRepositoryUUID(),
                     workingCopyRoot,
                     rootUrl,
@@ -150,62 +161,52 @@ public class CachedLog {
         return c;
     }
 
-    private synchronized List<CachedLogEntry> getEntries(SVNClientManager mgr, RepoDataCache repoCache)
+    private synchronized List<CachedLogEntry> getEntries(final RepoDataCache repoCache)
         throws SVNException {
 
-        final String wcRootString = repoCache.getRepo().getLocalRoot().toString();
-        List<CachedLogEntry> list = this.entriesPerWcRoot.get(wcRootString);
-        if (list == null) {
-            list = new CopyOnWriteArrayList<>();
-            this.entriesPerWcRoot.put(wcRootString, list);
-        }
-
-        final boolean gotNewEntries = this.loadNewEntries(mgr, repoCache, list);
+        final boolean gotNewEntries = this.loadNewEntries(repoCache);
 
         if (gotNewEntries) {
-            try {
-                this.storeCacheToFile();
-            } catch (final IOException e) {
-                Logger.error("problem while caching svn log", e);
-            }
+            this.tryToStoreCacheToFile();
         }
 
-        return list;
+        return repoCache.getEntries();
     }
 
-    private boolean loadNewEntries(SVNClientManager mgr, RepoDataCache repoCache, List<CachedLogEntry> list)
-        throws SVNException {
+    private boolean loadNewEntries(final RepoDataCache repoCache) throws SVNException {
 
-        final long lastKnownRevision = list.isEmpty() ? 0 : list.get(0).getRevision();
+        final List<CachedLogEntry> entries = repoCache.getEntries();
+        final long lastKnownRevision = entries.isEmpty() ? 0 : entries.get(entries.size() - 1).getRevision();
+        final long latestRevision = repoCache.getRepo().getLatestRevision();
 
-        final ArrayList<CachedLogEntry> newEntries = new ArrayList<>();
-        mgr.getLogClient().doLog(
-                repoCache.getRepo().getRemoteUrl(),
-                new String[] { repoCache.relPath },
-                SVNRevision.HEAD,
-                SVNRevision.HEAD,
-                SVNRevision.create(lastKnownRevision),
-                false,
-                true,
-                false,
-                this.minCount,
-                new String[0],
-                new ISVNLogEntryHandler() {
-                    @Override
-                    public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
-                        if (logEntry.getRevision() > lastKnownRevision) {
-                            newEntries.add(new CachedLogEntry(logEntry));
+        final List<CachedLogEntry> newEntries = new ArrayList<>();
+        if (lastKnownRevision < latestRevision) {
+            final long startRevision = lastKnownRevision == 0
+                    ? Math.max(0, latestRevision - this.minCount + 1) : lastKnownRevision + 1;
+
+            this.mgr.getLogClient().doLog(
+                    repoCache.getRepo().getRemoteUrl(),
+                    new String[] { repoCache.getRepo().getRelativePath() },
+                    SVNRevision.create(latestRevision),
+                    SVNRevision.create(startRevision),
+                    SVNRevision.create(latestRevision),
+                    false,
+                    true,
+                    false,
+                    0,
+                    new String[0],
+                    new ISVNLogEntryHandler() {
+                        @Override
+                        public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
+                            final CachedLogEntry entry = new CachedLogEntry(logEntry);
+                            final SvnRevision revision = new SvnRevision(repoCache.getRepo(), entry);
+                            repoCache.getRepo().getRemoteFileHistoryGraph().processRevision(revision);
+                            newEntries.add(entry);
                         }
-                    }
-                });
+                    });
+        }
 
-        Collections.sort(newEntries, new Comparator<CachedLogEntry>() {
-            @Override
-            public int compare(CachedLogEntry o1, CachedLogEntry o2) {
-                return Long.compare(o2.getRevision(), o1.getRevision());
-            }
-        });
-        list.addAll(0, newEntries);
+        entries.addAll(newEntries);
         return !newEntries.isEmpty();
     }
 
@@ -221,39 +222,68 @@ public class CachedLog {
         return i;
     }
 
-    private void readCacheFromFile() throws IOException, ClassNotFoundException {
-        final File file = this.getCacheFilePath().toFile();
-        if (!file.exists()) {
+    private void tryToReadCacheFromFile() {
+        final File cache = this.getCacheFilePath().toFile();
+        try {
+            this.readCacheFromFile(cache);
+        } catch (final ClassNotFoundException | IOException | ClassCastException e) {
+            Logger.error("Problem while loading SVN history data from cache " + cache, e);
+        }
+    }
+
+    private void readCacheFromFile(final File cache) throws IOException, ClassNotFoundException {
+        if (!cache.exists()) {
+            Logger.info("SVN cache " + cache + " is missing, nothing to load");
             return;
         }
         try (ObjectInputStream ois =
-                new ObjectInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+                new ObjectInputStream(new BufferedInputStream(new FileInputStream(cache)))) {
             while (true) {
-                String key;
+                final File wcRoot;
                 try {
-                    key = ois.readUTF();
+                    wcRoot = new File(ois.readUTF());
                 } catch (final EOFException ex) {
                     break;
                 }
-                @SuppressWarnings("unchecked")
-                final List<CachedLogEntry> value = (List<CachedLogEntry>) ois.readObject();
-                this.entriesPerWcRoot.put(key, value);
+
+                try {
+                    @SuppressWarnings("unchecked") final List<CachedLogEntry> value =
+                            (List<CachedLogEntry>) ois.readObject();
+
+                    final RepoDataCache c = this.getRepoCache(wcRoot);
+                    c.getEntries().addAll(value);
+                    for (final CachedLogEntry entry : value) {
+                        final SvnRevision revision = new SvnRevision(c.getRepo(), entry);
+                        c.getRepo().getRemoteFileHistoryGraph().processRevision(revision);
+                    }
+                } catch (final SVNException ex) {
+                    Logger.warn("Ignoring SVN history data for non-existing or corrupt working copy in " + wcRoot, ex);
+                }
             }
         }
     }
 
-    private void storeCacheToFile() throws IOException {
-        final IPath file = this.getCacheFilePath();
+    private void tryToStoreCacheToFile() {
+        final File cache = this.getCacheFilePath().toFile();
+        try {
+            this.storeCacheToFile(cache);
+        } catch (final IOException e) {
+            Logger.error("Problem while storing SVN history data to cache " + cache, e);
+        }
+    }
+
+    private void storeCacheToFile(final File cache) throws IOException {
         try (ObjectOutputStream oos =
-                new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(file.toFile())))) {
-            int entryCount = 0;
-            for (final Entry<String, List<CachedLogEntry>> e : this.entriesPerWcRoot.entrySet()) {
-                oos.writeUTF(e.getKey());
-                oos.writeObject(e.getValue());
-                entryCount++;
-                if (entryCount > this.maxCount) {
-                    break;
-                }
+                new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(cache)))) {
+            for (final RepoDataCache repo : this.repoDataPerWcRoot.values()) {
+                oos.writeUTF(repo.getRepo().getLocalRoot().toString());
+                final List<CachedLogEntry> entries = repo.getEntries();
+                final int numEntries = entries.size();
+                final List<CachedLogEntry> subList = new ArrayList<>(entries.subList(
+                        numEntries - Integer.min(numEntries, this.maxCount),
+                        numEntries
+                ));
+                oos.writeObject(subList);
             }
         }
     }
@@ -263,5 +293,4 @@ public class CachedLog {
         final IPath dir = Platform.getStateLocation(bundle);
         return dir.append("svnlog.cache");
     }
-
 }

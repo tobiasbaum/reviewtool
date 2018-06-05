@@ -1,14 +1,18 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map.Entry;
 
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
+import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
 
@@ -69,5 +73,52 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
             }
 
         });
+    }
+
+    /**
+     * Processes a single SVN repository revision by translating it into a file history graph operation.
+     *
+     * @param revision The revision to process,
+     */
+    public void processRevision(final ISvnRevision revision) {
+        for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
+            final String path = e.getKey();
+
+            final CachedLogEntryPath pathInfo = e.getValue();
+            final String copyPath = pathInfo.getCopyPath();
+            if (pathInfo.isDeleted()) {
+                this.addDeletion(path, revision.toRevision());
+            } else if (pathInfo.isReplaced()) {
+                if (copyPath != null) {
+                    this.addReplacement(
+                            path,
+                            revision.toRevision(),
+                            copyPath,
+                            ChangestructureFactory.createRepoRevision(pathInfo.getCopyRevision(),
+                                    revision.getRepository()));
+                } else {
+                    this.addReplacement(path, revision.toRevision());
+                }
+            } else if (pathInfo.isNew()) {
+                if (copyPath != null) {
+                    this.addCopy(
+                            copyPath,
+                            path,
+                            ChangestructureFactory.createRepoRevision(
+                                    pathInfo.getCopyRevision(),
+                                    revision.getRepository()),
+                            revision.toRevision());
+                } else {
+                    this.addAddition(path, revision.toRevision());
+                }
+            } else {
+                this.addChange(
+                        path,
+                        revision.toRevision(),
+                        Collections.<IRevision>singleton(ChangestructureFactory.createRepoRevision(
+                                e.getValue().getAncestorRevision(),
+                                revision.getRepository())));
+            }
+        }
     }
 }

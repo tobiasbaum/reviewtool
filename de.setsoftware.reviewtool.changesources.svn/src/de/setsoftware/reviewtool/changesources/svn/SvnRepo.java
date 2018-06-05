@@ -10,10 +10,12 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 
+import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
 
 /**
  * Wraps the information needed on a SVN repository and corresponding working copy.
@@ -27,6 +29,9 @@ public class SvnRepo extends AbstractRepository {
     private final int checkoutPrefix;
     private final SVNRepository svnRepo;
     private final SvnFileCache fileCache;
+    private final SvnFileHistoryGraph remoteHistoryGraph;
+    private SvnFileHistoryGraph localHistoryGraph;
+    private final VirtualFileHistoryGraph combinedHistoryGraph;
 
     public SvnRepo(
             final SVNClientManager mgr,
@@ -42,6 +47,9 @@ public class SvnRepo extends AbstractRepository {
         this.checkoutPrefix = checkoutPrefix;
         this.svnRepo = mgr.createRepository(rootUrl, false);
         this.fileCache = new SvnFileCache(this.svnRepo);
+        this.remoteHistoryGraph = new SvnFileHistoryGraph();
+        this.localHistoryGraph = new SvnFileHistoryGraph();
+        this.combinedHistoryGraph = new VirtualFileHistoryGraph(this.remoteHistoryGraph, this.localHistoryGraph);
     }
 
     public SVNURL getRemoteUrl() {
@@ -117,11 +125,51 @@ public class SvnRepo extends AbstractRepository {
 
     @Override
     public IFileHistoryGraph getFileHistoryGraph() {
-        return null;
+        return this.combinedHistoryGraph;
     }
 
     @Override
     public String toString() {
         return this.remoteUrl.toString();
+    }
+
+    /**
+     * Returns the relative path of the working copy root wrt. the URL of the remote repository.
+     * For example, if the remote repository's URL is https://example.com/svn/repo and the path "trunk/Workspace"
+     * is checked out, then the relative path returned is "trunk/Workspace".
+     */
+    String getRelativePath() {
+        return this.relPath;
+    }
+
+    /**
+     * Returns the latest revision of this repository.
+     */
+    long getLatestRevision() throws SVNException {
+        return this.svnRepo.getLatestRevision();
+    }
+
+    /**
+     * Returns the {@link SvnFileHistoryGraph} describing the changes in the remote repository.
+     */
+    SvnFileHistoryGraph getRemoteFileHistoryGraph() {
+        return this.remoteHistoryGraph;
+    }
+
+    /**
+     * Returns the {@link SvnFileHistoryGraph} describing the changes in the local working copy.
+     */
+    SvnFileHistoryGraph getLocalFileHistoryGraph() {
+        return this.localHistoryGraph;
+    }
+
+    /**
+     * Replaces the {@link SvnFileHistoryGraph} of the local working copy by an empty file history graph.
+     */
+    void clearLocalFileHistoryGraph() {
+        assert this.combinedHistoryGraph.size() > 0;
+        this.combinedHistoryGraph.remove(this.combinedHistoryGraph.size() - 1);
+        this.localHistoryGraph = new SvnFileHistoryGraph();
+        this.combinedHistoryGraph.add(this.localHistoryGraph);
     }
 }

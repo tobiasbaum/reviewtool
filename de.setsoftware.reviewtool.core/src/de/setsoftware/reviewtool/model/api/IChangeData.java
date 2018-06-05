@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.model.api;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Interface for the results from getting the relevant changes for a ticket from the ticket system.
@@ -15,20 +16,18 @@ public interface IChangeData {
     public abstract IChangeSource getSource();
 
     /**
-     * Returns all {@link ICommit}s that were matching for the given ticket.
+     * Returns all {@link ICommit}s matching the given ticket.
      */
     public abstract List<? extends ICommit> getMatchedCommits();
 
     /**
      * Returns the paths for all locally modified files together with their repository path.
-     * Only meaningful in results of
-     * {@link IChangeSource#getLocalChanges(IChangeData, List, org.eclipse.core.runtime.IProgressMonitor)}.
      */
     public abstract Map<File, IRevisionedFile> getLocalPathMap();
 
     /**
-     * Returns a {@link IFileHistoryGraph} for the change data.
+     * Returns all {@link IRepository}s that contain commits matching the given ticket.
      */
-    public abstract IFileHistoryGraph getHistoryGraph();
+    public abstract Set<? extends IRepository> getRepositories();
 
 }

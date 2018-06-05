@@ -213,7 +213,7 @@ public class ToursInReview {
         changeSourceUi.subTask("Creating tours from changes...");
         final List<Tour> tours = toTours(
                 filteredChanges,
-                new FragmentTracer(changeManager.getHistoryGraph()),
+                new FragmentTracer(),
                 changeSourceUi);
 
         final List<? extends Tour> userSelection =
@@ -257,7 +257,7 @@ public class ToursInReview {
     }
 
     private void updateMostRecentFragmentsWithLocalChanges() {
-        final IFragmentTracer tracer = new FragmentTracer(this.changeManager.getHistoryGraph());
+        final IFragmentTracer tracer = new FragmentTracer();
         for (final Tour tour : this.topmostTours) {
             for (final Stop stop : tour.getStops()) {
                 stop.updateMostRecentData(tracer);
@@ -521,7 +521,7 @@ public class ToursInReview {
      * @return The {@link IFileHistoryNode} describing changes for passed {@link FileInRevision} or null if not found.
      */
     public IFileHistoryNode getFileHistoryNode(final IRevisionedFile file) {
-        return this.changeManager.getHistoryGraph().getNodeFor(file);
+        return file.getRepository().getFileHistoryGraph().getNodeFor(file);
     }
 
     public List<Tour> getTopmostTours() {
