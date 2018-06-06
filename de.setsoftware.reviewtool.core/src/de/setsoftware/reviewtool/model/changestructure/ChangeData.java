@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.changesources.svn;
+package de.setsoftware.reviewtool.model.changestructure;
 
 import java.io.File;
 import java.util.Collections;
@@ -14,23 +14,20 @@ import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
- * Implementation of {@link IChangeData} that caches data needed for tracing in addition to the matched commits.
+ * Implementation of {@link IChangeData}.
  */
-final class SvnChangeData implements IChangeData {
+public final class ChangeData implements IChangeData {
 
     private final IChangeSource source;
     private final List<? extends ICommit> commits;
     private final Map<File, IRevisionedFile> localPathMap;
     private final Set<IRepository> repositories;
 
-    SvnChangeData(
-            final IChangeSource source,
-            final List<? extends ICommit> commits) {
-
+    ChangeData(final IChangeSource source, final List<? extends ICommit> commits) {
         this(source, commits, Collections.<File, IRevisionedFile> emptyMap());
     }
 
-    SvnChangeData(
+    ChangeData(
             final IChangeSource source,
             final List<? extends ICommit> commits,
             final Map<File, IRevisionedFile> localPathMap) {
@@ -64,5 +61,4 @@ final class SvnChangeData implements IChangeData {
     public Map<File, IRevisionedFile> getLocalPathMap() {
         return Collections.unmodifiableMap(this.localPathMap);
     }
-
 }

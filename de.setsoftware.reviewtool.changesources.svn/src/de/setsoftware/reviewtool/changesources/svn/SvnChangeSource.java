@@ -141,7 +141,7 @@ final class SvnChangeSource implements IChangeSource {
             this.checkWorkingCopiesUpToDate(neededRevisionPerRepo, ui);
             ui.subTask("Analyzing commits...");
             final List<ICommit> commits = this.convertToChanges(revisions, ui);
-            return new SvnChangeData(this, commits);
+            return ChangestructureFactory.createChangeData(this, commits);
         } catch (final SVNException e) {
             throw new ReviewtoolException(e);
         }
@@ -158,7 +158,7 @@ final class SvnChangeSource implements IChangeSource {
             ui.subTask("Analyzing local changes...");
             final List<ICommit> commits = this.convertToChanges(revisions, ui);
             final Map<File, IRevisionedFile> localPathMap = this.extractLocalPaths(revisions);
-            return new SvnChangeData(this, commits, localPathMap);
+            return ChangestructureFactory.createChangeData(this, commits, localPathMap);
         } catch (final SVNException e) {
             throw new ReviewtoolException(e);
         }
