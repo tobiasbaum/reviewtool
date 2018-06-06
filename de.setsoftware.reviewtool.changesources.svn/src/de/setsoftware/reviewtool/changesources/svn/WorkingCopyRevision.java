@@ -65,16 +65,6 @@ final class WorkingCopyRevision implements ISvnRevision {
     }
 
     @Override
-    public void accept(final ISvnRevisionVisitor visitor) {
-        visitor.handle(this);
-    }
-
-    @Override
-    public <E extends Exception> void accept(final ISvnRevisionVisitorE<E> visitor) throws E {
-        visitor.handle(this);
-    }
-
-    @Override
     public String toPrettyString() {
         return "(work in progress)";
     }

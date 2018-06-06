@@ -51,16 +51,6 @@ public interface ISvnRevision {
     public abstract Map<String, CachedLogEntryPath> getChangedPaths();
 
     /**
-     * Accepts a {@link ISvnRevisionVisitor}.
-     */
-    public abstract void accept(ISvnRevisionVisitor visitor);
-
-    /**
-     * Accepts a {@link ISvnRevisionVisitorE}.
-     */
-    public abstract <E extends Exception> void accept(ISvnRevisionVisitorE<E> visitor) throws E;
-
-    /**
      * Returns a pretty description of this revision.
      */
     public abstract String toPrettyString();

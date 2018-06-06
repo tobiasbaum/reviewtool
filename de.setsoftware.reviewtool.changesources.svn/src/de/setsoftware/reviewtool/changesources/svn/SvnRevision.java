@@ -67,16 +67,6 @@ final class SvnRevision implements ISvnRevision {
     }
 
     @Override
-    public void accept(final ISvnRevisionVisitor visitor) {
-        visitor.handle(this);
-    }
-
-    @Override
-    public <E extends Exception> void accept(final ISvnRevisionVisitorE<E> visitor) throws E {
-        visitor.handle(this);
-    }
-
-    @Override
     public String toPrettyString() {
         final StringBuilder sb = new StringBuilder();
         final String message = this.getMessage();

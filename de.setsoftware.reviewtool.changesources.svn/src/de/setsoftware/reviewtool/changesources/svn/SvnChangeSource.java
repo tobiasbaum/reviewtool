@@ -32,7 +32,6 @@ import org.tmatesoft.svn.core.wc.SVNStatus;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -42,7 +41,6 @@ import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IHunk;
-import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
@@ -312,7 +310,7 @@ final class SvnChangeSource implements IChangeSource {
                 if (localPath != null) {
                     result.put(
                             localPath,
-                            ChangestructureFactory.createFileInRevision(path.getPath(), this.revision(revision)));
+                            ChangestructureFactory.createFileInRevision(path.getPath(), revision.toRevision()));
                 }
             }
         }
@@ -369,7 +367,7 @@ final class SvnChangeSource implements IChangeSource {
             result.add(ChangestructureFactory.createCommit(
                     e.toPrettyString(),
                     changes,
-                    this.revision(e),
+                    e.toRevision(),
                     e.getDate()));
         }
     }
@@ -428,7 +426,7 @@ final class SvnChangeSource implements IChangeSource {
                 continue;
             }
 
-            final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(path, this.revision(e));
+            final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(path, e.toRevision());
             final IFileHistoryNode node = e.getRepository().getFileHistoryGraph().getNodeFor(fileInfo);
             if (node != null) {
                 try {
@@ -456,24 +454,6 @@ final class SvnChangeSource implements IChangeSource {
                 oldFileInfo,
                 node.getFile(),
                 false);
-    }
-
-    private IRevision revision(final ISvnRevision revision) {
-        final ValueWrapper<IRevision> result = new ValueWrapper<>();
-        revision.accept(new ISvnRevisionVisitor() {
-
-            @Override
-            public void handle(WorkingCopyRevision revision) {
-                result.setValue(ChangestructureFactory.createLocalRevision(revision.getRepository()));
-            }
-
-            @Override
-            public void handle(SvnRevision revision) {
-                result.setValue(ChangestructureFactory.createRepoRevision(
-                        revision.getRevisionNumber(), revision.getRepository()));
-            }
-        });
-        return result.get();
     }
 
     private List<? extends IChange> determineChangesInFile(final IFileHistoryNode node) throws Exception {
