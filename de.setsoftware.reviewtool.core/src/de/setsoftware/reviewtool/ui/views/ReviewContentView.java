@@ -39,6 +39,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
@@ -337,7 +338,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 setSelection(subPart, textSelection);
             }
         } else {
-            final ISelectionProvider sp = part.getEditorSite().getSelectionProvider();
+            final IEditorSite editorSite = part.getEditorSite();
+            final ISelectionProvider sp = editorSite == null ? null : editorSite.getSelectionProvider();
             if (sp == null) {
                 Logger.debug("cannot select, selection provider is null");
                 return;
