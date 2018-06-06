@@ -38,6 +38,8 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
  */
 public class CachedLog {
 
+    private static final long REVISION_BLOCK_SIZE = 500L;
+
     /**
      * Data regarding the repository. Is only cached in memory.
      */
@@ -178,6 +180,7 @@ public class CachedLog {
 
         final List<CachedLogEntry> entries = repoCache.getEntries();
         final long lastKnownRevision = entries.isEmpty() ? 0 : entries.get(entries.size() - 1).getRevision();
+        final SvnRepo repo = repoCache.getRepo();
         final long latestRevision = this.getLatestRevision(repoCache);
 
         final List<CachedLogEntry> newEntries = new ArrayList<>();
@@ -185,9 +188,11 @@ public class CachedLog {
             final long startRevision = lastKnownRevision == 0
                     ? Math.max(0, latestRevision - this.minCount + 1) : lastKnownRevision + 1;
 
+            Logger.info("Processing revisions " + startRevision + ".." + latestRevision
+                    + " from " + repo.getRemoteUrl());
             this.mgr.getLogClient().doLog(
-                    repoCache.getRepo().getRemoteUrl(),
-                    new String[] { repoCache.getRepo().getRelativePath() },
+                    repo.getRemoteUrl(),
+                    new String[] { repo.getRelativePath() },
                     SVNRevision.create(latestRevision),
                     SVNRevision.create(startRevision),
                     SVNRevision.create(latestRevision),
@@ -200,8 +205,7 @@ public class CachedLog {
                         @Override
                         public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
                             final CachedLogEntry entry = new CachedLogEntry(logEntry);
-                            final SvnRevision revision = new SvnRevision(repoCache.getRepo(), entry);
-                            repoCache.getRepo().getRemoteFileHistoryGraph().processRevision(revision);
+                            CachedLog.this.processLogEntry(entry, repo, newEntries.size());
                             newEntries.add(entry);
                         }
                     });
@@ -269,6 +273,7 @@ public class CachedLog {
             Logger.info("SVN cache " + cache + " is missing, nothing to load");
             return;
         }
+        Logger.info("Loading SVN history data from cache " + cache);
         try (ObjectInputStream ois =
                 new ObjectInputStream(new BufferedInputStream(new FileInputStream(cache)))) {
             while (true) {
@@ -280,14 +285,24 @@ public class CachedLog {
                 }
 
                 try {
+                    Logger.debug("Loading SVN history data for working copy in " + wcRoot);
                     @SuppressWarnings("unchecked") final List<CachedLogEntry> value =
                             (List<CachedLogEntry>) ois.readObject();
 
+                    Logger.debug("Loaded SVN history data for working copy in " + wcRoot);
                     final RepoDataCache c = this.getRepoCache(wcRoot);
                     c.getEntries().addAll(value);
-                    for (final CachedLogEntry entry : value) {
-                        final SvnRevision revision = new SvnRevision(c.getRepo(), entry);
-                        c.getRepo().getRemoteFileHistoryGraph().processRevision(revision);
+
+                    if (!value.isEmpty()) {
+                        final SvnRepo repo = c.getRepo();
+                        Logger.info("Processing revisions " + value.get(0).getRevision() + ".."
+                                + value.get(value.size() - 1).getRevision() + " from " + repo.getRemoteUrl());
+
+                        int numEntriesProcessed = 0;
+                        for (final CachedLogEntry entry : value) {
+                            CachedLog.this.processLogEntry(entry, repo, numEntriesProcessed);
+                            ++numEntriesProcessed;
+                        }
                     }
                 } catch (final SVNException ex) {
                     Logger.warn("Ignoring SVN history data for non-existing or corrupt working copy in " + wcRoot, ex);
@@ -306,9 +321,11 @@ public class CachedLog {
     }
 
     private void storeCacheToFile(final File cache) throws IOException {
+        Logger.info("Storing SVN history data to cache " + cache);
         try (ObjectOutputStream oos =
                 new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(cache)))) {
             for (final RepoDataCache repo : this.repoDataPerWcRoot.values()) {
+                Logger.debug("Storing SVN history data for working copy in " + repo.getRepo().getLocalRoot());
                 oos.writeUTF(repo.getRepo().getLocalRoot().toString());
                 final List<CachedLogEntry> entries = repo.getEntries();
                 final int numEntries = entries.size();
@@ -317,6 +334,7 @@ public class CachedLog {
                         numEntries
                 ));
                 oos.writeObject(subList);
+                Logger.debug("Stored SVN history data for working copy in " + repo.getRepo().getLocalRoot());
             }
         }
     }
@@ -325,5 +343,18 @@ public class CachedLog {
         final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
         final IPath dir = Platform.getStateLocation(bundle);
         return dir.append("svnlog.cache");
+    }
+
+    private void processLogEntry(
+            final CachedLogEntry entry,
+            final SvnRepo repo,
+            final int numEntriesProcessed) {
+
+        final SvnRevision revision = new SvnRevision(repo, entry);
+        repo.getRemoteFileHistoryGraph().processRevision(revision);
+        final int numEntriesProcessedNow = numEntriesProcessed + 1;
+        if (numEntriesProcessedNow % REVISION_BLOCK_SIZE == 0) {
+            Logger.debug(numEntriesProcessedNow + " revisions processed");
+        }
     }
 }
