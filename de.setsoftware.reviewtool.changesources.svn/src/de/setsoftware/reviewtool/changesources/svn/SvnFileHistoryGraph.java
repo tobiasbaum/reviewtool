@@ -24,7 +24,7 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
     /**
      * Constructor.
      */
-    public SvnFileHistoryGraph() {
+    SvnFileHistoryGraph() {
         super(DiffAlgorithmFactory.createDefault());
     }
 
@@ -80,7 +80,7 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
      *
      * @param revision The revision to process,
      */
-    public void processRevision(final ISvnRevision revision) {
+    void processRevision(final ISvnRevision revision) {
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String path = e.getKey();
 

@@ -16,21 +16,21 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 /**
  * Implementation of {@link IChangeData} that caches data needed for tracing in addition to the matched commits.
  */
-public class SvnChangeData implements IChangeData {
+final class SvnChangeData implements IChangeData {
 
     private final IChangeSource source;
     private final List<? extends ICommit> commits;
     private final Map<File, IRevisionedFile> localPathMap;
     private final Set<IRepository> repositories;
 
-    public SvnChangeData(
+    SvnChangeData(
             final IChangeSource source,
             final List<? extends ICommit> commits) {
 
         this(source, commits, Collections.<File, IRevisionedFile> emptyMap());
     }
 
-    public SvnChangeData(
+    SvnChangeData(
             final IChangeSource source,
             final List<? extends ICommit> commits,
             final Map<File, IRevisionedFile> localPathMap) {

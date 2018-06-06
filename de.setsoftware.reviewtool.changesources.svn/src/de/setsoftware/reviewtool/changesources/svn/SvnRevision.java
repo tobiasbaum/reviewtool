@@ -21,7 +21,7 @@ final class SvnRevision implements ISvnRevision {
      * @param repository The associated repository.
      * @param logEntry The log entry.
      */
-    public SvnRevision(final SvnRepo repository, final CachedLogEntry logEntry) {
+    SvnRevision(final SvnRepo repository, final CachedLogEntry logEntry) {
         this.repository = repository;
         this.logEntry = logEntry;
     }

@@ -11,7 +11,7 @@ import org.tmatesoft.svn.core.io.SVNRepository;
 /**
  * Represents a cache for file contents for a single SVN repository.
  */
-public class SvnFileCache {
+final class SvnFileCache {
 
     /**
      * Encapsulates a file whose contents are to be cached.
@@ -25,7 +25,7 @@ public class SvnFileCache {
          * @param path The file path.
          * @param revision The file revision.
          */
-        CachedFile(final String path, long revision) {
+        CachedFile(final String path, final long revision) {
             this.path = path;
             this.revision = revision;
         }
@@ -53,7 +53,7 @@ public class SvnFileCache {
      * Constructor.
      * @param repo The {@link SVNRepository}.
      */
-    public SvnFileCache(final SVNRepository repo) {
+    SvnFileCache(final SVNRepository repo) {
         this.repo = repo;
         this.fileContents = new HashMap<>();
     }
@@ -65,7 +65,7 @@ public class SvnFileCache {
      * @return The file contents as a byte array.
      * @throws SVNException if some error occurs.
      */
-    public byte[] getFileContents(final String path, final long revision) throws SVNException {
+    byte[] getFileContents(final String path, final long revision) throws SVNException {
         final CachedFile entry = new CachedFile(path, revision);
         byte[] contents = this.fileContents.get(entry);
         if (contents == null) {

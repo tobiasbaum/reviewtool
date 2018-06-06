@@ -49,7 +49,7 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 /**
  * A simple change source that loads the changes from subversion.
  */
-public class SvnChangeSource implements IChangeSource {
+final class SvnChangeSource implements IChangeSource {
 
     private static final String KEY_PLACEHOLDER = "${key}";
 
@@ -58,7 +58,7 @@ public class SvnChangeSource implements IChangeSource {
     private final SVNClientManager mgr = SVNClientManager.newInstance();
     private final long maxTextDiffThreshold;
 
-    public SvnChangeSource(
+    SvnChangeSource(
             List<File> projectRoots,
             String logMessagePattern,
             String user,

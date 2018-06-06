@@ -13,13 +13,13 @@ import org.tmatesoft.svn.core.SVNException;
  * inaccurate. Revisions that are retrofitted are marked as "invisible" in order to be able to differentiate between
  * "proper" and "technically necessary" revisions.
  */
-class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
+final class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
 
     private final Pattern pattern;
     private final List<SvnRevision> relevantEntries = new ArrayList<>();
     private SvnRepo currentRoot;
 
-    public RelevantRevisionLookupHandler(final Pattern patternForKey) {
+    RelevantRevisionLookupHandler(final Pattern patternForKey) {
         this.pattern = patternForKey;
     }
 
@@ -40,7 +40,7 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
      * Returns all revisions that matched the given pattern and all revisions in between that touched
      * files changed in a matching revision.
      */
-    public List<? extends ISvnRevision> getRelevantRevisions() {
+    List<? extends ISvnRevision> getRelevantRevisions() {
         return this.relevantEntries;
     }
 }

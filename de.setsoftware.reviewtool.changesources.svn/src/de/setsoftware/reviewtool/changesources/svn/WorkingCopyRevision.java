@@ -19,7 +19,7 @@ final class WorkingCopyRevision implements ISvnRevision {
      * @param repository The associated repository.
      * @param paths The paths changed in the working copy.
      */
-    public WorkingCopyRevision(final SvnRepo repository, final SortedMap<String, CachedLogEntryPath> paths) {
+    WorkingCopyRevision(final SvnRepo repository, final SortedMap<String, CachedLogEntryPath> paths) {
         this.repository = repository;
         this.paths = paths;
     }

@@ -36,7 +36,7 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 /**
  * A local cache of the SVN log(s) to speed up the gathering of relevant entries.
  */
-public class CachedLog {
+final class CachedLog {
 
     private static final long REVISION_BLOCK_SIZE = 500L;
 
@@ -102,7 +102,7 @@ public class CachedLog {
     /**
      * Returns a collection of all known Subversion repositories.
      */
-    public Collection<SvnRepo> getRepositories() {
+    Collection<SvnRepo> getRepositories() {
         final List<SvnRepo> result = new ArrayList<>();
         for (final RepoDataCache info : this.repoDataPerWcRoot.values()) {
             result.add(info.getRepo());
@@ -113,7 +113,7 @@ public class CachedLog {
     /**
      * Calls the given handler for all recent log entries of the given working copy root.
      */
-    public void traverseRecentEntries(
+    void traverseRecentEntries(
             final File workingCopyRoot,
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
@@ -133,7 +133,7 @@ public class CachedLog {
      * @param workingCopyRoot The path pointing at the root of some working copy.
      * @return A suitable {@link SvnRepo} object or {@code null} if the path passed is unknown.
      */
-    public SvnRepo mapWorkingCopyRootToRepository(final File workingCopyRoot)
+    SvnRepo mapWorkingCopyRootToRepository(final File workingCopyRoot)
             throws SVNException {
         final RepoDataCache cache = this.getRepoCache(workingCopyRoot);
         return cache.getRepo();

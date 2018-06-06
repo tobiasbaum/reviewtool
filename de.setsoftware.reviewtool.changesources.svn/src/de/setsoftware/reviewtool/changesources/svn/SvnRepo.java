@@ -20,7 +20,7 @@ import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
 /**
  * Wraps the information needed on a SVN repository and corresponding working copy.
  */
-public class SvnRepo extends AbstractRepository {
+final class SvnRepo extends AbstractRepository {
 
     private final String id;
     private final File workingCopyRoot;
@@ -33,7 +33,7 @@ public class SvnRepo extends AbstractRepository {
     private SvnFileHistoryGraph localHistoryGraph;
     private final VirtualFileHistoryGraph combinedHistoryGraph;
 
-    public SvnRepo(
+    SvnRepo(
             final SVNClientManager mgr,
             final String id,
             final File workingCopyRoot,
@@ -52,7 +52,7 @@ public class SvnRepo extends AbstractRepository {
         this.combinedHistoryGraph = new VirtualFileHistoryGraph(this.remoteHistoryGraph, this.localHistoryGraph);
     }
 
-    public SVNURL getRemoteUrl() {
+    SVNURL getRemoteUrl() {
         return this.remoteUrl;
     }
 
@@ -85,6 +85,10 @@ public class SvnRepo extends AbstractRepository {
 
     }
 
+    private File combineWcRootAndSuffix(final Path p, int prefixLength) {
+        return new File(this.workingCopyRoot, p.subpath(prefixLength, p.getNameCount()).toString());
+    }
+
     @Override
     public String fromAbsolutePathInWc(final String absolutePathInWc) {
         assert absolutePathInWc.startsWith(this.workingCopyRoot.getPath());
@@ -98,10 +102,6 @@ public class SvnRepo extends AbstractRepository {
     @Override
     public byte[] getFileContents(final String path, final IRepoRevision revision) throws SVNException {
         return this.fileCache.getFileContents(path, (Long) revision.getId());
-    }
-
-    private File combineWcRootAndSuffix(final Path p, int prefixLength) {
-        return new File(this.workingCopyRoot, p.subpath(prefixLength, p.getNameCount()).toString());
     }
 
     @Override
