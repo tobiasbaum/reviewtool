@@ -92,7 +92,7 @@ public final class FileHistoryEdge extends ProxyableFileHistoryEdge {
 
     @Override
     public int hashCode() {
-        return this.ancestor.hashCode() ^ this.descendant.hashCode();
+        return this.ancestor.hashCode() ^ this.descendant.hashCode() ^ this.type.hashCode();
     }
 
     /**

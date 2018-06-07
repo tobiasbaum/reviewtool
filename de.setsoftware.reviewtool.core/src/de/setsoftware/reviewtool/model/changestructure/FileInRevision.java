@@ -129,7 +129,7 @@ public class FileInRevision implements IRevisionedFile {
 
     @Override
     public int hashCode() {
-        return this.path.hashCode();
+        return this.path.hashCode() ^ this.revision.hashCode();
     }
 
     @Override
