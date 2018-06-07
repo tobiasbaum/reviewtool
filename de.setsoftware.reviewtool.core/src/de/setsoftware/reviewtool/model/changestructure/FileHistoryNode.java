@@ -25,6 +25,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
     private transient ProxyableFileHistoryNode parent;
     private final Set<ProxyableFileHistoryNode> children;
     private Type type;
+    private boolean hasAllChildren;
 
     /**
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
@@ -39,6 +40,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
         this.descendants = new LinkedHashSet<>();
         this.children = new LinkedHashSet<>();
         this.type = type;
+        this.hasAllChildren = false;
     }
 
     /**
@@ -190,6 +192,16 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
     void addChild(final ProxyableFileHistoryNode child) {
         this.children.add(child);
         child.setParent(this);
+    }
+
+    @Override
+    void setHasAllChildren() {
+        this.hasAllChildren = true;
+    }
+
+    @Override
+    boolean hasAllChildren() {
+        return this.hasAllChildren;
     }
 
     @Override

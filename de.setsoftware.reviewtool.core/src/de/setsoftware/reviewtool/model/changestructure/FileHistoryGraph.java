@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -233,36 +235,57 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             paths.add(child.getFile().getPath());
         }
         this.createMissingChildren(paths, target, target, new LinkedHashSet<ProxyableFileHistoryNode>());
+        target.setHasAllChildren();
     }
 
     /**
      * Creates all missing children of passed node.
      *
      * @param paths The paths for which a child node has already been created.
-     * @param node The node the children of which are to be computed.
+     * @param source The node the children of which are to be computed.
      * @param target The node the children of which are to be created.
      * @param visitedNodes The set of nodes that have already been visited. As the file hierarchy graph is not
      *      necessarily a tree due to branching and merging, we need to mark nodes that have already been processed.
      */
     private void createMissingChildren(
             final Set<String> paths,
-            final ProxyableFileHistoryNode node,
+            final ProxyableFileHistoryNode source,
             final ProxyableFileHistoryNode target,
             final Set<ProxyableFileHistoryNode> visitedNodes) {
 
-        if (visitedNodes.contains(node)) {
-            return;
-        } else {
-            visitedNodes.add(node);
+        Deque<ProxyableFileHistoryNode> moreAncestors = new ArrayDeque<>();
+
+        ProxyableFileHistoryNode node = source;
+        while (node != null) {
+            if (!visitedNodes.add(node)) {
+                return;
+            }
+
+            if (!node.equals(target)) {
+                this.createMissingTargetChildren(paths, node, target);
+            }
+
+            if (node.hasAllChildren()) {
+                break;
+            }
+
+            boolean firstAncestor = true;
+            for (final ProxyableFileHistoryEdge ancestorEdge : node.getAncestors()) {
+                final ProxyableFileHistoryNode ancestor = ancestorEdge.getAncestor();
+                if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.NORMAL)) {
+                    if (firstAncestor) {
+                        node = ancestor;
+                        firstAncestor = false;
+                    } else {
+                        moreAncestors.push(ancestor);
+                    }
+                }
+            }
         }
 
-        this.createMissingTargetChildren(paths, node, target);
-
-        for (final ProxyableFileHistoryEdge ancestorEdge : node.getAncestors()) {
-            final ProxyableFileHistoryNode ancestor = ancestorEdge.getAncestor();
-            if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.NORMAL)) {
-                this.createMissingChildren(paths, ancestor, target, visitedNodes);
-            }
+        while (!moreAncestors.isEmpty()) {
+            final ProxyableFileHistoryNode ancestor = moreAncestors.pop();
+            this.createMissingChildren(paths, ancestor, target, visitedNodes);
         }
     }
 

@@ -132,6 +132,16 @@ final class FileHistoryNodeProxy extends ProxyableFileHistoryNode {
     }
 
     @Override
+    void setHasAllChildren() {
+        this.getTarget().setHasAllChildren();
+    }
+
+    @Override
+    boolean hasAllChildren() {
+        return this.getTarget().hasAllChildren();
+    }
+
+    @Override
     ProxyableFileHistoryNode getParent() {
         return this.getTarget().getParent();
     }

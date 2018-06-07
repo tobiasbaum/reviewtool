@@ -66,6 +66,17 @@ public abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode i
     abstract void addChild(final ProxyableFileHistoryNode child);
 
     /**
+     * Returns {@code true} iff all children of this node are known to exist (as far as the history is known).
+     */
+    abstract boolean hasAllChildren();
+
+    /**
+     * Makes this node aware of the fact that all of its children (as far as the history is known) are known to exist.
+     * This is used as an optimization in order to prevent unnecessary graph traversals.
+     */
+    abstract void setHasAllChildren();
+
+    /**
      * Returns the parent {@link ProxyableFileHistoryNode} or <code>null</code> if no parent has been set.
      */
     abstract ProxyableFileHistoryNode getParent();
