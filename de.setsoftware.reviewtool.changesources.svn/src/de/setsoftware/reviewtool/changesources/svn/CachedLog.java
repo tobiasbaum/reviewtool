@@ -16,8 +16,13 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobFunction;
+import org.eclipse.core.runtime.jobs.Job;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
@@ -96,7 +101,14 @@ final class CachedLog {
         this.minCount = Math.min(minCount, maxCount);
         this.maxCount = Math.max(minCount, maxCount);
 
-        this.tryToReadCacheFromFile();
+        final Job job = Job.create("Loading SVN review cache", new IJobFunction() {
+            @Override
+            public IStatus run(IProgressMonitor monitor) {
+                CachedLog.this.tryToReadCacheFromFile();
+                return Status.OK_STATUS;
+            }
+        });
+        job.schedule();
     }
 
     /**
@@ -268,7 +280,7 @@ final class CachedLog {
         }
     }
 
-    private void readCacheFromFile(final File cache) throws IOException, ClassNotFoundException {
+    private synchronized void readCacheFromFile(final File cache) throws IOException, ClassNotFoundException {
         if (!cache.exists()) {
             Logger.info("SVN cache " + cache + " is missing, nothing to load");
             return;
