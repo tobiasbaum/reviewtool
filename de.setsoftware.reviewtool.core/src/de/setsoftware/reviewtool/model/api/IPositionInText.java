@@ -1,9 +1,11 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.Serializable;
+
 /**
  * A position in a text file, denoted by character index.
  */
-public interface IPositionInText extends Comparable<IPositionInText> {
+public interface IPositionInText extends Comparable<IPositionInText>, Serializable {
 
     /**
      * Returns the one-based line number this {@link IPositionInText} refers to.

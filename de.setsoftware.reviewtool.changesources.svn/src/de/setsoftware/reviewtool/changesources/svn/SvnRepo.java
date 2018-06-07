@@ -1,6 +1,9 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.File;
+import java.io.InvalidObjectException;
+import java.io.ObjectStreamException;
+import java.io.Serializable;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -22,6 +25,33 @@ import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
  */
 final class SvnRepo extends AbstractRepository {
 
+    /**
+     * References a SVN repository by its working copy root.
+     */
+    private static final class SvnRepoRef implements Serializable {
+
+        private static final long serialVersionUID = 8155878129812235537L;
+        private final File wcRoot;
+
+        /**
+         * Constructor.
+         * @param workingCopyRoot The root directory of the working copy.
+         */
+        SvnRepoRef(final File workingCopyRoot) {
+            this.wcRoot = workingCopyRoot;
+        }
+
+        private Object readResolve() throws ObjectStreamException {
+            final SvnRepo repo = CachedLog.getInstance().getRepositoryByWorkingCopyRoot(this.wcRoot);
+            if (repo == null) {
+                throw new InvalidObjectException("No repository for working copy at " + this.wcRoot);
+            }
+            return repo;
+        }
+    }
+
+    private static final long serialVersionUID = 8792151363600093081L;
+
     private final String id;
     private final File workingCopyRoot;
     private final SVNURL remoteUrl;
@@ -29,7 +59,7 @@ final class SvnRepo extends AbstractRepository {
     private final int checkoutPrefix;
     private final SVNRepository svnRepo;
     private final SvnFileCache fileCache;
-    private final SvnFileHistoryGraph remoteHistoryGraph;
+    private SvnFileHistoryGraph remoteHistoryGraph;
     private SvnFileHistoryGraph localHistoryGraph;
     private final VirtualFileHistoryGraph combinedHistoryGraph;
 
@@ -39,7 +69,9 @@ final class SvnRepo extends AbstractRepository {
             final File workingCopyRoot,
             final SVNURL rootUrl,
             final String relPath,
-            final int checkoutPrefix) throws SVNException {
+            final int checkoutPrefix,
+            final SvnFileHistoryGraph remoteHistoryGraph) throws SVNException {
+
         this.id = id;
         this.workingCopyRoot = workingCopyRoot;
         this.remoteUrl = rootUrl;
@@ -47,7 +79,7 @@ final class SvnRepo extends AbstractRepository {
         this.checkoutPrefix = checkoutPrefix;
         this.svnRepo = mgr.createRepository(rootUrl, false);
         this.fileCache = new SvnFileCache(this.svnRepo);
-        this.remoteHistoryGraph = new SvnFileHistoryGraph();
+        this.remoteHistoryGraph = remoteHistoryGraph == null ? new SvnFileHistoryGraph() : remoteHistoryGraph;
         this.localHistoryGraph = new SvnFileHistoryGraph();
         this.combinedHistoryGraph = new VirtualFileHistoryGraph(this.remoteHistoryGraph, this.localHistoryGraph);
     }
@@ -171,5 +203,20 @@ final class SvnRepo extends AbstractRepository {
         this.combinedHistoryGraph.remove(this.combinedHistoryGraph.size() - 1);
         this.localHistoryGraph = new SvnFileHistoryGraph();
         this.combinedHistoryGraph.add(this.localHistoryGraph);
+    }
+
+    /**
+     * Replaces the {@link SvnFileHistoryGraph} of the remote repository.
+     * @param remoteFileHistoryGraph The new remote file history graph.
+     */
+    void setRemoteFileHistoryGraph(final SvnFileHistoryGraph remoteFileHistoryGraph) {
+        this.remoteHistoryGraph = remoteFileHistoryGraph;
+        this.combinedHistoryGraph.clear();
+        this.combinedHistoryGraph.add(this.remoteHistoryGraph);
+        this.combinedHistoryGraph.add(this.localHistoryGraph);
+    }
+
+    private Object writeReplace() {
+        return new SvnRepoRef(this.workingCopyRoot);
     }
 }

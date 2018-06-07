@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.Serializable;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
@@ -7,7 +8,7 @@ import de.setsoftware.reviewtool.base.Pair;
 /**
  * Interface for diff algorithms.
  */
-public interface IDiffAlgorithm {
+public interface IDiffAlgorithm extends Serializable {
 
     /**
      * Determines a diff between the given file contents. The result is a list

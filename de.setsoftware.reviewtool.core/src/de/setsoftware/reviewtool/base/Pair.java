@@ -1,11 +1,15 @@
 package de.setsoftware.reviewtool.base;
 
+import java.io.Serializable;
+
 /**
  * A simple pair of two values.
  * @param <T1> Type of the first value.
  * @param <T2> Type of the second value.
  */
-public class Pair<T1, T2> {
+public class Pair<T1, T2> implements Serializable {
+
+    private static final long serialVersionUID = -8355039116625200370L;
 
     private final T1 v1;
     private final T2 v2;

@@ -7,6 +7,8 @@ import de.setsoftware.reviewtool.model.api.IDelta;
  */
 public final class Delta implements IDelta {
 
+    private static final long serialVersionUID = 3698918072368955600L;
+
     private final int lineOffset;
     private final int columnOffset;
 

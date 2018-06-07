@@ -29,6 +29,8 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
 public class OneStopPerPartOfFileRestructuringTest {
 
     private static final IRepository REPO = new AbstractRepository() {
+        private static final long serialVersionUID = 1L;
+
         @Override
         public String getId() {
             return "stub";

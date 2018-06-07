@@ -10,6 +10,8 @@ import de.setsoftware.reviewtool.model.api.IUnknownRevision;
  */
 public final class UnknownRevision implements IUnknownRevision {
 
+    private static final long serialVersionUID = -9220849030981162090L;
+
     private final IRepository repo;
 
     UnknownRevision(final IRepository repo) {

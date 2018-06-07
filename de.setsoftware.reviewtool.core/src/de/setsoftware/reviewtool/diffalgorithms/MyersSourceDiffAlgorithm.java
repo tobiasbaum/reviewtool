@@ -20,6 +20,8 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
  */
 class MyersSourceDiffAlgorithm implements IDiffAlgorithm {
 
+    private static final long serialVersionUID = -2135531518214950624L;
+
     @Override
     public List<Pair<IFragment, IFragment>> determineDiff(IRevisionedFile fileOldInfo, byte[] fileOldContent,
             IRevisionedFile fileNewInfo, byte[] fileNewContent, String charset) {

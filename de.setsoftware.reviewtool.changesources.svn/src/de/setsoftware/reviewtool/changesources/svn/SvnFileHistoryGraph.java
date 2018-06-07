@@ -14,12 +14,14 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
+import de.setsoftware.reviewtool.model.changestructure.ProxyableFileHistoryNode;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
 final class SvnFileHistoryGraph extends FileHistoryGraph {
+
+    private static final long serialVersionUID = 2706724778357716541L;
 
     /**
      * Constructor.
@@ -29,12 +31,12 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
     }
 
     @Override
-    public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
-        final List<FileHistoryNode> nodesForKey = this.lookupFile(file);
+    public ProxyableFileHistoryNode findAncestorFor(final IRevisionedFile file) {
+        final List<ProxyableFileHistoryNode> nodesForKey = this.lookupFile(file);
         final long targetRevision = getRevision(file);
         long nearestRevision = Long.MIN_VALUE;
-        FileHistoryNode nearestNode = null;
-        for (final FileHistoryNode node : nodesForKey) {
+        ProxyableFileHistoryNode nearestNode = null;
+        for (final ProxyableFileHistoryNode node : nodesForKey) {
             final long nodeRevision = getRevision(node.getFile());
             if (nodeRevision < targetRevision && nodeRevision > nearestRevision) {
                 nearestNode = node;

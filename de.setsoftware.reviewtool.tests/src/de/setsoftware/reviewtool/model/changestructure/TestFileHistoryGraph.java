@@ -16,6 +16,8 @@ import de.setsoftware.reviewtool.model.api.IUnknownRevision;
  */
 final class TestFileHistoryGraph extends FileHistoryGraph {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Constructor.
      */
@@ -24,12 +26,12 @@ final class TestFileHistoryGraph extends FileHistoryGraph {
     }
 
     @Override
-    public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
-        final List<FileHistoryNode> nodesForKey = this.lookupFile(file);
+    public ProxyableFileHistoryNode findAncestorFor(final IRevisionedFile file) {
+        final List<ProxyableFileHistoryNode> nodesForKey = this.lookupFile(file);
         final long targetRevision = getRevision(file);
         long nearestRevision = Long.MIN_VALUE;
-        FileHistoryNode nearestNode = null;
-        for (final FileHistoryNode node : nodesForKey) {
+        ProxyableFileHistoryNode nearestNode = null;
+        for (final ProxyableFileHistoryNode node : nodesForKey) {
             final long nodeRevision = getRevision(node.getFile());
             if (nodeRevision < targetRevision && nodeRevision > nearestRevision) {
                 nearestNode = node;

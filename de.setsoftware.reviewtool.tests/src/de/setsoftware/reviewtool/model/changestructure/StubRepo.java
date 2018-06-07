@@ -13,6 +13,8 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 public final class StubRepo extends AbstractRepository {
 
     public static StubRepo INSTANCE = new StubRepo();
+    private static final long serialVersionUID = 1L;
+
 
     @Override
     public String getId() {

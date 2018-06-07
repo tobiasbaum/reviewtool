@@ -22,6 +22,8 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
  */
 public final class FileDiff implements IFileDiff {
 
+    private static final long serialVersionUID = -3942922342076568059L;
+
     /**
      * The hunks this FileDiff object is made of. Later hunks depend on earlier hunks, i.e. the source/target fragment
      * positions of later hunks take the deltas of earlier hunks into consideration.

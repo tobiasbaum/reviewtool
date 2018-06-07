@@ -10,6 +10,8 @@ import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
  */
 public final class LocalRevision implements ILocalRevision {
 
+    private static final long serialVersionUID = 1808884414733783082L;
+
     private final IRepository repo;
 
     LocalRevision(final IRepository repo) {

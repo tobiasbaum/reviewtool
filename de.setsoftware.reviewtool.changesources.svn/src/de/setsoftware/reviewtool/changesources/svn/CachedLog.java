@@ -123,6 +123,20 @@ final class CachedLog {
     }
 
     /**
+     * Returns a repository by its working copy root.
+     * @param workingCopyRoot The root directory of the working copy.
+     * @return A {@link SvnRepo} or {@code null} if not found.
+     */
+    SvnRepo getRepositoryByWorkingCopyRoot(final File workingCopyRoot) {
+        try {
+            final RepoDataCache c = this.getRepoCache(workingCopyRoot, null);
+            return c.getRepo();
+        } catch (final SVNException e) {
+            return null;
+        }
+    }
+
+    /**
      * Calls the given handler for all recent log entries of the given working copy root.
      */
     void traverseRecentEntries(
@@ -130,7 +144,7 @@ final class CachedLog {
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
-        final RepoDataCache repoCache = this.getRepoCache(workingCopyRoot);
+        final RepoDataCache repoCache = this.getRepoCache(workingCopyRoot, null);
         handler.startNewRepo(repoCache.getRepo());
         for (final CachedLogEntry entry : this.getEntries(repoCache)) {
             if (ui.isCanceled()) {
@@ -147,7 +161,7 @@ final class CachedLog {
      */
     SvnRepo mapWorkingCopyRootToRepository(final File workingCopyRoot)
             throws SVNException {
-        final RepoDataCache cache = this.getRepoCache(workingCopyRoot);
+        final RepoDataCache cache = this.getRepoCache(workingCopyRoot, null);
         return cache.getRepo();
     }
 
@@ -156,7 +170,10 @@ final class CachedLog {
      * @param workingCopyRoot The working copy root.
      * @throws SVNException if the working copy does not exist or is corrupt
      */
-    private synchronized RepoDataCache getRepoCache(final File workingCopyRoot) throws SVNException {
+    private synchronized RepoDataCache getRepoCache(
+            final File workingCopyRoot,
+            final SvnFileHistoryGraph fileHistoryGraph) throws SVNException {
+
         RepoDataCache c = this.repoDataPerWcRoot.get(workingCopyRoot.toString());
         if (c == null) {
             final SVNWCClient wcClient = this.mgr.getWCClient();
@@ -170,8 +187,11 @@ final class CachedLog {
                     workingCopyRoot,
                     rootUrl,
                     relPath,
-                    this.determineCheckoutPrefix(wcUrl, rootUrl)));
+                    this.determineCheckoutPrefix(wcUrl, rootUrl),
+                    fileHistoryGraph));
             this.repoDataPerWcRoot.put(workingCopyRoot.toString(), c);
+        } else if (fileHistoryGraph != null) {
+            c.getRepo().setRemoteFileHistoryGraph(fileHistoryGraph);
         }
         return c;
     }
@@ -301,21 +321,11 @@ final class CachedLog {
                     @SuppressWarnings("unchecked") final List<CachedLogEntry> value =
                             (List<CachedLogEntry>) ois.readObject();
 
+                    final SvnFileHistoryGraph historyGraph = (SvnFileHistoryGraph) ois.readObject();
+
                     Logger.debug("Loaded SVN history data for working copy in " + wcRoot);
-                    final RepoDataCache c = this.getRepoCache(wcRoot);
+                    final RepoDataCache c = this.getRepoCache(wcRoot, historyGraph);
                     c.getEntries().addAll(value);
-
-                    if (!value.isEmpty()) {
-                        final SvnRepo repo = c.getRepo();
-                        Logger.info("Processing revisions " + value.get(0).getRevision() + ".."
-                                + value.get(value.size() - 1).getRevision() + " from " + repo.getRemoteUrl());
-
-                        int numEntriesProcessed = 0;
-                        for (final CachedLogEntry entry : value) {
-                            CachedLog.this.processLogEntry(entry, repo, numEntriesProcessed);
-                            ++numEntriesProcessed;
-                        }
-                    }
                 } catch (final SVNException ex) {
                     Logger.warn("Ignoring SVN history data for non-existing or corrupt working copy in " + wcRoot, ex);
                 }
@@ -346,6 +356,7 @@ final class CachedLog {
                         numEntries
                 ));
                 oos.writeObject(subList);
+                oos.writeObject(repo.getRepo().getRemoteFileHistoryGraph());
                 Logger.debug("Stored SVN history data for working copy in " + repo.getRepo().getLocalRoot());
             }
         }

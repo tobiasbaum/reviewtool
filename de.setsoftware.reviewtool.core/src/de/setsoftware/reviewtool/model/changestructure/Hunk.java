@@ -18,6 +18,8 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
  */
 public final class Hunk implements IHunk {
 
+    private static final long serialVersionUID = 6069703227726679411L;
+
     /**
      * The source fragment.
      */

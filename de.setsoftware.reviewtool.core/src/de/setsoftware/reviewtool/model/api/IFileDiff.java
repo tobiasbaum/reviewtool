@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 
@@ -7,7 +8,7 @@ import java.util.List;
  * Represents a set of difference hunks between different revisions of the same file. A FileDiff object can accumulate
  * hunks of different source/target revisions.
  */
-public interface IFileDiff {
+public interface IFileDiff extends Serializable {
 
     /**
      * Returns un unmodifiable view of the hunks this {@link IFileDiff} is made of.

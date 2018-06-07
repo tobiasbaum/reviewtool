@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Set;
 
@@ -11,7 +12,7 @@ import java.util.Set;
  * a pure deletion, so that there is no code to point to left in that revision of the file, this is denoted
  * specially.
  */
-public interface IFragment extends Comparable<IFragment> {
+public interface IFragment extends Comparable<IFragment>, Serializable {
 
     /**
      * Returns the {@link IRevisionedFile} this {@link IFragment} is part of.

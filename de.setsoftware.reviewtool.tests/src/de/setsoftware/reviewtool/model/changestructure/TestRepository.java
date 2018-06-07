@@ -13,6 +13,8 @@ import de.setsoftware.reviewtool.model.api.IRevision;
  */
 final class TestRepository extends AbstractRepository {
 
+    private static final long serialVersionUID = 1L;
+
     private final String id;
     private final File localRoot;
 
