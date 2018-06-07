@@ -1750,6 +1750,169 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(xyEdge), yNode.getAncestors());
     }
 
+    /**
+     * This is really possible, see r36247 in the POSY-Redesign repository.
+     */
+    @Test
+    public void testCopyOfDirectoryIntoItself() {
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
+
+        final IRevisionedFile trunkRevOrig =
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
+        final IRevisionedFile aRevOrig =
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
+
+        g.addAddition(trunkRevOrig.getPath(), trunkRevOrig.getRevision());
+        g.addAddition(aRevOrig.getPath(), aRevOrig.getRevision());
+
+        final IRevisionedFile trunkRev =
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 2L));
+        final IRevisionedFile xRev =
+                ChangestructureFactory.createFileInRevision("/trunk/x", trunkRev.getRevision());
+        final IRevisionedFile aRevCopy =
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", trunkRev.getRevision());
+
+        g.addCopy(trunkRevOrig.getPath(), xRev.getPath(), trunkRevOrig.getRevision(), xRev.getRevision());
+
+        final ProxyableFileHistoryNode trunkOrigNode = g.getNodeFor(trunkRevOrig);
+        assertEquals(trunkRevOrig, trunkOrigNode.getFile());
+        assertEquals(IFileHistoryNode.Type.ADDED, trunkOrigNode.getType());
+        assertEquals(false, trunkOrigNode.isCopyTarget());
+        assertEquals(Collections.singleton(createAlphaNode(repo, g, trunkOrigNode)), trunkOrigNode.getAncestors());
+
+        final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
+        assertEquals(aRevOrig, aOrigNode.getFile());
+        assertEquals(IFileHistoryNode.Type.ADDED, aOrigNode.getType());
+        assertEquals(false, aOrigNode.isCopyTarget());
+        assertEquals(Collections.singleton(createAlphaNode(repo, g, aOrigNode)), aOrigNode.getAncestors());
+
+        final ProxyableFileHistoryNode trunkNode = g.getNodeFor(trunkRev);
+        assertEquals(trunkRev, trunkNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, trunkNode.getType());
+        assertEquals(false, trunkNode.isCopyTarget());
+        assertEquals(Collections.emptySet(), trunkNode.getDescendants());
+
+        final ProxyableFileHistoryNode xNode = g.getNodeFor(xRev);
+        assertEquals(xRev, xNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, xNode.getType());
+        assertEquals(true, xNode.isCopyTarget());
+        assertEquals(Collections.emptySet(), xNode.getDescendants());
+
+        final ProxyableFileHistoryNode aCopyNode = g.getNodeFor(aRevCopy);
+        assertEquals(aRevCopy, aCopyNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, aCopyNode.getType());
+        assertEquals(true, aCopyNode.isCopyTarget());
+        assertEquals(Collections.emptySet(), aCopyNode.getDescendants());
+
+        assertEquals(Collections.singleton(aOrigNode), trunkOrigNode.getChildren());
+        assertEquals(trunkOrigNode, aOrigNode.getParent());
+
+        assertEquals(Collections.singleton(xNode), trunkNode.getChildren());
+        assertEquals(trunkNode, xNode.getParent());
+
+        assertEquals(Collections.singleton(aCopyNode), xNode.getChildren());
+        assertEquals(xNode, aCopyNode.getParent());
+
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkOrigNode, trunkNode,
+                IFileHistoryEdge.Type.NORMAL);
+        final FileHistoryEdge xEdge = new FileHistoryEdge(g, trunkOrigNode, xNode, IFileHistoryEdge.Type.COPY);
+        assertEquals(new HashSet<>(Arrays.asList(trunkEdge, xEdge)), trunkOrigNode.getDescendants());
+        assertEquals(Collections.singleton(trunkEdge), trunkNode.getAncestors());
+        assertEquals(Collections.singleton(xEdge), xNode.getAncestors());
+
+        final FileHistoryEdge aCopyEdge = new FileHistoryEdge(g, aOrigNode, aCopyNode, IFileHistoryEdge.Type.COPY);
+        assertEquals(Collections.singleton(aCopyEdge), aOrigNode.getDescendants());
+        assertEquals(Collections.singleton(aCopyEdge), aCopyNode.getAncestors());
+    }
+
+    @SuppressWarnings("null")
+    @Test
+    public void testCopyOfDirectoryWithManyAncestorsIntoItself() {
+        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final FileHistoryGraph g = new TestFileHistoryGraph();
+
+        final IRevisionedFile trunkRevOrig =
+                ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, 1L));
+        final IRevisionedFile aRevOrig =
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
+
+        g.addAddition(trunkRevOrig.getPath(), trunkRevOrig.getRevision());
+        g.addAddition(aRevOrig.getPath(), aRevOrig.getRevision());
+
+        IRevisionedFile oldTrunkRev = null;
+        IRevisionedFile currentTrunkRev = trunkRevOrig;
+        for (long revIndex = 2L; revIndex <= 20000L; ++revIndex) {
+            final IRevisionedFile trunkRev =
+                    ChangestructureFactory.createFileInRevision("/trunk", new TestRepoRevision(repo, revIndex));
+            g.addChange(trunkRev.getPath(), trunkRev.getRevision(),
+                    Collections.singleton(currentTrunkRev.getRevision()));
+            oldTrunkRev = currentTrunkRev;
+            currentTrunkRev = trunkRev;
+        }
+
+        final IRevisionedFile aCopySourceRev =
+                ChangestructureFactory.createFileInRevision("/trunk/a", oldTrunkRev.getRevision());
+
+        final IRevisionedFile trunkRev =
+                ChangestructureFactory.createFileInRevision("/trunk", currentTrunkRev.getRevision());
+        final IRevisionedFile xRev =
+                ChangestructureFactory.createFileInRevision("/trunk/x", trunkRev.getRevision());
+        final IRevisionedFile aRevCopy =
+                ChangestructureFactory.createFileInRevision("/trunk/x/a", trunkRev.getRevision());
+
+        g.addCopy(oldTrunkRev.getPath(), xRev.getPath(), oldTrunkRev.getRevision(), xRev.getRevision());
+
+        final ProxyableFileHistoryNode trunkCopySourceNode = g.getNodeFor(oldTrunkRev);
+        assertEquals(oldTrunkRev, trunkCopySourceNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, trunkCopySourceNode.getType());
+        assertEquals(false, trunkCopySourceNode.isCopyTarget());
+
+        final ProxyableFileHistoryNode aCopySourceNode = g.getNodeFor(aCopySourceRev);
+        assertEquals(aCopySourceRev, aCopySourceNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, aCopySourceNode.getType());
+        assertEquals(false, aCopySourceNode.isCopyTarget());
+
+        final ProxyableFileHistoryNode trunkNode = g.getNodeFor(trunkRev);
+        assertEquals(trunkRev, trunkNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, trunkNode.getType());
+        assertEquals(false, trunkNode.isCopyTarget());
+        assertEquals(Collections.emptySet(), trunkNode.getDescendants());
+
+        final ProxyableFileHistoryNode xNode = g.getNodeFor(xRev);
+        assertEquals(xRev, xNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, xNode.getType());
+        assertEquals(true, xNode.isCopyTarget());
+        assertEquals(Collections.emptySet(), xNode.getDescendants());
+
+        final ProxyableFileHistoryNode aCopyNode = g.getNodeFor(aRevCopy);
+        assertEquals(aRevCopy, aCopyNode.getFile());
+        assertEquals(IFileHistoryNode.Type.CHANGED, aCopyNode.getType());
+        assertEquals(true, aCopyNode.isCopyTarget());
+        assertEquals(Collections.emptySet(), aCopyNode.getDescendants());
+
+        assertEquals(Collections.singleton(aCopySourceNode), trunkCopySourceNode.getChildren());
+        assertEquals(trunkCopySourceNode, aCopySourceNode.getParent());
+
+        assertEquals(Collections.singleton(xNode), trunkNode.getChildren());
+        assertEquals(trunkNode, xNode.getParent());
+
+        assertEquals(Collections.singleton(aCopyNode), xNode.getChildren());
+        assertEquals(xNode, aCopyNode.getParent());
+
+        final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkCopySourceNode, trunkNode,
+                IFileHistoryEdge.Type.NORMAL);
+        final FileHistoryEdge xEdge = new FileHistoryEdge(g, trunkCopySourceNode, xNode, IFileHistoryEdge.Type.COPY);
+        assertEquals(new HashSet<>(Arrays.asList(trunkEdge, xEdge)), trunkCopySourceNode.getDescendants());
+        assertEquals(Collections.singleton(trunkEdge), trunkNode.getAncestors());
+        assertEquals(Collections.singleton(xEdge), xNode.getAncestors());
+
+        final FileHistoryEdge aCopyEdge = new FileHistoryEdge(g, aCopySourceNode, aCopyNode,
+                IFileHistoryEdge.Type.COPY);
+        assertEquals(Collections.singleton(aCopyEdge), aCopySourceNode.getDescendants());
+        assertEquals(Collections.singleton(aCopyEdge), aCopyNode.getAncestors());
+    }
+
     @Test
     public void testAdditionInCopiedKnownDirectory() {
         final IRepository repo = new TestRepository("123", new File("/some/repo"));
