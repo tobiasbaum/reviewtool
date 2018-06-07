@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
-import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
@@ -21,7 +20,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implements IMutableFileHistoryGraph {
 
     private final IDiffAlgorithm diffAlgorithm;
-    private final Multimap<Pair<String, IRepository>, FileHistoryNode> index = new Multimap<>();
+    private final Multimap<String, FileHistoryNode> index = new Multimap<>();
 
     /**
      * Constructor.
@@ -33,7 +32,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
     @Override
     public final boolean contains(final String path, final IRepository repo) {
-        return !this.index.get(Pair.create(path, repo)).isEmpty();
+        return !this.index.get(path).isEmpty();
     }
 
     @Override
@@ -387,7 +386,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             node = new FileHistoryNode(this, file, nodeType);
-            this.index.put(this.createKey(file), node);
+            this.index.put(file.getPath(), node);
 
             this.addParentNodes(node, inheritCopy);
 
@@ -468,8 +467,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
     @Override
     public final FileHistoryNode getNodeFor(final IRevisionedFile file) {
-        final Pair<String, IRepository> key = this.createKey(file);
-        final List<FileHistoryNode> nodesForKey = this.index.get(key);
+        final List<FileHistoryNode> nodesForKey = this.index.get(file.getPath());
         for (final FileHistoryNode node : nodesForKey) {
             if (node.getFile().getRevision().equals(file.getRevision())) {
                 return node;
@@ -478,18 +476,13 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         return null;
     }
 
-    private Pair<String, IRepository> createKey(final IRevisionedFile file) {
-        return Pair.create(file.getPath(), file.getRepository());
-    }
-
     /**
      * Performs a file lookup in the index.
      * @param file The file to look for.
      * @return A list of matching {@link FileHistoryNode}s.
      */
     protected final List<FileHistoryNode> lookupFile(final IRevisionedFile file) {
-        final Pair<String, IRepository> key = this.createKey(file);
-        return this.index.get(key);
+        return this.index.get(file.getPath());
     }
 
     /**
