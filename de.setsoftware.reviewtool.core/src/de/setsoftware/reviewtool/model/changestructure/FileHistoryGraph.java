@@ -64,7 +64,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                 final ProxyableFileHistoryNode ancestor = this.getOrCreateConnectedNode(
                         prevFile,
                         IFileHistoryNode.Type.UNCONFIRMED);
-                addEdge(ancestor, node, IFileHistoryEdge.Type.NORMAL);
+                ancestor.addDescendant(node, IFileHistoryEdge.Type.NORMAL);
             }
         }
         //else: a change is being recorded for a node copied in the same commit, so passed ancestors can be ignored
@@ -153,7 +153,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
          * because of the explicit copy operation. Technically, there are two flows trunk2/x/a is being part of,
          * but the terminating flow is redundant.
          */
-        addEdge(fromNode, toNode, IFileHistoryEdge.Type.COPY);
+        fromNode.addDescendant(toNode, IFileHistoryEdge.Type.COPY);
         this.copyChildNodes(fromNode, toNode);
     }
 
@@ -180,19 +180,6 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                         toRevision);
             }
         }
-    }
-
-    /**
-     * Adds an ancestor/descendant relationship between two nodes.
-     * @param ancestor The ancestor.
-     * @param descendant The descendant.
-     * @param type The type of the edge to create.
-     */
-    private static void addEdge(
-            final ProxyableFileHistoryNode ancestor,
-            final ProxyableFileHistoryNode descendant,
-            final IFileHistoryEdge.Type type) {
-        ancestor.addDescendant(descendant, type);
     }
 
     /**
@@ -438,7 +425,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             this.injectInteriorNode(ancestor, node);
         }
 
-        addEdge(ancestor, node, edgeType);
+        ancestor.addDescendant(node, edgeType);
     }
 
     /**
