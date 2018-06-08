@@ -69,8 +69,7 @@ final class SvnRepo extends AbstractRepository {
             final File workingCopyRoot,
             final SVNURL rootUrl,
             final String relPath,
-            final int checkoutPrefix,
-            final SvnFileHistoryGraph remoteHistoryGraph) throws SVNException {
+            final int checkoutPrefix) throws SVNException {
 
         this.id = id;
         this.workingCopyRoot = workingCopyRoot;
@@ -79,7 +78,7 @@ final class SvnRepo extends AbstractRepository {
         this.checkoutPrefix = checkoutPrefix;
         this.svnRepo = mgr.createRepository(rootUrl, false);
         this.fileCache = new SvnFileCache(this.svnRepo);
-        this.remoteHistoryGraph = remoteHistoryGraph == null ? new SvnFileHistoryGraph() : remoteHistoryGraph;
+        this.remoteHistoryGraph = new SvnFileHistoryGraph();
         this.localHistoryGraph = new SvnFileHistoryGraph();
         this.combinedHistoryGraph = new VirtualFileHistoryGraph(this.remoteHistoryGraph, this.localHistoryGraph);
     }

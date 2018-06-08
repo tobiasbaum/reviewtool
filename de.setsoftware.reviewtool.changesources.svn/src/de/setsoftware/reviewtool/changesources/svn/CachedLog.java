@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -10,19 +9,15 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
-import org.eclipse.core.runtime.jobs.Job;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
@@ -53,17 +48,27 @@ final class CachedLog {
         private final SvnRepo repo;
         private final List<CachedLogEntry> entries;
 
-        public RepoDataCache(final SvnRepo repo) {
+        RepoDataCache(final SvnRepo repo) {
             this.repo = repo;
             this.entries = new ArrayList<>();
         }
 
-        public SvnRepo getRepo() {
+        SvnRepo getRepo() {
             return this.repo;
         }
 
-        public List<CachedLogEntry> getEntries() {
+        List<CachedLogEntry> getEntries() {
             return this.entries;
+        }
+
+        IPath getCacheFilePath() {
+            final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+            final IPath dir = Platform.getStateLocation(bundle);
+            return dir.append("svnlog-" + encodeString(this.repo.getRemoteUrl().toString()) + ".cache");
+        }
+
+        private static String encodeString(final String s) {
+            return Base64.getUrlEncoder().encodeToString(s.getBytes());
         }
     }
 
@@ -100,15 +105,6 @@ final class CachedLog {
         this.mgr = mgr;
         this.minCount = Math.min(minCount, maxCount);
         this.maxCount = Math.max(minCount, maxCount);
-
-        final Job job = Job.create("Loading SVN review cache", new IJobFunction() {
-            @Override
-            public IStatus run(IProgressMonitor monitor) {
-                CachedLog.this.tryToReadCacheFromFile();
-                return Status.OK_STATUS;
-            }
-        });
-        job.schedule();
     }
 
     /**
@@ -129,7 +125,7 @@ final class CachedLog {
      */
     SvnRepo getRepositoryByWorkingCopyRoot(final File workingCopyRoot) {
         try {
-            final RepoDataCache c = this.getRepoCache(workingCopyRoot, null);
+            final RepoDataCache c = this.getRepoCache(workingCopyRoot);
             return c.getRepo();
         } catch (final SVNException e) {
             return null;
@@ -144,7 +140,7 @@ final class CachedLog {
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
-        final RepoDataCache repoCache = this.getRepoCache(workingCopyRoot, null);
+        final RepoDataCache repoCache = this.getRepoCache(workingCopyRoot);
         handler.startNewRepo(repoCache.getRepo());
         for (final CachedLogEntry entry : this.getEntries(repoCache)) {
             if (ui.isCanceled()) {
@@ -161,7 +157,7 @@ final class CachedLog {
      */
     SvnRepo mapWorkingCopyRootToRepository(final File workingCopyRoot)
             throws SVNException {
-        final RepoDataCache cache = this.getRepoCache(workingCopyRoot, null);
+        final RepoDataCache cache = this.getRepoCache(workingCopyRoot);
         return cache.getRepo();
     }
 
@@ -170,9 +166,7 @@ final class CachedLog {
      * @param workingCopyRoot The working copy root.
      * @throws SVNException if the working copy does not exist or is corrupt
      */
-    private synchronized RepoDataCache getRepoCache(
-            final File workingCopyRoot,
-            final SvnFileHistoryGraph fileHistoryGraph) throws SVNException {
+    private synchronized RepoDataCache getRepoCache(final File workingCopyRoot) throws SVNException {
 
         RepoDataCache c = this.repoDataPerWcRoot.get(workingCopyRoot.toString());
         if (c == null) {
@@ -187,11 +181,9 @@ final class CachedLog {
                     workingCopyRoot,
                     rootUrl,
                     relPath,
-                    this.determineCheckoutPrefix(wcUrl, rootUrl),
-                    fileHistoryGraph));
+                    this.determineCheckoutPrefix(wcUrl, rootUrl)));
             this.repoDataPerWcRoot.put(workingCopyRoot.toString(), c);
-        } else if (fileHistoryGraph != null) {
-            c.getRepo().setRemoteFileHistoryGraph(fileHistoryGraph);
+            CachedLog.this.tryToReadCacheFromFile(c);
         }
         return c;
     }
@@ -202,7 +194,7 @@ final class CachedLog {
         final boolean gotNewEntries = this.loadNewEntries(repoCache);
 
         if (gotNewEntries) {
-            this.tryToStoreCacheToFile();
+            this.tryToStoreCacheToFile(repoCache);
         }
 
         return repoCache.getEntries();
@@ -291,81 +283,60 @@ final class CachedLog {
         return i;
     }
 
-    private void tryToReadCacheFromFile() {
-        final File cache = this.getCacheFilePath().toFile();
+    private void tryToReadCacheFromFile(final RepoDataCache c) {
         try {
-            this.readCacheFromFile(cache);
+            this.readCacheFromFile(c);
         } catch (final ClassNotFoundException | IOException | ClassCastException e) {
-            Logger.error("Problem while loading SVN history data from cache " + cache, e);
+            Logger.error("Problem while loading SVN history data for " + c.getRepo().getRemoteUrl(), e);
         }
     }
 
-    private synchronized void readCacheFromFile(final File cache) throws IOException, ClassNotFoundException {
+    private synchronized void readCacheFromFile(final RepoDataCache c)
+            throws IOException, ClassNotFoundException {
+
+        final File cache = c.getCacheFilePath().toFile();
         if (!cache.exists()) {
-            Logger.info("SVN cache " + cache + " is missing, nothing to load");
+            Logger.info("SVN cache " + cache + " is missing for " + c.getRepo().getRemoteUrl() + ", nothing to load");
             return;
         }
-        Logger.info("Loading SVN history data from cache " + cache);
+        Logger.info("Loading SVN history data for " + c.getRepo().getRemoteUrl() + " from " + cache);
         try (ObjectInputStream ois =
                 new ObjectInputStream(new BufferedInputStream(new FileInputStream(cache)))) {
-            while (true) {
-                final File wcRoot;
-                try {
-                    wcRoot = new File(ois.readUTF());
-                } catch (final EOFException ex) {
-                    break;
-                }
 
-                try {
-                    Logger.debug("Loading SVN history data for working copy in " + wcRoot);
-                    @SuppressWarnings("unchecked") final List<CachedLogEntry> value =
-                            (List<CachedLogEntry>) ois.readObject();
+            @SuppressWarnings("unchecked") final List<CachedLogEntry> value =
+                    (List<CachedLogEntry>) ois.readObject();
+            final SvnFileHistoryGraph historyGraph = (SvnFileHistoryGraph) ois.readObject();
 
-                    final SvnFileHistoryGraph historyGraph = (SvnFileHistoryGraph) ois.readObject();
-
-                    Logger.debug("Loaded SVN history data for working copy in " + wcRoot);
-                    final RepoDataCache c = this.getRepoCache(wcRoot, historyGraph);
-                    c.getEntries().addAll(value);
-                } catch (final SVNException ex) {
-                    Logger.warn("Ignoring SVN history data for non-existing or corrupt working copy in " + wcRoot, ex);
-                }
-            }
+            c.getEntries().addAll(value);
+            c.getRepo().setRemoteFileHistoryGraph(historyGraph);
         }
+        Logger.info("Loaded SVN history data for " + c.getRepo().getRemoteUrl() + " from " + cache);
     }
 
-    private void tryToStoreCacheToFile() {
-        final File cache = this.getCacheFilePath().toFile();
+    private void tryToStoreCacheToFile(final RepoDataCache c) {
         try {
-            this.storeCacheToFile(cache);
+            this.storeCacheToFile(c);
         } catch (final IOException e) {
-            Logger.error("Problem while storing SVN history data to cache " + cache, e);
+            Logger.error("Problem while storing SVN history data for " + c.getRepo().getRemoteUrl(), e);
         }
     }
 
-    private void storeCacheToFile(final File cache) throws IOException {
-        Logger.info("Storing SVN history data to cache " + cache);
+    private void storeCacheToFile(final RepoDataCache c) throws IOException {
+        final File cache = c.getCacheFilePath().toFile();
+        Logger.info("Storing SVN history data for " + c.getRepo().getRemoteUrl() + " to " + cache);
         try (ObjectOutputStream oos =
                 new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(cache)))) {
-            for (final RepoDataCache repo : this.repoDataPerWcRoot.values()) {
-                Logger.debug("Storing SVN history data for working copy in " + repo.getRepo().getLocalRoot());
-                oos.writeUTF(repo.getRepo().getLocalRoot().toString());
-                final List<CachedLogEntry> entries = repo.getEntries();
-                final int numEntries = entries.size();
-                final List<CachedLogEntry> subList = new ArrayList<>(entries.subList(
-                        numEntries - Integer.min(numEntries, this.maxCount),
-                        numEntries
-                ));
-                oos.writeObject(subList);
-                oos.writeObject(repo.getRepo().getRemoteFileHistoryGraph());
-                Logger.debug("Stored SVN history data for working copy in " + repo.getRepo().getLocalRoot());
-            }
-        }
-    }
 
-    private IPath getCacheFilePath() {
-        final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
-        final IPath dir = Platform.getStateLocation(bundle);
-        return dir.append("svnlog.cache");
+            final List<CachedLogEntry> entries = c.getEntries();
+            final int numEntries = entries.size();
+            final List<CachedLogEntry> subList = new ArrayList<>(entries.subList(
+                    numEntries - Integer.min(numEntries, this.maxCount),
+                    numEntries
+            ));
+            oos.writeObject(subList);
+            oos.writeObject(c.getRepo().getRemoteFileHistoryGraph());
+        }
+        Logger.info("Stored SVN history data for " + c.getRepo().getRemoteUrl() + " to " + cache);
     }
 
     private void processLogEntry(
