@@ -30,6 +30,7 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNWCClient;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 
 /**
@@ -177,7 +178,7 @@ public class CachedLog {
 
         final List<CachedLogEntry> entries = repoCache.getEntries();
         final long lastKnownRevision = entries.isEmpty() ? 0 : entries.get(entries.size() - 1).getRevision();
-        final long latestRevision = repoCache.getRepo().getLatestRevision();
+        final long latestRevision = this.getLatestRevision(repoCache);
 
         final List<CachedLogEntry> newEntries = new ArrayList<>();
         if (lastKnownRevision < latestRevision) {
@@ -208,6 +209,38 @@ public class CachedLog {
 
         entries.addAll(newEntries);
         return !newEntries.isEmpty();
+    }
+
+    /**
+     * Returns the latest revision for given repository. The result respects the associated working copy
+     * and is hence more exact than {@link org.tmatesoft.svn.core.io.SVNRepository#getLatestRevision()}.
+     * @param repoCache The {@link RepoDataCache} to use.
+     * @return The latest revision of the repository wrt. the associated working copy.
+     * @throws SVNException if some SVN problem occurred
+     */
+    private long getLatestRevision(final RepoDataCache repoCache) throws SVNException {
+        final ValueWrapper<Long> latestRevision = new ValueWrapper<>(0L);
+
+        final SvnRepo repo = repoCache.getRepo();
+        this.mgr.getLogClient().doLog(
+                repo.getRemoteUrl(),
+                new String[] { repo.getRelativePath() },
+                SVNRevision.HEAD,
+                SVNRevision.HEAD,
+                SVNRevision.create(0),
+                false,
+                true,
+                false,
+                1,
+                new String[0],
+                new ISVNLogEntryHandler() {
+                    @Override
+                    public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
+                        latestRevision.setValue(logEntry.getRevision());
+                    }
+                });
+
+        return latestRevision.get();
     }
 
     private int determineCheckoutPrefix(final SVNURL wcUrl, final SVNURL rootUrl)
