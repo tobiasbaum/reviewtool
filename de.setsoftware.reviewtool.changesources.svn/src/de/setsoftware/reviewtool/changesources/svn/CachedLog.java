@@ -109,7 +109,6 @@ final class CachedLog {
     private final Map<String, RepoDataCache> repoDataPerWcRoot;
     private SVNClientManager mgr;
     private int minCount;
-    private int maxCount;
 
     /**
      * Constructor.
@@ -117,7 +116,6 @@ final class CachedLog {
     private CachedLog() {
         this.repoDataPerWcRoot = new HashMap<>();
         this.minCount = 1000;
-        this.maxCount = 1000;
     }
 
     /**
@@ -130,19 +128,16 @@ final class CachedLog {
     /**
      * Initializes the cache.
      * @param mgr The {@link SVNClientManager} for retrieving information about working copies.
-     * @param minCount minimum size of the log
-     * @param maxCount maximum size of the log
+     * @param minCount maximum initial size of the log
      * @param workingCopyRoots The root directories of all known working copies.
      */
     public void init(
             final SVNClientManager mgr,
             final int minCount,
-            final int maxCount,
             final Set<File> workingCopyRoots) {
 
         this.mgr = mgr;
-        this.minCount = Math.min(minCount, maxCount);
-        this.maxCount = Math.max(minCount, maxCount);
+        this.minCount = minCount;
 
         for (final File workingCopyRoot : workingCopyRoots) {
             final Job job = Job.create("Loading SVN review cache for " + workingCopyRoot,
@@ -387,13 +382,7 @@ final class CachedLog {
         try (ObjectOutputStream oos =
                 new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(cache)))) {
 
-            final List<CachedLogEntry> entries = c.getEntries();
-            final int numEntries = entries.size();
-            final List<CachedLogEntry> subList = new ArrayList<>(entries.subList(
-                    numEntries - Integer.min(numEntries, this.maxCount),
-                    numEntries
-            ));
-            oos.writeObject(subList);
+            oos.writeObject(c.getEntries());
             oos.writeObject(c.getRepo().getRemoteFileHistoryGraph());
         }
         Logger.info("Stored SVN history data for " + c.getRepo().getRemoteUrl() + " to " + cache);

@@ -62,8 +62,7 @@ final class SvnChangeSource implements IChangeSource {
             String user,
             String pwd,
             long maxTextDiffThreshold,
-            int logCacheMinSize,
-            int logCacheMaxSize) {
+            int logCacheMinSize) {
         this.mgr.setAuthenticationManager(new DefaultSVNAuthenticationManager(
                 null, false, user, pwd.toCharArray(), null, null));
         this.workingCopyRoots = this.determineWorkingCopyRoots(projectRoots);
@@ -72,7 +71,7 @@ final class SvnChangeSource implements IChangeSource {
         //check that the pattern can be parsed
         this.createPatternForKey("TEST-123");
         this.maxTextDiffThreshold = maxTextDiffThreshold;
-        CachedLog.getInstance().init(this.mgr, logCacheMinSize, logCacheMaxSize, this.workingCopyRoots);
+        CachedLog.getInstance().init(this.mgr, logCacheMinSize, this.workingCopyRoots);
     }
 
     private Set<File> determineWorkingCopyRoots(List<File> projectRoots) {
