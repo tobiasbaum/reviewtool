@@ -16,8 +16,14 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobFunction;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.Job;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
@@ -37,8 +43,6 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
  * A local cache of the SVN log(s) to speed up the gathering of relevant entries.
  */
 final class CachedLog {
-
-    private static final long REVISION_BLOCK_SIZE = 500L;
 
     /**
      * Data regarding the repository. Is only cached in memory.
@@ -72,7 +76,34 @@ final class CachedLog {
         }
     }
 
+    /**
+     * Scheduling rule preventing two cache jobs to run concurrently.
+     */
+    private static class CacheJobMutexRule implements ISchedulingRule {
+
+        private final File cache;
+
+        CacheJobMutexRule(final File cache) {
+            this.cache = cache;
+        }
+
+        @Override
+        public boolean isConflicting(ISchedulingRule rule) {
+            if (rule instanceof CacheJobMutexRule) {
+                final CacheJobMutexRule other = (CacheJobMutexRule) rule;
+                return this.cache.equals(other.cache);
+            }
+            return false;
+        }
+
+        @Override
+        public boolean contains(ISchedulingRule rule) {
+            return rule == this;
+        }
+    }
+
     private static final CachedLog INSTANCE = new CachedLog();
+    private static final long REVISION_BLOCK_SIZE = 500L;
 
     private final Map<String, RepoDataCache> repoDataPerWcRoot;
     private SVNClientManager mgr;
@@ -194,7 +225,16 @@ final class CachedLog {
         final boolean gotNewEntries = this.loadNewEntries(repoCache);
 
         if (gotNewEntries) {
-            this.tryToStoreCacheToFile(repoCache);
+            final Job job = Job.create("Storing SVN review cache for " + repoCache.getRepo().getLocalRoot(),
+                    new IJobFunction() {
+                        @Override
+                        public IStatus run(IProgressMonitor monitor) {
+                            CachedLog.this.tryToStoreCacheToFile(repoCache);
+                            return Status.OK_STATUS;
+                        }
+                    });
+            job.setRule(new CacheJobMutexRule(repoCache.getCacheFilePath().toFile()));
+            job.schedule();
         }
 
         return repoCache.getEntries();
