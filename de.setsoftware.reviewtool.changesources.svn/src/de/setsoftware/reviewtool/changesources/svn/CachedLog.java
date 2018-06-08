@@ -14,6 +14,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -131,11 +132,30 @@ final class CachedLog {
      * @param mgr The {@link SVNClientManager} for retrieving information about working copies.
      * @param minCount minimum size of the log
      * @param maxCount maximum size of the log
+     * @param workingCopyRoots The root directories of all known working copies.
      */
-    public void init(final SVNClientManager mgr, final int minCount, final int maxCount) {
+    public void init(
+            final SVNClientManager mgr,
+            final int minCount,
+            final int maxCount,
+            final Set<File> workingCopyRoots) {
+
         this.mgr = mgr;
         this.minCount = Math.min(minCount, maxCount);
         this.maxCount = Math.max(minCount, maxCount);
+
+        for (final File workingCopyRoot : workingCopyRoots) {
+            final Job job = Job.create("Loading SVN review cache for " + workingCopyRoot,
+                    new IJobFunction() {
+                        @Override
+                        public IStatus run(IProgressMonitor monitor) {
+                            CachedLog.this.getRepositoryByWorkingCopyRoot(workingCopyRoot);
+                            return Status.OK_STATUS;
+                        }
+                    });
+            job.setRule(new CacheJobMutexRule(workingCopyRoot));
+            job.schedule();
+        }
     }
 
     /**
