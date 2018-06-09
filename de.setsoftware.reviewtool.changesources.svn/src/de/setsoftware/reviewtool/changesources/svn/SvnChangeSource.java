@@ -51,7 +51,6 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.Hunk;
 
 /**
  * A simple change source that loads the changes from subversion.
@@ -500,7 +499,12 @@ public class SvnChangeSource implements IChangeSource {
             return Collections.emptyList(); // loading new file data failed
         }
 
-        final List<IChange> ret = new ArrayList<>();
+        return this.extractChanges(node, isVisible, newFileContent);
+    }
+
+    private List<? extends IChange> extractChanges(final IMutableFileHistoryNode node, final boolean isVisible,
+            final byte[] newFileContent) {
+        final List<IChange> changes = new ArrayList<>();
         for (final IMutableFileHistoryEdge ancestorEdge : node.getAncestors()) {
             final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
 
@@ -512,27 +516,16 @@ public class SvnChangeSource implements IChangeSource {
             }
 
             if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
-                ret.add(this.createBinaryChange(node, ancestor, isVisible));
+                changes.add(this.createBinaryChange(node, ancestor, isVisible));
                 continue;
             }
             if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
-                ret.add(this.createBinaryChange(node, ancestor, isVisible));
+                changes.add(this.createBinaryChange(node, ancestor, isVisible));
                 continue;
             }
 
-            final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
-            final List<Pair<IFragment, IFragment>> changes = diffAlgorithm.determineDiff(
-                    ancestor.getFile(),
-                    oldFileContent,
-                    node.getFile(),
-                    newFileContent,
-                    this.guessEncoding(oldFileContent, newFileContent));
-            final List<IHunk> hunks = new ArrayList<>();
-            for (final Pair<IFragment, IFragment> pos : changes) {
-                ret.add(ChangestructureFactory.createTextualChangeHunk(
-                        pos.getFirst(), pos.getSecond(), false, isVisible));
-                hunks.add(new Hunk(pos.getFirst(), pos.getSecond()));
-            }
+            final List<IHunk> hunks =
+                    this.extractHunks(ancestor.getFile(), oldFileContent, node, isVisible, newFileContent, changes);
 
             try {
                 ancestorEdge.setDiff(ancestorEdge.getDiff().merge(hunks));
@@ -540,7 +533,30 @@ public class SvnChangeSource implements IChangeSource {
                 throw new ReviewtoolException(e);
             }
         }
-        return ret;
+        return changes;
+    }
+
+    private List<IHunk> extractHunks(
+            final IRevisionedFile ancestorFile,
+            final byte[] oldFileContent,
+            final IFileHistoryNode node,
+            final boolean isVisible,
+            final byte[] newFileContent,
+            final List<? super IChange> changes) {
+        final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
+        final List<Pair<IFragment, IFragment>> textChanges = diffAlgorithm.determineDiff(
+                ancestorFile,
+                oldFileContent,
+                node.getFile(),
+                newFileContent,
+                this.guessEncoding(oldFileContent, newFileContent));
+        final List<IHunk> hunks = new ArrayList<>();
+        for (final Pair<IFragment, IFragment> pos : textChanges) {
+            changes.add(ChangestructureFactory.createTextualChangeHunk(
+                    pos.getFirst(), pos.getSecond(), false, isVisible));
+            hunks.add(ChangestructureFactory.createHunk(pos.getFirst(), pos.getSecond()));
+        }
+        return hunks;
     }
 
     private boolean contentLooksBinary(byte[] fileContent) {

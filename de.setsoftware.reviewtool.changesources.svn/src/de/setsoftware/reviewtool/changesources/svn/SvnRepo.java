@@ -7,6 +7,7 @@ import java.util.Collection;
 
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
@@ -24,6 +25,7 @@ public class SvnRepo extends AbstractRepository {
     private final SVNURL remoteUrl;
     private final String relPath;
     private final int checkoutPrefix;
+    private final SVNRepository svnRepo;
     private final SvnFileCache fileCache;
 
     public SvnRepo(
@@ -32,13 +34,14 @@ public class SvnRepo extends AbstractRepository {
             final File workingCopyRoot,
             final SVNURL rootUrl,
             final String relPath,
-            final int checkoutPrefix) {
+            final int checkoutPrefix) throws SVNException {
         this.id = id;
         this.workingCopyRoot = workingCopyRoot;
         this.remoteUrl = rootUrl;
         this.relPath = relPath + '/';
         this.checkoutPrefix = checkoutPrefix;
-        this.fileCache = new SvnFileCache(mgr, this);
+        this.svnRepo = mgr.createRepository(rootUrl, false);
+        this.fileCache = new SvnFileCache(this.svnRepo);
     }
 
     public SVNURL getRemoteUrl() {

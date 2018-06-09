@@ -18,8 +18,9 @@ public class CachedLogEntryPath implements Serializable {
 
     private final String path;
     private final File localPath;
-    private final String copyPath;
     private final long prevRevision;
+    private final String copyPath;
+    private final long copyRevision;
     private final char type;
     private final char kind;
 
@@ -27,11 +28,8 @@ public class CachedLogEntryPath implements Serializable {
         this.path = value.getPath();
         this.localPath = null;
         this.copyPath = value.getCopyPath();
-        if (this.copyPath == null) {
-            this.prevRevision = prevRevision;
-        } else {
-            this.prevRevision = value.getCopyRevision();
-        }
+        this.prevRevision = prevRevision;
+        this.copyRevision = value.getCopyRevision();
         this.type = value.getType();
         this.kind = mapStatusKind(value.getKind());
     }
@@ -47,19 +45,21 @@ public class CachedLogEntryPath implements Serializable {
     }
 
     public CachedLogEntryPath(final SvnRepo repo, final SVNStatus status) {
+        if (status.getRevision().equals(SVNRevision.UNDEFINED)) {
+            this.prevRevision = SVNRevision.BASE.getNumber();
+        } else {
+            this.prevRevision = status.getCommittedRevision().getNumber();
+        }
+
         final String copySourceUrl = status.getCopyFromURL();
         if (copySourceUrl != null) {
             this.path = '/' + status.getRepositoryRelativePath();
             this.copyPath = copySourceUrl.substring(repo.getRemoteUrl().toString().length());
-            this.prevRevision = status.getCopyFromRevision().getNumber();
+            this.copyRevision = status.getCopyFromRevision().getNumber();
         } else {
             this.path = '/' + status.getRepositoryRelativePath();
             this.copyPath = null;
-            if (status.getRevision().equals(SVNRevision.UNDEFINED)) {
-                this.prevRevision = SVNRevision.BASE.getNumber();
-            } else {
-                this.prevRevision = status.getCommittedRevision().getNumber();
-            }
+            this.copyRevision = -1;
         }
         this.localPath = status.getFile();
         this.type = mapStatusTypeToLogEntryType(status.getNodeStatus());
@@ -88,12 +88,16 @@ public class CachedLogEntryPath implements Serializable {
         return this.localPath;
     }
 
+    public long getAncestorRevision() {
+        return this.prevRevision;
+    }
+
     public String getCopyPath() {
         return this.copyPath;
     }
 
-    public long getAncestorRevision() {
-        return this.prevRevision;
+    public long getCopyRevision() {
+        return this.copyRevision;
     }
 
     public boolean isFile() {
@@ -105,11 +109,15 @@ public class CachedLogEntryPath implements Serializable {
     }
 
     public boolean isNew() {
-        return this.type == SVNLogEntryPath.TYPE_ADDED || this.type == SVNLogEntryPath.TYPE_REPLACED;
+        return this.type == SVNLogEntryPath.TYPE_ADDED;
     }
 
     public boolean isDeleted() {
         return this.type == SVNLogEntryPath.TYPE_DELETED;
+    }
+
+    public boolean isReplaced() {
+        return this.type == SVNLogEntryPath.TYPE_REPLACED;
     }
 
 }

@@ -29,7 +29,9 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
+import org.tmatesoft.svn.core.wc.SVNInfo;
 import org.tmatesoft.svn.core.wc.SVNRevision;
+import org.tmatesoft.svn.core.wc.SVNWCClient;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
@@ -131,16 +133,18 @@ public class CachedLog {
     private synchronized RepoDataCache getRepoCache(SVNClientManager mgr, File workingCopyRoot) throws SVNException {
         RepoDataCache c = this.repoDataPerWcRoot.get(workingCopyRoot.toString());
         if (c == null) {
-            final SVNURL rootUrl = mgr.getLogClient().getReposRoot(workingCopyRoot, null, SVNRevision.HEAD);
-            final SVNURL wcUrl = mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.WORKING).getURL();
+            final SVNWCClient wcClient = mgr.getWCClient();
+            final SVNURL rootUrl = wcClient.getReposRoot(workingCopyRoot, null, SVNRevision.WORKING);
+            final SVNInfo wcInfo = wcClient.doInfo(workingCopyRoot, SVNRevision.WORKING);
+            final SVNURL wcUrl = wcInfo.getURL();
             final String relPath = wcUrl.toString().substring(rootUrl.toString().length());
             c = new RepoDataCache(relPath, new SvnRepo(
                     mgr,
-                    mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.HEAD).getRepositoryUUID(),
+                    wcInfo.getRepositoryUUID(),
                     workingCopyRoot,
                     rootUrl,
                     relPath,
-                    this.determineCheckoutPrefix(mgr, workingCopyRoot, rootUrl)));
+                    this.determineCheckoutPrefix(wcUrl, rootUrl)));
             this.repoDataPerWcRoot.put(workingCopyRoot.toString(), c);
         }
         return c;
@@ -205,10 +209,10 @@ public class CachedLog {
         return !newEntries.isEmpty();
     }
 
-    private int determineCheckoutPrefix(SVNClientManager mgr, File workingCopyRoot, SVNURL rootUrl)
+    private int determineCheckoutPrefix(final SVNURL wcUrl, final SVNURL rootUrl)
         throws SVNException {
 
-        SVNURL checkoutRootUrlPrefix = mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.HEAD).getURL();
+        SVNURL checkoutRootUrlPrefix = wcUrl;
         int i = 0;
         while (!(checkoutRootUrlPrefix.equals(rootUrl) || checkoutRootUrlPrefix.getPath().equals("//"))) {
             checkoutRootUrlPrefix = checkoutRootUrlPrefix.removePathTail();
