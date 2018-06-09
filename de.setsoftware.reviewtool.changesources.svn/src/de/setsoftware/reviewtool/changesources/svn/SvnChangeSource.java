@@ -1,10 +1,6 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.File;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +15,12 @@ import java.util.TreeMap;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
+import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
@@ -32,24 +33,20 @@ import org.tmatesoft.svn.core.wc.SVNStatus;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.ValueWrapper;
-import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
-import de.setsoftware.reviewtool.diffalgorithms.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IHunk;
-import de.setsoftware.reviewtool.model.api.IMutableFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
@@ -254,9 +251,8 @@ public class SvnChangeSource implements IChangeSource {
                     null); /* no change lists */
 
             final WorkingCopyRevision wcRevision = new WorkingCopyRevision(repo, paths);
-            if (RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph)) {
-                revisions.add(wcRevision);
-            }
+            RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph);
+            revisions.add(wcRevision);
         }
 
         return revisions;
@@ -279,9 +275,8 @@ public class SvnChangeSource implements IChangeSource {
 
         for (final Map.Entry<SvnRepo, SortedMap<String, CachedLogEntryPath>> entry : changeMap.entrySet()) {
             final WorkingCopyRevision wcRevision = new WorkingCopyRevision(entry.getKey(), entry.getValue());
-            if (RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph)) {
-                revisions.add(wcRevision);
-            }
+            RelevantRevisionLookupHandler.processRevision(wcRevision, historyGraph);
+            revisions.add(wcRevision);
         }
 
         return revisions;
@@ -387,7 +382,6 @@ public class SvnChangeSource implements IChangeSource {
             result.add(ChangestructureFactory.createCommit(
                     e.toPrettyString(),
                     changes,
-                    e.isVisible(),
                     this.revision(e),
                     e.getDate()));
         }
@@ -451,14 +445,23 @@ public class SvnChangeSource implements IChangeSource {
             final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(path, this.revision(e));
             final IMutableFileHistoryNode node = historyGraph.getNodeFor(fileInfo);
             if (node != null) {
-                ret.addAll(this.determineChangesInFile(node, e.isVisible()));
+                try {
+                    ret.addAll(this.determineChangesInFile(node));
+                } catch (final Exception ex) {
+                    IStatus status = new Status(
+                            IStatus.ERROR,
+                            "CoRT",
+                            "An error occurred while computing changes for " + fileInfo.toString(),
+                            ex);
+                    final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+                    Platform.getLog(bundle).log(status);
+                }
             }
         }
         return ret;
     }
 
-    private IBinaryChange createBinaryChange(final IFileHistoryNode node, final IFileHistoryNode ancestor,
-            final boolean isVisible) {
+    private IBinaryChange createBinaryChange(final IFileHistoryNode node, final IFileHistoryNode ancestor) {
 
         final IRevisionedFile oldFileInfo = ChangestructureFactory.createFileInRevision(ancestor.getFile().getPath(),
                         ancestor.getFile().getRevision());
@@ -466,8 +469,7 @@ public class SvnChangeSource implements IChangeSource {
         return ChangestructureFactory.createBinaryChange(
                 oldFileInfo,
                 node.getFile(),
-                false,
-                isVisible);
+                false);
     }
 
     private IRevision revision(final ISvnRevision revision) {
@@ -488,84 +490,44 @@ public class SvnChangeSource implements IChangeSource {
         return result.get();
     }
 
-    private List<? extends IChange> determineChangesInFile(
-            final IMutableFileHistoryNode node,
-            final boolean isVisible) {
+    private List<? extends IChange> determineChangesInFile(final IMutableFileHistoryNode node) throws Exception {
 
-        final byte[] newFileContent;
-        try {
-            newFileContent = node.getFile().getContents();
-        } catch (final Exception e) {
-            return Collections.emptyList(); // loading new file data failed
-        }
+        final byte[] newFileContents = node.getFile().getContents();
+        final boolean newFileContentsUseTextualDiff = this.isUseTextualDiff(newFileContents);
 
-        return this.extractChanges(node, isVisible, newFileContent);
-    }
-
-    private List<? extends IChange> extractChanges(final IMutableFileHistoryNode node, final boolean isVisible,
-            final byte[] newFileContent) {
         final List<IChange> changes = new ArrayList<>();
-        for (final IMutableFileHistoryEdge ancestorEdge : node.getAncestors()) {
+        for (final IFileHistoryEdge ancestorEdge : node.getAncestors()) {
             final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
 
-            final byte[] oldFileContent;
-            try {
-                oldFileContent = ancestor.getFile().getContents();
-            } catch (final Exception e) {
-                continue; // loading old file data failed
-            }
+            final byte[] oldFileContents = ancestor.getFile().getContents();
+            final boolean oldFileContentsUseTextualDiff = this.isUseTextualDiff(oldFileContents);
 
-            if (this.contentLooksBinary(oldFileContent) || oldFileContent.length > this.maxTextDiffThreshold) {
-                changes.add(this.createBinaryChange(node, ancestor, isVisible));
-                continue;
-            }
-            if (this.contentLooksBinary(newFileContent) || newFileContent.length > this.maxTextDiffThreshold) {
-                changes.add(this.createBinaryChange(node, ancestor, isVisible));
-                continue;
-            }
-
-            final List<IHunk> hunks =
-                    this.extractHunks(ancestor.getFile(), oldFileContent, node, isVisible, newFileContent, changes);
-
-            try {
-                ancestorEdge.setDiff(ancestorEdge.getDiff().merge(hunks));
-            } catch (final IncompatibleFragmentException e) {
-                throw new ReviewtoolException(e);
+            if (oldFileContentsUseTextualDiff && newFileContentsUseTextualDiff) {
+                final List<? extends IHunk> hunks = ancestorEdge.getDiff().getHunks();
+                for (final IHunk hunk : hunks) {
+                    changes.add(ChangestructureFactory.createTextualChangeHunk(
+                            hunk.getSource(),
+                            hunk.getTarget(),
+                            false));
+                }
+            } else {
+                changes.add(this.createBinaryChange(node, ancestor));
             }
         }
         return changes;
     }
 
-    private List<IHunk> extractHunks(
-            final IRevisionedFile ancestorFile,
-            final byte[] oldFileContent,
-            final IFileHistoryNode node,
-            final boolean isVisible,
-            final byte[] newFileContent,
-            final List<? super IChange> changes) {
-        final IDiffAlgorithm diffAlgorithm = DiffAlgorithmFactory.createDefault();
-        final List<Pair<IFragment, IFragment>> textChanges = diffAlgorithm.determineDiff(
-                ancestorFile,
-                oldFileContent,
-                node.getFile(),
-                newFileContent,
-                this.guessEncoding(oldFileContent, newFileContent));
-        final List<IHunk> hunks = new ArrayList<>();
-        for (final Pair<IFragment, IFragment> pos : textChanges) {
-            changes.add(ChangestructureFactory.createTextualChangeHunk(
-                    pos.getFirst(), pos.getSecond(), false, isVisible));
-            hunks.add(ChangestructureFactory.createHunk(pos.getFirst(), pos.getSecond()));
-        }
-        return hunks;
+    private boolean isUseTextualDiff(final byte[] newFileContent) {
+        return !contentLooksBinary(newFileContent) && newFileContent.length <= this.maxTextDiffThreshold;
     }
 
-    private boolean contentLooksBinary(byte[] fileContent) {
+    private static boolean contentLooksBinary(byte[] fileContent) {
         if (fileContent.length == 0) {
             return false;
         }
         final int max = Math.min(128, fileContent.length);
         for (int i = 0; i < max; i++) {
-            if (this.isStrangeChar(fileContent[i])) {
+            if (isStrangeChar(fileContent[i])) {
                 //we only count ASCII control chars as "strange" (to be UTF-8 agnostic), so
                 //  a single strange char should suffice to declare a file non-text
                 return true;
@@ -574,31 +536,8 @@ public class SvnChangeSource implements IChangeSource {
         return false;
     }
 
-    private boolean isStrangeChar(byte b) {
+    private static boolean isStrangeChar(byte b) {
         return b != '\n' && b != '\r' && b != '\t' && b < 0x20 && b >= 0;
-    }
-
-    private String guessEncoding(byte[] oldFileContent, byte[] newFileContent) {
-        if (this.isValidUtf8(oldFileContent) && this.isValidUtf8(newFileContent)) {
-            return "UTF-8";
-        } else {
-            return "ISO-8859-1";
-        }
-    }
-
-    /**
-     * Returns true iff the given bytes are syntactically valid UTF-8.
-     */
-    private boolean isValidUtf8(byte[] content) {
-        try {
-            StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT)
-                .decode(ByteBuffer.wrap(content));
-            return true;
-        } catch (final CharacterCodingException e) {
-            return false;
-        }
     }
 
     private Set<String> determineCopySources(Collection<CachedLogEntryPath> entries, DirectoryCopyInfo dirMoves) {

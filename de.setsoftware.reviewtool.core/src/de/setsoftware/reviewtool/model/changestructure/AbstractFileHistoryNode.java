@@ -10,7 +10,6 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 
 /**
  * Contains behaviour common to all {@link IFileHistoryNode} implementations.
@@ -36,7 +35,7 @@ public abstract class AbstractFileHistoryNode implements IFileHistoryNode {
                 for (final IFileDiff diff : ancestorEdge.getAncestor().buildHistories(from)) {
                     try {
                         result.add(diff.merge(ancestorEdge.getDiff()));
-                    } catch (final IncompatibleFragmentException e) {
+                    } catch (final Exception e) {
                         throw new ReviewtoolException(e);
                     }
                 }

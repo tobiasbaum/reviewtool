@@ -29,7 +29,7 @@ public class TokenSimilarityRelationTest {
 
     private static Stop binaryStop(String filename) {
         return new Stop(
-                ChangestructureFactory.createBinaryChange(file(filename, 1), file(filename, 3), false, true),
+                ChangestructureFactory.createBinaryChange(file(filename, 1), file(filename, 3), false),
                 file(filename, 4));
     }
 
@@ -43,7 +43,7 @@ public class TokenSimilarityRelationTest {
                 ChangestructureFactory.createPositionInText(1, 1 + commonPrefix.length() + newContent.length()),
                 commonPrefix + newContent + commonSuffix);
         return new Stop(
-                ChangestructureFactory.createTextualChangeHunk(from, to, false, true),
+                ChangestructureFactory.createTextualChangeHunk(from, to, false),
                 to);
     }
 

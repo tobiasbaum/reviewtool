@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
@@ -292,4 +293,12 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         }
     }
 
+    /**
+     * Returns the difference algorithm of the first graph being part of this virtual graph.
+     * If no such graph exists, {@code null} is returned.
+     */
+    @Override
+    public IDiffAlgorithm getDiffAlgorithm() {
+        return this.graphs.isEmpty() ? null : this.graphs.get(0).getDiffAlgorithm();
+    }
 }

@@ -1,10 +1,8 @@
-package de.setsoftware.reviewtool.diffalgorithms;
+package de.setsoftware.reviewtool.model.api;
 
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.api.IFragment;
-import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
  * Interface for diff algorithms.

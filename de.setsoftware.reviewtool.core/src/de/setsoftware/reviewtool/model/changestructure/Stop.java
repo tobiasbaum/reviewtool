@@ -54,7 +54,6 @@ public class Stop extends TourElement {
         this.mostRecentFragmentConsideringLocalChanges = null;
 
         this.irrelevantForReview = change.isIrrelevantForReview();
-        assert change.isVisible();
     }
 
     /**
@@ -73,7 +72,6 @@ public class Stop extends TourElement {
         this.mostRecentFragmentConsideringLocalChanges = null;
 
         this.irrelevantForReview = change.isIrrelevantForReview();
-        assert change.isVisible();
     }
 
     /**

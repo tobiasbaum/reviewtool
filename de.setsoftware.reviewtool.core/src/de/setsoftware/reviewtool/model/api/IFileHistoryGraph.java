@@ -33,4 +33,8 @@ public interface IFileHistoryGraph {
      */
     public abstract List<? extends IRevisionedFile> getLatestFiles(IRevisionedFile file);
 
+    /**
+     * Returns the algorithm used for computing differences between file revisions.
+     */
+    public abstract IDiffAlgorithm getDiffAlgorithm();
 }

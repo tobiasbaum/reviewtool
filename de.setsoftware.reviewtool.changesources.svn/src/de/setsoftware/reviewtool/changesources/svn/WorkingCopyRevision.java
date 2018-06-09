@@ -65,11 +65,6 @@ final class WorkingCopyRevision implements ISvnRevision {
     }
 
     @Override
-    public boolean isVisible() {
-        return true;
-    }
-
-    @Override
     public void accept(final ISvnRevisionVisitor visitor) {
         visitor.handle(this);
     }

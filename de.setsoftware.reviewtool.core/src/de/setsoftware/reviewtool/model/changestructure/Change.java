@@ -8,26 +8,17 @@ import de.setsoftware.reviewtool.model.api.IChange;
 public abstract class Change implements IChange {
 
     private final boolean irrelevantForReview;
-    private final boolean isVisible;
 
     /**
      * Constructs a change.
-     * @param isVisible True if the change is visible, else false. See {@link #isVisible()} for a description of
-     *                      visible/invisible changes.
      */
-    public Change(boolean irrelevantForReview, final boolean isVisible) {
+    public Change(final boolean irrelevantForReview) {
         this.irrelevantForReview = irrelevantForReview;
-        this.isVisible = isVisible;
     }
 
     @Override
     public final boolean isIrrelevantForReview() {
         return this.irrelevantForReview;
-    }
-
-    @Override
-    public final boolean isVisible() {
-        return this.isVisible;
     }
 
 }

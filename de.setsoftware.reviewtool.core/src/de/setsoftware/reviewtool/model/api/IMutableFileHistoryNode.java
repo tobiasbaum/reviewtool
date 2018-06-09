@@ -2,11 +2,8 @@ package de.setsoftware.reviewtool.model.api;
 
 import java.util.Set;
 
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-
 /**
- * A node in a {@link IMutableFileHistoryGraph}.
- * It is bound to a {@link FileInRevision} and knows its ancestors and descendants.
+ * A specialized {@link IFileHistoryNode node} in a {@link IMutableFileHistoryGraph}.
  */
 public interface IMutableFileHistoryNode extends IFileHistoryNode {
 

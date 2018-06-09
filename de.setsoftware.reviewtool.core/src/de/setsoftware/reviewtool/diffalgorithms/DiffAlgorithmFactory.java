@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.diffalgorithms;
 
+import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
+
 /**
  * A factory for diff algorithms.
  * Allows the change sources to be decoupled from the concrete diff algorithm used.

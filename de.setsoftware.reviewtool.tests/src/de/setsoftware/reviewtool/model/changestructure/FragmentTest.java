@@ -4,8 +4,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.UnsupportedEncodingException;
-
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.model.api.IFragment;
@@ -22,12 +20,8 @@ public class FragmentTest {
     private static FileInRevision fileWithContent(final String content) {
         return new FileInRevision("file", new LocalRevision(StubRepo.INSTANCE)) {
             @Override
-            public byte[] getContents() {
-                try {
-                    return content.getBytes("UTF-8");
-                } catch (final UnsupportedEncodingException e) {
-                    throw new AssertionError();
-                }
+            public byte[] getContents() throws Exception {
+                return content.getBytes("UTF-8");
             }
         };
     }

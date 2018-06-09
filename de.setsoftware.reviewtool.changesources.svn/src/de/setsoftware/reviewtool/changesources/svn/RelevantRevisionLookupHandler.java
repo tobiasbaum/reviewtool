@@ -65,7 +65,8 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                 if (ui.isCanceled()) {
                     throw new OperationCanceledException();
                 }
-                if (processRevision(revision, historyGraph)) {
+                processRevision(revision, historyGraph);
+                if (revision.isVisible()) {
                     ret.add(revision);
                 }
             }
@@ -74,31 +75,14 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
     }
 
     /**
-     * @return {@code true} if the path is relevant.
-     */
-    private static boolean isPathRelevant(
-            final String path,
-            final ISvnRevision revision,
-            final IMutableFileHistoryGraph historyGraph) {
-        return revision.isVisible() || historyGraph.contains(path, revision.getRepository());
-    }
-
-    /**
      * Processes a single repository revision by translating it into a file history graph operation.
      *
      * @param revision The revision to process,
      * @param historyGraph The file history graph to operate on.
-     * @return {@code true} if the revision contained at least one relevant path, else {@code false}.
      */
-    public static boolean processRevision(final ISvnRevision revision, final IMutableFileHistoryGraph historyGraph) {
-        boolean isRelevant = false;
+    public static void processRevision(final ISvnRevision revision, final IMutableFileHistoryGraph historyGraph) {
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String path = e.getKey();
-            if (isPathRelevant(path, revision, historyGraph)) {
-                isRelevant = true;
-            } else {
-                continue;
-            }
 
             final CachedLogEntryPath pathInfo = e.getValue();
             final String copyPath = pathInfo.getCopyPath();
@@ -134,7 +118,6 @@ class RelevantRevisionLookupHandler implements CachedLogLookupHandler {
                         ));
             }
         }
-        return isRelevant;
     }
 
     private Map<SvnRepo, TreeMap<Long, SvnRevision>> groupResultsByRepository() {

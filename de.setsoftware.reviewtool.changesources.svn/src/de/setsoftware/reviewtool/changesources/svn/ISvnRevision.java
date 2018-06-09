@@ -51,11 +51,6 @@ public interface ISvnRevision {
     public abstract Map<String, CachedLogEntryPath> getChangedPaths();
 
     /**
-     * Returns true if the revision is visible, else false.
-     */
-    public abstract boolean isVisible();
-
-    /**
      * Accepts a {@link ISvnRevisionVisitor}.
      */
     public abstract void accept(ISvnRevisionVisitor visitor);

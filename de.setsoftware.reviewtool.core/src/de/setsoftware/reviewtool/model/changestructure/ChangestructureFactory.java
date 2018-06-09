@@ -25,20 +25,19 @@ public class ChangestructureFactory {
     public static Commit createCommit(
             final String message,
             final List<? extends IChange> changes,
-            final boolean isVisible,
             final IRevision revision,
             final Date timestamp) {
-        return new Commit(message, changes, isVisible, revision, timestamp);
+        return new Commit(message, changes, revision, timestamp);
     }
 
     public static IBinaryChange createBinaryChange(
-            IRevisionedFile from, IRevisionedFile to, boolean irrelevantForReview, final boolean isVisible) {
-        return new BinaryChange(from, to, irrelevantForReview, isVisible);
+            IRevisionedFile from, IRevisionedFile to, boolean irrelevantForReview) {
+        return new BinaryChange(from, to, irrelevantForReview);
     }
 
     public static ITextualChange createTextualChangeHunk(
-            IFragment from, IFragment to, boolean irrelevantForReview, final boolean isVisible) {
-        return new TextualChangeHunk(from, to, irrelevantForReview, isVisible);
+            IFragment from, IFragment to, boolean irrelevantForReview) {
+        return new TextualChangeHunk(from, to, irrelevantForReview);
     }
 
     public static IRevisionedFile createFileInRevision(final String path, final IRevision revision) {
