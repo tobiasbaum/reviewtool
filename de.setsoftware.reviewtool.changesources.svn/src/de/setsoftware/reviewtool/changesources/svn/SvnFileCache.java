@@ -69,7 +69,7 @@ final class SvnFileCache {
         final CachedFile entry = new CachedFile(path, revision);
         byte[] contents = this.fileContents.get(entry);
         if (contents == null) {
-            contents = this.loadFile(this.repo, path, revision);
+            contents = this.loadFile(path, revision);
             this.fileContents.put(entry, contents);
         }
         return contents;
@@ -77,18 +77,17 @@ final class SvnFileCache {
 
     /**
      * Loads the contents of some file in the repository.
-     * @param repoUrl The {@link SvnRepo}.
      * @param path The file path.
      * @param revision The file revision.
      * @return The file contents as a byte array.
      * @throws SVNException if some error occurs.
      */
-    private byte[] loadFile(final SVNRepository repo, final String path, final long revision) throws SVNException {
+    private byte[] loadFile(final String path, final long revision) throws SVNException {
         final ByteArrayOutputStream contents = new ByteArrayOutputStream();
-        if (repo.checkPath(path, revision) != SVNNodeKind.FILE) {
+        if (this.repo.checkPath(path, revision) != SVNNodeKind.FILE) {
             return new byte[0];
         }
-        repo.getFile(path, revision, null, contents);
+        this.repo.getFile(path, revision, null, contents);
         return contents.toByteArray();
     }
 }
