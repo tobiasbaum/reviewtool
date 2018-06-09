@@ -8,6 +8,7 @@ import de.setsoftware.reviewtool.model.api.IPositionInText;
  */
 public class PositionInText implements IPositionInText {
 
+    private static final long serialVersionUID = -8391244195144049911L;
     public static final IPositionInText UNKNOWN = new PositionInText(0, 0);
 
     private final int line;

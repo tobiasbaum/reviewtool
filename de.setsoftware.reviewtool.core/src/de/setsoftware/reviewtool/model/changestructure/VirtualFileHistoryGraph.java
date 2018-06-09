@@ -266,6 +266,10 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         this.graphs.remove(index);
     }
 
+    public void clear() {
+        this.graphs.clear();
+    }
+
     @Override
     public boolean contains(final String path, final IRepository repo) {
         for (final IFileHistoryGraph graph : this.graphs) {

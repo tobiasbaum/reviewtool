@@ -19,7 +19,7 @@ final class WorkingCopyRevision implements ISvnRevision {
      * @param repository The associated repository.
      * @param paths The paths changed in the working copy.
      */
-    public WorkingCopyRevision(final SvnRepo repository, final SortedMap<String, CachedLogEntryPath> paths) {
+    WorkingCopyRevision(final SvnRepo repository, final SortedMap<String, CachedLogEntryPath> paths) {
         this.repository = repository;
         this.paths = paths;
     }
@@ -62,16 +62,6 @@ final class WorkingCopyRevision implements ISvnRevision {
     @Override
     public Map<String, CachedLogEntryPath> getChangedPaths() {
         return this.paths;
-    }
-
-    @Override
-    public void accept(final ISvnRevisionVisitor visitor) {
-        visitor.handle(this);
-    }
-
-    @Override
-    public <E extends Exception> void accept(final ISvnRevisionVisitorE<E> visitor) throws E {
-        visitor.handle(this);
     }
 
     @Override

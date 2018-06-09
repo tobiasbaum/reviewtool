@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
@@ -28,6 +29,8 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
 public class OneStopPerPartOfFileRestructuringTest {
 
     private static final IRepository REPO = new AbstractRepository() {
+        private static final long serialVersionUID = 1L;
+
         @Override
         public String getId() {
             return "stub";
@@ -61,6 +64,11 @@ public class OneStopPerPartOfFileRestructuringTest {
         @Override
         public byte[] getFileContents(final String path, final IRepoRevision revision) {
             return new byte[0];
+        }
+
+        @Override
+        public IMutableFileHistoryGraph getFileHistoryGraph() {
+            return null;
         }
     };
 

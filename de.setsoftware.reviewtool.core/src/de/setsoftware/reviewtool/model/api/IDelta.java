@@ -1,9 +1,11 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.Serializable;
+
 /**
  * A delta in a text file, denoted by line and column offset.
  */
-public interface IDelta {
+public interface IDelta extends Serializable {
 
     /**
      * Returns the line offset.

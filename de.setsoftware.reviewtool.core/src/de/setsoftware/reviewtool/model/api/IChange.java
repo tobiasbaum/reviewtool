@@ -35,4 +35,9 @@ public interface IChange {
      */
     public abstract IChange makeIrrelevant();
 
+    /**
+     * @return The associated {@link IRepository}.
+     */
+    public abstract IRepository getRepository();
+
 }

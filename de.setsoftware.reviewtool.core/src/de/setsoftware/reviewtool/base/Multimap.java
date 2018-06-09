@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.base;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -13,7 +14,9 @@ import java.util.Set;
  * @param <K> Type of the key.
  * @param <V> Type of the value.
  */
-public final class Multimap<K, V> {
+public final class Multimap<K, V> implements Serializable {
+
+    private static final long serialVersionUID = -2669248894482975071L;
 
     private final Map<K, List<V>> map = new LinkedHashMap<>();
 

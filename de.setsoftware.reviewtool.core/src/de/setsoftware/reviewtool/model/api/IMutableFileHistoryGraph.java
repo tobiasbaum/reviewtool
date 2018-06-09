@@ -1,11 +1,12 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.Serializable;
 import java.util.Set;
 
 /**
  * Represents a mutable file history graph.
  */
-public interface IMutableFileHistoryGraph extends IFileHistoryGraph {
+public interface IMutableFileHistoryGraph extends IFileHistoryGraph, Serializable {
 
     @Override
     public abstract IMutableFileHistoryNode getNodeFor(IRevisionedFile file);

@@ -23,6 +23,8 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
  */
 public final class Fragment implements IFragment {
 
+    private static final long serialVersionUID = 8223980588230543842L;
+
     private final IRevisionedFile file;
     private final IPositionInText from;
     private final IPositionInText to;

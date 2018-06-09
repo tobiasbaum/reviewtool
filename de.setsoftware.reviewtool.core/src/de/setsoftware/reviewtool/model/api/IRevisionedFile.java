@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.api;
 
 import java.io.IOException;
+import java.io.Serializable;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
@@ -8,7 +9,7 @@ import org.eclipse.core.runtime.IPath;
 /**
  * Denotes a certain revision of a file.
  */
-public interface IRevisionedFile {
+public interface IRevisionedFile extends Serializable {
 
     /**
      * Returns the path of the file (relative to the SCM repository root).

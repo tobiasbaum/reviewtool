@@ -12,7 +12,7 @@ import org.tmatesoft.svn.core.wc.SVNStatusType;
 /**
  * Stores all relevant data from a {@link SVNLogEntryPath} or a {@link SVNStatus}.
  */
-public class CachedLogEntryPath implements Serializable {
+final class CachedLogEntryPath implements Serializable {
 
     private static final long serialVersionUID = -7052753449952234943L;
 
@@ -24,7 +24,7 @@ public class CachedLogEntryPath implements Serializable {
     private final char type;
     private final char kind;
 
-    public CachedLogEntryPath(final SVNLogEntryPath value, final long prevRevision) {
+    CachedLogEntryPath(final SVNLogEntryPath value, final long prevRevision) {
         this.path = value.getPath();
         this.localPath = null;
         this.copyPath = value.getCopyPath();
@@ -34,17 +34,7 @@ public class CachedLogEntryPath implements Serializable {
         this.kind = mapStatusKind(value.getKind());
     }
 
-    private static char mapStatusKind(final SVNNodeKind nodeKind) {
-        if (nodeKind.equals(SVNNodeKind.FILE)) {
-            return 'F';
-        } else if (nodeKind.equals(SVNNodeKind.DIR)) {
-            return 'D';
-        } else {
-            return ' ';
-        }
-    }
-
-    public CachedLogEntryPath(final SvnRepo repo, final SVNStatus status) {
+    CachedLogEntryPath(final SvnRepo repo, final SVNStatus status) {
         if (status.getRevision().equals(SVNRevision.UNDEFINED)) {
             this.prevRevision = SVNRevision.BASE.getNumber();
         } else {
@@ -66,6 +56,16 @@ public class CachedLogEntryPath implements Serializable {
         this.kind = mapStatusKind(status.getKind());
     }
 
+    private static char mapStatusKind(final SVNNodeKind nodeKind) {
+        if (nodeKind.equals(SVNNodeKind.FILE)) {
+            return 'F';
+        } else if (nodeKind.equals(SVNNodeKind.DIR)) {
+            return 'D';
+        } else {
+            return ' ';
+        }
+    }
+
     private static char mapStatusTypeToLogEntryType(final SVNStatusType type) {
         if (type == SVNStatusType.STATUS_ADDED) {
             return SVNLogEntryPath.TYPE_ADDED;
@@ -80,43 +80,43 @@ public class CachedLogEntryPath implements Serializable {
         }
     }
 
-    public String getPath() {
+    String getPath() {
         return this.path;
     }
 
-    public File getLocalPath() {
+    File getLocalPath() {
         return this.localPath;
     }
 
-    public long getAncestorRevision() {
+    long getAncestorRevision() {
         return this.prevRevision;
     }
 
-    public String getCopyPath() {
+    String getCopyPath() {
         return this.copyPath;
     }
 
-    public long getCopyRevision() {
+    long getCopyRevision() {
         return this.copyRevision;
     }
 
-    public boolean isFile() {
+    boolean isFile() {
         return this.kind == 'F';
     }
 
-    public boolean isDir() {
+    boolean isDir() {
         return this.kind == 'D';
     }
 
-    public boolean isNew() {
+    boolean isNew() {
         return this.type == SVNLogEntryPath.TYPE_ADDED;
     }
 
-    public boolean isDeleted() {
+    boolean isDeleted() {
         return this.type == SVNLogEntryPath.TYPE_DELETED;
     }
 
-    public boolean isReplaced() {
+    boolean isReplaced() {
         return this.type == SVNLogEntryPath.TYPE_REPLACED;
     }
 

@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
-import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
@@ -15,15 +14,18 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
  * A node can be in one of three states: "normal", deleted, or replaced (which basically means that
  * the chain of history has been broken deliberately).
  */
-public final class FileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
+public final class FileHistoryNode extends ProxyableFileHistoryNode {
+
+    private static final long serialVersionUID = 7938054839176372206L;
 
     private final FileHistoryGraph graph;
     private final IRevisionedFile file;
-    private final Set<FileHistoryEdge> ancestors;
-    private final Set<FileHistoryEdge> descendants;
-    private FileHistoryNode parent;
-    private final Set<FileHistoryNode> children;
+    private final Set<ProxyableFileHistoryEdge> ancestors;
+    private final Set<ProxyableFileHistoryEdge> descendants;
+    private transient ProxyableFileHistoryNode parent;
+    private final Set<ProxyableFileHistoryNode> children;
     private Type type;
+    private boolean hasAllChildren;
 
     /**
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
@@ -31,12 +33,37 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
      * @param file The {@link IRevisionedFile} to wrap.
      * @param type The node type.
      */
-    public FileHistoryNode(final FileHistoryGraph graph, final IRevisionedFile file, final Type type) {
+    FileHistoryNode(final FileHistoryGraph graph, final IRevisionedFile file, final Type type) {
         this.graph = graph;
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
         this.children = new LinkedHashSet<>();
+        this.type = type;
+        this.hasAllChildren = false;
+    }
+
+    /**
+     * Creates a {@link FileHistoryNode} which is fully specified. Used by deserialization code.
+     *
+     * @param file The {@link IRevisionedFile} to wrap.
+     * @param type The node type.
+     */
+    FileHistoryNode(
+            final FileHistoryGraph graph,
+            final IRevisionedFile file,
+            final Set<ProxyableFileHistoryEdge> ancestors,
+            final Set<ProxyableFileHistoryEdge> descendants,
+            final ProxyableFileHistoryNode parent,
+            final Set<ProxyableFileHistoryNode> children,
+            final Type type) {
+
+        this.graph = graph;
+        this.file = file;
+        this.ancestors = ancestors;
+        this.descendants = descendants;
+        this.parent = parent;
+        this.children = children;
         this.type = type;
     }
 
@@ -56,12 +83,12 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     @Override
-    public Set<FileHistoryEdge> getAncestors() {
+    public Set<ProxyableFileHistoryEdge> getAncestors() {
         return this.ancestors;
     }
 
     @Override
-    public Set<FileHistoryEdge> getDescendants() {
+    public Set<ProxyableFileHistoryEdge> getDescendants() {
         return this.descendants;
     }
 
@@ -77,7 +104,7 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
 
     @Override
     public boolean isCopyTarget() {
-        for (final FileHistoryEdge ancestorEdge : this.ancestors) {
+        for (final ProxyableFileHistoryEdge ancestorEdge : this.ancestors) {
             if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY)) {
                 return true;
             } else if (this.type.equals(Type.DELETED)
@@ -106,66 +133,47 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
 
     @Override
     public int hashCode() {
-        return this.file.hashCode();
+        return this.file.hashCode() ^ this.type.hashCode();
     }
 
-    /**
-     * Adds some nearest ancestor {@link FileHistoryNode}.
-     * This operation is called internally when this node starts being a descendant
-     * of some other {@link FileHistoryNode}.
-     */
-    private void addAncestor(final FileHistoryEdge ancestor) {
+    @Override
+    void addAncestor(final ProxyableFileHistoryEdge ancestor) {
         this.ancestors.add(ancestor);
     }
 
-    /**
-     * Removes some nearest ancestor {@link FileHistoryNode}.
-     * This operation is called internally when this node stops being a descendant
-     * of some other {@link FileHistoryNode}.
-     */
-    void removeAncestor(final FileHistoryEdge ancestor) {
+    @Override
+    void removeAncestor(final ProxyableFileHistoryEdge ancestor) {
         this.ancestors.remove(ancestor);
     }
 
-    /**
-     * Adds a descendant {@link FileHistoryNode} of this node.
-     */
-    void addDescendant(final FileHistoryNode descendant, final IFileHistoryEdge.Type type) {
-        final FileHistoryEdge edge = new FileHistoryEdge(this.graph, this, descendant, type);
+    @Override
+    void addDescendant(final ProxyableFileHistoryNode descendant, final IFileHistoryEdge.Type type) {
+        final ProxyableFileHistoryEdge edge = new FileHistoryEdge(this.graph, this, descendant, type);
         this.descendants.add(edge);
         descendant.addAncestor(edge);
     }
 
-    /**
-     * Makes this node a deleted node. Requires that the node is a {@link Type#ADDED} or {@link Type#CHANGED} node.
-     */
+    @Override
     void makeDeleted() {
         assert this.type.equals(Type.ADDED) || this.type.equals(Type.CHANGED);
         this.type = Type.DELETED;
 
-        final Iterator<FileHistoryEdge> it = this.ancestors.iterator();
+        final Iterator<ProxyableFileHistoryEdge> it = this.ancestors.iterator();
         while (it.hasNext()) {
-            final FileHistoryEdge ancestorEdge = it.next();
+            final ProxyableFileHistoryEdge ancestorEdge = it.next();
             if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY)) {
                 ancestorEdge.setType(IFileHistoryEdge.Type.COPY_DELETED);
             }
         }
     }
 
-    /**
-     * Makes this node a replaced node. Requires that the node is a {@link Type#DELETED} node.
-     */
+    @Override
     void makeReplaced() {
         assert this.type.equals(Type.DELETED);
         this.type = Type.REPLACED;
     }
 
-    /**
-     * Changes the type of this node to {@link Type#CHANGED}.
-     * Requires that the node is a {@link Type#UNCONFIRMED} node.
-     * In addition, {@link #makeConfirmed()} is invoked on the parent node if that exists and if it is of type
-     * {@link Type#UNCONFIRMED}.
-     */
+    @Override
     void makeConfirmed() {
         assert this.type.equals(Type.UNCONFIRMED);
         this.type = Type.CHANGED;
@@ -175,41 +183,38 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
         }
     }
 
-    /**
-     * Returns a list of child {@link FileHistoryNode}s.
-     */
-    public Set<FileHistoryNode> getChildren() {
+    @Override
+    Set<ProxyableFileHistoryNode> getChildren() {
         return this.children;
     }
 
-    /**
-     * Adds a child {@link FileHistoryNode}.
-     */
-    public void addChild(final FileHistoryNode child) {
+    @Override
+    void addChild(final ProxyableFileHistoryNode child) {
         this.children.add(child);
         child.setParent(this);
     }
 
-    /**
-     * Returns the parent {@link FileHistoryNode} or <code>null</code> if no parent has been set.
-     */
-    public FileHistoryNode getParent() {
+    @Override
+    void setHasAllChildren() {
+        this.hasAllChildren = true;
+    }
+
+    @Override
+    boolean hasAllChildren() {
+        return this.hasAllChildren;
+    }
+
+    @Override
+    ProxyableFileHistoryNode getParent() {
         return this.parent;
     }
 
-    /**
-     * Sets the parent {@link FileHistoryNode}.
-     * This operation is called internally when this node becomes/stops being a child of some other
-     * {@link FileHistoryNode}.
-     */
-    private void setParent(final FileHistoryNode newParent) {
+    @Override
+    void setParent(final ProxyableFileHistoryNode newParent) {
         this.parent = newParent;
     }
 
-    /**
-     * Returns the path of this node relative to its parent.
-     * If this node does not have a parent, the node's path is returned unmodified.
-     */
+    @Override
     String getPathRelativeToParent() {
         if (this.parent == null) {
             return this.file.getPath();
@@ -228,5 +233,27 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
         if (!this.children.isEmpty()) {
             attributes.add("children=" + this.children);
         }
+    }
+
+    /**
+     * Replaces this object by a proxy when serializing.
+     */
+    protected final Object writeReplace() {
+        return new FileHistoryNodeProxy(
+                this.graph,
+                this.file,
+                this.ancestors,
+                this.descendants,
+                this.parent == null ? null : this.parent.getFile(),
+                toFiles(this.children),
+                this.type);
+    }
+
+    private static Set<IRevisionedFile> toFiles(final Set<ProxyableFileHistoryNode> nodes) {
+        final Set<IRevisionedFile> result = new LinkedHashSet<>();
+        for (final ProxyableFileHistoryNode node : nodes) {
+            result.add(node.getFile());
+        }
+        return result;
     }
 }

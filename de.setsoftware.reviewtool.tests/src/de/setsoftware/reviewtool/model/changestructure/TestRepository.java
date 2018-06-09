@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.io.File;
 import java.util.Collection;
 
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -11,6 +12,8 @@ import de.setsoftware.reviewtool.model.api.IRevision;
  * Implements {@link IRepository} for this test case.
  */
 final class TestRepository extends AbstractRepository {
+
+    private static final long serialVersionUID = 1L;
 
     private final String id;
     private final File localRoot;
@@ -63,4 +66,8 @@ final class TestRepository extends AbstractRepository {
         return new byte[0];
     }
 
+    @Override
+    public IMutableFileHistoryGraph getFileHistoryGraph() {
+        return null;
+    }
 }

@@ -19,6 +19,8 @@ public class FragmentTest {
 
     private static FileInRevision fileWithContent(final String content) {
         return new FileInRevision("file", new LocalRevision(StubRepo.INSTANCE)) {
+            private static final long serialVersionUID = 1L;
+
             @Override
             public byte[] getContents() throws Exception {
                 return content.getBytes("UTF-8");

@@ -19,13 +19,15 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 /**
  * Implementation of a {@link IMutableFileHistoryEdge}.
  */
-public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IMutableFileHistoryEdge {
+public final class FileHistoryEdge extends ProxyableFileHistoryEdge {
+
+    private static final long serialVersionUID = 2504351095940964539L;
 
     private final FileHistoryGraph graph;
-    private final FileHistoryNode ancestor;
-    private final FileHistoryNode descendant;
+    private final ProxyableFileHistoryNode ancestor;
+    private final ProxyableFileHistoryNode descendant;
     private Type type;
-    private transient IFileDiff diff;
+    private IFileDiff diff;
 
     /**
      * Constructor.
@@ -33,10 +35,10 @@ public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IM
      * @param descendant The descendant node of the edge.
      * @param type The type of the edge.
      */
-    public FileHistoryEdge(
+    FileHistoryEdge(
             final FileHistoryGraph graph,
-            final FileHistoryNode ancestor,
-            final FileHistoryNode descendant,
+            final ProxyableFileHistoryNode ancestor,
+            final ProxyableFileHistoryNode descendant,
             final Type type) {
         this.graph = graph;
         this.ancestor = ancestor;
@@ -50,12 +52,12 @@ public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IM
     }
 
     @Override
-    public FileHistoryNode getAncestor() {
+    public ProxyableFileHistoryNode getAncestor() {
         return this.ancestor;
     }
 
     @Override
-    public FileHistoryNode getDescendant() {
+    public ProxyableFileHistoryNode getDescendant() {
         return this.descendant;
     }
 
@@ -64,11 +66,7 @@ public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IM
         return this.type;
     }
 
-    /**
-     * Changes the type of the edge. This is used to replace a {@link Type#COPY} edge by a {@link Type#COPY_DELETED}
-     * edge when a flow is terminated in a copy target.
-     * @param type The new type.
-     */
+    @Override
     void setType(final Type type) {
         this.type = type;
     }
@@ -94,7 +92,7 @@ public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IM
 
     @Override
     public int hashCode() {
-        return this.ancestor.hashCode() ^ this.descendant.hashCode();
+        return this.ancestor.hashCode() ^ this.descendant.hashCode() ^ this.type.hashCode();
     }
 
     /**
@@ -154,5 +152,12 @@ public final class FileHistoryEdge extends AbstractFileHistoryEdge implements IM
         } catch (final CharacterCodingException e) {
             return false;
         }
+    }
+
+    /**
+     * Replaces this object by a proxy when serializing.
+     */
+    protected final Object writeReplace() {
+        return new FileHistoryEdgeProxy(this.graph, this.ancestor.getFile(), this.descendant.getFile(), this.type);
     }
 }

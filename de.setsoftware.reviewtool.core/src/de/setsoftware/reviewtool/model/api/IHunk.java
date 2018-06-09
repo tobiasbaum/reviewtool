@@ -1,11 +1,13 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.Serializable;
+
 /**
  * Encapsulates a single difference between two revisions of a file, i.e. a pair (source fragment, target fragment).
  * <p/>
  * Hunks can be ordered according to their source fragment.
  */
-public interface IHunk extends Comparable<IHunk> {
+public interface IHunk extends Comparable<IHunk>, Serializable {
 
     /**
      * Returns the source fragment.

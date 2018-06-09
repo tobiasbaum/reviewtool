@@ -15,18 +15,15 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 final class SvnRevision implements ISvnRevision {
     private final SvnRepo repository;
     private final CachedLogEntry logEntry;
-    private final boolean isVisible;
 
     /**
      * Constructor.
      * @param repository The associated repository.
      * @param logEntry The log entry.
-     * @param isVisible True if the revision is visible, else false.
      */
-    public SvnRevision(final SvnRepo repository, final CachedLogEntry logEntry, final boolean isVisible) {
+    SvnRevision(final SvnRepo repository, final CachedLogEntry logEntry) {
         this.repository = repository;
         this.logEntry = logEntry;
-        this.isVisible = isVisible;
     }
 
     @Override
@@ -69,20 +66,6 @@ final class SvnRevision implements ISvnRevision {
         return this.logEntry.getChangedPaths();
     }
 
-    boolean isVisible() {
-        return this.isVisible;
-    }
-
-    @Override
-    public void accept(final ISvnRevisionVisitor visitor) {
-        visitor.handle(this);
-    }
-
-    @Override
-    public <E extends Exception> void accept(final ISvnRevisionVisitorE<E> visitor) throws E {
-        visitor.handle(this);
-    }
-
     @Override
     public String toPrettyString() {
         final StringBuilder sb = new StringBuilder();
@@ -92,15 +75,14 @@ final class SvnRevision implements ISvnRevision {
             sb.append(" ");
         }
         sb.append(String.format(
-                "(Rev. %s, %s)%s",
+                "(Rev. %s, %s)",
                 this.getRevisionString(),
-                this.getAuthor(),
-                (this.isVisible ? "" : " [invisible]")));
+                this.getAuthor()));
         return sb.toString();
     }
 
     @Override
     public String toString() {
-        return this.repository.toString() + "@" + this.logEntry.toString() + (this.isVisible ? "(+)" : "(-)");
+        return this.repository.toString() + "@" + this.logEntry.toString();
     }
 }

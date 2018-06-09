@@ -186,8 +186,7 @@ public class PositionTransformer {
         do {
             ret.add(curNode.path);
             curNode = curNode.next;
-        }
-        while (curNode != null);
+        } while (curNode != null);
         return ret;
     }
 
@@ -356,8 +355,7 @@ public class PositionTransformer {
                 } else {
                     success = this.sharedMap.replace(childNameWithoutExtension, oldNode, newNode);
                 }
-            }
-            while (!success);
+            } while (!success);
         }
 
     }
@@ -413,12 +411,15 @@ public class PositionTransformer {
     }
 
     private static IPath findFittingPath(String[] segments, List<IPath> paths) {
+        IPath result = null;
         for (final IPath path : paths) {
-            if (sameSuffix(segments, path.segments(), segments.length)) {
-                return path;
+            final String[] pathSegments = path.segments();
+            if (sameSuffix(segments, pathSegments, segments.length)
+                    && (result == null || pathSegments.length < result.segments().length)) {
+                result = path;
             }
         }
-        return null;
+        return result;
     }
 
     private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, IPath fittingPath) {

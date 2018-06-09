@@ -13,7 +13,7 @@ import org.tmatesoft.svn.core.SVNLogEntryPath;
 /**
  * Stores all relevant data from a log entry.
  */
-public class CachedLogEntry implements Serializable {
+final class CachedLogEntry implements Serializable {
 
     private static final long serialVersionUID = 4057821677135067022L;
 
@@ -23,7 +23,7 @@ public class CachedLogEntry implements Serializable {
     private final Date date;
     private final SortedMap<String, CachedLogEntryPath> paths;
 
-    public CachedLogEntry(SVNLogEntry logEntry) {
+    CachedLogEntry(final SVNLogEntry logEntry) {
         this.revision = logEntry.getRevision();
         this.message = logEntry.getMessage();
         this.author = logEntry.getAuthor();
@@ -35,23 +35,23 @@ public class CachedLogEntry implements Serializable {
         }
     }
 
-    public String getMessage() {
+    String getMessage() {
         return this.message;
     }
 
-    public long getRevision() {
+    long getRevision() {
         return this.revision;
     }
 
-    public Date getDate() {
+    Date getDate() {
         return this.date;
     }
 
-    public String getAuthor() {
+    String getAuthor() {
         return this.author;
     }
 
-    public Map<String, CachedLogEntryPath> getChangedPaths() {
+    Map<String, CachedLogEntryPath> getChangedPaths() {
         return this.paths;
     }
 

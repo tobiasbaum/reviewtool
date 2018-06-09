@@ -30,6 +30,8 @@ import de.setsoftware.reviewtool.model.api.IUnknownRevision;
  */
 public class FileInRevision implements IRevisionedFile {
 
+    private static final long serialVersionUID = 1849848257016731168L;
+
     private final String path;
     private final IRevision revision;
     private Path localPath;
@@ -127,7 +129,7 @@ public class FileInRevision implements IRevisionedFile {
 
     @Override
     public int hashCode() {
-        return this.path.hashCode();
+        return this.path.hashCode() ^ this.revision.hashCode();
     }
 
     @Override

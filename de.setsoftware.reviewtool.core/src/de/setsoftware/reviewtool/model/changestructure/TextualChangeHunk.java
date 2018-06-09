@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
 import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 
@@ -53,4 +54,8 @@ public class TextualChangeHunk extends Change implements ITextualChange {
         return this.getToFragment().getFile();
     }
 
+    @Override
+    public IRepository getRepository() {
+        return this.from.getFile().getRepository();
+    }
 }

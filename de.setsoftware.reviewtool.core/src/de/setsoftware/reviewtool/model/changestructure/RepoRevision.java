@@ -10,6 +10,8 @@ import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
  */
 public final class RepoRevision implements IRepoRevision {
 
+    private static final long serialVersionUID = 1180259541435591492L;
+
     private final IRepository repo;
     private final Object id;
 

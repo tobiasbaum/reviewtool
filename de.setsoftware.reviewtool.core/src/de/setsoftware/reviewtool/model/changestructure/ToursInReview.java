@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +22,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.swt.widgets.Display;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
@@ -33,7 +31,6 @@ import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
-import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
 import de.setsoftware.reviewtool.model.api.ICommit;
@@ -158,27 +155,30 @@ public class ToursInReview {
         }
     }
 
-    private final VirtualFileHistoryGraph historyGraph;
+    private final ChangeManager changeManager;
     private final List<Tour> topmostTours;
-    private final IChangeData remoteChanges;
-    private Map<File, IRevisionedFile> modifiedFiles;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
+    private final IChangeManagerListener mostRecentFragmentUpdater;
 
-    private ToursInReview(final List<? extends Tour> topmostTours, final IChangeData remoteChanges) {
-        this.historyGraph = new VirtualFileHistoryGraph(remoteChanges.getHistoryGraph());
+    private ToursInReview(final ChangeManager changeManager, final List<? extends Tour> topmostTours) {
+        this.changeManager = changeManager;
         this.topmostTours = new ArrayList<>(topmostTours);
-        this.remoteChanges = remoteChanges;
-        this.modifiedFiles = remoteChanges.getLocalPathMap();
         this.currentTourIndex = 0;
+        this.mostRecentFragmentUpdater = new IChangeManagerListener() {
+            @Override
+            public void localChangeInfoUpdated(final ChangeManager changeManager) {
+                ToursInReview.this.updateMostRecentFragmentsWithLocalChanges();
+            }
+        };
+        this.changeManager.addListener(this.mostRecentFragmentUpdater);
     }
 
     private ToursInReview(final List<? extends Tour> topmostTours) {
-        this.historyGraph = new VirtualFileHistoryGraph();
+        this.changeManager = new ChangeManager();
         this.topmostTours = new ArrayList<>(topmostTours);
-        this.remoteChanges = null;
-        this.modifiedFiles = new LinkedHashMap<>();
         this.currentTourIndex = 0;
+        this.mostRecentFragmentUpdater = null;
     }
 
     /**
@@ -194,16 +194,14 @@ public class ToursInReview {
      * null is returned.
      */
     public static ToursInReview create(
-            IChangeSource src,
+            final ChangeManager changeManager,
             final IChangeSourceUi changeSourceUi,
             List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
             List<? extends ITourRestructuring> tourRestructuringStrategies,
             IStopOrdering orderingAlgorithm,
             ICreateToursUi createUi,
-            String ticketKey,
+            IChangeData changes,
             List<ReviewRoundInfo> reviewRounds) {
-        changeSourceUi.subTask("Determining relevant changes...");
-        final IChangeData changes = src.getRepositoryChanges(ticketKey, changeSourceUi);
         changeSourceUi.subTask("Filtering changes...");
         final List<? extends ICommit> filteredChanges =
                 filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(),
@@ -215,7 +213,7 @@ public class ToursInReview {
         changeSourceUi.subTask("Creating tours from changes...");
         final List<Tour> tours = toTours(
                 filteredChanges,
-                new FragmentTracer(changes.getHistoryGraph()),
+                new FragmentTracer(),
                 changeSourceUi);
 
         final List<? extends Tour> userSelection =
@@ -242,9 +240,7 @@ public class ToursInReview {
                     }
                 });
 
-        final ToursInReview result = new ToursInReview(toursToShow, changes);
-        result.createLocalTour(null, changeSourceUi, null);
-        return result;
+        return new ToursInReview(changeManager, toursToShow);
     }
 
     private static List<? extends Tour> groupAndSort(
@@ -260,49 +256,8 @@ public class ToursInReview {
         }
     }
 
-    /**
-     * (Re)creates the local tour by (re)collecting local changes and combining them with the repository changes
-     * in a {@link VirtualFileHistoryGraph}.
-     *
-     * @param progressMonitor The progress monitor to use.
-     * @param markerFactory The marker factory to use. May be null if initially called while creating the tours.
-     */
-    public void createLocalTour(
-            final List<File> paths,
-            final IProgressMonitor progressMonitor,
-            final IStopMarkerFactory markerFactory) {
-
-        progressMonitor.subTask("Collecting local changes...");
-        final IChangeData localChanges;
-        try {
-            if (paths == null) {
-                localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, null,
-                        progressMonitor);
-            } else {
-                final List<File> allFilesToAnalyze = new ArrayList<>(this.modifiedFiles.keySet());
-                allFilesToAnalyze.addAll(paths);
-                localChanges = this.remoteChanges.getSource().getLocalChanges(this.remoteChanges, allFilesToAnalyze,
-                        progressMonitor);
-            }
-        } catch (final ReviewtoolException e) {
-            //if there is a problem while determining the local changes, ignore them
-            Logger.warn("problem while determining local changes", e);
-            return;
-        }
-        this.modifiedFiles = new LinkedHashMap<>(localChanges.getLocalPathMap());
-
-        if (this.historyGraph.size() > 1) {
-            this.historyGraph.remove(1);
-        }
-        this.historyGraph.add(localChanges.getHistoryGraph());
-
-        this.updateMostRecentFragmentsWithLocalChanges();
-
-        this.notifyListenersAboutTourStructureChange(markerFactory);
-    }
-
     private void updateMostRecentFragmentsWithLocalChanges() {
-        final IFragmentTracer tracer = new FragmentTracer(this.historyGraph);
+        final IFragmentTracer tracer = new FragmentTracer();
         for (final Tour tour : this.topmostTours) {
             for (final Stop stop : tour.getStops()) {
                 stop.updateMostRecentData(tracer);
@@ -566,7 +521,7 @@ public class ToursInReview {
      * @return The {@link IFileHistoryNode} describing changes for passed {@link FileInRevision} or null if not found.
      */
     public IFileHistoryNode getFileHistoryNode(final IRevisionedFile file) {
-        return this.historyGraph.getNodeFor(file);
+        return file.getRepository().getFileHistoryGraph().getNodeFor(file);
     }
 
     public List<Tour> getTopmostTours() {
@@ -627,30 +582,6 @@ public class ToursInReview {
     public Tour getActiveTour() {
         return this.currentTourIndex >= this.topmostTours.size() || this.currentTourIndex < 0
                 ? null : this.topmostTours.get(this.currentTourIndex);
-    }
-
-    private void notifyListenersAboutTourStructureChange(final IStopMarkerFactory markerFactory) {
-        // markerFactors is null only if called from ToursInReview.create(), and in this case ensureTourActive()
-        // is called later on which recreates the markers
-        if (markerFactory != null) {
-            new WorkspaceJob("Stop marker update") {
-                @Override
-                public IStatus runInWorkspace(IProgressMonitor progressMonitor) throws CoreException {
-                    ToursInReview.this.clearMarkers();
-                    ToursInReview.this.createMarkers(markerFactory, progressMonitor);
-                    return Status.OK_STATUS;
-                }
-            }.schedule();
-        }
-
-        Display.getDefault().asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                for (final IToursInReviewChangeListener l : ToursInReview.this.listeners) {
-                    l.toursChanged();
-                }
-            }
-        });
     }
 
     public void registerListener(IToursInReviewChangeListener listener) {

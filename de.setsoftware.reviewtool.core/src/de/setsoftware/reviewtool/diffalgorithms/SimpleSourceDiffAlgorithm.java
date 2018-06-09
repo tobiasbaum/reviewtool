@@ -21,6 +21,8 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
  */
 class SimpleSourceDiffAlgorithm implements IDiffAlgorithm {
 
+    private static final long serialVersionUID = -45643400400146359L;
+
     /**
      * A part of the file that is logically related, e.g. a method.
      * The algorithm first tries to identify whole chunks and only looks at the

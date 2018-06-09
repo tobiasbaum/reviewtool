@@ -11,6 +11,8 @@ import de.setsoftware.reviewtool.model.api.IRevision;
  */
 public abstract class AbstractRepository implements IRepository {
 
+    private static final long serialVersionUID = 7916699534735945340L;
+
     @Override
     public final boolean equals(final Object o) {
         if (o instanceof IRepository) {

@@ -1,13 +1,14 @@
 package de.setsoftware.reviewtool.model.api;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
  * A source code management repository.
  * Also includes information on a working copy.
  */
-public interface IRepository {
+public interface IRepository extends Serializable {
 
     /**
      * Returns an identifier that is unique amongst all known repositories.
@@ -51,4 +52,8 @@ public interface IRepository {
      */
     public abstract byte[] getFileContents(String path, IRepoRevision revision) throws Exception;
 
+    /**
+     * Returns the associated file history graph.
+     */
+    public abstract IFileHistoryGraph getFileHistoryGraph();
 }

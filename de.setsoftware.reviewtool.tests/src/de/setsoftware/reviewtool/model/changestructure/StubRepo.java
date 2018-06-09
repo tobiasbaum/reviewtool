@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.io.File;
 import java.util.Collection;
 
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 
@@ -12,6 +13,8 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 public final class StubRepo extends AbstractRepository {
 
     public static StubRepo INSTANCE = new StubRepo();
+    private static final long serialVersionUID = 1L;
+
 
     @Override
     public String getId() {
@@ -46,5 +49,10 @@ public final class StubRepo extends AbstractRepository {
     @Override
     public byte[] getFileContents(final String path, final IRepoRevision revision) {
         return new byte[0];
+    }
+
+    @Override
+    public IMutableFileHistoryGraph getFileHistoryGraph() {
+        return null;
     }
 }

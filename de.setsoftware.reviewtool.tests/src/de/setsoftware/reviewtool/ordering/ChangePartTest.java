@@ -35,6 +35,8 @@ public class ChangePartTest {
             final String name, final int revision, final String content) {
         return new IRevisionedFile() {
 
+            private static final long serialVersionUID = 1L;
+
             @Override
             public IPath toLocalPath() {
                 throw new UnsupportedOperationException();

@@ -158,8 +158,7 @@ public class ChangePart {
                 }
                 do {
                     currentBlockEnd = scanner.getNextRegionEndLineNumber();
-                }
-                while (stopStartLine > currentBlockEnd);
+                } while (stopStartLine > currentBlockEnd);
                 stopsInCurrentBlock = new ArrayList<>();
                 stopsInCurrentBlock.add(s);
             }

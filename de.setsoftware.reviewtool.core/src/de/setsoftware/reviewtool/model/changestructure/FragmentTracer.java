@@ -16,20 +16,15 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
  */
 public class FragmentTracer implements IFragmentTracer {
 
-    private final IFileHistoryGraph fileHistoryGraph;
-
-    public FragmentTracer(final IFileHistoryGraph fileHistoryGraph) {
-        this.fileHistoryGraph = fileHistoryGraph;
-    }
-
     @Override
     public List<IFragment> traceFragment(final IFragment fragment) {
         final ArrayList<IFragment> result = new ArrayList<>();
         final IRevisionedFile file = fragment.getFile();
-        final IFileHistoryNode node = this.fileHistoryGraph.getNodeFor(file);
+        final IFileHistoryGraph fileHistoryGraph = file.getRepository().getFileHistoryGraph();
+        final IFileHistoryNode node = fileHistoryGraph.getNodeFor(file);
         if (node != null) {
-            for (final IRevisionedFile leafRevision : this.fileHistoryGraph.getLatestFiles(file)) {
-                final IFileHistoryNode descendant = this.fileHistoryGraph.getNodeFor(leafRevision);
+            for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file)) {
+                final IFileHistoryNode descendant = fileHistoryGraph.getNodeFor(leafRevision);
                 final Set<? extends IFileDiff> fileDiffs = descendant.buildHistories(node);
                 for (final IFileDiff fileDiff : fileDiffs) {
                     final IFragment lastFragment = fileDiff.traceFragment(fragment);
@@ -44,9 +39,10 @@ public class FragmentTracer implements IFragmentTracer {
     @Override
     public List<IRevisionedFile> traceFile(final IRevisionedFile file) {
         final ArrayList<IRevisionedFile> result = new ArrayList<>();
-        final IFileHistoryNode node = this.fileHistoryGraph.getNodeFor(file);
+        final IFileHistoryGraph fileHistoryGraph = file.getRepository().getFileHistoryGraph();
+        final IFileHistoryNode node = fileHistoryGraph.getNodeFor(file);
         if (node != null) {
-            for (final IRevisionedFile leafRevision : this.fileHistoryGraph.getLatestFiles(file)) {
+            for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file)) {
                 result.add(leafRevision);
             }
         }
