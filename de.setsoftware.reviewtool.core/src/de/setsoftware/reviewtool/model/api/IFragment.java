@@ -29,7 +29,7 @@ public interface IFragment extends Comparable<IFragment> {
     public abstract IPositionInText getTo();
 
     /**
-     * @return {@code true} if this is an in-line fragment.
+     * Returns {@code true} if this is an in-line fragment.
      */
     public abstract boolean isInline();
 
@@ -56,7 +56,7 @@ public interface IFragment extends Comparable<IFragment> {
     public abstract String getContent();
 
     /**
-     * @return {@code true} if this fragment is an original one, i.e. if it has no other origin(s).
+     * Returns {@code true} if this fragment is an original one, i.e. if it has no other origin(s).
      */
     public abstract boolean isOrigin();
 
@@ -122,7 +122,7 @@ public interface IFragment extends Comparable<IFragment> {
     public abstract IFragment merge(IFragment other);
 
     /**
-     * @return {@code true} if this fragment is empty, else {@code false}.
+     * Returns {@code true} if this fragment is empty, else {@code false}.
      */
     public abstract boolean isDeletion();
 

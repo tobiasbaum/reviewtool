@@ -578,7 +578,7 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(Tour t, IStopMarkerFactory markerFactory) throws CoreException {
+    public void ensureTourActive(Tour t, IStopMarkerFactory markerFactory) {
         this.ensureTourActive(t, markerFactory, true);
     }
 
@@ -586,8 +586,7 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(Tour t, final IStopMarkerFactory markerFactory, boolean notify)
-        throws CoreException {
+    public void ensureTourActive(Tour t, final IStopMarkerFactory markerFactory, boolean notify) {
 
         final int index = this.topmostTours.indexOf(t);
         if (index != this.currentTourIndex) {

@@ -121,7 +121,7 @@ public class RemarkTest {
     }
 
     @Test
-    public void testMissingTypeLeadsToParseException() throws Exception {
+    public void testMissingTypeLeadsToParseException() {
         final String input =
                 "Review 1:\n"
                 + "*# Anm A\n"

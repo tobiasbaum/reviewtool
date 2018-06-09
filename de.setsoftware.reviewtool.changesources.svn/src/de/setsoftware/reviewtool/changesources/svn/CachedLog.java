@@ -231,6 +231,7 @@ public class CachedLog {
                 } catch (final EOFException ex) {
                     break;
                 }
+                @SuppressWarnings("unchecked")
                 final List<CachedLogEntry> value = (List<CachedLogEntry>) ois.readObject();
                 this.entriesPerWcRoot.put(key, value);
             }

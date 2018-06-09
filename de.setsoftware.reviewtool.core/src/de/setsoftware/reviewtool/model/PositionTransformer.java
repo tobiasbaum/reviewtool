@@ -186,7 +186,8 @@ public class PositionTransformer {
         do {
             ret.add(curNode.path);
             curNode = curNode.next;
-        } while (curNode != null);
+        }
+        while (curNode != null);
         return ret;
     }
 
@@ -355,7 +356,8 @@ public class PositionTransformer {
                 } else {
                     success = this.sharedMap.replace(childNameWithoutExtension, oldNode, newNode);
                 }
-            } while (!success);
+            }
+            while (!success);
         }
 
     }

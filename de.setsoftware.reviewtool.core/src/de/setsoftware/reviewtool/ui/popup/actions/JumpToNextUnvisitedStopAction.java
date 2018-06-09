@@ -3,7 +3,6 @@ package de.setsoftware.reviewtool.ui.popup.actions;
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -44,11 +43,7 @@ public class JumpToNextUnvisitedStopAction extends AbstractHandler {
 
                     @Override
                     public void newTourStarted(Tour tour) {
-                        try {
-                            tours.ensureTourActive(tour, new RealMarkerFactory());
-                        } catch (final CoreException e) {
-                            throw new RuntimeException(e);
-                        }
+                        tours.ensureTourActive(tour, new RealMarkerFactory());
                         MessageDialog.openInformation(shell, "Change of review tour",
                                 "Start of a new tour:\n" + tour.getDescription());
                     }

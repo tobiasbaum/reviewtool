@@ -52,7 +52,7 @@ public class LineSequence {
     }
 
     /**
-     * @return The number of lines in the sequence.
+     * Returns the number of lines in the sequence.
      */
     public int getNumberOfLines() {
         return this.lines.size();

@@ -18,7 +18,7 @@ public final class Multimap<K, V> {
     private final Map<K, List<V>> map = new LinkedHashMap<>();
 
     /**
-     * @return {@code true} iff the multimap is empty.
+     * Returns {@code true} iff the multimap is empty, else {@code false}.
      */
     public boolean isEmpty() {
         return this.map.isEmpty();
@@ -124,7 +124,9 @@ public final class Multimap<K, V> {
      */
     public void sortValues() {
         for (final Entry<K, List<V>> e : this.map.entrySet()) {
-            Collections.sort((List<Comparable<Object>>) e.getValue());
+            @SuppressWarnings("unchecked")
+            final List<Comparable<Object>> values = (List<Comparable<Object>>) e.getValue();
+            Collections.sort(values);
         }
     }
 

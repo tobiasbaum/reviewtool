@@ -73,7 +73,7 @@ public class ChangePartTest {
                 file(filename, 4));
     }
 
-    private static Stop singleLineStop(IRevisionedFile file, int lineNumber) throws Exception {
+    private static Stop singleLineStop(IRevisionedFile file, int lineNumber) {
         final IPositionInText posFrom = ChangestructureFactory.createPositionInText(lineNumber, 1);
         final IPositionInText posTo = ChangestructureFactory.createPositionInText(lineNumber + 1, 1);
         return new Stop(
@@ -111,7 +111,7 @@ public class ChangePartTest {
     }
 
     @Test
-    public void testGroupDifferentMethods() throws Exception {
+    public void testGroupDifferentMethods() {
         final IRevisionedFile file = file("Testklasse.java", 4,
                 "package x.y.z;\r\n"
                 + "\r\n"
@@ -135,7 +135,7 @@ public class ChangePartTest {
     }
 
     @Test
-    public void testGroupSameMethod() throws Exception {
+    public void testGroupSameMethod() {
         final IRevisionedFile file = file("Testklasse.java", 4,
                 "package x.y.z;\r\n"
                 + "\r\n"
@@ -158,7 +158,7 @@ public class ChangePartTest {
     }
 
     @Test
-    public void testSpecialHandlingOnlyForJavaFiles() throws Exception {
+    public void testSpecialHandlingOnlyForJavaFiles() {
         final IRevisionedFile file = file("Testklasse.txt", 4,
                 "package x.y.z;\r\n"
                 + "\r\n"
@@ -182,7 +182,7 @@ public class ChangePartTest {
     }
 
     @Test
-    public void testGroupVariousSituations() throws Exception {
+    public void testGroupVariousSituations() {
         final IRevisionedFile file = file("Testklasse.java", 4,
                 "package x.y.z;\r\n"
                 + "\r\n"

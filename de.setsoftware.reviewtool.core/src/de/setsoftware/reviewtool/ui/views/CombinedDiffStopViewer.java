@@ -80,7 +80,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
 
         /**
-         * @return The color to use for the range.
+         * Returns the color to use for the range.
          */
         private Color getTextColor() {
             if (this.hunkColor == null) {
@@ -123,7 +123,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
 
         /**
-         * @return The color to use for the range.
+         * Returns the color to use for the range.
          */
         private Color getTextColor() {
             if (this.hunkColor == null) {

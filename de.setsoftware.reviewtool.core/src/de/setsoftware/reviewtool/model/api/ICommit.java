@@ -10,17 +10,17 @@ import java.util.Set;
 public interface ICommit {
 
     /**
-     * @return The message of the commit.
+     * Returns the message of the commit.
      */
     public abstract String getMessage();
 
     /**
-     * @return The revision of the commit.
+     * Returns the revision of the commit.
      */
     public abstract IRevision getRevision();
 
     /**
-     * @return The {@list IChange}s of the commit.
+     * Returns the {@list IChange}s of the commit.
      */
     public abstract List<? extends IChange> getChanges();
 
@@ -31,12 +31,12 @@ public interface ICommit {
     public abstract ICommit makeChangesIrrelevant(Set<? extends IChange> toMakeIrrelevant);
 
     /**
-     * @return {@code true} if this {@link ICommit} is visible, else false.
+     * Returns {@code true} if this {@link ICommit} is visible, else false.
      */
     public abstract boolean isVisible();
 
     /**
-     * @return The date and time of the commit.
+     * Returns The date and time of the commit.
      */
     public abstract Date getTime();
 

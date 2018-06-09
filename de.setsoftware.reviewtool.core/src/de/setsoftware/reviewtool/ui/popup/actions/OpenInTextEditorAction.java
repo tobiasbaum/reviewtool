@@ -34,6 +34,7 @@ public class OpenInTextEditorAction extends AbstractHandler {
         }
         final TreeSelection ts = (TreeSelection) selection;
 
+        @SuppressWarnings("unchecked")
         final List<Stop> stops = new ArrayList<>(ts.toList());
         for (final Stop stop : stops) {
             final Tour tour = tours.getTopmostTourWith(stop);

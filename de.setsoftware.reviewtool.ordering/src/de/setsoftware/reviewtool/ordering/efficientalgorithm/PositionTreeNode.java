@@ -72,6 +72,7 @@ public abstract class PositionTreeNode<T> extends PositionTreeElement<T> {
 
     protected final PositionTreeElement<T>[] copyChildren(PositionTreeElement<T> toReplace,
             PositionTreeElement<T> replacement) {
+        @SuppressWarnings("unchecked")
         final PositionTreeElement<T>[] newChildren = new PositionTreeElement[this.children.length];
         for (int i = 0; i < newChildren.length; i++) {
             newChildren[i] = this.children[i].copyReplacing(toReplace, replacement);

@@ -10,17 +10,17 @@ import java.util.List;
 public interface IFileDiff {
 
     /**
-     * @return An unmodifiable view of the hunks this {@link IFileDiff} is made of.
+     * Returns un unmodifiable view of the hunks this {@link IFileDiff} is made of.
      */
     public abstract List<? extends IHunk> getHunks();
 
     /**
-     * @return The {@link IRevisionedFile} this diff starts at.
+     * Returns the {@link IRevisionedFile} this diff starts at.
      */
     public abstract IRevisionedFile getFrom();
 
     /**
-     * @return The {@link IRevisionedFile} this diff ends at.
+     * Returns the {@link IRevisionedFile} this diff ends at.
      */
     public abstract IRevisionedFile getTo();
 

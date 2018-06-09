@@ -41,7 +41,9 @@ public abstract class AbstractRepository implements IRepository {
                     final Object vs = ((IRepoRevision) smallestSoFar).getId();
                     final Object vr = ((IRepoRevision) r).getId();
                     if (areCompatibleComparables(vs, vr)) {
+                        @SuppressWarnings("unchecked")
                         final Comparable<Comparable<?>> cs = (Comparable<Comparable<?>>) vs;
+                        @SuppressWarnings("unchecked")
                         final Comparable<Comparable<?>> cr = (Comparable<Comparable<?>>) vr;
                         if (cr.compareTo(cs) < 0) {
                             smallestSoFar = r;

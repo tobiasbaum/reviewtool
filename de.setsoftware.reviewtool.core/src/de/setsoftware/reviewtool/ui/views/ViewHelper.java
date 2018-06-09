@@ -99,8 +99,7 @@ public class ViewHelper {
         return null;
     }
 
-    private static Pair<? extends Object, Integer> handleTextSelection(ITextSelection sel, Object input)
-            throws ExecutionException {
+    private static Pair<? extends Object, Integer> handleTextSelection(ITextSelection sel, Object input) {
 
         if (input instanceof FileEditorInput) {
             final IFile f = ((FileEditorInput) input).getFile();

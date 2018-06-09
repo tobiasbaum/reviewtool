@@ -8,12 +8,12 @@ import java.util.List;
 public interface IFragmentList {
 
     /**
-     * @return A read-only view on the fragments in this fragment list.
+     * Returns a read-only view on the fragments in this fragment list.
      */
     public abstract List<? extends IFragment> getFragments();
 
     /**
-     * @return {@code true} if this fragment list is empty.
+     * Returns {@code true} if this fragment list is empty.
      */
     public abstract boolean isEmpty();
 

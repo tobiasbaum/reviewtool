@@ -10,12 +10,12 @@ import java.util.Collection;
 public interface IRepository {
 
     /**
-     * @return An identifier unique amongst all known repositories.
+     * Returns an identifier that is unique amongst all known repositories.
      */
     public abstract String getId();
 
     /**
-     * @return The root of the working copy.
+     * Returns the root of the working copy.
      */
     public abstract File getLocalRoot();
 

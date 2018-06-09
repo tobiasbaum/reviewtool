@@ -452,10 +452,11 @@ public class JiraPersistence implements IReviewPersistence {
     }
 
     private void flushErrorStream(final HttpURLConnection c) throws IOException {
-        final InputStream s = c.getErrorStream();
-        int r;
-        while ((r = s.read()) >= 0) {
-            System.err.write(r);
+        try (final InputStream s = c.getErrorStream()) {
+            int r;
+            while ((r = s.read()) >= 0) {
+                System.err.write(r);
+            }
         }
     }
 
