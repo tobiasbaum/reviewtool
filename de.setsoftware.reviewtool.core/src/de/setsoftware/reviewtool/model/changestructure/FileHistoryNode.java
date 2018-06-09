@@ -1,6 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -11,27 +11,39 @@ import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
- * A node in a {@link FileHistoryGraph}.
+ * A node in a {@link FileHistoryGraph}. It denotes a path pointing to either a directory or a file.
+ * <p/>
+ * A node can be in one of three states: "normal", deleted, or replaced (which basically means that
+ * the chain of history has been broken deliberately).
  */
 public final class FileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 
+    private final FileHistoryGraph graph;
     private final IRevisionedFile file;
     private final Set<FileHistoryEdge> ancestors;
     private final Set<FileHistoryEdge> descendants;
     private FileHistoryNode parent;
-    private final List<FileHistoryNode> children;
-    private boolean isDeleted;
+    private final Set<FileHistoryNode> children;
+    private Type type;
 
     /**
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
+     *
      * @param file The {@link IRevisionedFile} to wrap.
+     * @param type The node type.
      */
-    public FileHistoryNode(final IRevisionedFile file, final boolean isDeleted) {
+    public FileHistoryNode(final FileHistoryGraph graph, final IRevisionedFile file, final Type type) {
+        this.graph = graph;
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
-        this.children = new ArrayList<>();
-        this.isDeleted = isDeleted;
+        this.children = new LinkedHashSet<>();
+        this.type = type;
+    }
+
+    @Override
+    public FileHistoryGraph getGraph() {
+        return this.graph;
     }
 
     @Override
@@ -55,8 +67,47 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     @Override
-    public boolean isDeleted() {
-        return this.isDeleted;
+    public Type getType() {
+        return this.type;
+    }
+
+    @Override
+    public boolean isConfirmed() {
+        return !this.type.equals(Type.UNCONFIRMED);
+    }
+
+    @Override
+    public boolean isCopyTarget() {
+        for (final FileHistoryEdge ancestorEdge : this.ancestors) {
+            if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY)) {
+                return true;
+            } else if (this.type.equals(Type.DELETED)
+                    && ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY_DELETED)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Only internal properties of the nodes are compared, no properties that would require traversing the graph.
+     * So neither ancestors nor descendants, neither parent nodes nor child nodes are compared.
+     */
+    @Override
+    public boolean equals(final Object o) {
+        if (o instanceof FileHistoryNode) {
+            final FileHistoryNode other = (FileHistoryNode) o;
+            return this.file.equals(other.file)
+                    && this.type.equals(other.type);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.file.hashCode();
     }
 
     /**
@@ -80,36 +131,55 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     /**
      * Adds a descendant {@link FileHistoryNode} of this node.
      */
-    public void addDescendant(final FileHistoryNode descendant, final IFileDiff diff) {
-        final FileHistoryEdge edge = new FileHistoryEdge(this, descendant, diff);
+    void addDescendant(final FileHistoryNode descendant, final IFileHistoryEdge.Type type, final IFileDiff diff) {
+        final FileHistoryEdge edge = new FileHistoryEdge(this.graph, this, descendant, type, diff);
         this.descendants.add(edge);
         descendant.addAncestor(edge);
     }
 
     /**
-     * Adds a descendant {@link FileHistoryNode} of this node.
+     * Makes this node a deleted node. Requires that the node is a {@link Type#ADDED} or {@link Type#CHANGED} node.
      */
-    public boolean hasDescendant(final FileHistoryNode descendant) {
-        for (final FileHistoryEdge descendantEdge : this.getDescendants()) {
-            if (descendantEdge.getDescendant().equals(descendant)) {
-                return true;
+    void makeDeleted() {
+        assert this.type.equals(Type.ADDED) || this.type.equals(Type.CHANGED);
+        this.type = Type.DELETED;
+
+        final Iterator<FileHistoryEdge> it = this.ancestors.iterator();
+        while (it.hasNext()) {
+            final FileHistoryEdge ancestorEdge = it.next();
+            if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.COPY)) {
+                ancestorEdge.setType(IFileHistoryEdge.Type.COPY_DELETED);
             }
         }
-        return false;
     }
 
     /**
-     * Sets whether this node is deleted.
-     * @param newDeleted {@code true} if this node should represent a deleted path, else {@code false}.
+     * Makes this node a replaced node. Requires that the node is a {@link Type#DELETED} node.
      */
-    void setDeleted(final boolean newDeleted) {
-        this.isDeleted = newDeleted;
+    void makeReplaced() {
+        assert this.type.equals(Type.DELETED);
+        this.type = Type.REPLACED;
+    }
+
+    /**
+     * Changes the type of this node to {@link Type#CHANGED}.
+     * Requires that the node is a {@link Type#UNCONFIRMED} node.
+     * In addition, {@link #makeConfirmed()} is invoked on the parent node if that exists and if it is of type
+     * {@link Type#UNCONFIRMED}.
+     */
+    void makeConfirmed() {
+        assert this.type.equals(Type.UNCONFIRMED);
+        this.type = Type.CHANGED;
+
+        if (this.parent != null && !this.parent.isConfirmed()) {
+            this.parent.makeConfirmed();
+        }
     }
 
     /**
      * Returns a list of child {@link FileHistoryNode}s.
      */
-    public List<FileHistoryNode> getChildren() {
+    public Set<FileHistoryNode> getChildren() {
         return this.children;
     }
 
@@ -119,13 +189,6 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     public void addChild(final FileHistoryNode child) {
         this.children.add(child);
         child.setParent(this);
-    }
-
-    /**
-     * Returns <code>true</code> if this node has a parent {@link FileHistoryNode}.
-     */
-    public boolean hasParent() {
-        return this.parent != null;
     }
 
     /**
@@ -145,18 +208,15 @@ public final class FileHistoryNode extends AbstractFileHistoryNode implements IM
     }
 
     /**
-     * Returns <code>true</code> if this node results from a copy operation.
+     * Returns the path of this node relative to its parent.
+     * If this node does not have a parent, the node's path is returned unmodified.
      */
-    public boolean isCopied() {
-        if (this.isRoot()) {
-            return false;
+    String getPathRelativeToParent() {
+        if (this.parent == null) {
+            return this.file.getPath();
+        } else {
+            return this.file.getPath().substring(this.parent.getFile().getPath().length());
         }
-        for (final IFileHistoryEdge ancestor : this.ancestors) {
-            if (!this.getFile().getPath().equals(ancestor.getAncestor().getFile().getPath())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

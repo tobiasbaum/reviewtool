@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -8,14 +7,12 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.api.ILocalRevision;
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
-import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
-import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
@@ -30,114 +27,73 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     }
 
     @Override
-    public final void addAdditionOrChange(
+    public final void addAddition(
             final String path,
-            final IRevision revision,
-            final Set<IRevision> ancestorRevisions) {
+            final IRevision revision) {
 
-        final boolean isNew = ancestorRevisions.isEmpty();
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
-        final FileHistoryNode node = this.getOrCreateFileHistoryNode(file, true, isNew, !isNew);
-        if (node.isRoot()) {
-            // for each root file within the history graph, we need an artificial ancestor node to record the changes
-            final Set<IRevision> ancestorRevs;
-            if (isNew) {
-                // use an UnknownRevision node as ancestor for newly added nodes
-                ancestorRevs = Collections.<IRevision>singleton(new UnknownRevision(revision.getRepository()));
-            } else {
-                ancestorRevs = ancestorRevisions;
-            }
-
-            for (final IRevision ancestorRevision : ancestorRevs) {
-                final IRevisionedFile prevFile = ChangestructureFactory.createFileInRevision(path, ancestorRevision);
-                final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(
-                        prevFile,
-                        true,   // must not exist
-                        false,  // is not known to be a new node
-                        false); // don't copy children (they do not exist anyway)
-                this.addDescendants(ancestor, node);
-            }
-        }
+        this.getOrCreateConnectedNode(file, IFileHistoryNode.Type.ADDED);
     }
 
-    /**
-     * Adds an edge between ancestor and descendant. Child nodes are not copied.
-     * Traverses the hierarchy upwards and adds all missing edges between the parents, if necessary.
-     * @param ancestor The ancestor node.
-     * @param descendant The descendant node.
-     */
-    private void addDescendants(final FileHistoryNode ancestor, final FileHistoryNode descendant) {
-        assert ancestor.getFile().getPath().equals(descendant.getFile().getPath());
-        FileHistoryNode ancestorNode = ancestor;
-        FileHistoryNode descendantNode = descendant;
-        while (!ancestorNode.hasDescendant(descendantNode)) {
-            ancestorNode.addDescendant(descendantNode, new FileDiff(ancestor.getFile(), descendant.getFile()));
-            assert ancestorNode.hasParent() == descendantNode.hasParent();
-            if (!ancestorNode.hasParent()) {
-                return;
+    @Override
+    public final void addChange(
+            final String path,
+            final IRevision revision,
+            Set<? extends IRevision> ancestorRevisions) {
+
+        assert !ancestorRevisions.isEmpty();
+        final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
+        final FileHistoryNode node = this.getOrCreateChangeNode(file);
+        assert !node.getType().equals(IFileHistoryNode.Type.DELETED);
+
+        if (node.isRoot()) {
+            // for each root file within the history graph, we need an ancestor node to record the changes
+            for (final IRevision ancestorRevision : ancestorRevisions) {
+                final IRevisionedFile prevFile = ChangestructureFactory.createFileInRevision(path, ancestorRevision);
+                final FileHistoryNode ancestor = this.getOrCreateConnectedNode(
+                        prevFile,
+                        IFileHistoryNode.Type.UNCONFIRMED);
+                addEdge(ancestor, node, IFileHistoryEdge.Type.NORMAL);
             }
-            ancestorNode = ancestorNode.getParent();
-            descendantNode = descendantNode.getParent();
         }
+        //else: a change is being recorded for a node copied in the same commit, so passed ancestors can be ignored
     }
 
     @Override
     public final void addDeletion(
             final String path,
-            final IRevision revision,
-            final Set<IRevision> ancestorRevisions) {
-
-        final Set<FileHistoryNode> ancestors = new LinkedHashSet<>();
-        for (final IRevision ancestorRevision : ancestorRevisions) {
-            final IRevisionedFile ancestorFile =
-                    ChangestructureFactory.createFileInRevision(path, ancestorRevision);
-            final FileHistoryNode ancestor = this.getOrCreateFileHistoryNode(ancestorFile, false, false, true);
-            assert !ancestor.isDeleted();
-            ancestors.add(ancestor);
-        }
+            final IRevision revision) {
 
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
-        final FileHistoryNode node = this.getNodeFor(file);
-        revision.accept(new IRevisionVisitor<Void>() {
+        final FileHistoryNode node = this.getOrCreateConnectedNode(file, IFileHistoryNode.Type.CHANGED);
+        node.makeDeleted();
 
-            @Override
-            public Void handleLocalRevision(final ILocalRevision revision) {
-                if (node != null) {
-                    assert !node.isDeleted();
-                    node.setDeleted(true);
-                }
-                return null;
-            }
-
-            @Override
-            public Void handleRepoRevision(final IRepoRevision revision) {
-                // a file in a non-local revision can have at most one associated node per revision
-                assert node == null;
-                return null;
-            }
-
-            @Override
-            public Void handleUnknownRevision(final IUnknownRevision revision) {
-                // it is not allowed to delete artificial nodes
-                assert node == null;
-                return null;
-            }
-
-        });
-
-        if (node == null) {
-            final FileHistoryNode deletionNode = new FileHistoryNode(file, true);
-            this.addParentNodes(deletionNode, false, false);
-            final Pair<String, IRepository> key = FileHistoryGraph.this.createKey(file);
-            this.index.put(key, deletionNode);
-            for (final FileHistoryNode ancestor : ancestors) {
-                ancestor.addDescendant(deletionNode, new FileDiff(ancestor.getFile(), file));
-                for (final FileHistoryNode child : ancestor.getChildren()) {
-                    this.addDeletion(child.getFile().getPath(), revision,
-                            Collections.singleton(ancestor.getFile().getRevision()));
-                }
-            }
+        this.createMissingChildren(node);
+        for (final FileHistoryNode child : node.getChildren()) {
+            final IRevisionedFile childFile = child.getFile();
+            assert revision.equals(childFile.getRevision());
+            this.addDeletion(childFile.getPath(), revision);
         }
+    }
+
+    @Override
+    public final void addReplacement(
+            final String path,
+            final IRevision revision) {
+
+        this.addDeletion(path, revision);
+        this.addAddition(path, revision);
+    }
+
+    @Override
+    public final void addReplacement(
+            final String path,
+            final IRevision revision,
+            final String pathFrom,
+            final IRevision revisionFrom) {
+
+        this.addDeletion(path, revision);
+        this.addCopy(pathFrom, path, revisionFrom, revision, IFileHistoryNode.Type.ADDED);
     }
 
     @Override
@@ -146,15 +102,71 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final String pathTo,
             final IRevision revisionFrom,
             final IRevision revisionTo) {
+        this.addCopy(pathFrom, pathTo, revisionFrom, revisionTo, IFileHistoryNode.Type.CHANGED);
+    }
+
+    private void addCopy(
+            final String pathFrom,
+            final String pathTo,
+            final IRevision revisionFrom,
+            final IRevision revisionTo,
+            final IFileHistoryNode.Type nodeType) {
 
         final IRevisionedFile fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom);
         final IRevisionedFile fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo);
 
-        final FileHistoryNode fromNode = this.getOrCreateFileHistoryNode(fileFrom, false, false, true);
-        final FileHistoryNode toNode = this.getOrCreateFileHistoryNode(fileTo, true, true, true);
+        final FileHistoryNode fromNode = this.getOrCreateConnectedNode(fileFrom, IFileHistoryNode.Type.UNCONFIRMED);
+        final FileHistoryNode toNode = this.getOrCreateUnconnectedNode(fileTo, nodeType);
 
-        if (!fromNode.hasDescendant(toNode)) {
-            this.addEdge(fromNode, toNode, true);
+        this.createMissingChildren(fromNode);
+
+        /*
+         * This can result in two copy edges (one of type COPY and one of type COPY_DELETED) between two nodes.
+         * Consider the following Subversion commands:
+         *
+         *   mkdir -p trunk/x
+         *   > trunk/x/a
+         *   svn add trunk; svn ci -m "." trunk; svn update
+         *   # copy trunk --> trunk2, which also copies trunk/x --> trunk2/x and trunk/x/a --> trunk2/x/a
+         *   svn copy trunk trunk2
+         *   # replace trunk2/x, which deletes trunk2/x/a
+         *   svn rm trunk2/x
+         *   mkdir trunk2/x
+         *   svn add trunk2/x
+         *   # "resurrect" trunk2/x/a
+         *   svn copy trunk/x/a trunk2/x/a
+         *
+         * After these operations, we have a COPY_DELETED edge between trunk/x/a and trunk2/x/a because of the
+         * deletion of trunk2/x being child of copied trunk2, and a COPY edge between trunk/x/a and trunk2/x/a
+         * because of the explicit copy operation. Technically, there are two flows trunk2/x/a is being part of,
+         * but the terminating flow is redundant.
+         */
+        addEdge(fromNode, toNode, IFileHistoryEdge.Type.COPY);
+        this.copyChildNodes(fromNode, toNode);
+    }
+
+    /**
+     * Copies child nodes.
+     *
+     * @param fromParent The node the children of which are to be copied.
+     * @param toParent The node where the children shall be copied to.
+     */
+    private void copyChildNodes(final FileHistoryNode fromParent, final FileHistoryNode toParent) {
+        final String fromParentPath = fromParent.getFile().getPath();
+        final IRevision fromRevision = fromParent.getFile().getRevision();
+        final String toParentPath = toParent.getFile().getPath();
+        final IRevision toRevision = toParent.getFile().getRevision();
+
+        for (final FileHistoryNode child : fromParent.getChildren()) {
+            // don't copy deleted children
+            if (!child.getType().equals(IFileHistoryNode.Type.DELETED)) {
+                final String childPath = child.getFile().getPath();
+                this.addCopy(
+                        childPath,
+                        toParentPath.concat(childPath.substring(fromParentPath.length())),
+                        fromRevision,
+                        toRevision);
+            }
         }
     }
 
@@ -162,22 +174,21 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * Adds an ancestor/descendant relationship between two nodes.
      * @param ancestor The ancestor.
      * @param descendant The descendant.
-     * @param copyChildren If <code>true</code>, the children of the ancestor node are copied to the descendant node.
+     * @param type The type of the edge to create.
      */
-    private void addEdge(final FileHistoryNode ancestor, final FileHistoryNode descendant,
-            final boolean copyChildren) {
-        ancestor.addDescendant(descendant, new FileDiff(ancestor.getFile(), descendant.getFile()));
-        if (copyChildren) {
-            this.copyChildNodes(ancestor, descendant);
-        }
+    private static void addEdge(
+            final FileHistoryNode ancestor,
+            final FileHistoryNode descendant,
+            final IFileHistoryEdge.Type type) {
+        ancestor.addDescendant(descendant, type, new FileDiff(ancestor.getFile(), descendant.getFile()));
     }
 
     /**
      * Adds a parent node to the node passed. Either an existing parent node is used or a new one is created.
      * @param node The node which to find/create parent node for.
-     * @param isNew If <code>true</code>, it is known that the node has been added in its revision.
+     * @param inheritCopy If {@code true}, copy associations are inherited from parent node.
      */
-    private void addParentNodes(final FileHistoryNode node, final boolean isNew, final boolean copyChildren) {
+    private void addParentNodes(final FileHistoryNode node, final boolean inheritCopy) {
         final IRevisionedFile file = node.getFile();
         final String path = file.getPath();
         if (path.contains("/")) {
@@ -186,12 +197,15 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                 final IRevisionedFile fileRev = ChangestructureFactory.createFileInRevision(
                         parentPath,
                         file.getRevision());
-                // don't copy child nodes when traversing upwards the tree as they already exist
-                final FileHistoryNode parent = this.getOrCreateFileHistoryNode(fileRev, false, false, false);
+                final FileHistoryNode parent = this.getOrCreateConnectedNode(
+                        fileRev,
+                        node.isConfirmed() ? IFileHistoryNode.Type.CHANGED : IFileHistoryNode.Type.UNCONFIRMED);
+                if (parent.isConfirmed() && !node.isConfirmed()) {
+                    node.makeConfirmed();
+                }
                 parent.addChild(node);
 
-                if (!isNew && !node.isCopied() && parent.isCopied()) {
-                    // special case: node begins lifetime with a change or deletion in a copied directory
+                if (inheritCopy && parent.isCopyTarget() && !node.getType().equals(IFileHistoryNode.Type.ADDED)) {
                     final String name = path.substring(path.lastIndexOf("/") + 1);
                     for (final FileHistoryEdge parentAncestorEdge : parent.getAncestors()) {
                         final FileHistoryNode parentAncestor = parentAncestorEdge.getAncestor();
@@ -200,37 +214,140 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                                 parentAncestorRev.getPath() + "/" + name,
                                 parentAncestorRev.getRevision());
                         final FileHistoryNode ancestor =
-                                this.getOrCreateFileHistoryNode(ancestorRev, false, false, false);
-                        this.addEdge(ancestor, node, copyChildren);
+                                this.getOrCreateConnectedNode(ancestorRev, IFileHistoryNode.Type.UNCONFIRMED);
+                        this.addNodeWithAncestor(node, ancestor, IFileHistoryEdge.Type.COPY);
                     }
                 }
             }
         }
     }
 
-    private static String crateCopyTargetName(final String childPath, final String oldParentPath,
-            final String newParentPath) {
-        return newParentPath.concat(childPath.substring(oldParentPath.length()));
+    /**
+     * Creates all missing children of passed node. The nodes are determined by recursively traversing the
+     * node's ancestors.
+     *
+     * @param target The node the children of which are to be created.
+     */
+    private void createMissingChildren(final FileHistoryNode target) {
+        final Set<String> paths = new LinkedHashSet<>();
+        for (final FileHistoryNode child : target.getChildren()) {
+            paths.add(child.getFile().getPath());
+        }
+        this.createMissingChildren(paths, target, target, new LinkedHashSet<FileHistoryNode>());
     }
 
     /**
-     * Copies child nodes.
+     * Creates all missing children of passed node.
+     *
+     * @param paths The paths for which a child node has already been created.
+     * @param node The node the children of which are to be computed.
+     * @param target The node the children of which are to be created.
+     * @param visitedNodes The set of nodes that have already been visited. As the file hierarchy graph is not
+     *      necessarily a tree due to branching and merging, we need to mark nodes that have already been processed.
      */
-    private void copyChildNodes(final FileHistoryNode oldNode, final FileHistoryNode newNode) {
-        final String oldParentPath = oldNode.getFile().getPath();
-        final IRevision oldRevision = oldNode.getFile().getRevision();
-        final String newParentPath = newNode.getFile().getPath();
-        final IRevision newRevision = newNode.getFile().getRevision();
+    private void createMissingChildren(
+            final Set<String> paths,
+            final FileHistoryNode node,
+            final FileHistoryNode target,
+            final Set<FileHistoryNode> visitedNodes) {
 
-        for (final FileHistoryNode child : oldNode.getChildren()) {
-            // don't copy deleted children
-            if (!child.isDeleted()) {
-                final String childPath = child.getFile().getPath();
-                FileHistoryGraph.this.addCopy(childPath,
-                        crateCopyTargetName(childPath, oldParentPath, newParentPath),
-                        oldRevision, newRevision);
+        if (visitedNodes.contains(node)) {
+            return;
+        } else {
+            visitedNodes.add(node);
+        }
+
+        this.createMissingTargetChildren(paths, node, target);
+
+        for (final FileHistoryEdge ancestorEdge : node.getAncestors()) {
+            final FileHistoryNode ancestor = ancestorEdge.getAncestor();
+            if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.NORMAL)) {
+                this.createMissingChildren(paths, ancestor, target, visitedNodes);
             }
         }
+    }
+
+    /**
+     * Determines all missing child nodes of passed ancestor node and creates suitable descendant nodes as children of
+     * passed target node. A child node is missing if the target node does not have a child node with the same path.
+     *
+     * @param paths The paths for which a child node has already been created.
+     * @param ancestor The node the children of which are to be computed.
+     * @param target The node the children of which are to be created.
+     */
+    private void createMissingTargetChildren(
+            final Set<String> paths,
+            final FileHistoryNode ancestor,
+            final FileHistoryNode target) {
+
+        for (final FileHistoryNode ancestorChild : ancestor.getChildren()) {
+            final String ancestorChildPath = ancestorChild.getFile().getPath();
+            if (paths.add(ancestorChildPath)) {
+                if (!ancestorChild.getType().equals(IFileHistoryNode.Type.DELETED)) {
+                    final String targetChildPath = target.getFile().getPath() + ancestorChild.getPathRelativeToParent();
+                    this.createTargetChild(target, ancestorChild, targetChildPath);
+                }
+            }
+        }
+    }
+
+    /**
+     * Creates a child node under a target node based on a child node of some ancestor of the target.
+     *
+     * @param target The node where the child node is to be created.
+     * @param ancestorChild The child of the ancestor node that is to be recreated as child of passed target node.
+     * @param targetChildPath The path of the new child node to be created.
+     */
+    private void createTargetChild(
+            final FileHistoryNode target,
+            final FileHistoryNode ancestorChild,
+            final String targetChildPath) {
+        final IRevisionedFile file =
+                ChangestructureFactory.createFileInRevision(targetChildPath, target.getFile().getRevision());
+        if (this.getNodeFor(file) == null) {
+            final FileHistoryNode targetChild = this.getOrCreateUnconnectedNode(
+                    file,
+                    IFileHistoryNode.Type.CHANGED);
+            this.addNodeWithAncestor(targetChild, ancestorChild, IFileHistoryEdge.Type.NORMAL);
+        }
+    }
+
+    /**
+     * Returns or creates a {@link FileHistoryNode} for a given {@link IRevisionedFile}
+     * which inherits copy associations from its parent node if possible.
+     * If a node for that {@link IRevisionedFile} already exists, it is returned.
+     * If a node for that {@link IRevisionedFile} does not exist, it is created as a node with passed type.
+     * If the node returned is a root node, an artificial ancestor is created.
+     */
+    private FileHistoryNode getOrCreateConnectedNode(
+            final IRevisionedFile file,
+            final IFileHistoryNode.Type nodeType) {
+        return this.getOrCreateFileHistoryNode(file, nodeType, true, true);
+    }
+
+    /**
+     * Returns or creates a {@link FileHistoryNode} for a given {@link IRevisionedFile}
+     * which does not inherit any copy associations from its parent node.
+     * If a node for that {@link IRevisionedFile} already exists, it is returned.
+     * If a node for that {@link IRevisionedFile} does not exist, it is created as a node with passed type.
+     * No artificial ancestor is created for root nodes.
+     */
+    private FileHistoryNode getOrCreateUnconnectedNode(
+            final IRevisionedFile file,
+            final IFileHistoryNode.Type nodeType) {
+        return this.getOrCreateFileHistoryNode(file, nodeType, false, false);
+    }
+
+    /**
+     * Returns or creates a {@link FileHistoryNode} for a given {@link IRevisionedFile}
+     * which inherits copy associations from its parent node if possible.
+     * If a node for that {@link IRevisionedFile} already exists, it is returned.
+     * If a node for that {@link IRevisionedFile} does not exist, it is created as a node with type
+     * {@link IFileHistoryNode.Type#CHANGED}.
+     * No artificial ancestor is created for root nodes.
+     */
+    private FileHistoryNode getOrCreateChangeNode(final IRevisionedFile file) {
+        return this.getOrCreateFileHistoryNode(file, IFileHistoryNode.Type.CHANGED, false, true);
     }
 
     /**
@@ -240,53 +357,102 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * In addition, it is inserted into a possibly existing ancestor/descendant chain and/or parent/child of other
      * {@link FileHistoryNode}s.
      *
-     * @param mustNotExist If <code>true</code>, the node may not already exist.
-     * @param isNew If <code>true</code>, the node is known to have been added in passed revision. This makes a
-     *      difference when the node's parent is a copied directory: New nodes remain root nodes, while other nodes
-     *      will be associated to an ancestor in the parent's copy source.
-     * @param copyChildren If <code>true</code> and a new node is created, child nodes are copied from the ancestor
-     *      (if it exists) to the new node.
+     * @param file The revisioned file to get or create a {@link FileHistoryNode} for.
+     * @param nodeType The node type for a newly created node.
+     * @param connected If {@code true}, an artificial ancestor node is created for a root node.
+     * @param inheritCopy If {@code true}, copy associations are inherited from parent node if possible.
      */
-    private FileHistoryNode getOrCreateFileHistoryNode(final IRevisionedFile file, final boolean mustNotExist,
-            final boolean isNew, final boolean copyChildren) {
+    private FileHistoryNode getOrCreateFileHistoryNode(
+            final IRevisionedFile file,
+            final IFileHistoryNode.Type nodeType,
+            final boolean connected,
+            final boolean inheritCopy) {
+
+        // other types have to be set afterwards by using {@link FileHistoryNode#makeDeleted()} or
+        // {@link FileHistoryNode#makeReplaced()}
+        assert nodeType.equals(IFileHistoryNode.Type.UNCONFIRMED)
+                || nodeType.equals(IFileHistoryNode.Type.ADDED)
+                || nodeType.equals(IFileHistoryNode.Type.CHANGED);
+
         FileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
-            final FileHistoryNode newNode = new FileHistoryNode(file, false);
-            this.index.put(this.createKey(file), newNode);
+            node = new FileHistoryNode(this, file, nodeType);
+            this.index.put(this.createKey(file), node);
 
-            this.addParentNodes(newNode, isNew, copyChildren);
-            if (!isNew && newNode.isRoot()) { // addParentNodes() may have already added an ancestor
-                final FileHistoryNode ancestor = this.findAncestorFor(file);
+            this.addParentNodes(node, inheritCopy);
+
+            if (node.isRoot() && connected) {
+                FileHistoryNode ancestor = node.getType().equals(IFileHistoryNode.Type.ADDED) ? null
+                        : this.findAncestorFor(file);
+                if (ancestor == null) {
+                    final IRevisionedFile alphaFile = ChangestructureFactory.createFileInRevision(
+                            file.getPath(), ChangestructureFactory.createUnknownRevision(file.getRepository()));
+                    if (!alphaFile.equals(file)) {
+                        ancestor = this.getOrCreateUnconnectedNode(alphaFile, IFileHistoryNode.Type.UNCONFIRMED);
+                    }
+                }
+
                 if (ancestor != null) {
-                    this.injectInteriorNode(ancestor, newNode);
-                    this.addEdge(ancestor, newNode, copyChildren);
+                    this.addNodeWithAncestor(node, ancestor, IFileHistoryEdge.Type.NORMAL);
                 }
             }
-
-            return newNode;
         } else {
-            assert !isNew && !mustNotExist;
-            return node;
+            if (nodeType.equals(IFileHistoryNode.Type.ADDED)) {
+                node.makeReplaced();
+            }
         }
+
+        assert node != null;
+        return node;
+    }
+
+    /**
+     * Adds a node into the graph whose ancestor node has already been determined.
+     *
+     * @param node The node to add.
+     * @param ancestor The ancestor node.
+     * @param edgeType The edge to be inserted between the ancestor node and the node to add.
+     */
+    private void addNodeWithAncestor(
+            final FileHistoryNode node,
+            final FileHistoryNode ancestor,
+            final IFileHistoryEdge.Type edgeType) {
+
+        if (ancestor.isConfirmed() && !node.isConfirmed()) {
+            node.makeConfirmed();
+        }
+
+        if (node.isConfirmed()) {
+            this.injectInteriorNode(ancestor, node);
+        }
+
+        addEdge(ancestor, node, edgeType);
     }
 
     /**
      * Injects a node into an existing ancestor/descendant relationship between other nodes. This can happen if the
      * interior node is created later due to copying an old file revision.
      *
-     * @param ancestor The ancestor.
-     * @param descendant The descendant.
+     * @param ancestor The ancestor node.
+     * @param interiorNode The interior node.
      */
-    private void injectInteriorNode(final FileHistoryNode ancestor, final FileHistoryNode descendant) {
+    private void injectInteriorNode(final FileHistoryNode ancestor, final FileHistoryNode interiorNode) {
+        if (!ancestor.getFile().getPath().equals(interiorNode.getFile().getPath())) {
+            return;
+        }
+
         final Iterator<FileHistoryEdge> it = ancestor.getDescendants().iterator();
         while (it.hasNext()) {
             final FileHistoryEdge descendantOfAncestorEdge = it.next();
-            final FileHistoryNode descendantOfAncestor = descendantOfAncestorEdge.getDescendant();
-            // only inject interior node if it's the same path (i.e. no rename/move)
-            if (ancestor.getFile().getPath().equals(descendantOfAncestor.getFile().getPath())) {
+            // only inject interior node if edge is not a copy (this excludes rename/move operations)
+            if (descendantOfAncestorEdge.getType().equals(IFileHistoryEdge.Type.NORMAL)) {
+                final FileHistoryNode descendantOfAncestor = descendantOfAncestorEdge.getDescendant();
                 it.remove();
                 descendantOfAncestor.removeAncestor(descendantOfAncestorEdge);
-                descendant.addDescendant(descendantOfAncestor, descendantOfAncestorEdge.getDiff());
+                interiorNode.addDescendant(
+                        descendantOfAncestor,
+                        descendantOfAncestorEdge.getType(), // always IFileHistoryEdge.Type.NORMAL
+                        descendantOfAncestorEdge.getDiff());
             }
         }
     }
@@ -319,8 +485,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
     /**
      * Returns the nearest ancestor for passed {@link IRevisionedFile} having the same path, or <code>null</code>
-     * if no suitable node exists. To be suitable, the ancestor node must be an {@link ExistingFileHistoryNode} as
-     * a deleted file cannot be an ancestor.
+     * if no suitable node exists. To be suitable, the ancestor node must not be deleted.
      */
     public abstract FileHistoryNode findAncestorFor(IRevisionedFile file);
 

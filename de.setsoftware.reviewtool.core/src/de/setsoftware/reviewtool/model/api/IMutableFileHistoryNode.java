@@ -11,6 +11,9 @@ import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 public interface IMutableFileHistoryNode extends IFileHistoryNode {
 
     @Override
+    public abstract IMutableFileHistoryGraph getGraph();
+
+    @Override
     public abstract Set<? extends IMutableFileHistoryEdge> getAncestors();
 
     @Override

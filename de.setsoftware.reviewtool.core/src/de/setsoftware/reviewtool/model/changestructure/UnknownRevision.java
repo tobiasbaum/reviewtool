@@ -28,12 +28,16 @@ public final class UnknownRevision implements IUnknownRevision {
 
     @Override
     public int hashCode() {
-        return 9871234;
+        return this.repo.hashCode();
     }
 
     @Override
     public boolean equals(Object o) {
-        return o instanceof UnknownRevision;
+        if (!(o instanceof UnknownRevision)) {
+            return false;
+        }
+        final UnknownRevision r = (UnknownRevision) o;
+        return this.repo.equals(r.repo);
     }
 
     @Override

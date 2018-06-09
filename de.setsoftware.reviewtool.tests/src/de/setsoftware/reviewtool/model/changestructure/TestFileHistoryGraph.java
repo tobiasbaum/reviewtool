@@ -1,20 +1,19 @@
-package de.setsoftware.reviewtool.changesources.svn;
+package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.List;
 
+import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryNode;
 
 /**
- *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
+ * Implements {@link IFileHistoryGraph} for this test case. (Code borrowed from the SVN change source code.)
  */
-final class SvnFileHistoryGraph extends FileHistoryGraph {
+final class TestFileHistoryGraph extends FileHistoryGraph {
 
     @Override
     public FileHistoryNode findAncestorFor(final IRevisionedFile file) {
@@ -57,9 +56,10 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
 
             @Override
             public Long handleUnknownRevision(final IUnknownRevision revision) {
-                return -1L;
+                return 0L;
             }
 
         });
     }
+
 }

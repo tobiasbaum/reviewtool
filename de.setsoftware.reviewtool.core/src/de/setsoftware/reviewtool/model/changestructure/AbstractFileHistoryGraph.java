@@ -10,6 +10,7 @@ import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
 
 /**
  * Contains behaviour common to all {@link IFileHistoryGraph} implementations.
@@ -61,7 +62,7 @@ public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
      */
     private Set<IFileHistoryNode> getLatestFilesHelper(final IFileHistoryNode node, final boolean returnDeletions) {
         // deletion nodes are never returned
-        if (!node.isDeleted()) {
+        if (!node.getType().equals(Type.DELETED)) {
             if (node.getDescendants().isEmpty()) {
                 return Collections.singleton(node);
             } else {

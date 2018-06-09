@@ -4,9 +4,12 @@ import de.setsoftware.reviewtool.model.changestructure.FileDiff;
 
 /**
  * An edge in a {@link IMutableFileHistoryGraph} between an ancestor and a descendant {@link IMutableFileHistoryNode}.
- * It contains a {@link FileDiff}.
+ * Its {@link FileDiff} object can be changed.
  */
 public interface IMutableFileHistoryEdge extends IFileHistoryEdge {
+
+    @Override
+    public abstract IMutableFileHistoryGraph getGraph();
 
     @Override
     public abstract IMutableFileHistoryNode getAncestor();

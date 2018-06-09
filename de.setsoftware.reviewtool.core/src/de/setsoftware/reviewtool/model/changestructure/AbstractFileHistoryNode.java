@@ -77,6 +77,7 @@ public abstract class AbstractFileHistoryNode implements IFileHistoryNode {
      * @param attributes A list containing elements to be included in the output of {@link #toString()}.
      */
     protected void attributesToString(final List<String> attributes) {
+        attributes.add("state=" + this.getType());
         if (!this.isRoot()) {
             final Set<IFileHistoryNode> nodes = new LinkedHashSet<>();
             for (final IFileHistoryEdge ancestorEdge : this.getAncestors()) {
@@ -91,9 +92,6 @@ public abstract class AbstractFileHistoryNode implements IFileHistoryNode {
                 nodes.add(descendantEdge.getDescendant());
             }
             attributes.add("descendants=" + nodes);
-        }
-        if (this.isDeleted()) {
-            attributes.add("deleted");
         }
     }
 

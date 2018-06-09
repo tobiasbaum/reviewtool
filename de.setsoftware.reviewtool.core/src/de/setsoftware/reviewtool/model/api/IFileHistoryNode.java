@@ -11,6 +11,40 @@ import de.setsoftware.reviewtool.model.changestructure.FileDiff;
 public interface IFileHistoryNode {
 
     /**
+     * Represents the type of an edge.
+     */
+    public enum Type {
+        /**
+         * A node denoting an addition, i.e. the start of a new flow.
+         */
+        ADDED,
+        /**
+         * A node denoting a change, i.e. the continuation of an existing flow.
+         * The change may be empty. Such a node results from confirming an unconfirmed copy source retroactively.
+         */
+        CHANGED,
+        /**
+         * A node denoting a deletion, i.e. the termination of an existing flow.
+         */
+        DELETED,
+        /**
+         * A node denoting a replacement, i.e. the termination of an existing and the start of a new or continuation
+         * of an existing flow (the latter happens when the node is replaced by a copy of some other node).
+         */
+        REPLACED,
+        /**
+         * A node denoting an unconfirmed copy source. "Unconfirmed" means that it is not clear which flow the node
+         * belongs to.
+         */
+        UNCONFIRMED
+    }
+
+    /**
+     * Returns the {@link IFileHistoryGraph} this node belongs to.
+     */
+    public abstract IFileHistoryGraph getGraph();
+
+    /**
      * Returns the {@link IRevisionedFile} wrapped by this node.
      */
     public abstract IRevisionedFile getFile();
@@ -22,20 +56,32 @@ public interface IFileHistoryNode {
     public abstract boolean isRoot();
 
     /**
-     * Checks whether this {@link IFileHistoryNode} denotes a deleted node.
-     * @return <code>true</code> if this node is deleted, else <code>false</code>
+     * Returns the type of this node.
      */
-    public abstract boolean isDeleted();
+    public abstract Type getType();
 
     /**
-     * Returns the set of outgoing edges pointing to the nearest ancestor {@link IFileHistoryNode}s.
+     * Returns {@code true} if this is a confirmed node, i.e. iff {@code this.getType() != Type.UNCONFIRMED}.
+     */
+    public abstract boolean isConfirmed();
+
+    /**
+     * Checks whether this {@link IFileHistoryNode} denotes a copy target.
+     * In case of a replaced node the copy target state refers to the replacing node in the new flow,
+     * not the replaced one in the old flow.
+     * @return <code>true</code> if this node is a copy target, else <code>false</code>
+     */
+    public abstract boolean isCopyTarget();
+
+    /**
+     * Returns the set of incoming edges originating from the nearest ancestor {@link IFileHistoryNode}s.
      * Note that the nodes returned by this operation may change over time when intermediate
      * {@link IFileHistoryNode}s are created due to recorded copy operations.
      */
     public abstract Set<? extends IFileHistoryEdge> getAncestors();
 
     /**
-     * Returns the set of incoming edges originating from the nearest descendant {@link IFileHistoryNode}s.
+     * Returns the set of outgoing edges pointing to the the nearest descendant {@link IFileHistoryNode}s.
      * Note that the nodes returned by this operation may change over time when intermediate
      * {@link IFileHistoryNode}s are created due to recorded copy operations.
      */
