@@ -315,7 +315,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             if (forceTextEditor) {
                 part = page.openEditor(new FileStoreEditorInput(fileStore), getTextEditorId());
             } else {
-                part = IDE.openEditorOnFileStore(page, fileStore);
+                part = IDE.openInternalEditorOnFileStore(page, fileStore);
             }
             //for files not in the workspace, we cannot create markers, but let's at least select the text
             if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {
