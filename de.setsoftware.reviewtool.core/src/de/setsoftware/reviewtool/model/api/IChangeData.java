@@ -16,7 +16,7 @@ public interface IChangeData {
     public abstract IChangeSource getSource();
 
     /**
-     * Returns all {@link ICommit}s matching the given ticket.
+     * Returns all {@link ICommit}s matching the given ticket, sorted by commit date from oldest to newest.
      */
     public abstract List<? extends ICommit> getMatchedCommits();
 

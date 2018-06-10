@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +36,13 @@ public final class ChangeData implements IChangeData {
         this.source = source;
         this.commits = commits;
         this.localPathMap = localPathMap;
+
+        this.commits.sort(new Comparator<ICommit>() {
+            @Override
+            public int compare(ICommit o1, ICommit o2) {
+                return o1.getTime().compareTo(o2.getTime());
+            }
+        });
 
         this.repositories = new LinkedHashSet<>();
         for (final ICommit commit : this.commits) {
