@@ -25,6 +25,7 @@ import com.eclipsesource.json.ParseException;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.base.Util;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
@@ -316,12 +317,12 @@ public class JiraPersistence implements IReviewPersistence {
     }
 
     private Date getTimeOfTransferToCurrentStatus(JsonObject ticket) {
-        Date ret = new Date();
+        Date ret = new Date(0);
         final JsonArray histories = JiraPersistence.this.getHistories(ticket);
         for (final JsonValue v : histories) {
             final String fromStatus = this.getFromStatus(v);
             if (fromStatus != null) {
-                ret = this.getTimeOfHistoryItem(v);
+                ret = Util.max(ret, this.getTimeOfHistoryItem(v));
             }
         }
         return ret;

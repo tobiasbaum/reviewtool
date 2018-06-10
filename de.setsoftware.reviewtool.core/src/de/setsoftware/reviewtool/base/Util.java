@@ -40,4 +40,11 @@ public class Util {
         return ret.toString();
     }
 
+    /**
+     * Compares the given arguments and returns the larger one.
+     */
+    public static<T extends Comparable<T>> T max(T o1, T o2) {
+        return o1.compareTo(o2) >= 0 ? o1 : o2;
+    }
+
 }
