@@ -135,4 +135,32 @@ public class RemarkTest {
         }
     }
 
+    @Test
+    public void testRemarksAreOrderedByFileAndLine() throws Exception {
+        final String input = "Review 1:\n"
+                + "* muss\n"
+                + "*# (x/Y) Anm A\n"
+                + "*# (x/Z) Anm B\n"
+                + "*# (x/Y, 5) Anm C\n"
+                + "*# global\n"
+                + "*# (x/Z, 10) Anm D\n"
+                + "*# (y/Y, 4) Anm E\n"
+                + "*# (x/Y, 10) Anm F\n"
+                + "*# (x/Z, 4) Anm G\n";
+
+        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
+
+        assertEquals("Review 1:\n"
+                + "* muss\n"
+                + "*# global\n"
+                + "*# (x/Y) Anm A\n"
+                + "*# (x/Y, 5) Anm C\n"
+                + "*# (x/Y, 10) Anm F\n"
+                + "*# (x/Z) Anm B\n"
+                + "*# (x/Z, 4) Anm G\n"
+                + "*# (x/Z, 10) Anm D\n"
+                + "*# (y/Y, 4) Anm E\n",
+                d.serialize());
+    }
+
 }

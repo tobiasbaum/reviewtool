@@ -176,4 +176,33 @@ public class ReviewRemark {
         this.marker.delete();
     }
 
+    private Position getPosition() {
+        return Position.parse(this.getPositionString());
+    }
+
+    /**
+     * Returns true iff the current remark's position is larger than the given remark's.
+     * Global remarks are seen as the smallest ones, and whole file remarks are smaller than
+     * remarks for a specific line in that file.
+     */
+    public boolean hasLargerPositionThan(ReviewRemark r2) {
+        final Position p1 = this.getPosition();
+        final Position p2 = r2.getPosition();
+        final String f1 = p1.getShortFileName();
+        if (f1 == null) {
+            return false;
+        }
+        final String f2 = p2.getShortFileName();
+        if (f2 == null) {
+            return true;
+        }
+        if (f1.compareTo(f2) < 0) {
+            return false;
+        } else if (f1.compareTo(f2) > 0) {
+            return true;
+        }
+
+        return p1.getLine() > p2.getLine();
+    }
+
 }

@@ -41,7 +41,7 @@ public class ReviewRound {
         if (index >= 0) {
             this.remarks.set(index, reviewRemark);
         } else {
-            this.remarks.add(reviewRemark);
+            this.add(reviewRemark);
         }
     }
 
@@ -57,7 +57,17 @@ public class ReviewRound {
     }
 
     public void add(ReviewRemark reviewRemark) {
-        this.remarks.add(reviewRemark);
+        final int index = this.findInsertionIndex(reviewRemark);
+        this.remarks.add(index, reviewRemark);
+    }
+
+    private int findInsertionIndex(ReviewRemark reviewRemark) {
+        for (int i = 0; i < this.remarks.size(); i++) {
+            if (this.remarks.get(i).hasLargerPositionThan(reviewRemark)) {
+                return i;
+            }
+        }
+        return this.remarks.size();
     }
 
     public boolean isEmpty() {

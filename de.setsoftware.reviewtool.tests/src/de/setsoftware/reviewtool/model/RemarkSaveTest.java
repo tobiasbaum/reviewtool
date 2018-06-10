@@ -282,8 +282,8 @@ public class RemarkSaveTest {
                 + "\n"
                 + "Review 1:\n"
                 + "* muss\n"
-                + "*# (DateiX) Anm A\n"
-                + "*# Anm B\n",
+                + "*# Anm B\n"
+                + "*# (DateiX) Anm A\n",
                 p.getCurrentReviewData());
     }
 

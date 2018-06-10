@@ -39,4 +39,9 @@ public class FilePosition extends Position {
     public String toString() {
         return this.serialize();
     }
+
+    @Override
+    public int getLine() {
+        return 0;
+    }
 }

@@ -7,7 +7,15 @@ public abstract class Position {
 
     public abstract String serialize();
 
+    /**
+     * Returns the filename (as used for serialization), or null iff there is no file for this remark.
+     */
     public abstract String getShortFileName();
+
+    /**
+     * Returns the line of this remark, or 0 if there is no line for this remark.
+     */
+    public abstract int getLine();
 
     /**
      * Creates a position from its string representation.

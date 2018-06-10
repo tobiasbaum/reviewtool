@@ -30,4 +30,9 @@ public class GlobalPosition extends Position {
         return "global";
     }
 
+    @Override
+    public int getLine() {
+        return 0;
+    }
+
 }
