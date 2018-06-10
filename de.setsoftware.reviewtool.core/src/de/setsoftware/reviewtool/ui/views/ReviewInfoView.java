@@ -1,5 +1,12 @@
 package de.setsoftware.reviewtool.ui.views;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ScrolledComposite;
@@ -42,7 +49,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
     private Text reviewDataText;
 
     private String lastText = "";
-    private String ticketId;
+    private final Set<String> ticketIdHistory = new LinkedHashSet<>();
 
     @Override
     public void createPartControl(Composite comp) {
@@ -154,7 +161,7 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
 
         final ITicketData ticketData = mgr.getCurrentTicketData();
         final TicketInfo ticketInfo = ticketData.getTicketInfo();
-        this.ticketId = ticketInfo.getId();
+        this.ticketIdHistory.add(ticketInfo.getId());
         this.createIdStuff(scrollContent, title, ticketInfo.getId(), mgr);
         this.createLabelAndText(scrollContent, "Title:", ticketInfo.getSummary(),
                 SWT.SINGLE | SWT.WRAP, GridData.FILL_HORIZONTAL);
@@ -223,10 +230,13 @@ public class ReviewInfoView extends ViewPart implements ReviewModeListener, IRev
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
-        if (this.ticketId == null) {
+        if (this.ticketIdHistory.isEmpty()) {
             label.setText("No review or fixing active");
         } else {
-            label.setText("No review or fixing active. Last finished: " + this.ticketId);
+            final List<String> reversedHistory = new ArrayList<>(this.ticketIdHistory);
+            Collections.reverse(reversedHistory);
+            label.setText("No review or fixing active.\nLast finished: "
+                    + reversedHistory.stream().limit(5).collect(Collectors.joining(", ")));
         }
 
         ViewHelper.createContextMenuWithoutSelectionProvider(this, label);

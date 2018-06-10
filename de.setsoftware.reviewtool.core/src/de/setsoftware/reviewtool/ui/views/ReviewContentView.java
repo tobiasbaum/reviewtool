@@ -2,9 +2,14 @@ package de.setsoftware.reviewtool.ui.views;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.filesystem.EFS;
@@ -141,7 +146,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     private FilterStateAction hideChecked;
     private FilterStateAction hideVisited;
     private FilterStateAction hideIrrelevant;
-    private String ticketId;
+    private final Set<String> ticketIdHistory = new LinkedHashSet<>();
 
     @Override
     public void createPartControl(Composite comp) {
@@ -187,7 +192,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     public void notifyReview(ReviewStateManager mgr, ToursInReview tours) {
         this.disposeOldContent();
         this.currentContent = this.createReviewContent(tours);
-        this.ticketId = mgr.getTicketKey();
+        this.ticketIdHistory.add(mgr.getTicketKey());
         this.comp.layout();
     }
 
@@ -414,10 +419,13 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         final Composite panel = new Composite(this.comp, SWT.NULL);
         panel.setLayout(new FillLayout());
         final Label label = new Label(panel, SWT.NULL);
-        if (this.ticketId == null) {
-            label.setText("Not in review mode");
+        if (this.ticketIdHistory.isEmpty()) {
+            label.setText("Not in review mode.");
         } else {
-            label.setText("Not in review mode\nLast finished: " + this.ticketId);
+            final List<String> reversedHistory = new ArrayList<>(this.ticketIdHistory);
+            Collections.reverse(reversedHistory);
+            label.setText("Not in review mode.\nLast finished: "
+                    + reversedHistory.stream().limit(5).collect(Collectors.joining(", ")));
         }
         ViewHelper.createContextMenuWithoutSelectionProvider(this, label);
         return panel;
