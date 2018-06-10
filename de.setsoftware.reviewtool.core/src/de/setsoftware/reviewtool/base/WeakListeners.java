@@ -15,7 +15,7 @@ public class WeakListeners<T> implements Iterable<T> {
     private final List<WeakReference<T>> listeners = new ArrayList<>();
 
     /**
-     * Returns the currently registered iterators.
+     * Returns a snapshot of the currently registered iterators.
      * Also performs housekeeping of references that have been garbage collected.
      */
     public List<T> getListeners() {
@@ -34,6 +34,19 @@ public class WeakListeners<T> implements Iterable<T> {
 
     public void add(T listener) {
         this.listeners.add(new WeakReference<>(listener));
+    }
+
+    /**
+     * Removes the given listener.
+     */
+    public void remove(T toRemove) {
+        final Iterator<WeakReference<T>> iter = this.listeners.iterator();
+        while (iter.hasNext()) {
+            final T s = iter.next().get();
+            if (toRemove == s) {
+                iter.remove();
+            }
+        }
     }
 
     @Override

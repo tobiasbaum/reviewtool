@@ -35,6 +35,10 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
     @Override
     public void notifyStopChange(Stop stop) {
         this.disposeOldContent();
+        if (this.comp.isDisposed()) {
+            CurrentStop.unregisterListener(this);
+            return;
+        }
         if (stop == null) {
             this.currentContent = this.createIdleContent("No review tour stop selected");
         } else {

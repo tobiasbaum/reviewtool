@@ -45,4 +45,8 @@ public class CurrentStop {
         listener.notifyStopChange(getCurrentStop());
     }
 
+    static void unregisterListener(StopSelectionListener listener) {
+        listeners.remove(listener);
+    }
+
 }
