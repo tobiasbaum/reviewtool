@@ -134,11 +134,14 @@ public class CommitParser {
 
     private void processNonSourceChange(IChange change) throws Exception {
         if (this.isNewFile(change)) {
-            this.model.newParts.addPart(new ChangePart(this.getRelPathTo(change).toString(), "", Kind.NON_SOURCE_FILE));
+            this.model.newParts.addPart(
+                    new ChangePart(this.getRelPathTo(change).toString(), "", Kind.NON_SOURCE_FILE));
         } else if (this.isDeletedFile(change)) {
-            this.model.deletedParts.addPart(new ChangePart(this.getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
+            this.model.deletedParts.addPart(
+                    new ChangePart(this.getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
         } else {
-            this.model.changedParts.addPart(new ChangePart(this.getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
+            this.model.changedParts.addPart(
+                    new ChangePart(this.getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
         }
     }
 
