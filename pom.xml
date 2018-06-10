@@ -106,9 +106,9 @@
             <plugins>
 
                 <plugin>
-                    <groupId>org.pitest</groupId>
+                    <groupId>org.bithill</groupId>
                     <artifactId>classycle-maven-plugin</artifactId>
-                    <version>0.4</version>
+                    <version>0.5</version>
                     <executions>
                         <execution>
                             <id>verify</id>
