@@ -51,9 +51,7 @@ public class ReviewStateManager {
     public void saveCurrentReviewData(String newData) {
         this.loadTicketDataAndCheckExistence(true);
         this.localReviewData.saveLocalReviewData(this.ticketKey, newData);
-        for (final IReviewDataSaveListener l : this.saveListeners) {
-            l.onSave(newData);
-        }
+        this.saveListeners.notifyListeners(l -> l.onSave(newData));
     }
 
     /**

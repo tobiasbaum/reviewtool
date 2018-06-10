@@ -67,8 +67,6 @@ public final class ChangeManager {
         }
         this.relevantLocalFiles = new LinkedHashMap<>(localChanges.getLocalPathMap());
 
-        for (final IChangeManagerListener listener: this.changeManagerListeners) {
-            listener.localChangeInfoUpdated(this);
-        }
+        this.changeManagerListeners.notifyListeners(listener -> listener.localChangeInfoUpdated(this));
     }
 }

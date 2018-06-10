@@ -555,9 +555,7 @@ public class ToursInReview {
                 }
             }.schedule();
             if (notify) {
-                for (final IToursInReviewChangeListener l : this.listeners) {
-                    l.activeTourChanged(oldActive, this.getActiveTour());
-                }
+                this.listeners.notifyListeners(l -> l.activeTourChanged(oldActive, this.getActiveTour()));
             }
             Telemetry.event("tourActivated")
                 .param("tourIndex", index)

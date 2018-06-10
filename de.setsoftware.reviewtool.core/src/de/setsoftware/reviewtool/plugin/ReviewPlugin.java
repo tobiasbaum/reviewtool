@@ -658,9 +658,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void notifyModeListeners() {
-        for (final ReviewModeListener l : this.modeListeners) {
-            this.notifyModeListener(l);
-        }
+        this.modeListeners.notifyListeners(this::notifyModeListener);
     }
 
     private void notifyModeListener(ReviewModeListener s) {

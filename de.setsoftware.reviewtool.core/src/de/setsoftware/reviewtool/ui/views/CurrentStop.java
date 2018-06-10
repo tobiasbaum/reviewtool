@@ -15,9 +15,7 @@ public class CurrentStop {
 
     static void setCurrentStop(Stop fragment) {
         currentStop = new WeakReference<Stop>(fragment);
-        for (final StopSelectionListener l : listeners.getListeners()) {
-            l.notifyStopChange(fragment);
-        }
+        listeners.notifyListeners(l -> l.notifyStopChange(fragment));
     }
 
     /**
@@ -25,9 +23,7 @@ public class CurrentStop {
      */
     public static void unsetCurrentStop() {
         currentStop = null;
-        for (final StopSelectionListener l : listeners.getListeners()) {
-            l.notifyStopChange(null);
-        }
+        listeners.notifyListeners(l -> l.notifyStopChange(null));
     }
 
     /**

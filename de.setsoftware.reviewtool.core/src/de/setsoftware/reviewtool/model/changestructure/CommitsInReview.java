@@ -37,9 +37,7 @@ public class CommitsInReview {
     }
 
     private static void notifyListener() {
-        for (CommitsInReviewListener l : listeners) {
-            l.notifyCommits(currentCommits);
-        }
+        listeners.notifyListeners(l -> l.notifyCommits(currentCommits));
     }
 
     public static List<ICommit> getCommits() {

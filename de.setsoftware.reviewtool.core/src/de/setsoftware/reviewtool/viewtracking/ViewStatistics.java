@@ -104,9 +104,7 @@ public class ViewStatistics {
     }
 
     private void notifyListeners(File absFile) {
-        for (final IViewStatisticsListener l : this.listeners.getListeners()) {
-            l.statisticsChanged(absFile);
-        }
+        this.listeners.notifyListeners(l -> l.statisticsChanged(absFile));
     }
 
     public void addListener(IViewStatisticsListener listener) {

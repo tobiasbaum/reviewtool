@@ -28,9 +28,7 @@ public class TrackerManager {
             this.stopTracker();
         }
         this.currentTracker = new CodeViewTracker();
-        for (final ITrackerCreationListener l : this.creationListeners) {
-            l.trackerStarts(this.currentTracker);
-        }
+        this.creationListeners.notifyListeners(l -> l.trackerStarts(this.currentTracker));
         this.currentTracker.start();
     }
 
