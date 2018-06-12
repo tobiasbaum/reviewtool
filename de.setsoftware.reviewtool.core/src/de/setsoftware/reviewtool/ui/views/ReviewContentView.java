@@ -298,6 +298,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     stop.getMostRecentFragment().getFrom(),
                     stop.getMostRecentFragment().getFrom());
             final ITextualChange change = ChangestructureFactory.createTextualChangeHunk(
+                    stop.getWorkingCopy(),
                     fragment,
                     fragment,
                     false);
@@ -315,7 +316,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             marker.delete();
         } else {
             final IFileStore fileStore =
-                    EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath());
+                    EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()));
             final IEditorPart part;
             if (forceTextEditor) {
                 part = page.openEditor(new FileStoreEditorInput(fileStore), getTextEditorId());
@@ -702,7 +703,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         private String determineFilename(final Stop f) {
             final Position pos = PositionTransformer.toPosition(
-                    f.getMostRecentFile().toLocalPath(),
+                    f.getMostRecentFile().toLocalPath(f.getWorkingCopy()),
                     -1,
                     ResourcesPlugin.getWorkspace());
             if (pos instanceof GlobalPosition) {

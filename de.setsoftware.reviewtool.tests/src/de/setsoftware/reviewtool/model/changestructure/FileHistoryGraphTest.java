@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -35,7 +34,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -83,7 +82,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRev =
@@ -116,7 +115,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInNewDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -149,7 +148,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInSubsequentRevisions() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile a1Rev =
@@ -199,7 +198,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownNode() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -256,7 +255,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfUnknownNode() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevPrev =
@@ -286,7 +285,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -370,7 +369,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownDirectoryWithKnownDeletedNode() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -481,7 +480,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownDirectoryWithKnownDeletedNode2() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -661,7 +660,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionOfKnownMovedDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -872,7 +871,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfKnownFile() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -929,7 +928,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfUnknownFile() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevPrev =
@@ -959,7 +958,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -1042,7 +1041,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementOfUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =
@@ -1117,7 +1116,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionAndDeletionOfSameFileInSubsequentRevisions() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevNew =
@@ -1147,7 +1146,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionAndDeletionOfSameDirectoryInSubsequentRevisions() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevNew =
@@ -1204,7 +1203,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeOfKnownFile() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevOrig =
@@ -1263,7 +1262,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeOfUnknownFile() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevChanged =
@@ -1291,7 +1290,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeOfUnknownFileInKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevOrig =
@@ -1351,7 +1350,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfFile() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -1400,7 +1399,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyAndChangeOfFile() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -1450,7 +1449,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfFileWithSourceFromIntermediateRevisions() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -1524,7 +1523,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfFile() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -1582,7 +1581,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfFile2() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -1638,7 +1637,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -1691,7 +1690,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyOfDirectoryWithDeletedNodes() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -1755,7 +1754,7 @@ public final class FileHistoryGraphTest {
      */
     @Test
     public void testCopyOfDirectoryIntoItself() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevOrig =
@@ -1829,7 +1828,7 @@ public final class FileHistoryGraphTest {
     @SuppressWarnings("null")
     @Test
     public void testCopyOfDirectoryWithManyAncestorsIntoItself() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRevOrig =
@@ -1915,7 +1914,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInCopiedKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -1961,7 +1960,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testAdditionInCopiedUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2003,7 +2002,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionInCopiedKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2058,7 +2057,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testDeletionInCopiedUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2105,7 +2104,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementInCopiedKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2189,7 +2188,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testReplacementInCopiedUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2265,7 +2264,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeInCopiedKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2320,7 +2319,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeInCopiedUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2371,7 +2370,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testChangeInCopiedUnknownDirectory2() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2426,7 +2425,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyInCopiedKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2504,7 +2503,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyInCopiedUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2556,7 +2555,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyInCopiedUnknownDirectory2() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2617,7 +2616,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyAndChangeInCopiedKnownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2696,7 +2695,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testCopyAndChangeInCopiedUnknownDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile xRevOrig =
@@ -2749,7 +2748,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfDirectory() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -2826,7 +2825,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testMovementOfDirectory2() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile aRevOrig =
@@ -2903,7 +2902,7 @@ public final class FileHistoryGraphTest {
 
     @Test
     public void testContains() {
-        final IRepository repo = new TestRepository("123", new File("/some/repo"));
+        final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
         final IRevisionedFile trunkRev =

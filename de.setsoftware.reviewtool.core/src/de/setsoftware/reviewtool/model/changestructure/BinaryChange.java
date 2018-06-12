@@ -2,8 +2,8 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
-import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
  * Default implementation of {@link IBinaryChange}.
@@ -14,10 +14,11 @@ public class BinaryChange extends Change implements IBinaryChange {
     private final IRevisionedFile to;
 
     BinaryChange(
+            final IWorkingCopy wc,
             final IRevisionedFile from,
             final IRevisionedFile to,
             final boolean irrelevantForReview) {
-        super(irrelevantForReview);
+        super(wc, irrelevantForReview);
         this.from = from;
         this.to = to;
     }
@@ -42,11 +43,6 @@ public class BinaryChange extends Change implements IBinaryChange {
         if (this.isIrrelevantForReview()) {
             return this;
         }
-        return new BinaryChange(this.from, this.to, true);
-    }
-
-    @Override
-    public IRepository getRepository() {
-        return this.from.getRepository();
+        return new BinaryChange(this.getWorkingCopy(), this.from, this.to, true);
     }
 }

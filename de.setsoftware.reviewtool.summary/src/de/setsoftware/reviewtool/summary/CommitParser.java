@@ -121,14 +121,14 @@ public class CommitParser {
     }
 
     private Path getRelPathFrom(IChange change) {
-        final Path root = this.commit.getRevision().getRepository().getLocalRoot().toPath();
-        final Path file = change.getFrom().toLocalPath().toFile().toPath();
+        final Path root = this.commit.getWorkingCopy().getLocalRoot().toPath();
+        final Path file = change.getFrom().toLocalPath(this.commit.getWorkingCopy()).toFile().toPath();
         return root.relativize(file);
     }
 
     private Path getRelPathTo(IChange change) {
-        final Path root = this.commit.getRevision().getRepository().getLocalRoot().toPath();
-        final Path file = change.getTo().toLocalPath().toFile().toPath();
+        final Path root = this.commit.getWorkingCopy().getLocalRoot().toPath();
+        final Path file = change.getTo().toLocalPath(this.commit.getWorkingCopy()).toFile().toPath();
         return root.relativize(file);
     }
 

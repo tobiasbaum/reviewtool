@@ -46,7 +46,6 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 import de.setsoftware.reviewtool.model.changestructure.Hunk;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
-import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.IStopViewer;
 
 /**
@@ -388,12 +387,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
     @Override
     public void createStopView(final ViewPart view, final Composite scrollContent, final Stop stop) {
-        final ToursInReview tours = ViewDataSource.get().getToursInReview();
-        if (tours == null) {
-            return;
-        }
-
-        this.allRevisions = this.determineAllRevisionsOfFile(tours, stop.getOriginalMostRecentFile());
+        this.allRevisions = this.determineAllRevisionsOfFile(stop);
         final Set<IRevisionedFile> revisionsForStop = new LinkedHashSet<>();
         revisionsForStop.addAll(stop.getHistory().keySet());
         revisionsForStop.addAll(stop.getHistory().values());
@@ -533,9 +527,9 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
     }
 
-    private List<? extends IRevisionedFile> determineAllRevisionsOfFile(
-            ToursInReview tours, IRevisionedFile lastRevision) {
-        final IFileHistoryNode node = tours.getFileHistoryNode(lastRevision);
+    private List<? extends IRevisionedFile> determineAllRevisionsOfFile(final Stop stop) {
+        final IRevisionedFile lastRevision = stop.getOriginalMostRecentFile();
+        final IFileHistoryNode node = stop.getWorkingCopy().getFileHistoryGraph().getNodeFor(lastRevision);
         final LinkedHashSet<IRevisionedFile> filesBuffer = new LinkedHashSet<>();
         this.determineAllRevisionsOfFileRec(node, filesBuffer);
         return FileInRevision.sortByRevision(filesBuffer);

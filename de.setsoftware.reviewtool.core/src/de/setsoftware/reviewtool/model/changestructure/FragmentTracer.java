@@ -17,10 +17,9 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 public class FragmentTracer implements IFragmentTracer {
 
     @Override
-    public List<IFragment> traceFragment(final IFragment fragment) {
+    public List<IFragment> traceFragment(final IFileHistoryGraph fileHistoryGraph, final IFragment fragment) {
         final ArrayList<IFragment> result = new ArrayList<>();
         final IRevisionedFile file = fragment.getFile();
-        final IFileHistoryGraph fileHistoryGraph = file.getRepository().getFileHistoryGraph();
         final IFileHistoryNode node = fileHistoryGraph.getNodeFor(file);
         if (node != null) {
             for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file)) {
@@ -37,9 +36,8 @@ public class FragmentTracer implements IFragmentTracer {
     }
 
     @Override
-    public List<IRevisionedFile> traceFile(final IRevisionedFile file) {
+    public List<IRevisionedFile> traceFile(final IFileHistoryGraph fileHistoryGraph, final IRevisionedFile file) {
         final ArrayList<IRevisionedFile> result = new ArrayList<>();
-        final IFileHistoryGraph fileHistoryGraph = file.getRepository().getFileHistoryGraph();
         final IFileHistoryNode node = fileHistoryGraph.getNodeFor(file);
         if (node != null) {
             for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file)) {

@@ -3,18 +3,14 @@ package de.setsoftware.reviewtool.changesources.svn;
 import org.tmatesoft.svn.core.SVNException;
 
 /**
- * Callback interface for log entries.
+ * Filters log entries.
  */
 public interface CachedLogLookupHandler {
 
     /**
-     * Is called when traversal of a new repository starts.
-     */
-    public abstract void startNewRepo(SvnRepo svnRepo);
-
-    /**
      * Is called for every log entry.
+     * @return {@code true} if log entry matches some user-defined criteria, else {@code false}.
      */
-    public abstract void handleLogEntry(CachedLogEntry logEntry) throws SVNException;
+    public abstract boolean handleLogEntry(CachedLogEntry logEntry) throws SVNException;
 
 }

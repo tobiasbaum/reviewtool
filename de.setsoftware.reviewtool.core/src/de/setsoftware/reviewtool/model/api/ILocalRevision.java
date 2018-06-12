@@ -5,4 +5,8 @@ package de.setsoftware.reviewtool.model.api;
  */
 public interface ILocalRevision extends IRevision {
 
+    /**
+     * Returns the working copy this revision is associated with.
+     */
+    public abstract IWorkingCopy getWorkingCopy();
 }

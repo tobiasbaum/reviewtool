@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
@@ -24,6 +25,7 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
  * Default implementation of {@link IRevisionFile}.
@@ -34,7 +36,6 @@ public class FileInRevision implements IRevisionedFile {
 
     private final String path;
     private final IRevision revision;
-    private Path localPath;
 
     FileInRevision(String path, IRevision revision) {
         this.path = path;
@@ -62,7 +63,7 @@ public class FileInRevision implements IRevisionedFile {
 
             @Override
             public byte[] handleLocalRevision(final ILocalRevision revision) throws IOException {
-                final IPath localPath = FileInRevision.this.toLocalPath();
+                final IPath localPath = FileInRevision.this.toLocalPath(revision.getWorkingCopy());
                 final File file = localPath.toFile();
                 if (!file.exists()) {
                     return new byte[0];
@@ -120,11 +121,13 @@ public class FileInRevision implements IRevisionedFile {
     }
 
     @Override
-    public IPath toLocalPath() {
-        if (this.localPath == null) {
-            this.localPath = new Path(this.getRepository().toAbsolutePathInWc(this.path));
+    public IPath toLocalPath(final IWorkingCopy wc) {
+        final String absolutePathInWc = wc.toAbsolutePathInWc(this.path);
+        if (absolutePathInWc != null) {
+            return new Path(absolutePathInWc);
+        } else {
+            throw new ReviewtoolException("File " + this + " cannot be mapped to working copy at " + wc.getLocalRoot());
         }
-        return this.localPath;
     }
 
     @Override

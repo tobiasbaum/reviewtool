@@ -1,12 +1,10 @@
 package de.setsoftware.reviewtool.model.api;
 
-import java.io.File;
 import java.io.Serializable;
 import java.util.Collection;
 
 /**
  * A source code management repository.
- * Also includes information on a working copy.
  */
 public interface IRepository extends Serializable {
 
@@ -16,26 +14,9 @@ public interface IRepository extends Serializable {
     public abstract String getId();
 
     /**
-     * Returns the root of the working copy.
-     */
-    public abstract File getLocalRoot();
-
-    /**
      * Converts the string representation of a repository revision into a {@link IRepoRevision}.
      */
     public abstract IRepoRevision toRevision(String revisionId);
-
-    /**
-     * Converts a path that is absolute in the repository to a path that is absolute in the file
-     * system of the local working copy.
-     */
-    public abstract String toAbsolutePathInWc(String absolutePathInRepo);
-
-    /**
-     * Converts a path that is absolute in the file system of the working copy to a path that is absolute
-     * in the repository.
-     */
-    public abstract String fromAbsolutePathInWc(String absolutePathInWc);
 
     /**
      * Returns one of the smallest revisions from the given collection. When there are multiple,

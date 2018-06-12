@@ -3,24 +3,18 @@ package de.setsoftware.reviewtool.tourrestructuring.onestop;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
-import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.api.IRepository;
-import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.changestructure.StubRepo;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 
 /**
@@ -28,59 +22,16 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
  */
 public class OneStopPerPartOfFileRestructuringTest {
 
-    private static final IRepository REPO = new AbstractRepository() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public String getId() {
-            return "stub";
-        }
-
-        @Override
-        public File getLocalRoot() {
-            return null;
-        }
-
-        @Override
-        public IRepoRevision toRevision(final String revisionId) {
-            return ChangestructureFactory.createRepoRevision(revisionId, this);
-        }
-
-        @Override
-        public String toAbsolutePathInWc(String absolutePathInRepo) {
-            return absolutePathInRepo;
-        }
-
-        @Override
-        public String fromAbsolutePathInWc(String absolutePathInWc) {
-            return absolutePathInWc;
-        }
-
-        @Override
-        public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
-            return getSmallestOfComparableRevisions(revisions);
-        }
-
-        @Override
-        public byte[] getFileContents(final String path, final IRepoRevision revision) {
-            return new byte[0];
-        }
-
-        @Override
-        public IMutableFileHistoryGraph getFileHistoryGraph() {
-            return null;
-        }
-    };
-
     private static IRevisionedFile fileInRevision(String file, int i) {
         return ChangestructureFactory.createFileInRevision(
                 file,
-                ChangestructureFactory.createRepoRevision(i, REPO));
+                ChangestructureFactory.createRepoRevision(i, StubRepo.INSTANCE));
     }
 
     private static Stop stop(final String file, int revision) {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(
+                        null,
                         fileInRevision(file, revision - 1), fileInRevision(file, revision), false),
                 fileInRevision(file, 100));
     }
@@ -98,6 +49,7 @@ public class OneStopPerPartOfFileRestructuringTest {
         final IPositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 1);
         return new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
+                        null,
                         ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),
                         ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo),
                         false),

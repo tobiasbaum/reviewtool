@@ -4,6 +4,7 @@ import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
  * Default implementation of {@link ILocalRevision}.
@@ -12,15 +13,20 @@ public final class LocalRevision implements ILocalRevision {
 
     private static final long serialVersionUID = 1808884414733783082L;
 
-    private final IRepository repo;
+    private final IWorkingCopy wc;
 
-    LocalRevision(final IRepository repo) {
-        this.repo = repo;
+    LocalRevision(final IWorkingCopy wc) {
+        this.wc = wc;
     }
 
     @Override
     public IRepository getRepository() {
-        return this.repo;
+        return this.wc.getRepository();
+    }
+
+    @Override
+    public IWorkingCopy getWorkingCopy() {
+        return this.wc;
     }
 
     @Override
@@ -30,7 +36,7 @@ public final class LocalRevision implements ILocalRevision {
 
     @Override
     public int hashCode() {
-        return this.repo.hashCode();
+        return this.wc.hashCode();
     }
 
     @Override
@@ -39,7 +45,7 @@ public final class LocalRevision implements ILocalRevision {
             return false;
         }
         final LocalRevision r = (LocalRevision) o;
-        return this.repo.equals(r.repo);
+        return this.wc.equals(r.wc);
     }
 
     @Override

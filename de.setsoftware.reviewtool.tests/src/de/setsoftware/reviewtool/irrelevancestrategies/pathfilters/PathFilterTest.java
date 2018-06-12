@@ -16,7 +16,7 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 public class PathFilterTest {
 
     private static ITextualChange change(String pathFrom, String pathTo) {
-        return ChangestructureFactory.createTextualChangeHunk(fragment(pathFrom), fragment(pathTo), false);
+        return ChangestructureFactory.createTextualChangeHunk(null, fragment(pathFrom), fragment(pathTo), false);
     }
 
     private static IFragment fragment(String path) {

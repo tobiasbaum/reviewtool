@@ -17,6 +17,7 @@ import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
  * A part of a review tour, corresponding to some notion of "singular change".
@@ -27,6 +28,7 @@ import de.setsoftware.reviewtool.model.api.ITextualChange;
  */
 public class Stop extends TourElement {
 
+    private final IWorkingCopy wc;
     private final Map<IRevisionedFile, IRevisionedFile> historyOrder;
     private final Multimap<IRevisionedFile, Hunk> history;
 
@@ -43,6 +45,8 @@ public class Stop extends TourElement {
     public Stop(
             final ITextualChange change,
             final IFragment traceFragment) {
+
+        this.wc = change.getWorkingCopy();
         this.historyOrder = new LinkedHashMap<>();
         this.historyOrder.put(change.getFrom(), change.getTo());
         this.history = new Multimap<>();
@@ -62,6 +66,8 @@ public class Stop extends TourElement {
     public Stop(
             final IBinaryChange change,
             final IRevisionedFile traceFile) {
+
+        this.wc = change.getWorkingCopy();
         this.historyOrder = new LinkedHashMap<>();
         this.historyOrder.put(change.getFrom(), change.getTo());
         this.history = new Multimap<>();
@@ -78,6 +84,7 @@ public class Stop extends TourElement {
      * Constructor for internal use.
      */
     private Stop(
+            final IWorkingCopy wc,
             final Map<IRevisionedFile, IRevisionedFile> historyOrder,
             final Multimap<IRevisionedFile, Hunk> history,
             final IRevisionedFile mostRecentFile,
@@ -85,6 +92,8 @@ public class Stop extends TourElement {
             final IRevisionedFile mostRecentFileConsideringLocalChanges,
             final IFragment mostRecentFragmentConsideringLocalChanges,
             final boolean irrelevantForReview) {
+
+        this.wc = wc;
         this.historyOrder = historyOrder;
         this.history = history;
         this.mostRecentFile = mostRecentFile;
@@ -92,6 +101,10 @@ public class Stop extends TourElement {
         this.mostRecentFileConsideringLocalChanges = mostRecentFileConsideringLocalChanges;
         this.mostRecentFragmentConsideringLocalChanges = mostRecentFragmentConsideringLocalChanges;
         this.irrelevantForReview = irrelevantForReview;
+    }
+
+    public IWorkingCopy getWorkingCopy() {
+        return this.wc;
     }
 
     public boolean isDetailedFragmentKnown() {
@@ -123,14 +136,21 @@ public class Stop extends TourElement {
      */
     public void updateMostRecentData(final IFragmentTracer tracer) {
         if (this.mostRecentFragment != null) {
-            final List<? extends IFragment> fragments = tracer.traceFragment(this.mostRecentFragment);
-            if (!fragments.isEmpty()) {
-                this.mostRecentFragmentConsideringLocalChanges = fragments.get(0);
+            final List<? extends IFragment> fragments =
+                    tracer.traceFragment(this.wc.getFileHistoryGraph(), this.mostRecentFragment);
+            for (final IFragment fragment : fragments) {
+                if (this.wc.toAbsolutePathInWc(fragment.getFile().getPath()) != null) {
+                    this.mostRecentFragmentConsideringLocalChanges = fragment;
+                    break;
+                }
             }
         }
-        final List<IRevisionedFile> files = tracer.traceFile(this.mostRecentFile);
-        if (!files.isEmpty()) {
-            this.mostRecentFileConsideringLocalChanges = files.get(0);
+        final List<IRevisionedFile> files = tracer.traceFile(this.wc.getFileHistoryGraph(), this.mostRecentFile);
+        for (final IRevisionedFile file : files) {
+            if (this.wc.toAbsolutePathInWc(file.getPath()) != null) {
+                this.mostRecentFileConsideringLocalChanges = file;
+                break;
+            }
         }
     }
 
@@ -206,6 +226,7 @@ public class Stop extends TourElement {
         mergedHistory.sortValues();
 
         return new Stop(
+                this.wc,
                 mergedHistoryOrder,
                 mergedHistory,
                 this.mostRecentFile,
@@ -246,7 +267,7 @@ public class Stop extends TourElement {
     }
 
     public File getAbsoluteFile() {
-        return this.getMostRecentFile().toLocalPath().toFile().getAbsoluteFile();
+        return this.getMostRecentFile().toLocalPath(this.wc).toFile().getAbsoluteFile();
     }
 
     /**

@@ -40,8 +40,9 @@ public interface IRevisionedFile extends Serializable {
     public abstract IResource determineResource();
 
     /**
-     * Returns the absolute path of the file in the local working copy.
+     * Returns the absolute path of the file in some local working copy.
+     * @param wc The working copy to use.
      */
-    public abstract IPath toLocalPath();
+    public abstract IPath toLocalPath(final IWorkingCopy wc);
 
 }

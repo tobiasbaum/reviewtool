@@ -13,7 +13,7 @@ import de.setsoftware.reviewtool.model.api.IHunk;
 public class HunkTest {
 
     private static FileInRevision file() {
-        return new FileInRevision("file", new LocalRevision(StubRepo.INSTANCE));
+        return new FileInRevision("file", new LocalRevision(StubWorkingCopy.INSTANCE));
     }
 
     private static PositionInText pos(int line, int col) {

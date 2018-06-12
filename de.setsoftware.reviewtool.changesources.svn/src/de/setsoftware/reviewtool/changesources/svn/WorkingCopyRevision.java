@@ -8,10 +8,10 @@ import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
- * Encapsulates the "revision" of a working copy.
+ * Encapsulates the "revision" of a Subversion working copy.
  */
-final class WorkingCopyRevision implements ISvnRevision {
-    private final SvnRepo repository;
+final class WorkingCopyRevision extends AbstractSvnRevision {
+    private final SvnWorkingCopy wc;
     private final SortedMap<String, CachedLogEntryPath> paths;
 
     /**
@@ -19,14 +19,21 @@ final class WorkingCopyRevision implements ISvnRevision {
      * @param repository The associated repository.
      * @param paths The paths changed in the working copy.
      */
-    WorkingCopyRevision(final SvnRepo repository, final SortedMap<String, CachedLogEntryPath> paths) {
-        this.repository = repository;
+    WorkingCopyRevision(final SvnWorkingCopy wc, final SortedMap<String, CachedLogEntryPath> paths) {
+        this.wc = wc;
         this.paths = paths;
+    }
+
+    /**
+     * Returns the associated working copy.
+     */
+    SvnWorkingCopy getWorkingCopy() {
+        return this.wc;
     }
 
     @Override
     public SvnRepo getRepository() {
-        return this.repository;
+        return this.wc.getRepository();
     }
 
     @Override
@@ -41,7 +48,7 @@ final class WorkingCopyRevision implements ISvnRevision {
 
     @Override
     public ILocalRevision toRevision() {
-        return ChangestructureFactory.createLocalRevision(this.repository);
+        return ChangestructureFactory.createLocalRevision(this.wc);
     }
 
     @Override
@@ -71,6 +78,6 @@ final class WorkingCopyRevision implements ISvnRevision {
 
     @Override
     public String toString() {
-        return this.repository.toString() + "@WORKING";
+        return this.getRepository() + "@WORKING";
     }
 }

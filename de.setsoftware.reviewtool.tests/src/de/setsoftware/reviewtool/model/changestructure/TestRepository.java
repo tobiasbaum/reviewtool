@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.io.File;
 import java.util.Collection;
 
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
@@ -16,11 +15,9 @@ final class TestRepository extends AbstractRepository {
     private static final long serialVersionUID = 1L;
 
     private final String id;
-    private final File localRoot;
 
-    TestRepository(final String id, final File localRoot) {
+    TestRepository(final String id) {
         this.id = id;
-        this.localRoot = localRoot;
     }
 
     @Override
@@ -29,29 +26,10 @@ final class TestRepository extends AbstractRepository {
     }
 
     @Override
-    public File getLocalRoot() {
-        return this.localRoot;
-    }
-
-    @Override
     public IRepoRevision toRevision(final String revisionId) {
         try {
             return new TestRepoRevision(this, Long.parseLong(revisionId));
         } catch (final NumberFormatException e) {
-            return null;
-        }
-    }
-
-    @Override
-    public String toAbsolutePathInWc(final String absolutePathInRepo) {
-        return new File(this.localRoot, absolutePathInRepo).getAbsolutePath();
-    }
-
-    @Override
-    public String fromAbsolutePathInWc(final String absolutePathInWc) {
-        if (absolutePathInWc.startsWith(this.localRoot.getAbsolutePath())) {
-            return absolutePathInWc.substring(this.localRoot.getAbsolutePath().length());
-        } else {
             return null;
         }
     }

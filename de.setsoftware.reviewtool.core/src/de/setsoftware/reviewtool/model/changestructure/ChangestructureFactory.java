@@ -20,6 +20,7 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
  * Factory for the various classes belonging to the changestructure.
@@ -28,21 +29,28 @@ import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 public class ChangestructureFactory {
 
     public static Commit createCommit(
+            final IWorkingCopy wc,
             final String message,
             final List<? extends IChange> changes,
             final IRevision revision,
             final Date timestamp) {
-        return new Commit(message, changes, revision, timestamp);
+        return new Commit(wc, message, changes, revision, timestamp);
     }
 
     public static IBinaryChange createBinaryChange(
-            IRevisionedFile from, IRevisionedFile to, boolean irrelevantForReview) {
-        return new BinaryChange(from, to, irrelevantForReview);
+            final IWorkingCopy wc,
+            final IRevisionedFile from,
+            final IRevisionedFile to,
+            final boolean irrelevantForReview) {
+        return new BinaryChange(wc, from, to, irrelevantForReview);
     }
 
     public static ITextualChange createTextualChangeHunk(
-            IFragment from, IFragment to, boolean irrelevantForReview) {
-        return new TextualChangeHunk(from, to, irrelevantForReview);
+            IWorkingCopy wc,
+            final IFragment from,
+            final IFragment to,
+            final boolean irrelevantForReview) {
+        return new TextualChangeHunk(wc, from, to, irrelevantForReview);
     }
 
     public static IRevisionedFile createFileInRevision(final String path, final IRevision revision) {
@@ -57,8 +65,8 @@ public class ChangestructureFactory {
         return new Hunk(from, to);
     }
 
-    public static ILocalRevision createLocalRevision(final IRepository repo) {
-        return new LocalRevision(repo);
+    public static ILocalRevision createLocalRevision(final IWorkingCopy wc) {
+        return new LocalRevision(wc);
     }
 
     public static IRepoRevision createRepoRevision(final Object id, final IRepository repo) {
