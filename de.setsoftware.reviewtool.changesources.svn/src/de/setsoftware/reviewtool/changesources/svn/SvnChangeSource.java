@@ -341,7 +341,16 @@ final class SvnChangeSource implements IChangeSource {
             final IChangeSourceUi ui) throws SVNException {
 
         final List<Pair<SvnWorkingCopy, SvnRevision>> result = new ArrayList<>();
-        final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
+        final Pattern pattern = this.createPatternForKey(key);
+        final CachedLogLookupHandler handler = new CachedLogLookupHandler() {
+
+            @Override
+            public boolean handleLogEntry(final CachedLogEntry logEntry) throws SVNException {
+                final String message = logEntry.getMessage();
+                return message != null && pattern.matcher(message).matches();
+            }
+        };
+
         for (final File workingCopyRoot : this.workingCopyRoots) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
