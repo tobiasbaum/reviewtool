@@ -82,7 +82,7 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
      *
      * @param revision The revision to process,
      */
-    void processRevision(final ISvnRevision revision) {
+    void processRevision(final SvnRevision revision) {
         for (final Entry<String, CachedLogEntryPath> e : revision.getChangedPaths().entrySet()) {
             final String path = e.getKey();
 

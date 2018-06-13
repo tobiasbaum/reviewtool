@@ -10,7 +10,7 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 /**
  * Encapsulates the "revision" of a Subversion working copy.
  */
-final class WorkingCopyRevision extends AbstractSvnRevision {
+final class SvnWorkingCopyRevision extends AbstractSvnRevision {
     private final SvnWorkingCopy wc;
     private final SortedMap<String, CachedLogEntryPath> paths;
 
@@ -19,7 +19,7 @@ final class WorkingCopyRevision extends AbstractSvnRevision {
      * @param repository The associated repository.
      * @param paths The paths changed in the working copy.
      */
-    WorkingCopyRevision(final SvnWorkingCopy wc, final SortedMap<String, CachedLogEntryPath> paths) {
+    SvnWorkingCopyRevision(final SvnWorkingCopy wc, final SortedMap<String, CachedLogEntryPath> paths) {
         this.wc = wc;
         this.paths = paths;
     }

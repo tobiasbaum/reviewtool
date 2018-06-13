@@ -130,18 +130,18 @@ final class SvnRepositoryManager {
     /**
      * Calls the given handler for all recent log entries of the given {@link SvnRepo}.
      */
-    List<SvnRevision> traverseRecentEntries(
+    List<SvnRepoRevision> traverseRecentEntries(
             final SvnRepo repo,
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
-        final List<SvnRevision> result = new ArrayList<>();
+        final List<SvnRepoRevision> result = new ArrayList<>();
         for (final CachedLogEntry entry : this.getEntries(repo)) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
             if (handler.handleLogEntry(entry)) {
-                result.add(new SvnRevision(repo, entry));
+                result.add(new SvnRepoRevision(repo, entry));
             }
         }
         return result;
@@ -250,7 +250,7 @@ final class SvnRepositoryManager {
             final SvnRepo repo,
             final int numEntriesProcessed) {
 
-        final SvnRevision revision = new SvnRevision(repo, entry);
+        final SvnRepoRevision revision = new SvnRepoRevision(repo, entry);
         repo.getFileHistoryGraph().processRevision(revision);
         final int numEntriesProcessedNow = numEntriesProcessed + 1;
         if (numEntriesProcessedNow % REVISION_BLOCK_SIZE == 0) {

@@ -3,84 +3,56 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Date;
 import java.util.Map;
 
-import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.api.IRevision;
 
 /**
- * Encapsulates a Subversion revision with associated information about the repository, the log message, the commit
- * date, the commit author, and the paths changed.
+ * Represents a Subversion revision which can be a repository revision or a working copy revision.
  */
-final class SvnRevision extends AbstractSvnRevision {
-    private final SvnRepo repository;
-    private final CachedLogEntry logEntry;
+public interface SvnRevision {
 
     /**
-     * Constructor.
-     * @param repository The associated repository.
-     * @param logEntry The log entry.
+     * Returns the associated repository.
      */
-    SvnRevision(final SvnRepo repository, final CachedLogEntry logEntry) {
-        this.repository = repository;
-        this.logEntry = logEntry;
-    }
+    public abstract SvnRepo getRepository();
 
-    @Override
-    public SvnRepo getRepository() {
-        return this.repository;
-    }
+    /**
+     * Returns the associated revision number.
+     */
+    public abstract long getRevisionNumber();
 
-    @Override
-    public long getRevisionNumber() {
-        return this.logEntry.getRevision();
-    }
+    /**
+     * Returns the associated revision number as a readable string.
+     */
+    public abstract String getRevisionString();
 
-    @Override
-    public String getRevisionString() {
-        return Long.toString(this.logEntry.getRevision());
-    }
+    /**
+     * Returns the {@link IRevision} for this Subversion revision.
+     */
+    public abstract IRevision toRevision();
 
-    @Override
-    public IRepoRevision toRevision() {
-        return ChangestructureFactory.createRepoRevision(this.getRevisionNumber(), this.repository);
-    }
+    /**
+     * Returns the associated commit date.
+     */
+    public abstract Date getDate();
 
-    @Override
-    public Date getDate() {
-        return this.logEntry.getDate();
-    }
+    /**
+     * Returns the associated commit author.
+     */
+    public abstract String getAuthor();
 
-    @Override
-    public String getAuthor() {
-        return this.logEntry.getAuthor();
-    }
+    /**
+     * Returns the associated commit message.
+     */
+    public abstract String getMessage();
 
-    @Override
-    public String getMessage() {
-        return this.logEntry.getMessage();
-    }
+    /**
+     * Returns the associated commit paths.
+     */
+    public abstract Map<String, CachedLogEntryPath> getChangedPaths();
 
-    @Override
-    public Map<String, CachedLogEntryPath> getChangedPaths() {
-        return this.logEntry.getChangedPaths();
-    }
+    /**
+     * Returns a pretty description of this revision.
+     */
+    public abstract String toPrettyString();
 
-    @Override
-    public String toPrettyString() {
-        final StringBuilder sb = new StringBuilder();
-        final String message = this.getMessage();
-        if (!message.isEmpty()) {
-            sb.append(message);
-            sb.append(" ");
-        }
-        sb.append(String.format(
-                "(Rev. %s, %s)",
-                this.getRevisionString(),
-                this.getAuthor()));
-        return sb.toString();
-    }
-
-    @Override
-    public String toString() {
-        return this.repository.toString() + "@" + this.logEntry.toString();
-    }
 }
