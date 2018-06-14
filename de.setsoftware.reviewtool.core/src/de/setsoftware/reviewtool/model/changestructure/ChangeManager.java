@@ -42,7 +42,7 @@ public final class ChangeManager {
      *
      * @param changeManagerListener The listener to add.
      */
-    public void addListener(final IChangeManagerListener changeManagerListener) {
+    public synchronized void addListener(final IChangeManagerListener changeManagerListener) {
         this.changeManagerListeners.add(changeManagerListener);
     }
 
@@ -53,7 +53,10 @@ public final class ChangeManager {
      * @param filesToAnalyze Files to analyze. If {@code null}, all local files are checked for local modifications.
      * @param progressMonitor The progress monitor to use.
      */
-    public void analyzeLocalChanges(final List<File> filesToAnalyze, final IProgressMonitor progressMonitor) {
+    public synchronized void analyzeLocalChanges(
+            final List<File> filesToAnalyze,
+            final IProgressMonitor progressMonitor) {
+
         assert this.remoteChanges != null;
         final IChangeData localChanges;
         if (filesToAnalyze == null) {
