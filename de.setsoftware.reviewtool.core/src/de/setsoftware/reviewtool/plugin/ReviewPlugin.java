@@ -7,21 +7,25 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -280,32 +284,53 @@ public class ReviewPlugin implements IReviewConfigurable {
         @Override
         public void resourceChanged(IResourceChangeEvent event) {
             this.logged = false;
+            final List<File> projectsAdded = new ArrayList<>();
+            final List<File> projectsRemoved = new ArrayList<>();
             final List<File> paths = new ArrayList<>();
 
-            try {
-                this.handleResourceDelta(event.getDelta(), paths);
-                if (!paths.isEmpty()) {
-                    final Job job = Job.create("Processing local changes",
-                            new IJobFunction() {
-                                @Override
-                                public IStatus run(IProgressMonitor monitor) {
-                                    ReviewPlugin.this.updateLocalChanges(paths);
-                                    return Status.OK_STATUS;
-                                }
-                            });
-                    job.setRule(MutexRule.getInstance());
-                    job.schedule();
+            if (event.getType() == IResourceChangeEvent.POST_CHANGE) {
+                try {
+                    this.handleResourceDelta(event.getDelta(), projectsAdded, projectsRemoved, paths);
+                } catch (final Exception e) {
+                    Logger.error("Error while processing local changes", e);
                 }
-            } catch (final Exception e) {
-                Logger.error("error while sending telemetry events", e);
+            } else if (event.getType() == IResourceChangeEvent.PRE_DELETE) {
+                final IPath location = event.getResource().getLocation();
+                assert location != null;
+                projectsRemoved.add(location.toFile());
+            }
+
+            if (!projectsAdded.isEmpty() || !projectsRemoved.isEmpty() || !paths.isEmpty()) {
+                final Job job = Job.create("Processing local changes",
+                        new IJobFunction() {
+                            @Override
+                            public IStatus run(IProgressMonitor monitor) {
+                                ReviewPlugin.this.updateLocalChanges(projectsAdded, projectsRemoved, paths);
+                                return Status.OK_STATUS;
+                            }
+                        });
+                job.setRule(MutexRule.getInstance());
+                job.schedule();
             }
         }
 
-        private void handleResourceDelta(final IResourceDelta delta, final List<File> paths) {
-            if (delta.getResource().isDerived()) {
+        private void handleResourceDelta(
+                final IResourceDelta delta,
+                final List<File> projectsAdded,
+                final List<File> projectsRemoved,
+                final List<File> paths) {
+
+            final IResource resource = delta.getResource();
+            if (resource.isDerived()) {
                 return;
             }
-            if (delta.getResource().getType() == IResource.FILE) {
+
+            final IPath location = resource.getLocation();
+            if (location == null) {
+                return;
+            }
+
+            if (resource.getType() == IResource.FILE) {
                 if (!this.logged && (delta.getFlags() & IResourceDelta.CONTENT) != 0) {
                     Telemetry.event("fileChanged")
                         .param("path", delta.getFullPath())
@@ -316,12 +341,16 @@ public class ReviewPlugin implements IReviewConfigurable {
 
                 if (delta.getKind() != IResourceDelta.CHANGED
                         || (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.REPLACED)) != 0) {
-                    final File filePath = delta.getResource().getLocation().toFile();
+                    final File filePath = location.toFile();
                     paths.add(filePath);
                 }
             } else {
+                if (resource.getType() == IResource.PROJECT && delta.getKind() == IResourceDelta.ADDED) {
+                    projectsAdded.add(location.toFile());
+                }
+
                 for (final IResourceDelta d : delta.getAffectedChildren()) {
-                    this.handleResourceDelta(d, paths);
+                    this.handleResourceDelta(d, projectsAdded, projectsRemoved, paths);
                 }
             }
         }
@@ -375,14 +404,14 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     private static final ReviewPlugin INSTANCE = new ReviewPlugin();
     private final ReviewStateManager persistence;
-    private IChangeSource changeSource;
-    private ToursInReview toursInReview;
+    private final Set<File> projectDirs; // synchronized with updateLocalChanges() running in the background
+    private IChangeSource changeSource;  // synchronized with updateLocalChanges() running in the background
     private ChangeManager changeManager; // synchronized with updateLocalChanges() running in the background
+    private ToursInReview toursInReview;
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
     private ILaunchesListener launchesListener;
-    private IResourceChangeListener changeListener;
     private final List<IIrrelevanceDetermination> relevanceFilters = new ArrayList<>();
     private final List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
     private final List<IPreferredTransitionStrategy> preferredTransitionStrategies = new ArrayList<>();
@@ -392,6 +421,21 @@ public class ReviewPlugin implements IReviewConfigurable {
 
 
     private ReviewPlugin() {
+        this.projectDirs = new LinkedHashSet<>();
+
+        final IResourceChangeListener changeListener = new ResourceChangeListener();
+        ResourcesPlugin.getWorkspace().addResourceChangeListener(
+                changeListener,
+                IResourceChangeEvent.PRE_DELETE | IResourceChangeEvent.POST_CHANGE);
+
+        final IWorkspace root = ResourcesPlugin.getWorkspace();
+        for (final IProject project : root.getRoot().getProjects()) {
+            final IPath location = project.getLocation();
+            if (location != null) {
+                this.projectDirs.add(location.toFile());
+            }
+        }
+
         this.persistence = new ReviewStateManager(
                 new FileReviewDataCache(Activator.getDefault().getStateLocation().toFile()),
                 new FilePersistence(new File("."), "please configure"),
@@ -432,7 +476,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         });
     }
 
-    private void reconfigure() {
+    private synchronized void reconfigure() {
         final String configFile =
                 Activator.getDefault().getPreferenceStore().getString(ReviewToolPreferencePage.TEAM_CONFIG_FILE);
         if (configFile.isEmpty()) {
@@ -994,8 +1038,11 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     @Override
-    public void setChangeSource(IChangeSource changeSource) {
+    public synchronized void setChangeSource(IChangeSource changeSource) {
         this.changeSource = changeSource;
+        for (final File projectRoot : this.projectDirs) {
+            this.changeSource.addProject(projectRoot);
+        }
     }
 
     public ToursInReview getTours() {
@@ -1027,14 +1074,10 @@ public class ReviewPlugin implements IReviewConfigurable {
             }
         };
         DebugPlugin.getDefault().getLaunchManager().addLaunchListener(this.launchesListener);
-
-        this.changeListener = new ResourceChangeListener();
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(this.changeListener, IResourceChangeEvent.POST_CHANGE);
     }
 
     private void unregisterGlobalTelemetryListeners() {
         DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(this.launchesListener);
-        ResourcesPlugin.getWorkspace().removeResourceChangeListener(this.changeListener);
     }
 
     @Override
@@ -1061,7 +1104,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         return this.stopViewer;
     }
 
-    private void collectLocalChanges(final IChangeSourceUi sourceUi) {
+    private synchronized void collectLocalChanges(final IChangeSourceUi sourceUi) {
         try {
             this.changeManager.analyzeLocalChanges(null, sourceUi);
         } catch (final ReviewtoolException e) {
@@ -1070,12 +1113,27 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    private synchronized void updateLocalChanges(final List<File> paths) {
-        if (this.changeManager == null) {
-            return;
+    private synchronized void updateLocalChanges(
+            final List<File> projectsAdded,
+            final List<File> projectsRemoved,
+            final List<File> paths) {
+
+        if (this.changeSource != null) {
+            for (final File project : projectsAdded) {
+                this.projectDirs.add(project);
+                this.changeSource.addProject(project);
+                Logger.info("Adding project " + project);
+            }
+            for (final File project : projectsRemoved) {
+                this.projectDirs.remove(project);
+                this.changeSource.removeProject(project);
+                Logger.info("Removing project " + project);
+            }
         }
 
-        this.changeManager.analyzeLocalChanges(paths, new DummyProgressMonitor());
+        if (this.changeManager != null) {
+            this.changeManager.analyzeLocalChanges(paths, new DummyProgressMonitor());
+        }
     }
 
     /**

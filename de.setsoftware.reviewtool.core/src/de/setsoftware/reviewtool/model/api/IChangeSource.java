@@ -27,4 +27,17 @@ public interface IChangeSource extends IRepositoryProvider {
             List<File> relevantPaths,
             IProgressMonitor ui);
 
+    /**
+     * Notifies the change source that a project has been added.
+     *
+     * @param projectRoot The root directory of the project.
+     */
+    public abstract void addProject(final File projectRoot);
+
+    /**
+     * Notifies the change source that a project has been removed.
+     *
+     * @param projectRoot The root directory of the project.
+     */
+    public abstract void removeProject(final File projectRoot);
 }
