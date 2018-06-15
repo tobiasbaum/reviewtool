@@ -3,9 +3,7 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="minimal-json.jar"/>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="hackybuffer-1.0.jar"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/de.setsoftware.reviewtool.reviewdata"/>
-	<classpathentry combineaccessrules="false" kind="src" path="/de.setsoftware.reviewtool.ordering"/>
+	<classpathentry exported="true" kind="lib" path="hackybuffer-1.0.jar"/>
+	<classpathentry kind="src" path="src/"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

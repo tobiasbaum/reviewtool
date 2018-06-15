@@ -2,13 +2,13 @@
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="antlr-runtime-3.4.jar"/>
-	<classpathentry kind="lib" path="sequence-library-1.0.3.jar"/>
-	<classpathentry kind="lib" path="sqljet-1.1.10.jar"/>
+	<classpathentry exported="true" kind="lib" path="antlr-runtime-3.4.jar"/>
+	<classpathentry exported="true" kind="lib" path="sequence-library-1.0.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="sqljet-1.1.10.jar"/>
 	<classpathentry kind="lib" path="svnkit-1.9.3.jar" sourcepath="svnkit-1.9.3-sources.jar"/>
 	<classpathentry kind="lib" path="svnkit-cli-1.9.3.jar" sourcepath="svnkit-cli-1.9.3-sources.jar"/>
 	<classpathentry kind="lib" path="svnkit-javahl16-1.9.3.jar" sourcepath="svnkit-javahl16-1.9.3-sources.jar"/>
-	<classpathentry kind="lib" path="trilead-ssh2-1.0.0-build220.jar"/>
-	<classpathentry kind="output" path="bin"/>
+	<classpathentry exported="true" kind="lib" path="trilead-ssh2-1.0.0-build220.jar"/>
+	<classpathentry kind="src" path="src/"/>
+	<classpathentry kind="output" path="target/classes"/>
 </classpath>
