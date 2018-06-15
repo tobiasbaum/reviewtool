@@ -18,3 +18,4 @@ Import-Package: de.setsoftware.reviewtool.model.remarks,
 Bundle-ClassPath: .,
  refdiff-core.jar,
  deltadoc.jar
+Automatic-Module-Name: de.setsoftware.reviewtool.summary
