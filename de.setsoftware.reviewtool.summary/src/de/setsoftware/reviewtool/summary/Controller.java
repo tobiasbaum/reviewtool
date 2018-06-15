@@ -32,9 +32,10 @@ public class Controller {
      * techniques. Generated summary will be automatically presented in view.
      */
     public synchronized void processCommits(List<? extends ICommit> commits) {
-        view.setText("Generating summary...");
-        view.setHyperLinks(new ArrayList<>());
+        this.view.setText("Generating summary...");
+        this.view.setHyperLinks(new ArrayList<>());
         Runnable r = new Runnable() {
+            @Override
             public void run() {
                 processCommitsIntrnal(commits);
             }
@@ -43,22 +44,24 @@ public class Controller {
         t.start();
     }
 
+    @SuppressWarnings("deprecation")
     private synchronized void processCommitsIntrnal(List<? extends ICommit> commits) {
-        model = new ChangePartsModel();
+        this.model = new ChangePartsModel();
         int freeLength = SUMMARY_LENGTH;
         String refDiff = "";
         StringBuilder deltaDoc = new StringBuilder();
         for (ICommit commit : commits) {
             try {
-                CommitParser parser = new CommitParser(commit, model);
+                CommitParser parser = new CommitParser(commit, this.model);
                 parser.processCommit();
                 refDiff = refDiff + RefDiffTechnique.process(parser.previousDir, parser.currentDir,
-                        parser.previousDirFiles, parser.currentDirFiles, model);
+                        parser.previousDirFiles, parser.currentDirFiles, this.model);
 
                 Runnable r = new Runnable() {
+                    @Override
                     public void run() {
                         deltaDoc.append(DeltaDocTechnique.process(parser.previousDir, parser.currentDir,
-                                parser.previousDirFiles, parser.currentDirFiles, model));
+                                parser.previousDirFiles, parser.currentDirFiles, Controller.this.model));
                     }
                 };
                 Thread t = new Thread(r);
@@ -75,10 +78,10 @@ public class Controller {
                 e.printStackTrace();
             }
         }
-        model.sort();
-        summary = SummaryTextGenerator.generateSummary(model);
-        for (SummaryTextPart p : summary) {
-            p.maxLinesFolded = freeLength / summary.size() + 2;
+        this.model.sort();
+        this.summary = SummaryTextGenerator.generateSummary(this.model);
+        for (SummaryTextPart p : this.summary) {
+            p.maxLinesFolded = freeLength / this.summary.size() + 2;
         }
 
         if (!refDiff.equals("")) {
@@ -89,10 +92,10 @@ public class Controller {
             part.maxLinesFolded = REFDIFF_LENGTH;
             part.linesFolded = Math.min(part.lines, part.maxLinesFolded);
             freeLength = freeLength - part.linesFolded;
-            for (SummaryTextPart p : summary) {
-                p.maxLinesFolded = freeLength / summary.size() + 2;
+            for (SummaryTextPart p : this.summary) {
+                p.maxLinesFolded = freeLength / this.summary.size() + 2;
             }
-            summary.add(part);
+            this.summary.add(part);
         }
 
         if (!deltaDoc.toString().equals("")) {
@@ -102,12 +105,12 @@ public class Controller {
             part.maxLinesFolded = DELTADOC_LENGTH;
             part.linesFolded = Math.min(part.lines, part.maxLinesFolded);
             freeLength = freeLength - part.linesFolded;
-            for (SummaryTextPart p : summary) {
-                p.maxLinesFolded = freeLength / summary.size() + 2;
+            for (SummaryTextPart p : this.summary) {
+                p.maxLinesFolded = freeLength / this.summary.size() + 2;
             }
-            summary.add(part);
+            this.summary.add(part);
         }
-        SummaryTextGenerator.addLinks(summary);
+        SummaryTextGenerator.addLinks(this.summary);
         updateText();
     }
 
@@ -121,8 +124,8 @@ public class Controller {
     }
 
     private void updateText() {
-        String text = SummaryTextGenerator.getText(summary);
-        view.setText(text);
-        view.setHyperLinks(summary);
+        String text = SummaryTextGenerator.getText(this.summary);
+        this.view.setText(text);
+        this.view.setHyperLinks(this.summary);
     }
 }

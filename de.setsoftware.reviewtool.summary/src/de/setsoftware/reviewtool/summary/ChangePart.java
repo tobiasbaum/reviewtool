@@ -24,23 +24,23 @@ class ChangePart {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public String getParent() {
-        return parent;
+        return this.parent;
     }
 
     public Kind getType() {
-        return type;
+        return this.type;
     }
 
     @Override
     public String toString() {
-        if (type == Kind.NON_SOURCE_FILE) {
-            return name;
+        if (this.type == Kind.NON_SOURCE_FILE) {
+            return this.name;
         } else {
-            return name + " in " + parent;
+            return this.name + " in " + this.parent;
         }
     }
 
@@ -48,9 +48,9 @@ class ChangePart {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + ((name == null) ? 0 : name.hashCode());
-        result = prime * result + ((parent == null) ? 0 : parent.hashCode());
-        result = prime * result + ((type == null) ? 0 : type.hashCode());
+        result = prime * result + ((this.name == null) ? 0 : this.name.hashCode());
+        result = prime * result + ((this.parent == null) ? 0 : this.parent.hashCode());
+        result = prime * result + ((this.type == null) ? 0 : this.type.hashCode());
         return result;
     }
 
@@ -66,21 +66,21 @@ class ChangePart {
             return false;
         }
         ChangePart other = (ChangePart) obj;
-        if (name == null) {
+        if (this.name == null) {
             if (other.name != null) {
                 return false;
             }
-        } else if (!name.equals(other.name)) {
+        } else if (!this.name.equals(other.name)) {
             return false;
         }
-        if (parent == null) {
+        if (this.parent == null) {
             if (other.parent != null) {
                 return false;
             }
-        } else if (!parent.equals(other.parent)) {
+        } else if (!this.parent.equals(other.parent)) {
             return false;
         }
-        if (type != other.type) {
+        if (this.type != other.type) {
             return false;
         }
         return true;

@@ -51,6 +51,7 @@ import de.setsoftware.reviewtool.ui.IStopViewer;
 /**
  * Displays all differences of a {@link Stop} combined in a single window.
  */
+@SuppressWarnings("restriction")
 public class CombinedDiffStopViewer implements IStopViewer {
 
     /**

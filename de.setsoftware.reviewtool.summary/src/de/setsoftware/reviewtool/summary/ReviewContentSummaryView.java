@@ -41,15 +41,15 @@ public class ReviewContentSummaryView extends ViewPart {
 
     @Override
     public void createPartControl(Composite parent) {
-        viewer = new TextViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
-        viewer.setDocument(new Document());
-        viewer.setEditable(false);
+        this.viewer = new TextViewer(parent, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL);
+        this.viewer.setDocument(new Document());
+        this.viewer.setEditable(false);
 
         IHyperlinkDetector linkDetector = new IHyperlinkDetector() {
             @Override
             public IHyperlink[] detectHyperlinks(ITextViewer textViewer, IRegion region,
                     boolean canShowMultipleHyperlinks) {
-                for (IRegion link : links) {
+                for (IRegion link : ReviewContentSummaryView.this.links) {
                     if (region.getOffset() >= link.getOffset()
                             && region.getOffset() <= link.getOffset() + link.getLength()) {
                         IHyperlink hyperlink = new IHyperlink() {
@@ -71,7 +71,7 @@ public class ReviewContentSummaryView extends ViewPart {
 
                             @Override
                             public void open() {
-                                controller.onClick(link);
+                                ReviewContentSummaryView.this.controller.onClick(link);
                             }
                         };
                         return new IHyperlink[] { hyperlink };
@@ -80,15 +80,15 @@ public class ReviewContentSummaryView extends ViewPart {
                 return null;
             }
         };
-        viewer.setHyperlinkDetectors(new IHyperlinkDetector[] { linkDetector }, 0);
+        this.viewer.setHyperlinkDetectors(new IHyperlinkDetector[] { linkDetector }, 0);
 
         Display display = Display.getCurrent();
         Color color = display.getSystemColor(SWT.COLOR_BLUE);
-        viewer.setHyperlinkPresenter(new DefaultHyperlinkPresenter(color));
+        this.viewer.setHyperlinkPresenter(new DefaultHyperlinkPresenter(color));
 
         hookContextMenu();
 
-        commitsListener = new CommitsInReviewListener() {
+        this.commitsListener = new CommitsInReviewListener() {
 
             // SWTException: Invalid thread access, if not using asyncExec.
             @Override
@@ -96,18 +96,18 @@ public class ReviewContentSummaryView extends ViewPart {
                 Display.getDefault().asyncExec(new Runnable() {
                     @Override
                     public void run() {
-                        controller.processCommits(currentCommits);
+                        ReviewContentSummaryView.this.controller.processCommits(currentCommits);
                     }
                 });
             }
         };
-        ReviewUi.registerCommitsInReviewListener(commitsListener);
+        ReviewUi.registerCommitsInReviewListener(this.commitsListener);
 
         if (!ReviewUi.isIdle()) {
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    controller.processCommits(ReviewUi.getCommitsInReview());
+                    ReviewContentSummaryView.this.controller.processCommits(ReviewUi.getCommitsInReview());
                 }
             });
         }
@@ -116,14 +116,14 @@ public class ReviewContentSummaryView extends ViewPart {
     private void hookContextMenu() {
         MenuManager menuMgr = new MenuManager();
         menuMgr.setRemoveAllWhenShown(true);
-        Menu menu = menuMgr.createContextMenu(viewer.getControl());
-        viewer.getControl().setMenu(menu);
-        getSite().registerContextMenu(menuMgr, viewer);
+        Menu menu = menuMgr.createContextMenu(this.viewer.getControl());
+        this.viewer.getControl().setMenu(menu);
+        getSite().registerContextMenu(menuMgr, this.viewer);
     }
 
     @Override
     public void setFocus() {
-        viewer.getControl().setFocus();
+        this.viewer.getControl().setFocus();
     }
 
     /**
@@ -133,9 +133,9 @@ public class ReviewContentSummaryView extends ViewPart {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                int i = viewer.getTopIndex();
-                viewer.getDocument().set(text);
-                viewer.setTopIndex(i);
+                int i = ReviewContentSummaryView.this.viewer.getTopIndex();
+                ReviewContentSummaryView.this.viewer.getDocument().set(text);
+                ReviewContentSummaryView.this.viewer.setTopIndex(i);
             }
         });
     }
@@ -155,7 +155,7 @@ public class ReviewContentSummaryView extends ViewPart {
     private void setHyperLinksInternal(List<? extends IRegion> links) {
         this.links = links;
 
-        StyledText text = viewer.getTextWidget();
+        StyledText text = this.viewer.getTextWidget();
         if (text == null || text.isDisposed()) {
             return;
         }

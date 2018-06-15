@@ -19,11 +19,11 @@ class SummaryTextPart implements IRegion {
 
     @Override
     public int getLength() {
-        return linkLength;
+        return this.linkLength;
     }
 
     @Override
     public int getOffset() {
-        return linkOffset;
+        return this.linkOffset;
     }
 }

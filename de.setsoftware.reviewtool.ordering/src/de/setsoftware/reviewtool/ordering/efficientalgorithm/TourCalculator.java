@@ -144,7 +144,7 @@ public class TourCalculator<T> {
             this.unsatisfiedMatchesWithPotentiallyRelevantFolds.remove(toMatch);
         }
 
-        private boolean matchesWithFoldSubset(MatchSet<S> toMatch, SimpleSet<S> set) {
+        private boolean matchesWithFoldSubset(@SuppressWarnings("unused") MatchSet<S> toMatch, SimpleSet<S> set) {
             return this.bundler.bundle(set) != null;
         }
 

@@ -1,7 +1,6 @@
 package de.setsoftware.reviewtool.ordering;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -79,13 +78,6 @@ public class StopOrdering implements IStopOrdering {
                 return fragment == null ? -1 : fragment.getFrom().getLine();
             }
         };
-    }
-
-    private static List<? extends RelationMatcher> getRelationMatchers() {
-        //TODO make loading of relation matchers more dynamic
-        return Arrays.asList(
-                new InSameFileRelation(HierarchyExplicitness.ONLY_NONTRIVIAL),
-                new TokenSimilarityRelation());
     }
 
     private static List<MatchSet<ChangePart>> getMatchSets(List<OrderingInfo> orderingInfos) {

@@ -17,8 +17,8 @@ public class ChangePartsModel {
      * Sort parts using relevance or alphabetic, if relevance is same.
      */
     public void sort() {
-        newParts.sort();
-        deletedParts.sort();
-        changedParts.sort();
+        this.newParts.sort();
+        this.deletedParts.sort();
+        this.changedParts.sort();
     }
 }

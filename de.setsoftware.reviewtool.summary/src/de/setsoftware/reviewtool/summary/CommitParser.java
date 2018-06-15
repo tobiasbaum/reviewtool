@@ -113,7 +113,7 @@ public class CommitParser {
         this.addCodeLengthToRelevance();
     }
 
-    private boolean isSourceFile(IChange change) throws Exception {
+    private boolean isSourceFile(IChange change) {
         if (this.getRelPathFrom(change).toString().replaceAll(".*\\.", "").equals("java")) {
             return true;
         }
@@ -210,7 +210,7 @@ public class CommitParser {
         return type.getPackage().getName();
     }
 
-    private void parseTmpFilesFrom() throws IOException {
+    private void parseTmpFilesFrom() {
         final ASTParser parser = this.makeAstParser(new String[0]);
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
@@ -243,7 +243,7 @@ public class CommitParser {
         parser.createASTs(this.previousDirFilesArray, null, new String[0], requestor, null);
     }
 
-    private void parseTmpFilesTo() throws IOException {
+    private void parseTmpFilesTo() {
         final ASTParser parser = this.makeAstParser(new String[0]);
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
@@ -277,7 +277,7 @@ public class CommitParser {
     }
 
     private ASTParser makeAstParser(String[] sourceFolders) {
-        final ASTParser parser = ASTParser.newParser(AST.JLS8);
+        @SuppressWarnings("deprecation") final ASTParser parser = ASTParser.newParser(AST.JLS8);
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         final Map<String, String> options = JavaCore.getOptions();
         JavaCore.setComplianceOptions(JavaCore.VERSION_1_8, options);
@@ -358,7 +358,7 @@ public class CommitParser {
         });
     }
 
-    private void parseTmpFilesFromForRelevance() throws IOException {
+    private void parseTmpFilesFromForRelevance() {
         final ASTParser parser = this.makeAstParser(new String[0]);
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
@@ -387,7 +387,7 @@ public class CommitParser {
         parser.createASTs(this.previousDirFilesArray, null, new String[0], requestor, null);
     }
 
-    private void parseTmpFilesToForRelevance() throws IOException {
+    private void parseTmpFilesToForRelevance() {
         final ASTParser parser = this.makeAstParser(new String[0]);
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
