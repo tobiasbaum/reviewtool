@@ -10,8 +10,19 @@
   </parent>
   <artifactId>de.setsoftware.reviewtool.changesources.svn</artifactId>
   <packaging>eclipse-plugin</packaging>
+  <dependencies>
+    <dependency>
+      <groupId>org.tmatesoft.svnkit</groupId>
+      <artifactId>svnkit</artifactId>
+      <version>1.9.3</version>
+    </dependency>
+  </dependencies>
   <build>
     <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-checkstyle-plugin</artifactId>
