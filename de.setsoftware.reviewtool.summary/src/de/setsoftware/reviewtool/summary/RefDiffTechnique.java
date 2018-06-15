@@ -6,12 +6,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.jgit.revwalk.RevCommit;
-
 import de.setsoftware.reviewtool.summary.ChangePart.Kind;
-import refdiff.core.RefDiff;
 import refdiff.core.api.RefactoringType;
-import refdiff.core.rm2.analysis.StructuralDiffHandler;
+import refdiff.core.rm2.analysis.RefDiffConfigImpl;
+import refdiff.core.rm2.analysis.SDModelBuilder;
 import refdiff.core.rm2.model.SDEntity;
 import refdiff.core.rm2.model.SDModel;
 import refdiff.core.rm2.model.refactoring.SDRefactoring;
@@ -37,28 +35,28 @@ public class RefDiffTechnique {
             filesCurrent.add(currentDir.relativize(file).toString());
         }
 
-        StringBuilder text = new StringBuilder("");
-        RefDiff refDiff = new RefDiff();
-        StructuralDiffHandler handler = new StructuralDiffHandler() {
-            @Override
-            public void handle(RevCommit commitData, SDModel sdModel) {
-                for (SDRefactoring ref : sdModel.getRefactorings()) {
-                    if (ref.getRefactoringType() == RefactoringType.MOVE_CLASS
-                            || ref.getRefactoringType() == RefactoringType.MOVE_RENAME_CLASS
-                            || ref.getRefactoringType() == RefactoringType.RENAME_CLASS) {
-                        text.append(processClassRefactoring(ref, model) + "\n");
-                    } else if (ref.getRefactoringType() == RefactoringType.MOVE_OPERATION
-                            || ref.getRefactoringType() == RefactoringType.CHANGE_METHOD_SIGNATURE
-                            || ref.getRefactoringType() == RefactoringType.RENAME_METHOD) {
-                        text.append(processMethodRefactoring(ref, model) + "\n");
-                    } else {
-                        text.append(ref.getRefactoringType().getDisplayName() + ": " + ref.getEntityBefore().key()
-                                + " --> " + ref.getEntityAfter().key());
-                    }
-                }
+        final RefDiffConfigImpl config = new RefDiffConfigImpl();
+        final SDModelBuilder builder = new SDModelBuilder(config);
+        builder.analyzeAfter(currentDir.toFile(), filesCurrent);
+        builder.analyzeBefore(previousDir.toFile(), filesBefore);
+        final SDModel sdModel = builder.buildModel();
+
+        final StringBuilder text = new StringBuilder("");
+        for (final SDRefactoring ref : sdModel.getRefactorings()) {
+            if (ref.getRefactoringType() == RefactoringType.MOVE_CLASS
+                    || ref.getRefactoringType() == RefactoringType.MOVE_RENAME_CLASS
+                    || ref.getRefactoringType() == RefactoringType.RENAME_CLASS) {
+                text.append(processClassRefactoring(ref, model) + "\n");
+            } else if (ref.getRefactoringType() == RefactoringType.MOVE_OPERATION
+                    || ref.getRefactoringType() == RefactoringType.CHANGE_METHOD_SIGNATURE
+                    || ref.getRefactoringType() == RefactoringType.RENAME_METHOD) {
+                text.append(processMethodRefactoring(ref, model) + "\n");
+            } else {
+                text.append(ref.getRefactoringType().getDisplayName() + ": " + ref.getEntityBefore().key() + " --> "
+                        + ref.getEntityAfter().key());
             }
-        };
-        refDiff.detectAtCommit(previousDir.toFile(), currentDir.toFile(), filesBefore, filesCurrent, handler);
+        }
+
         return text.toString();
     }
 
