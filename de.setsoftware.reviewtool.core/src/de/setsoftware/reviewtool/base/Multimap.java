@@ -6,32 +6,26 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * A simple multimap with a list of values for each key.
+ * Implements the {@link IMultimap} interface using an ordinary {@link Map}.
  * @param <K> Type of the key.
  * @param <V> Type of the value.
  */
-public final class Multimap<K, V> implements Serializable {
+public final class Multimap<K, V> implements Serializable, IMultimap<K, V> {
 
     private static final long serialVersionUID = -2669248894482975071L;
 
     private final Map<K, List<V>> map = new LinkedHashMap<>();
 
-    /**
-     * Returns {@code true} iff the multimap is empty, else {@code false}.
-     */
+    @Override
     public boolean isEmpty() {
         return this.map.isEmpty();
     }
 
-    /**
-     * Add the given key value pair. If there already is an entry
-     * for the given key, add the value to the end of this key's list.
-     */
-    public void put(K key, V value) {
+    @Override
+    public void put(final K key, final V value) {
         List<V> list = this.map.get(key);
         if (list == null) {
             list = new ArrayList<>();
@@ -40,44 +34,38 @@ public final class Multimap<K, V> implements Serializable {
         list.add(value);
     }
 
-    /**
-     * Get the values for the given key. If there are no values, the
-     * empty list is returned.
-     */
-    public List<V> get(K key) {
+    @Override
+    public List<V> get(final K key) {
         final List<V> list = this.map.get(key);
         return list == null ? Collections.<V>emptyList() : Collections.unmodifiableList(list);
     }
 
-    /**
-     * Adds all entries from the given map to this map.
-     */
-    public void putAll(Multimap<? extends K, ? extends V> other) {
-        for (final K key : other.map.keySet()) {
-            for (final V value : other.map.get(key)) {
-                this.put(key, value);
+    @Override
+    public void putAll(final IMultimap<? extends K, ? extends V> other) {
+        for (final Map.Entry<? extends K, ? extends List<? extends V>> entry : other.entrySet()) {
+            for (final V value : entry.getValue()) {
+                this.put(entry.getKey(), value);
             }
         }
     }
 
-    /**
-     * Returns all entries of this multimap.
-     */
+    @Override
+    public Set<K> keySet() {
+        return Collections.unmodifiableSet(this.map.keySet());
+    }
+
+    @Override
     public Set<Map.Entry<K, List<V>>> entrySet() {
         return Collections.unmodifiableSet(this.map.entrySet());
     }
 
-    /**
-     * Removes the entry for the given key (including all values).
-     */
-    public void removeKey(K key) {
+    @Override
+    public void removeKey(final K key) {
         this.map.remove(key);
     }
 
-    /**
-     * Removes the value from the entries for the given key.
-     */
-    public void removeValue(K key, V value) {
+    @Override
+    public void removeValue(final K key, final V value) {
         final List<V> list = this.map.get(key);
         if (list != null) {
             list.remove(value);
@@ -98,7 +86,7 @@ public final class Multimap<K, V> implements Serializable {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (!(o instanceof Multimap)) {
             return false;
         }
@@ -106,13 +94,11 @@ public final class Multimap<K, V> implements Serializable {
         return this.map.equals(m.map);
     }
 
-    /**
-     * Returns one of the keys which have a maximal number of assigned values.
-     */
+    @Override
     public K keyWithMaxNumberOfValues() {
         int maxSize = 0;
         K maxKey = null;
-        for (final Entry<K, List<V>> e : this.map.entrySet()) {
+        for (final Map.Entry<K, List<V>> e : this.map.entrySet()) {
             if (e.getValue().size() > maxSize) {
                 maxSize = e.getValue().size();
                 maxKey = e.getKey();
@@ -121,16 +107,73 @@ public final class Multimap<K, V> implements Serializable {
         return maxKey;
     }
 
-    /**
-     * Sorts all value lists.
-     * @pre The values are comparable.
-     */
+    @Override
     public void sortValues() {
-        for (final Entry<K, List<V>> e : this.map.entrySet()) {
+        for (final Map.Entry<K, List<V>> e : this.map.entrySet()) {
             @SuppressWarnings("unchecked")
             final List<Comparable<Object>> values = (List<Comparable<Object>>) e.getValue();
             Collections.sort(values);
         }
     }
 
+    @Override
+    public IMultimap<K, V> readOnlyView() {
+        return new IMultimap<K, V>() {
+
+            @Override
+            public boolean isEmpty() {
+                return Multimap.this.isEmpty();
+            }
+
+            @Override
+            public void put(final K key, final V value) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public List<V> get(final K key) {
+                return Multimap.this.get(key);
+            }
+
+            @Override
+            public void putAll(final IMultimap<? extends K, ? extends V> other) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Set<K> keySet() {
+                return Multimap.this.keySet();
+            }
+
+            @Override
+            public Set<Map.Entry<K, List<V>>> entrySet() {
+                return Multimap.this.entrySet();
+            }
+
+            @Override
+            public void removeKey(final K key) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void removeValue(final K key, final V value) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public K keyWithMaxNumberOfValues() {
+                return Multimap.this.keyWithMaxNumberOfValues();
+            }
+
+            @Override
+            public void sortValues() {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public IMultimap<K, V> readOnlyView() {
+                return this;
+            }
+        };
+    }
 }
