@@ -1,10 +1,10 @@
 package de.setsoftware.reviewtool.config;
 
 import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
 import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
-import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 
 /**

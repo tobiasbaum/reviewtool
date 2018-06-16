@@ -32,13 +32,14 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.ui.part.ViewPart;
+import org.eclipse.ui.IViewPart;
 
 import de.setsoftware.reviewtool.base.LineSequence;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.Constants;
+import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IFragment;
@@ -46,11 +47,9 @@ import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IStop;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Stop;
-import de.setsoftware.reviewtool.ui.IStopViewer;
 
 /**
- * Displays all differences of a {@link Stop} combined in a single window.
+ * Displays all differences of a {@link IStop} combined in a single window.
  */
 @SuppressWarnings("restriction")
 public class CombinedDiffStopViewer implements IStopViewer {
@@ -363,7 +362,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
     private Highlights highlightsLeft;
     private Highlights highlightsRight;
 
-    private void createBinaryHunkViewer(final ViewPart view, final Composite parent) {
+    private void createBinaryHunkViewer(final IViewPart view, final Composite parent) {
         final Label label = new Label(parent, SWT.NULL);
         label.setText("binary");
         label.setFont(JFaceResources.getFontRegistry().getBold(JFaceResources.DEFAULT_FONT));
@@ -385,7 +384,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
     }
 
     @Override
-    public void createStopView(final ViewPart view, final Composite scrollContent, final Stop stop) {
+    public void createStopView(final IViewPart view, final Composite scrollContent, final IStop stop) {
         this.allRevisions = this.determineAllRevisionsOfFile(stop);
         final Set<IRevisionedFile> revisionsForStop = new LinkedHashSet<>();
         revisionsForStop.addAll(stop.getHistory().keySet());
