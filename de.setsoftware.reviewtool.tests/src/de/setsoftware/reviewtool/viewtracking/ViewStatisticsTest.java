@@ -10,7 +10,7 @@ import org.junit.Test;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
-import de.setsoftware.reviewtool.model.changestructure.StubRepo;
+import de.setsoftware.reviewtool.model.changestructure.StubWorkingCopy;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.viewtracking.ViewStatistics.INextStopCallback;
@@ -42,8 +42,8 @@ public class ViewStatisticsTest {
 
     private static Stop stop(String string) {
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(
-                string, ChangestructureFactory.createLocalRevision(new StubRepo()));
-        return new Stop(ChangestructureFactory.createBinaryChange(file, file, false), file);
+                string, ChangestructureFactory.createLocalRevision(StubWorkingCopy.INSTANCE));
+        return new Stop(ChangestructureFactory.createBinaryChange(StubWorkingCopy.INSTANCE, file, file, false), file);
     }
 
     private static void doTest(

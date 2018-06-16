@@ -31,7 +31,7 @@ public class TourHierarchyBuilderTest {
 
     private static Stop stop(String s) {
         return new Stop(
-                ChangestructureFactory.createBinaryChange(file(s, 1), file(s, 3), false),
+                ChangestructureFactory.createBinaryChange(null, file(s, 1), file(s, 3), false),
                 file(s, 4));
     }
 

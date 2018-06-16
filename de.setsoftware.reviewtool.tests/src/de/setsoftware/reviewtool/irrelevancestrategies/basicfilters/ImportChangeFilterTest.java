@@ -16,7 +16,7 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 public class ImportChangeFilterTest {
 
     private static IChange change(String from, String to) {
-        return ChangestructureFactory.createTextualChangeHunk(fragment(from), fragment(to), false);
+        return ChangestructureFactory.createTextualChangeHunk(null, fragment(from), fragment(to), false);
     }
 
     private static IFragment fragment(String content) {

@@ -36,8 +36,7 @@ public interface ICommit {
     public abstract Date getTime();
 
     /**
-     * @return The associated {@link IRepository}.
+     * Returns the associated {@link IWorkingCopy}.
      */
-    public abstract IRepository getRepository();
-
+    public abstract IWorkingCopy getWorkingCopy();
 }

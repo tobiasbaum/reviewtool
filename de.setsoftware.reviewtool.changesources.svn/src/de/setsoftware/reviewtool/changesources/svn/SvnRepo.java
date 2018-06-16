@@ -1,133 +1,110 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
-import java.io.File;
 import java.io.InvalidObjectException;
 import java.io.ObjectStreamException;
 import java.io.Serializable;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Platform;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
+import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.io.SVNRepository;
-import org.tmatesoft.svn.core.wc.SVNClientManager;
 
-import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
 
 /**
- * Wraps the information needed on a SVN repository and corresponding working copy.
+ * Represents a remote Subversion repository.
+ * Such a repository contains a cache of the history to speed up the gathering of relevant entries
+ * as well as a cache of requested file contents.
  */
 final class SvnRepo extends AbstractRepository {
 
     /**
-     * References a SVN repository by its working copy root.
+     * References a SVN repository by its remote URL.
      */
     private static final class SvnRepoRef implements Serializable {
 
         private static final long serialVersionUID = 8155878129812235537L;
-        private final File wcRoot;
+        private final String remoteUrl;
 
         /**
          * Constructor.
-         * @param workingCopyRoot The root directory of the working copy.
+         * @param remoteUrl The remote URL of the repository.
          */
-        SvnRepoRef(final File workingCopyRoot) {
-            this.wcRoot = workingCopyRoot;
+        SvnRepoRef(final SVNURL remoteUrl) {
+            this.remoteUrl = remoteUrl.toString();
         }
 
         private Object readResolve() throws ObjectStreamException {
-            final SvnRepo repo = CachedLog.getInstance().getRepositoryByWorkingCopyRoot(this.wcRoot);
-            if (repo == null) {
-                throw new InvalidObjectException("No repository for working copy at " + this.wcRoot);
+            try {
+                final SvnRepo repo = SvnRepositoryManager.getInstance().getRepo(SVNURL.parseURIEncoded(this.remoteUrl));
+                if (repo == null) {
+                    throw new InvalidObjectException("No repository found at " + this.remoteUrl);
+                }
+                return repo;
+            } catch (final SVNException e) {
+                final InvalidObjectException ex =
+                        new InvalidObjectException("Problem while creating URL for " + this.remoteUrl);
+                ex.initCause(e);
+                throw ex;
             }
-            return repo;
         }
     }
 
     private static final long serialVersionUID = 8792151363600093081L;
 
-    private final String id;
-    private final File workingCopyRoot;
-    private final SVNURL remoteUrl;
-    private final String relPath;
-    private final int checkoutPrefix;
     private final SVNRepository svnRepo;
+    private final String id;
+    private final SVNURL remoteUrl;
     private final SvnFileCache fileCache;
-    private SvnFileHistoryGraph remoteHistoryGraph;
-    private SvnFileHistoryGraph localHistoryGraph;
-    private final VirtualFileHistoryGraph combinedHistoryGraph;
+    private final List<CachedLogEntry> entries;
+    private SvnFileHistoryGraph fileHistoryGraph;
 
-    SvnRepo(
-            final SVNClientManager mgr,
-            final String id,
-            final File workingCopyRoot,
-            final SVNURL rootUrl,
-            final String relPath,
-            final int checkoutPrefix) throws SVNException {
-
-        this.id = id;
-        this.workingCopyRoot = workingCopyRoot;
-        this.remoteUrl = rootUrl;
-        this.relPath = relPath + '/';
-        this.checkoutPrefix = checkoutPrefix;
-        this.svnRepo = mgr.createRepository(rootUrl, false);
+    SvnRepo(final SVNRepository svnRepo, final SVNURL remoteUrl) throws SVNException {
+        this.svnRepo = svnRepo;
+        this.id = svnRepo.getRepositoryUUID(true);
+        this.remoteUrl = remoteUrl;
         this.fileCache = new SvnFileCache(this.svnRepo);
-        this.remoteHistoryGraph = new SvnFileHistoryGraph();
-        this.localHistoryGraph = new SvnFileHistoryGraph();
-        this.combinedHistoryGraph = new VirtualFileHistoryGraph(this.remoteHistoryGraph, this.localHistoryGraph);
+        this.entries = new ArrayList<>();
+        this.fileHistoryGraph = new SvnFileHistoryGraph();
     }
 
     SVNURL getRemoteUrl() {
         return this.remoteUrl;
     }
 
+    List<CachedLogEntry> getEntries() {
+        return Collections.unmodifiableList(this.entries);
+    }
+
+    void appendNewEntries(final Collection<CachedLogEntry> newEntries) {
+        this.entries.addAll(newEntries);
+    }
+
+    IPath getCacheFilePath() {
+        final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+        final IPath dir = Platform.getStateLocation(bundle);
+        return dir.append("svnlog-" + encodeString(this.remoteUrl.toString()) + ".cache");
+    }
+
+    private static String encodeString(final String s) {
+        return Base64.getUrlEncoder().encodeToString(s.getBytes());
+    }
+
     @Override
     public String getId() {
         return this.id;
-    }
-
-    @Override
-    public String toAbsolutePathInWc(String absolutePathInRepo) {
-        assert absolutePathInRepo.startsWith("/");
-        assert !absolutePathInRepo.contains("\\");
-
-        final Path p = Paths.get(absolutePathInRepo);
-        final File probableFile = this.combineWcRootAndSuffix(p, this.checkoutPrefix);
-        if (probableFile.exists()) {
-            return probableFile.toString();
-        }
-
-        //when the working copy has been switched to a branch, the checkout prefix might
-        //  be wrong and we have to heuristically find the right path (until we have a better idea)
-        for (int i = 0; i < p.getNameCount() - 1; i++) {
-            final File f = this.combineWcRootAndSuffix(p, this.checkoutPrefix);
-            if (f.exists()) {
-                return f.toString();
-            }
-        }
-
-        return probableFile.toString();
-
-    }
-
-    private File combineWcRootAndSuffix(final Path p, int prefixLength) {
-        return new File(this.workingCopyRoot, p.subpath(prefixLength, p.getNameCount()).toString());
-    }
-
-    @Override
-    public String fromAbsolutePathInWc(final String absolutePathInWc) {
-        assert absolutePathInWc.startsWith(this.workingCopyRoot.getPath());
-        final String path = new File(
-                this.relPath,
-                absolutePathInWc.toString().substring(this.workingCopyRoot.getPath().length()))
-                    .getPath().replace('\\', '/');
-        return path;
     }
 
     @Override
@@ -141,11 +118,6 @@ final class SvnRepo extends AbstractRepository {
     }
 
     @Override
-    public File getLocalRoot() {
-        return this.workingCopyRoot;
-    }
-
-    @Override
     public IRepoRevision toRevision(final String revisionId) {
         try {
             return ChangestructureFactory.createRepoRevision(Long.valueOf(revisionId), this);
@@ -155,8 +127,12 @@ final class SvnRepo extends AbstractRepository {
     }
 
     @Override
-    public IFileHistoryGraph getFileHistoryGraph() {
-        return this.combinedHistoryGraph;
+    public SvnFileHistoryGraph getFileHistoryGraph() {
+        return this.fileHistoryGraph;
+    }
+
+    void setFileHistoryGraph(final SvnFileHistoryGraph fileHistoryGraph) {
+        this.fileHistoryGraph = fileHistoryGraph;
     }
 
     @Override
@@ -165,12 +141,19 @@ final class SvnRepo extends AbstractRepository {
     }
 
     /**
-     * Returns the relative path of the working copy root wrt. the URL of the remote repository.
-     * For example, if the remote repository's URL is https://example.com/svn/repo and the path "trunk/Workspace"
-     * is checked out, then the relative path returned is "trunk/Workspace".
+     * Determines all commits between passed revision and the latest one.
      */
-    String getRelativePath() {
-        return this.relPath;
+    void getLog(final long startRevision, final ISVNLogEntryHandler handler) throws SVNException {
+        this.svnRepo.log(
+                null,   // no target paths (retrieve log entries of whole repository)
+                startRevision,
+                this.svnRepo.getLatestRevision(),
+                true,   // discover changed paths
+                false,  // don't stop at copy operations
+                0,      // no log limit
+                false,  // don't include merge history
+                new String[0],
+                handler);
     }
 
     /**
@@ -180,42 +163,7 @@ final class SvnRepo extends AbstractRepository {
         return this.svnRepo.getLatestRevision();
     }
 
-    /**
-     * Returns the {@link SvnFileHistoryGraph} describing the changes in the remote repository.
-     */
-    SvnFileHistoryGraph getRemoteFileHistoryGraph() {
-        return this.remoteHistoryGraph;
-    }
-
-    /**
-     * Returns the {@link SvnFileHistoryGraph} describing the changes in the local working copy.
-     */
-    SvnFileHistoryGraph getLocalFileHistoryGraph() {
-        return this.localHistoryGraph;
-    }
-
-    /**
-     * Replaces the {@link SvnFileHistoryGraph} of the local working copy by an empty file history graph.
-     */
-    void clearLocalFileHistoryGraph() {
-        assert this.combinedHistoryGraph.size() > 0;
-        this.combinedHistoryGraph.remove(this.combinedHistoryGraph.size() - 1);
-        this.localHistoryGraph = new SvnFileHistoryGraph();
-        this.combinedHistoryGraph.add(this.localHistoryGraph);
-    }
-
-    /**
-     * Replaces the {@link SvnFileHistoryGraph} of the remote repository.
-     * @param remoteFileHistoryGraph The new remote file history graph.
-     */
-    void setRemoteFileHistoryGraph(final SvnFileHistoryGraph remoteFileHistoryGraph) {
-        this.remoteHistoryGraph = remoteFileHistoryGraph;
-        this.combinedHistoryGraph.clear();
-        this.combinedHistoryGraph.add(this.remoteHistoryGraph);
-        this.combinedHistoryGraph.add(this.localHistoryGraph);
-    }
-
     private Object writeReplace() {
-        return new SvnRepoRef(this.workingCopyRoot);
+        return new SvnRepoRef(this.remoteUrl);
     }
 }

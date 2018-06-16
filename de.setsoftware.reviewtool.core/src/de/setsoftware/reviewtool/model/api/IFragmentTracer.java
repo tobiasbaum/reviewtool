@@ -11,13 +11,19 @@ public interface IFragmentTracer {
     /**
      * Determines the target fragment that most closely represents the given source fragment in the most recent
      * revision. If the fragment already denotes the most recent revision, this is an identity.
+     *
+     * @param fileHistoryGraph The file history graph to use for tracing.
+     * @param fragment The source fragment to start with.
      */
-    public abstract List<? extends IFragment> traceFragment(IFragment fragment);
+    public abstract List<? extends IFragment> traceFragment(IFileHistoryGraph fileHistoryGraph, IFragment fragment);
 
     /**
      * Determines the target file that most closely represents the given source file in the most recent revision.
      * If the file already denotes the most recent revision, this is an identity.
+     *
+     * @param fileHistoryGraph The file history graph to use for tracing.
+     * @param file The source file to start with.
      */
-    public abstract List<IRevisionedFile> traceFile(IRevisionedFile fragment);
+    public abstract List<IRevisionedFile> traceFile(IFileHistoryGraph fileHistoryGraph, IRevisionedFile file);
 
 }

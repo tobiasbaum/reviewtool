@@ -14,11 +14,11 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 public class FragmentTest {
 
     private static FileInRevision file() {
-        return new FileInRevision("file", new LocalRevision(StubRepo.INSTANCE));
+        return new FileInRevision("file", new LocalRevision(StubWorkingCopy.INSTANCE));
     }
 
     private static FileInRevision fileWithContent(final String content) {
-        return new FileInRevision("file", new LocalRevision(StubRepo.INSTANCE)) {
+        return new FileInRevision("file", new LocalRevision(StubWorkingCopy.INSTANCE)) {
             private static final long serialVersionUID = 1L;
 
             @Override

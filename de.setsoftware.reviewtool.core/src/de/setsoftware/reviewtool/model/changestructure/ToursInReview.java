@@ -34,11 +34,11 @@ import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
 import de.setsoftware.reviewtool.model.api.ICommit;
-import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
@@ -439,16 +439,24 @@ public class ToursInReview {
 
             @Override
             public void handle(ITextualChange visitee) {
-                final List<? extends IFragment> mostRecentFragments = tracer.traceFragment(visitee.getToFragment());
+                final IWorkingCopy wc = c.getWorkingCopy();
+                final List<? extends IFragment> mostRecentFragments =
+                        tracer.traceFragment(wc.getFileHistoryGraph(), visitee.getToFragment());
                 for (final IFragment fragment : mostRecentFragments) {
-                    ret.add(new Stop(visitee, fragment));
+                    if (wc.toAbsolutePathInWc(fragment.getFile().getPath()) != null) {
+                        ret.add(new Stop(visitee, fragment));
+                    }
                 }
             }
 
             @Override
             public void handle(IBinaryChange visitee) {
-                for (final IRevisionedFile fileInRevision : tracer.traceFile(visitee.getFrom())) {
-                    ret.add(new Stop(visitee, fileInRevision));
+                final IWorkingCopy wc = c.getWorkingCopy();
+                for (final IRevisionedFile fileInRevision :
+                        tracer.traceFile(wc.getFileHistoryGraph(), visitee.getFrom())) {
+                    if (wc.toAbsolutePathInWc(fileInRevision.getPath()) != null) {
+                        ret.add(new Stop(visitee, fileInRevision));
+                    }
                 }
             }
 
@@ -513,15 +521,6 @@ public class ToursInReview {
             IStopMarkerFactory markerFactory,
             final Stop f) {
         return this.createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f, true);
-    }
-
-    /**
-     * Returns a {@link IFileHistoryNode} for passed file.
-     * @param file The file whose change history to retrieve.
-     * @return The {@link IFileHistoryNode} describing changes for passed {@link FileInRevision} or null if not found.
-     */
-    public IFileHistoryNode getFileHistoryNode(final IRevisionedFile file) {
-        return file.getRepository().getFileHistoryGraph().getNodeFor(file);
     }
 
     public List<Tour> getTopmostTours() {
@@ -642,7 +641,7 @@ public class ToursInReview {
     }
 
     private int calculateDistance(Stop stop, IPath resource, int line) {
-        if (!stop.getMostRecentFile().toLocalPath().equals(resource)) {
+        if (!stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()).equals(resource)) {
             return Integer.MAX_VALUE;
         }
 

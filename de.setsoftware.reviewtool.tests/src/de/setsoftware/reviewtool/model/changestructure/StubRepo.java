@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.io.File;
 import java.util.Collection;
 
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
@@ -15,30 +14,14 @@ public final class StubRepo extends AbstractRepository {
     public static StubRepo INSTANCE = new StubRepo();
     private static final long serialVersionUID = 1L;
 
-
     @Override
     public String getId() {
         return "stub";
     }
 
     @Override
-    public File getLocalRoot() {
-        return null;
-    }
-
-    @Override
     public IRepoRevision toRevision(final String revisionId) {
         return ChangestructureFactory.createRepoRevision(revisionId, this);
-    }
-
-    @Override
-    public String toAbsolutePathInWc(String absolutePathInRepo) {
-        return absolutePathInRepo;
-    }
-
-    @Override
-    public String fromAbsolutePathInWc(String absolutePathInWc) {
-        return absolutePathInWc;
     }
 
     @Override

@@ -25,12 +25,12 @@ public class TourTest {
         final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(2, 1));
         final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(2, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(2, 1));
-        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false), current1);
+        final Stop s1 = new Stop(new TextualChangeHunk(null, from1, to1, false), current1);
 
         final IFragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(3, 1));
         final IFragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(3, 1));
-        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, true), current2);
+        final Stop s2 = new Stop(new TextualChangeHunk(null, from2, to2, true), current2);
 
         assertFalse(s1.canBeMergedWith(s2));
         assertFalse(s2.canBeMergedWith(s1));
@@ -41,12 +41,12 @@ public class TourTest {
         final IFragment from1 = new Fragment(file("a.java", 1), pos(1, 1), pos(3, 1));
         final IFragment to1 = new Fragment(file("a.java", 2), pos(1, 1), pos(3, 1));
         final Fragment current1 = new Fragment(file("a.java", 3), pos(1, 1), pos(3, 1));
-        final Stop s1 = new Stop(new TextualChangeHunk(from1, to1, false), current1);
+        final Stop s1 = new Stop(new TextualChangeHunk(null, from1, to1, false), current1);
 
         final IFragment from2 = new Fragment(file("a.java", 2), pos(2, 1), pos(4, 1));
         final IFragment to2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 1));
         final Fragment current2 = new Fragment(file("a.java", 3), pos(2, 1), pos(4, 1));
-        final Stop s2 = new Stop(new TextualChangeHunk(from2, to2, true), current2);
+        final Stop s2 = new Stop(new TextualChangeHunk(null, from2, to2, true), current2);
 
         assertTrue(s1.canBeMergedWith(s2));
         assertTrue(s2.canBeMergedWith(s1));

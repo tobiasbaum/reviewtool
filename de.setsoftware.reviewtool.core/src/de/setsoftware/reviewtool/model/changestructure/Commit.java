@@ -8,25 +8,28 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;
-import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
  * Default implementation of @{link ICommit}.
  */
 public class Commit implements ICommit {
 
+    private final IWorkingCopy wc;
     private final String message;
     private final List<IChange> changes;
     private final IRevision revision;
     private final long timestamp;
 
     Commit(
+            final IWorkingCopy wc,
             final String message,
             final List<? extends IChange> changes,
             final IRevision revision,
             final Date timestamp) {
 
+        this.wc = wc;
         this.message = message;
         this.changes = new ArrayList<>(changes);
         this.revision = revision;
@@ -58,7 +61,7 @@ public class Commit implements ICommit {
                 adjustedChanges.add(change);
             }
         }
-        return new Commit(this.message, adjustedChanges, this.revision, this.getTime());
+        return new Commit(this.wc, this.message, adjustedChanges, this.revision, this.getTime());
     }
 
     @Override
@@ -67,8 +70,7 @@ public class Commit implements ICommit {
     }
 
     @Override
-    public IRepository getRepository() {
-        return this.revision.getRepository();
+    public IWorkingCopy getWorkingCopy() {
+        return this.wc;
     }
-
 }

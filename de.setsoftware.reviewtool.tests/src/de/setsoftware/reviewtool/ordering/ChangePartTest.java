@@ -13,6 +13,7 @@ import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.StubRepo;
@@ -38,7 +39,7 @@ public class ChangePartTest {
             private static final long serialVersionUID = 1L;
 
             @Override
-            public IPath toLocalPath() {
+            public IPath toLocalPath(final IWorkingCopy wc) {
                 throw new UnsupportedOperationException();
             }
 
@@ -71,7 +72,7 @@ public class ChangePartTest {
 
     private static Stop binaryStop(String filename) {
         return new Stop(
-                ChangestructureFactory.createBinaryChange(file(filename, 1), file(filename, 3), false),
+                ChangestructureFactory.createBinaryChange(null, file(filename, 1), file(filename, 3), false),
                 file(filename, 4));
     }
 
@@ -80,6 +81,7 @@ public class ChangePartTest {
         final IPositionInText posTo = ChangestructureFactory.createPositionInText(lineNumber + 1, 1);
         return new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
+                        null,
                         ChangestructureFactory.createFragment(file(file.getPath(), 1), posFrom, posTo),
                         ChangestructureFactory.createFragment(file, posFrom, posTo),
                         false),

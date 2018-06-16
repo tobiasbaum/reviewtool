@@ -8,11 +8,9 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
  * Encapsulates a Subversion revision with associated information about the repository, the log message, the commit
- * date, the commit author, and the paths changed. In addition, a SvnRevision can be marked as "invisible". Invisible
- * revisions are revisions which would have been filtered out as they do not belong to the ticket in question but which
- * are necessary for the change history.
+ * date, the commit author, and the paths changed.
  */
-final class SvnRevision implements ISvnRevision {
+final class SvnRevision extends AbstractSvnRevision {
     private final SvnRepo repository;
     private final CachedLogEntry logEntry;
 
