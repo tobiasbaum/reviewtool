@@ -27,7 +27,6 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.wc.ISVNStatusHandler;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
-import org.tmatesoft.svn.core.wc.SVNInfo;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 
@@ -242,69 +241,31 @@ final class SvnChangeSource implements IChangeSource {
             final List<File> relevantPaths,
             final IProgressMonitor ui) throws SVNException {
 
-        if (relevantPaths != null) {
-            return this.collectWorkingCopyChangesByPath(relevantPaths, ui);
-        } else {
-            return this.collectWorkingCopyChangesByRepository(ui);
-        }
-    }
-
-    private List<SvnWorkingCopyRevision> collectWorkingCopyChangesByRepository(
-            final IProgressMonitor ui) throws SVNException {
-
         final List<SvnWorkingCopyRevision> revisions = new ArrayList<>();
         for (final SvnWorkingCopy wc : SvnWorkingCopyManager.getInstance().getWorkingCopies()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
-            final File wcRoot = wc.getLocalRoot();
-            final SortedMap<String, CachedLogEntryPath> paths = new TreeMap<>();
-            this.mgr.getStatusClient().doStatus(
-                    wcRoot,
-                    SVNRevision.WORKING,
-                    SVNDepth.INFINITY,
-                    false, /* no remote */
-                    false, /* report only modified paths */
-                    false, /* don't include ignored files */
-                    false, /* ignored */
-                    new ISVNStatusHandler() {
-                        @Override
-                        public void handleStatus(final SVNStatus status) throws SVNException {
-                            if (status.isVersioned()) {
-                                final CachedLogEntryPath entry = new CachedLogEntryPath(wc.getRepository(), status);
-                                paths.put(entry.getPath(), entry);
-                            }
-                        }
-                    },
-                    null); /* no change lists */
 
-            final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, paths);
-            final SvnFileHistoryGraph localFileHistoryGraph = new SvnFileHistoryGraph();
-            localFileHistoryGraph.processRevision(wcRevision);
-            wc.setLocalFileHistoryGraph(localFileHistoryGraph);
-            revisions.add(wcRevision);
-        }
+            final SortedMap<String, CachedLogEntryPath> changeMap = new TreeMap<>();
+            final ISVNStatusHandler handler = new ISVNStatusHandler() {
+                @Override
+                public void handleStatus(final SVNStatus status) throws SVNException {
+                    if (status.isVersioned()) {
+                        final CachedLogEntryPath entry = new CachedLogEntryPath(wc.getRepository(), status);
+                        changeMap.put(entry.getPath(), entry);
+                    }
+                }
+            };
 
-        return revisions;
-    }
-
-    private List<SvnWorkingCopyRevision> collectWorkingCopyChangesByPath(
-            final List<File> relevantPaths,
-            final IProgressMonitor ui) throws SVNException {
-
-        final Map<SvnWorkingCopy, SortedMap<String, CachedLogEntryPath>> changeMap = new LinkedHashMap<>();
-        final List<SvnWorkingCopyRevision> revisions = new ArrayList<>();
-
-        for (final File wcPath : relevantPaths) {
-            if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+            if (relevantPaths != null) {
+                final Set<File> filteredPaths = this.filterPaths(relevantPaths, wc);
+                this.collectWorkingCopyChanges(filteredPaths, handler);
+            } else {
+                this.collectWorkingCopyChanges(wc, handler);
             }
-            this.checkLocalFile(changeMap, wcPath);
-        }
 
-        for (final Map.Entry<SvnWorkingCopy, SortedMap<String, CachedLogEntryPath>> entry : changeMap.entrySet()) {
-            final SvnWorkingCopy wc = entry.getKey();
-            final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, entry.getValue());
+            final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, changeMap);
             final SvnFileHistoryGraph localFileHistoryGraph = new SvnFileHistoryGraph();
             localFileHistoryGraph.processRevision(wcRevision);
             wc.setLocalFileHistoryGraph(localFileHistoryGraph);
@@ -314,36 +275,64 @@ final class SvnChangeSource implements IChangeSource {
         return revisions;
     }
 
-    private void checkLocalFile(
-            final Map<SvnWorkingCopy, SortedMap<String, CachedLogEntryPath>> changeMap,
-            final File wcPath) throws SVNException {
+    /**
+     * Collects local changes given a set of paths.
+     * @param paths The paths to consider.
+     * @param handler Receives information about changes files.
+     */
+    private void collectWorkingCopyChanges(final Set<File> paths, final ISVNStatusHandler handler)
+            throws SVNException {
 
-        final SVNInfo info = this.mgr.getWCClient().doInfo(wcPath, SVNRevision.WORKING);
-        final File wcRoot = info.getWorkingCopyRoot();
-        final SvnWorkingCopy wc = SvnWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
-        if (!changeMap.containsKey(wc)) {
-            changeMap.put(wc, new TreeMap<String, CachedLogEntryPath>());
+        for (final File path : paths) {
+            this.mgr.getStatusClient().doStatus(
+                    path,
+                    SVNRevision.WORKING,
+                    SVNDepth.EMPTY,
+                    false, // no remote
+                    false, // report only modified files
+                    false, // don't include ignored files
+                    false, // ignored
+                    handler,
+                    null); // no change lists
         }
-        final SortedMap<String, CachedLogEntryPath> paths = changeMap.get(wc);
+    }
+
+    /**
+     * Collects local changes within a whole working copy.
+     * @param wc The working copy to consider.
+     * @param handler Receives information about changes files.
+     */
+    private void collectWorkingCopyChanges(final SvnWorkingCopy wc, final ISVNStatusHandler handler)
+            throws SVNException {
 
         this.mgr.getStatusClient().doStatus(
-                wcPath,
+                wc.getLocalRoot(), // analyse whole working copy
                 SVNRevision.WORKING,
                 SVNDepth.INFINITY,
-                false, /* no remote */
-                true,  /* report also unmodified files */
-                false, /* don't include ignored files */
-                false, /* ignored */
-                new ISVNStatusHandler() {
-                    @Override
-                    public void handleStatus(final SVNStatus status) throws SVNException {
-                        if (status.isVersioned()) {
-                            final CachedLogEntryPath entry = new CachedLogEntryPath(wc.getRepository(), status);
-                            paths.put(entry.getPath(), entry);
-                        }
-                    }
-                },
-                null); /* no change lists */
+                false, // no remote
+                false, // report only modified files
+                false, // don't include ignored files
+                false, // ignored
+                handler,
+                null); // no change lists
+    }
+
+    /**
+     * Filters out paths that do not belong to passed working copy.
+     * @param relevantPaths The paths to filter.
+     * @param wc The relevant working copy.
+     * @return A set of filtered paths.
+     */
+    private Set<File> filterPaths(final List<File> relevantPaths, final SvnWorkingCopy wc) {
+        final Set<File> paths = new LinkedHashSet<>();
+        for (final File path : relevantPaths) {
+            final String repoPath = wc.toAbsolutePathInRepo(path);
+            if (repoPath != null) {
+                paths.add(path);
+            }
+        }
+
+        return paths;
     }
 
     private Map<File, IRevisionedFile> extractLocalPaths(final Collection<SvnWorkingCopyRevision> revisions) {
