@@ -42,9 +42,10 @@ import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IStop;
 import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
-import de.setsoftware.reviewtool.model.changestructure.Hunk;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.ui.IStopViewer;
 
@@ -64,6 +65,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
         /**
          * Constructor.
+         *
          * @param ranges The ranges to highlight.
          */
         ChangeHighlighter(final List<Position> ranges) {
@@ -105,9 +107,10 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
         /**
          * Constructor.
+         *
          * @param ranges The ranges to highlight.
          */
-        BackgroundHighlighter(final List<Position> ranges, String colorKey, RGB defaultColor) {
+        BackgroundHighlighter(final List<Position> ranges, final String colorKey, final RGB defaultColor) {
             this.ranges = ranges;
             this.colorKey = colorKey;
             this.defaultColor = defaultColor;
@@ -148,7 +151,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         private SourceViewer[] viewers;
         private int nextViewer;
 
-        protected SourceViewer createSourceViewer(SourceViewer superResult) {
+        protected SourceViewer createSourceViewer(final SourceViewer superResult) {
             if (this.viewers == null) {
                 this.viewers = new SourceViewer[NUM_VIEWERS];
             }
@@ -312,7 +315,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         private final LineSequence lines;
         private final String charset;
 
-        public FileContent(byte[] data, String charset) throws IOException {
+        public FileContent(final byte[] data, final String charset) throws IOException {
             this.bytes = data;
             this.lines = new LineSequence(data, charset);
             this.charset = charset;
@@ -327,15 +330,13 @@ public class CombinedDiffStopViewer implements IStopViewer {
         private final ChangeHighlighter rangeHighlights;
         private final BackgroundHighlighter lineHighlights;
 
-        public Highlights(final List<Position> ranges,
-                final List<Position> lineRanges,
-                String backgroundColorKey,
-                RGB defaultBackgroundColor) {
+        public Highlights(final List<Position> ranges, final List<Position> lineRanges, final String backgroundColorKey,
+                final RGB defaultBackgroundColor) {
             this.rangeHighlights = new ChangeHighlighter(ranges);
             this.lineHighlights = new BackgroundHighlighter(lineRanges, backgroundColorKey, defaultBackgroundColor);
         }
 
-        public void remove(SourceViewer viewer) {
+        public void remove(final SourceViewer viewer) {
             if (this.rangeHighlights != null) {
                 viewer.removeTextPresentationListener(this.rangeHighlights);
             }
@@ -344,15 +345,13 @@ public class CombinedDiffStopViewer implements IStopViewer {
             }
         }
 
-        public void apply(SourceViewer viewer) {
+        public void apply(final SourceViewer viewer) {
             viewer.addTextPresentationListener(this.lineHighlights);
             viewer.addTextPresentationListener(this.rangeHighlights);
             viewer.invalidateTextPresentation();
         }
 
     }
-
-
 
     private static final int CONTEXT_LENGTH = 3;
 
@@ -364,7 +363,6 @@ public class CombinedDiffStopViewer implements IStopViewer {
     private Highlights highlightsLeft;
     private Highlights highlightsRight;
 
-
     private void createBinaryHunkViewer(final ViewPart view, final Composite parent) {
         final Label label = new Label(parent, SWT.NULL);
         label.setText("binary");
@@ -372,11 +370,11 @@ public class CombinedDiffStopViewer implements IStopViewer {
         ViewHelper.createContextMenuWithoutSelectionProvider(view, label);
     }
 
-    private boolean isJava(IRevisionedFile file) {
+    private boolean isJava(final IRevisionedFile file) {
         return file.getPath().endsWith(".java");
     }
 
-    private static String toLabel(IRevisionedFile revision) {
+    private static String toLabel(final IRevisionedFile revision) {
         final String original = revision.toString();
         String shortened = original;
         while (shortened.length() > 100 && shortened.contains("/")) {
@@ -402,12 +400,12 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
             final SelectionListener fileChangedListener = new SelectionListener() {
                 @Override
-                public void widgetSelected(SelectionEvent e) {
+                public void widgetSelected(final SelectionEvent e) {
                     CombinedDiffStopViewer.this.refreshShownContents();
                 }
 
                 @Override
-                public void widgetDefaultSelected(SelectionEvent e) {
+                public void widgetDefaultSelected(final SelectionEvent e) {
                     this.widgetSelected(e);
                 }
             };
@@ -444,7 +442,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
     }
 
-    private void setTooltips(IRevisionedFile leftFile, IRevisionedFile rightFile) {
+    private void setTooltips(final IRevisionedFile leftFile, final IRevisionedFile rightFile) {
         this.comboLeft.setToolTipText(leftFile.toString());
         this.comboRight.setToolTipText(rightFile.toString());
     }
@@ -496,16 +494,16 @@ public class CombinedDiffStopViewer implements IStopViewer {
     }
 
     private void moveToLineForStop(
-            Stop stop,
-            IRevisionedFile leftRevision,
-            IRevisionedFile rightRevision) {
+            final IStop stop,
+            final IRevisionedFile leftRevision,
+            final IRevisionedFile rightRevision) {
 
         reveal(this.viewer.getLeft(), this.getLineFor(stop, leftRevision, false));
         reveal(this.viewer.getRight(), this.getLineFor(stop, rightRevision, true));
     }
 
-    private int getLineFor(Stop stop, IRevisionedFile revision, boolean right) {
-        for (final Hunk hunk : stop.getContentFor(revision)) {
+    private int getLineFor(final IStop stop, final IRevisionedFile revision, final boolean right) {
+        for (final IHunk hunk : stop.getContentFor(revision)) {
             return (right ? hunk.getTarget() : hunk.getSource()).getFrom().getLine();
         }
         return stop.getMostRecentFragment().getFrom().getLine();
@@ -522,13 +520,13 @@ public class CombinedDiffStopViewer implements IStopViewer {
         this.viewer.getRight().setTopIndex(oldLineRight);
     }
 
-    private void addAll(Combo combo, List<? extends IRevisionedFile> subList) {
+    private void addAll(final Combo combo, final List<? extends IRevisionedFile> subList) {
         for (final IRevisionedFile file : subList) {
             combo.add(toLabel(file));
         }
     }
 
-    private List<? extends IRevisionedFile> determineAllRevisionsOfFile(final Stop stop) {
+    private List<? extends IRevisionedFile> determineAllRevisionsOfFile(final IStop stop) {
         final IRevisionedFile lastRevision = stop.getOriginalMostRecentFile();
         final IFileHistoryNode node = stop.getWorkingCopy().getFileHistoryGraph().getNodeFor(lastRevision);
         final LinkedHashSet<IRevisionedFile> filesBuffer = new LinkedHashSet<>();
@@ -536,7 +534,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         return FileInRevision.sortByRevision(filesBuffer);
     }
 
-    private void determineAllRevisionsOfFileRec(IFileHistoryNode node, Set<IRevisionedFile> buffer) {
+    private void determineAllRevisionsOfFileRec(final IFileHistoryNode node, final Set<IRevisionedFile> buffer) {
         if (buffer.contains(node.getFile())) {
             return;
         }
@@ -573,7 +571,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         return new Position(startOffset, endOffset - startOffset);
     }
 
-    private FileContent loadFile(IRevisionedFile revision) throws Exception {
+    private FileContent loadFile(final IRevisionedFile revision) throws Exception {
         final byte[] data = revision.getContents();
         try {
             StandardCharsets.UTF_8.newDecoder()
@@ -588,11 +586,11 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
     private static Highlights mark(
             final SourceViewer viewer,
-            Highlights oldHighlights,
+            final Highlights oldHighlights,
             final List<Position> ranges,
             final List<Position> lineRanges,
-            String backgroundColorKey,
-            RGB defaultBackgroundColor) {
+            final String backgroundColorKey,
+            final RGB defaultBackgroundColor) {
         if (viewer == null) {
             return oldHighlights;
         }
@@ -604,7 +602,6 @@ public class CombinedDiffStopViewer implements IStopViewer {
         newHighlights.apply(viewer);
         return newHighlights;
     }
-
 
     /**
      * Makes the line visible in the given viewer and includes context lines above if possible.
