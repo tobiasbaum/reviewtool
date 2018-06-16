@@ -106,6 +106,9 @@
                         <consoleOutput>true</consoleOutput>
                         <failOnViolation>true</failOnViolation>
                         <violationSeverity>warning</violationSeverity>
+                        <sourceDirectories>
+                          <sourceDirectory>${project.basedir}/src</sourceDirectory>
+                        </sourceDirectories>
                         <!--<failsOnError>true</failsOnError>
                         <linkXRef>false</linkXRef>-->
                     </configuration>
