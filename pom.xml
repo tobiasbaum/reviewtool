@@ -10,8 +10,6 @@
   <properties>
     <tycho.version>1.2.0</tycho.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <luna-repo.url>http://download.eclipse.org/releases/luna</luna-repo.url>
-    <!--<mars-repo.url>http://download.eclipse.org/releases/mars</mars-repo.url>-->
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
   </properties>
@@ -23,8 +21,8 @@
       <layout>p2</layout>
     </repository>-->
     <repository>
-      <id>luna</id>
-      <url>${luna-repo.url}</url>
+      <id>neon</id>
+      <url>http://download.eclipse.org/releases/neon</url>
       <layout>p2</layout>
     </repository>
   </repositories>
