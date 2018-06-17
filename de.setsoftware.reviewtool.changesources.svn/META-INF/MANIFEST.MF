@@ -3,13 +3,11 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: de.setsoftware.reviewtool.changesources.svn;singleton:=true
 Bundle-Version: 1.20.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-ClassPath: antlr-runtime-3.4.jar,
- sequence-library-1.0.3.jar,
- sqljet-1.1.10.jar,
- svnkit-1.9.3.jar,
- svnkit-cli-1.9.3.jar,
- svnkit-javahl16-1.9.3.jar,
- trilead-ssh2-1.0.0-build220.jar,
+Bundle-ClassPath: target/lib/antlr-runtime-3.4.jar,
+ target/lib/sequence-library-1.0.3.jar,
+ target/lib/sqljet-1.1.11.jar,
+ target/lib/svnkit-1.9.3.jar,
+ target/lib/trilead-ssh2-1.0.0-build221.jar,
  .
 Bundle-Name: Changesource-SVN
 Bundle-Vendor: Tobias Baum

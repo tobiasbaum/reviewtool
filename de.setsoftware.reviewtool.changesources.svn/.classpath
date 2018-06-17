@@ -2,13 +2,11 @@
 <classpath>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry exported="true" kind="lib" path="antlr-runtime-3.4.jar"/>
-	<classpathentry exported="true" kind="lib" path="sequence-library-1.0.3.jar"/>
-	<classpathentry exported="true" kind="lib" path="sqljet-1.1.10.jar"/>
-	<classpathentry kind="lib" path="svnkit-1.9.3.jar" sourcepath="svnkit-1.9.3-sources.jar"/>
-	<classpathentry kind="lib" path="svnkit-cli-1.9.3.jar" sourcepath="svnkit-cli-1.9.3-sources.jar"/>
-	<classpathentry kind="lib" path="svnkit-javahl16-1.9.3.jar" sourcepath="svnkit-javahl16-1.9.3-sources.jar"/>
-	<classpathentry exported="true" kind="lib" path="trilead-ssh2-1.0.0-build220.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/antlr-runtime-3.4.jar" sourcepath="target/sources/antlr-runtime-3.4-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/sequence-library-1.0.3.jar" sourcepath="target/sources/sequence-library-1.0.3-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/sqljet-1.1.11.jar" sourcepath="target/sources/sqljet-1.1.11-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/svnkit-1.9.3.jar" sourcepath="target/sources/svnkit-1.9.3-sources.jar"/>
+	<classpathentry exported="true" kind="lib" path="target/lib/trilead-ssh2-1.0.0-build221.jar" sourcepath="target/sources/trilead-ssh2-1.0.0-build221-sources.jar"/>
 	<classpathentry kind="src" path="src/"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

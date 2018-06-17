@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
@@ -390,7 +391,7 @@ public class JiraPersistence implements IReviewPersistence {
             }
             final String data = b.toString();
             try {
-                return JsonValue.readFrom(data);
+                return Json.parse(data);
             } catch (final ParseException e) {
                 throw new ReviewtoolException("exception parsing: " + data, e);
             }
