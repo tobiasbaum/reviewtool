@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.base.IMultimap;
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Util;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
@@ -16,21 +17,19 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IStop;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
- * A part of a review tour, corresponding to some notion of "singular change".
- * It knows the file fragment it belongs to in the most current revision, but
- * also the changes that it is based on.
- * <p/>
- * A stop is immutable.
+ * Implements the {@link IStop} interface.
+ *
  */
-public class Stop extends TourElement {
+public class Stop extends TourElement implements IStop {
 
     private final IWorkingCopy wc;
     private final Map<IRevisionedFile, IRevisionedFile> historyOrder;
-    private final Multimap<IRevisionedFile, Hunk> history;
+    private final Multimap<IRevisionedFile, IHunk> history;
 
     private final IRevisionedFile mostRecentFile;
     private final IFragment mostRecentFragment;
@@ -86,7 +85,7 @@ public class Stop extends TourElement {
     private Stop(
             final IWorkingCopy wc,
             final Map<IRevisionedFile, IRevisionedFile> historyOrder,
-            final Multimap<IRevisionedFile, Hunk> history,
+            final Multimap<IRevisionedFile, IHunk> history,
             final IRevisionedFile mostRecentFile,
             final IFragment mostRecentFragment,
             final IRevisionedFile mostRecentFileConsideringLocalChanges,
@@ -103,37 +102,39 @@ public class Stop extends TourElement {
         this.irrelevantForReview = irrelevantForReview;
     }
 
+    @Override
     public IWorkingCopy getWorkingCopy() {
         return this.wc;
     }
 
+    @Override
     public boolean isDetailedFragmentKnown() {
         return this.mostRecentFragment != null;
     }
 
+    @Override
     public IFragment getOriginalMostRecentFragment() {
         return this.mostRecentFragment;
     }
 
+    @Override
     public IRevisionedFile getOriginalMostRecentFile() {
         return this.mostRecentFile;
     }
 
+    @Override
     public synchronized IFragment getMostRecentFragment() {
         return this.mostRecentFragmentConsideringLocalChanges != null ? this.mostRecentFragmentConsideringLocalChanges
                 : this.mostRecentFragment;
     }
 
+    @Override
     public synchronized IRevisionedFile getMostRecentFile() {
         return this.mostRecentFileConsideringLocalChanges != null ? this.mostRecentFileConsideringLocalChanges
                 : this.mostRecentFile;
     }
 
-    /**
-     * Updates the most recent file and fragment given a {@link IFragmentTracer}.
-     * This operation is used to make the stop aware about current local modifications.
-     * The original most recent fragment and file are not forgotten, each update uses them as the basis for tracing.
-     */
+    @Override
     public synchronized void updateMostRecentData(final IFragmentTracer tracer) {
         if (this.mostRecentFragment != null) {
             final List<? extends IFragment> fragments =
@@ -154,24 +155,22 @@ public class Stop extends TourElement {
         }
     }
 
-    /**
-     * Returns the revisions relevant for this stop, as a map with entries
-     * in the form (from revision, to revision).
-     */
+    @Override
     public Map<IRevisionedFile, IRevisionedFile> getHistory() {
         return Collections.unmodifiableMap(this.historyOrder);
     }
 
-    /**
-     * Returns the hunks with the given source file/revision.
-     */
-    public List<Hunk> getContentFor(final IRevisionedFile revision) {
+    @Override
+    public IMultimap<IRevisionedFile, IHunk> getHunks() {
+        return this.history.readOnlyView();
+    }
+
+    @Override
+    public List<IHunk> getContentFor(final IRevisionedFile revision) {
         return this.history.get(revision);
     }
 
-    /**
-     * Returns {@code true} if this stop represents a binary change.
-     */
+    @Override
     public boolean isBinaryChange() {
         return this.history.isEmpty();
     }
@@ -183,26 +182,27 @@ public class Stop extends TourElement {
      * Neighboring segments are only considered mergeable if both are either
      * irrelevant or relevant.
      */
-    public boolean canBeMergedWith(final Stop other) {
-        if (!this.mostRecentFile.equals(other.mostRecentFile)) {
+    public boolean canBeMergedWith(final IStop other) {
+        if (!this.mostRecentFile.equals(other.getOriginalMostRecentFile())) {
             return false;
         }
         if (this.mostRecentFragment == null) {
-            if (other.mostRecentFragment == null) {
+            if (other.getOriginalMostRecentFragment() == null) {
                 return true;
             } else {
                 return false;
             }
         } else {
-            if (other.mostRecentFragment == null) {
+            if (other.getOriginalMostRecentFragment() == null) {
                 return false;
             } else {
                 final boolean fragmentsMergeable =
-                        this.mostRecentFragment.canBeMergedWith(other.mostRecentFragment);
-                if (this.irrelevantForReview == other.irrelevantForReview) {
+                        this.mostRecentFragment.canBeMergedWith(other.getOriginalMostRecentFragment());
+                if (this.irrelevantForReview == other.isIrrelevantForReview()) {
                     return fragmentsMergeable;
                 } else {
-                    return fragmentsMergeable && !this.mostRecentFragment.isNeighboring(other.mostRecentFragment);
+                    return fragmentsMergeable
+                            && !this.mostRecentFragment.isNeighboring(other.getOriginalMostRecentFragment());
                 }
             }
         }
@@ -220,9 +220,9 @@ public class Stop extends TourElement {
                 new LinkedHashMap<>(this.historyOrder);
         mergedHistoryOrder.putAll(other.historyOrder);
 
-        final Multimap<IRevisionedFile, Hunk> mergedHistory = new Multimap<>();
+        final Multimap<IRevisionedFile, IHunk> mergedHistory = new Multimap<>();
         mergedHistory.putAll(this.history);
-        mergedHistory.putAll(other.history);
+        mergedHistory.putAll(other.getHunks());
         mergedHistory.sortValues();
 
         return new Stop(
@@ -270,31 +270,30 @@ public class Stop extends TourElement {
         return this.getMostRecentFile().toLocalPath(this.wc).toFile().getAbsoluteFile();
     }
 
-    /**
-     * Returns the total number of fragments belonging to this stop.
-     * The returned number includes both the old and the new fragment, i.e. the return
-     * value for a simple stop is 2.
+    /* (non-Javadoc)
+     * @see de.setsoftware.reviewtool.model.changestructure.IStop#getNumberOfFragments()
      */
+    @Override
     public int getNumberOfFragments() {
         int ret = 1;
-        for (final Entry<IRevisionedFile, List<Hunk>> e : this.history.entrySet()) {
+        for (final Entry<IRevisionedFile, List<IHunk>> e : this.history.entrySet()) {
             ret += e.getValue().size();
         }
         return ret;
     }
 
-    /**
-     * Returns the total count of all added lines (right-hand side of a stop).
-     * A change is counted as both remove and add.
+    /* (non-Javadoc)
+     * @see de.setsoftware.reviewtool.model.changestructure.IStop#getNumberOfAddedLines()
      */
+    @Override
     public int getNumberOfAddedLines() {
         return this.mostRecentFragment == null ? 0 : this.mostRecentFragment.getNumberOfLines();
     }
 
-    /**
-     * Returns the total count of all removed lines (left-hand side of a stop).
-     * A change is counted as both remove and add.
+    /* (non-Javadoc)
+     * @see de.setsoftware.reviewtool.model.changestructure.IStop#getNumberOfRemovedLines()
      */
+    @Override
     public int getNumberOfRemovedLines() {
         int ret = 0;
         for (final IRevisionedFile oldestFile : this.getHistoryRoots()) {
@@ -311,15 +310,16 @@ public class Stop extends TourElement {
         return ret;
     }
 
-    /**
-     * Returns true if this stop was classified as irrelevant for code review.
+    /* (non-Javadoc)
+     * @see de.setsoftware.reviewtool.model.changestructure.IStop#isIrrelevantForReview()
      */
+    @Override
     public boolean isIrrelevantForReview() {
         return this.irrelevantForReview;
     }
 
     @Override
-    protected void fillStopsInto(List<Stop> buffer) {
+    protected void fillStopsInto(final List<Stop> buffer) {
         buffer.add(this);
     }
 

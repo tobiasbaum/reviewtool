@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ui.dialogs;
+package de.setsoftware.reviewtool.ui.dialogs.extensions;
 
 import org.eclipse.swt.widgets.Composite;
 

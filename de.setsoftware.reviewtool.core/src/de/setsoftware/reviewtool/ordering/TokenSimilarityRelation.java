@@ -12,8 +12,8 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.changestructure.Hunk;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 
 /**
@@ -25,7 +25,7 @@ public class TokenSimilarityRelation implements RelationMatcher {
     private static final double JACCARD_THRESHOLD = 0.7;
 
     @Override
-    public Collection<? extends OrderingInfo> determineMatches(List<ChangePart> changeParts) {
+    public Collection<? extends OrderingInfo> determineMatches(final List<ChangePart> changeParts) {
         final List<Pair<ChangePart, Set<String>>> tokenSets = new ArrayList<>(changeParts.size());
         for (final ChangePart c : changeParts) {
             if (c.isFullyIrrelevantForReview()) {
@@ -54,8 +54,8 @@ public class TokenSimilarityRelation implements RelationMatcher {
         Collections.sort(similarities, new Comparator<Pair<Double, SimpleUnorderedMatch>>() {
             @Override
             public int compare(
-                    Pair<Double, SimpleUnorderedMatch> o1,
-                    Pair<Double, SimpleUnorderedMatch> o2) {
+                    final Pair<Double, SimpleUnorderedMatch> o1,
+                    final Pair<Double, SimpleUnorderedMatch> o2) {
                 return Double.compare(o2.getFirst(), o1.getFirst());
             }
         });
@@ -67,7 +67,7 @@ public class TokenSimilarityRelation implements RelationMatcher {
         return ret;
     }
 
-    private Set<String> determineTokenSet(ChangePart changePart) {
+    private Set<String> determineTokenSet(final ChangePart changePart) {
         final Set<String> tokens = new HashSet<>();
         for (final Stop s : changePart.getStops()) {
             final IFragment fragment = s.getOriginalMostRecentFragment();
@@ -81,7 +81,7 @@ public class TokenSimilarityRelation implements RelationMatcher {
             //  not 100% accurate for complex structures, but hopefully sufficient
             final IRevisionedFile oldestFile = this.determineOldestFile(s);
             if (oldestFile != null) {
-                for (final Hunk hunk : s.getContentFor(oldestFile)) {
+                for (final IHunk hunk : s.getContentFor(oldestFile)) {
                     this.parseTokens(tokens, hunk.getSource().getContent());
                 }
             }
@@ -90,7 +90,7 @@ public class TokenSimilarityRelation implements RelationMatcher {
         return tokens;
     }
 
-    private IRevisionedFile determineOldestFile(Stop s) {
+    private IRevisionedFile determineOldestFile(final Stop s) {
         //determine one of oldest files; i.e. one which has no predecessor
         final Set<IRevisionedFile> toSet = new LinkedHashSet<>(s.getHistory().values());
         for (final IRevisionedFile candidate : s.getHistory().keySet()) {
@@ -102,7 +102,7 @@ public class TokenSimilarityRelation implements RelationMatcher {
         return null;
     }
 
-    private void parseTokens(Set<String> tokens, String content) {
+    private void parseTokens(final Set<String> tokens, final String content) {
         final StringBuilder curToken = new StringBuilder();
         for (final char ch : content.toCharArray()) {
             if (Character.isJavaIdentifierPart(ch)) {
@@ -119,7 +119,7 @@ public class TokenSimilarityRelation implements RelationMatcher {
         }
     }
 
-    private double jaccardSimilarity(Set<String> s1, Set<String> s2) {
+    private double jaccardSimilarity(final Set<String> s1, final Set<String> s2) {
         if (s2.size() < s1.size()) {
             //performance optimization
             return this.jaccardSimilarity(s2, s1);

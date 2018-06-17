@@ -14,7 +14,7 @@ import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.telemetry.TelemetryEventBuilder;
-import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtensionData;
+import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtensionData;
 
 /**
  * The combo boxes for the survey in the end review dialog.

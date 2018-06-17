@@ -18,9 +18,9 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
-import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -31,10 +31,10 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 public class ViewHelper {
 
     /**
-     * Creates a context menu for the given control in the given view part and with the given selection
-     * provider.
+     * Creates a context menu for the given control in the given view part and with the given selection provider.
      */
-    public static void createContextMenu(ViewPart viewPart, Control control, ISelectionProvider sel) {
+    public static void createContextMenu(final IViewPart viewPart, final Control control,
+            final ISelectionProvider sel) {
         final MenuManager menuManager = new MenuManager();
         final Menu menu = menuManager.createContextMenu(control);
         control.setMenu(menu);
@@ -45,17 +45,17 @@ public class ViewHelper {
     /**
      * Creates a context menu for a control for which no selection provider is available.
      */
-    public static void createContextMenuWithoutSelectionProvider(ViewPart viewPart, Control control) {
+    public static void createContextMenuWithoutSelectionProvider(final IViewPart viewPart, final Control control) {
         createContextMenu(viewPart, control, new ISelectionProvider() {
             private ISelection selection;
 
             @Override
-            public void setSelection(ISelection selection) {
+            public void setSelection(final ISelection selection) {
                 this.selection = selection;
             }
 
             @Override
-            public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+            public void removeSelectionChangedListener(final ISelectionChangedListener listener) {
             }
 
             @Override
@@ -64,19 +64,18 @@ public class ViewHelper {
             }
 
             @Override
-            public void addSelectionChangedListener(ISelectionChangedListener listener) {
+            public void addSelectionChangedListener(final ISelectionChangedListener listener) {
             }
         });
     }
 
     /**
-     * Extracts the selected resource and line in that resource from the given selection and input.
-     * If the position cannot be determined, the number zero is used. If the selection cannot be
-     * interpreted at all, null is returned. The first part of the pair is either an {@link IResource} (preferred)
-     * or an {@link IPath}.
+     * Extracts the selected resource and line in that resource from the given selection and input. If the position
+     * cannot be determined, the number zero is used. If the selection cannot be interpreted at all, null is returned.
+     * The first part of the pair is either an {@link IResource} (preferred) or an {@link IPath}.
      */
-    public static Pair<? extends Object, Integer> extractFileAndLineFromSelection(ISelection sel, Object input)
-        throws ExecutionException {
+    public static Pair<? extends Object, Integer> extractFileAndLineFromSelection(final ISelection sel,
+            final Object input) throws ExecutionException {
 
         final ITextSelection textSel = getAs(sel, ITextSelection.class);
         if (textSel != null) {
@@ -89,7 +88,7 @@ public class ViewHelper {
         return null;
     }
 
-    private static<T> T getAs(Object o, Class<T> class1) {
+    private static <T> T getAs(final Object o, final Class<T> class1) {
         if (class1.isInstance(o)) {
             return class1.cast(o);
         }
@@ -99,7 +98,7 @@ public class ViewHelper {
         return null;
     }
 
-    private static Pair<? extends Object, Integer> handleTextSelection(ITextSelection sel, Object input) {
+    private static Pair<? extends Object, Integer> handleTextSelection(final ITextSelection sel, final Object input) {
 
         if (input instanceof FileEditorInput) {
             final IFile f = ((FileEditorInput) input).getFile();
@@ -113,7 +112,7 @@ public class ViewHelper {
         }
     }
 
-    private static Pair<? extends Object, Integer> handleStructuredSelection(IStructuredSelection selection)
+    private static Pair<? extends Object, Integer> handleStructuredSelection(final IStructuredSelection selection)
             throws ExecutionException {
 
         for (final Object element : selection.toArray()) {
@@ -127,15 +126,14 @@ public class ViewHelper {
             }
             final Stop stop = getAs(element, Stop.class);
             if (stop != null) {
-                return Pair.create(
-                        stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()),
+                return Pair.create(stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()),
                         stop.isDetailedFragmentKnown() ? stop.getMostRecentFragment().getFrom().getLine() : 0);
             }
         }
         return null;
     }
 
-    private static Pair<IResource, Integer> toPos(IJavaElement type, int line) throws ExecutionException {
+    private static Pair<IResource, Integer> toPos(final IJavaElement type, final int line) throws ExecutionException {
         try {
             return Pair.create(type.getUnderlyingResource(), line);
         } catch (final JavaModelException e) {

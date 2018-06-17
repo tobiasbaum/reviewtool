@@ -70,6 +70,7 @@ import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.PathIrrelevan
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.FileReviewDataCache;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.ISyntaxFixer;
 import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.ITicketData;
@@ -96,15 +97,14 @@ import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionSt
 import de.setsoftware.reviewtool.preferredtransitions.basicstrategies.PathRegexStrategyConfigurator;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.tourrestructuring.onestop.OneStopPerPartOfFileRestructuring;
-import de.setsoftware.reviewtool.ui.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EndReviewDialog;
-import de.setsoftware.reviewtool.ui.dialogs.EndReviewExtension;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.dialogs.RemarkMarkers;
 import de.setsoftware.reviewtool.ui.dialogs.SelectIrrelevantDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTourStructureDialog;
+import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtension;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
 import de.setsoftware.reviewtool.ui.views.CombinedDiffStopViewer;
 import de.setsoftware.reviewtool.ui.views.CurrentStop;
