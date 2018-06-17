@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: de.setsoftware.reviewtool.changesources.svn;singleton:=true
-Bundle-Version: 1.20.0.qualifier
+Bundle-Version: 1.21.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: target/lib/antlr-runtime-3.4.jar,
  target/lib/sequence-library-1.0.3.jar,
