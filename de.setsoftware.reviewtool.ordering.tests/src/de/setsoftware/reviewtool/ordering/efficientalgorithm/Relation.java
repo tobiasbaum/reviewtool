@@ -109,7 +109,7 @@ public class Relation {
         }
     }
 
-    private static MatchSet<String> shrink(MatchSet<String> toShrink, MatchSet<String> ms) {
+    private static MatchSet<String> shrink(@SuppressWarnings("unused") MatchSet<String> toShrink, MatchSet<String> ms) {
         final LinkedHashSet<String> ret = new LinkedHashSet<>();
         for (final String s : ms.getChangeParts()) {
             ret.add(shrink(s, ms));

@@ -1,1 +1,4 @@
+/.checkstyle
+/.settings/
 /bin/
+/target/

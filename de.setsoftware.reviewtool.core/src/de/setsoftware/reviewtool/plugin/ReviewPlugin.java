@@ -23,8 +23,12 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobFunction;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchesListener;
@@ -243,6 +247,31 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     /**
+     * Singleton scheduling rule preventing two update jobs to run concurrently.
+     */
+    private static class MutexRule implements ISchedulingRule {
+
+        private static final MutexRule RULE_INSTANCE = new MutexRule();
+
+        private MutexRule() {
+        }
+
+        static MutexRule getInstance() {
+            return RULE_INSTANCE;
+        }
+
+        @Override
+        public boolean isConflicting(ISchedulingRule rule) {
+            return rule == this;
+        }
+
+        @Override
+        public boolean contains(ISchedulingRule rule) {
+            return rule == this;
+        }
+    }
+
+    /**
      * Handles resource changes.
      */
     private final class ResourceChangeListener implements IResourceChangeListener {
@@ -256,7 +285,16 @@ public class ReviewPlugin implements IReviewConfigurable {
             try {
                 this.handleResourceDelta(event.getDelta(), paths);
                 if (!paths.isEmpty()) {
-                    ReviewPlugin.this.updateLocalChanges(paths);
+                    final Job job = Job.create("Processing local changes",
+                            new IJobFunction() {
+                                @Override
+                                public IStatus run(IProgressMonitor monitor) {
+                                    ReviewPlugin.this.updateLocalChanges(paths);
+                                    return Status.OK_STATUS;
+                                }
+                            });
+                    job.setRule(MutexRule.getInstance());
+                    job.schedule();
                 }
             } catch (final Exception e) {
                 Logger.error("error while sending telemetry events", e);
@@ -339,7 +377,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final ReviewStateManager persistence;
     private IChangeSource changeSource;
     private ToursInReview toursInReview;
-    private ChangeManager changeManager;
+    private ChangeManager changeManager; // synchronized with updateLocalChanges() running in the background
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
@@ -653,7 +691,9 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
         if (mode == Mode.IDLE) {
             this.toursInReview = null;
-            this.changeManager = null;
+            synchronized (this) {
+                this.changeManager = null;
+            }
         }
     }
 
@@ -857,7 +897,9 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    private boolean doLoadToursAndCreateMarkers(final Display display, final IProgressMonitor progressMonitor,
+    private synchronized boolean doLoadToursAndCreateMarkers(
+            final Display display,
+            final IProgressMonitor progressMonitor,
             final String action) {
 
         final String ticketKey = this.persistence.getTicketKey();
@@ -1028,7 +1070,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    private void updateLocalChanges(final List<File> paths) {
+    private synchronized void updateLocalChanges(final List<File> paths) {
         if (this.changeManager == null) {
             return;
         }

@@ -6,9 +6,9 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * Common behaviour for {@link ISvnRevision} implementations.
+ * Common behaviour for {@link SvnRevision} implementations.
  */
-abstract class AbstractSvnRevision implements ISvnRevision {
+abstract class AbstractSvnRevision implements SvnRevision {
 
     /**
      * Filters out all changed paths that do not belong to passed working copy.

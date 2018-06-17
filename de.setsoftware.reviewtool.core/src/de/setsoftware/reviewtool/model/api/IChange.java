@@ -36,7 +36,7 @@ public interface IChange {
     public abstract IChange makeIrrelevant();
 
     /**
-     * @return The associated {@link IWorkingCopy}.
+     * Returns the associated {@link IWorkingCopy}.
      */
     public abstract IWorkingCopy getWorkingCopy();
 }

@@ -137,7 +137,7 @@ final class SvnWorkingCopyManager {
      * Calls the given handler for all recent log entries of the given working copy root.
      * All revisions returned have an associated working copy.
      */
-    List<Pair<SvnWorkingCopy, SvnRevision>> traverseRecentEntries(
+    List<Pair<SvnWorkingCopy, SvnRepoRevision>> traverseRecentEntries(
             final File workingCopyRoot,
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
@@ -147,8 +147,8 @@ final class SvnWorkingCopyManager {
             return Collections.emptyList();
         }
 
-        List<Pair<SvnWorkingCopy, SvnRevision>> revisions = new ArrayList<>();
-        for (final SvnRevision revision :
+        List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = new ArrayList<>();
+        for (final SvnRepoRevision revision :
                 SvnRepositoryManager.getInstance().traverseRecentEntries(wc.getRepository(), handler, ui)) {
             revisions.add(Pair.create(wc, revision));
         }

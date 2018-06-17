@@ -132,7 +132,7 @@ final class SvnChangeSource implements IChangeSource {
     public IChangeData getRepositoryChanges(String key, IChangeSourceUi ui) {
         try {
             ui.subTask("Determining relevant commits...");
-            final List<Pair<SvnWorkingCopy, SvnRevision>> revisions = this.determineRelevantRevisions(key, ui);
+            final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = this.determineRelevantRevisions(key, ui);
             final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
             ui.subTask("Checking state of working copy...");
             this.checkWorkingCopiesUpToDate(neededRevisionPerRepo, ui);
@@ -151,7 +151,7 @@ final class SvnChangeSource implements IChangeSource {
             final IProgressMonitor ui) {
         try {
             ui.subTask("Collecting local changes...");
-            final List<WorkingCopyRevision> revisions = this.collectWorkingCopyChanges(relevantPaths, ui);
+            final List<SvnWorkingCopyRevision> revisions = this.collectWorkingCopyChanges(relevantPaths, ui);
             ui.subTask("Analyzing local changes...");
             final List<ICommit> commits = this.convertLocalRevisionsToChanges(revisions, ui);
             final Map<File, IRevisionedFile> localPathMap = this.extractLocalPaths(revisions);
@@ -195,9 +195,9 @@ final class SvnChangeSource implements IChangeSource {
     /**
      * Collects all local changes and integrates them into the {@link SvnFileHistoryGraph}.
      * @param relevantPaths The list of paths to check. If {@code null}, the whole working copy is analyzed.
-     * @return A list of {@link WorkingCopyRevision}s. May be empty if no relevant local changes have been found.
+     * @return A list of {@link SvnWorkingCopyRevision}s. May be empty if no relevant local changes have been found.
      */
-    private List<WorkingCopyRevision> collectWorkingCopyChanges(
+    private List<SvnWorkingCopyRevision> collectWorkingCopyChanges(
             final List<File> relevantPaths,
             final IProgressMonitor ui) throws SVNException {
 
@@ -208,10 +208,10 @@ final class SvnChangeSource implements IChangeSource {
         }
     }
 
-    private List<WorkingCopyRevision> collectWorkingCopyChangesByRepository(
+    private List<SvnWorkingCopyRevision> collectWorkingCopyChangesByRepository(
             final IProgressMonitor ui) throws SVNException {
 
-        final List<WorkingCopyRevision> revisions = new ArrayList<>();
+        final List<SvnWorkingCopyRevision> revisions = new ArrayList<>();
         for (final SvnWorkingCopy wc : SvnWorkingCopyManager.getInstance().getWorkingCopies()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
@@ -238,7 +238,7 @@ final class SvnChangeSource implements IChangeSource {
                     null); /* no change lists */
 
             wc.clearLocalFileHistoryGraph();
-            final WorkingCopyRevision wcRevision = new WorkingCopyRevision(wc, paths);
+            final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, paths);
             wc.getLocalFileHistoryGraph().processRevision(wcRevision);
             revisions.add(wcRevision);
         }
@@ -246,12 +246,12 @@ final class SvnChangeSource implements IChangeSource {
         return revisions;
     }
 
-    private List<WorkingCopyRevision> collectWorkingCopyChangesByPath(
+    private List<SvnWorkingCopyRevision> collectWorkingCopyChangesByPath(
             final List<File> relevantPaths,
             final IProgressMonitor ui) throws SVNException {
 
         final Map<SvnWorkingCopy, SortedMap<String, CachedLogEntryPath>> changeMap = new LinkedHashMap<>();
-        final List<WorkingCopyRevision> revisions = new ArrayList<>();
+        final List<SvnWorkingCopyRevision> revisions = new ArrayList<>();
 
         for (final File wcPath : relevantPaths) {
             if (ui.isCanceled()) {
@@ -263,7 +263,7 @@ final class SvnChangeSource implements IChangeSource {
         for (final Map.Entry<SvnWorkingCopy, SortedMap<String, CachedLogEntryPath>> entry : changeMap.entrySet()) {
             final SvnWorkingCopy wc = entry.getKey();
             wc.clearLocalFileHistoryGraph();
-            final WorkingCopyRevision wcRevision = new WorkingCopyRevision(wc, entry.getValue());
+            final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, entry.getValue());
             wc.getLocalFileHistoryGraph().processRevision(wcRevision);
             revisions.add(wcRevision);
         }
@@ -303,9 +303,9 @@ final class SvnChangeSource implements IChangeSource {
                 null); /* no change lists */
     }
 
-    private Map<File, IRevisionedFile> extractLocalPaths(final Collection<WorkingCopyRevision> revisions) {
+    private Map<File, IRevisionedFile> extractLocalPaths(final Collection<SvnWorkingCopyRevision> revisions) {
         final Map<File, IRevisionedFile> result = new LinkedHashMap<>();
-        for (final WorkingCopyRevision revision : revisions) {
+        for (final SvnWorkingCopyRevision revision : revisions) {
             for (final CachedLogEntryPath path : revision.getChangedPaths().values()) {
                 final File localPath = path.getLocalPath();
                 if (localPath != null) {
@@ -318,10 +318,10 @@ final class SvnChangeSource implements IChangeSource {
         return result;
     }
 
-    private Map<SvnRepo, Long> determineMaxRevisionPerRepo(List<Pair<SvnWorkingCopy, SvnRevision>> revisions) {
+    private Map<SvnRepo, Long> determineMaxRevisionPerRepo(List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions) {
         final Map<SvnRepo, Long> ret = new LinkedHashMap<>();
-        for (final Pair<SvnWorkingCopy, SvnRevision> p : revisions) {
-            final SvnRevision revision = p.getSecond();
+        for (final Pair<SvnWorkingCopy, SvnRepoRevision> p : revisions) {
+            final SvnRepoRevision revision = p.getSecond();
             final SvnRepo repo = revision.getRepository();
             final long curRev = revision.getRevisionNumber();
             if (ret.containsKey(repo)) {
@@ -336,12 +336,21 @@ final class SvnChangeSource implements IChangeSource {
         return ret;
     }
 
-    private List<Pair<SvnWorkingCopy, SvnRevision>> determineRelevantRevisions(
+    private List<Pair<SvnWorkingCopy, SvnRepoRevision>> determineRelevantRevisions(
             final String key,
             final IChangeSourceUi ui) throws SVNException {
 
-        final List<Pair<SvnWorkingCopy, SvnRevision>> result = new ArrayList<>();
-        final RelevantRevisionLookupHandler handler = new RelevantRevisionLookupHandler(this.createPatternForKey(key));
+        final List<Pair<SvnWorkingCopy, SvnRepoRevision>> result = new ArrayList<>();
+        final Pattern pattern = this.createPatternForKey(key);
+        final CachedLogLookupHandler handler = new CachedLogLookupHandler() {
+
+            @Override
+            public boolean handleLogEntry(final CachedLogEntry logEntry) throws SVNException {
+                final String message = logEntry.getMessage();
+                return message != null && pattern.matcher(message).matches();
+            }
+        };
+
         for (final File workingCopyRoot : this.workingCopyRoots) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
@@ -352,10 +361,10 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     private List<ICommit> convertRepoRevisionsToChanges(
-            final List<Pair<SvnWorkingCopy, SvnRevision>> revisions,
+            final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions,
             final IProgressMonitor ui) {
         final List<ICommit> ret = new ArrayList<>();
-        for (final Pair<SvnWorkingCopy, SvnRevision> e : revisions) {
+        for (final Pair<SvnWorkingCopy, SvnRepoRevision> e : revisions) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
@@ -365,10 +374,10 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     private List<ICommit> convertLocalRevisionsToChanges(
-            final List<WorkingCopyRevision> revisions,
+            final List<SvnWorkingCopyRevision> revisions,
             final IProgressMonitor ui) {
         final List<ICommit> ret = new ArrayList<>();
-        for (final WorkingCopyRevision revision : revisions) {
+        for (final SvnWorkingCopyRevision revision : revisions) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
@@ -379,7 +388,7 @@ final class SvnChangeSource implements IChangeSource {
 
     private void convertToCommitIfPossible(
             final SvnWorkingCopy wc,
-            final ISvnRevision e,
+            final SvnRevision e,
             final Collection<? super ICommit> result,
             final IProgressMonitor ui) {
         final List<? extends IChange> changes = this.determineChangesInCommit(wc, e, ui);
@@ -425,7 +434,7 @@ final class SvnChangeSource implements IChangeSource {
 
     private List<? extends IChange> determineChangesInCommit(
             final SvnWorkingCopy wc,
-            final ISvnRevision e,
+            final SvnRevision e,
             final IProgressMonitor ui) {
 
         final List<IChange> ret = new ArrayList<>();

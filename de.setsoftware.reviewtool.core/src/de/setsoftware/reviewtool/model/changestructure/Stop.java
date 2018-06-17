@@ -119,12 +119,12 @@ public class Stop extends TourElement {
         return this.mostRecentFile;
     }
 
-    public IFragment getMostRecentFragment() {
+    public synchronized IFragment getMostRecentFragment() {
         return this.mostRecentFragmentConsideringLocalChanges != null ? this.mostRecentFragmentConsideringLocalChanges
                 : this.mostRecentFragment;
     }
 
-    public IRevisionedFile getMostRecentFile() {
+    public synchronized IRevisionedFile getMostRecentFile() {
         return this.mostRecentFileConsideringLocalChanges != null ? this.mostRecentFileConsideringLocalChanges
                 : this.mostRecentFile;
     }
@@ -134,7 +134,7 @@ public class Stop extends TourElement {
      * This operation is used to make the stop aware about current local modifications.
      * The original most recent fragment and file are not forgotten, each update uses them as the basis for tracing.
      */
-    public void updateMostRecentData(final IFragmentTracer tracer) {
+    public synchronized void updateMostRecentData(final IFragmentTracer tracer) {
         if (this.mostRecentFragment != null) {
             final List<? extends IFragment> fragments =
                     tracer.traceFragment(this.wc.getFileHistoryGraph(), this.mostRecentFragment);

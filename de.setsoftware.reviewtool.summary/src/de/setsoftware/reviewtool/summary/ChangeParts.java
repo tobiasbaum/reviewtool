@@ -17,31 +17,31 @@ class ChangeParts {
 
     public void addPart(ChangePart part) {
         if (part.getType().equals(Kind.METHOD)) {
-            if (!methods.contains(part)) {
-                methods.add(part);
+            if (!this.methods.contains(part)) {
+                this.methods.add(part);
             }
         }
         if (part.getType().equals(Kind.NON_SOURCE_FILE)) {
-            if (!files.contains(part)) {
-                files.add(part);
+            if (!this.files.contains(part)) {
+                this.files.add(part);
             }
         }
         if (part.getType().equals(Kind.TYPE)) {
-            if (!types.contains(part)) {
-                types.add(part);
+            if (!this.types.contains(part)) {
+                this.types.add(part);
             }
         }
     }
 
     public void removePart(ChangePart part) {
         if (part.getType().equals(Kind.METHOD)) {
-            methods.remove(part);
+            this.methods.remove(part);
         }
         if (part.getType().equals(Kind.NON_SOURCE_FILE)) {
-            files.remove(part);
+            this.files.remove(part);
         }
         if (part.getType().equals(Kind.TYPE)) {
-            types.remove(part);
+            this.types.remove(part);
         }
     }
 
@@ -49,7 +49,7 @@ class ChangeParts {
      * Sort parts using relevance or alphabetic, if relevance is same.
      */
     public void sort() {
-        Collections.sort(types, new Comparator<ChangePart>() {
+        Collections.sort(this.types, new Comparator<ChangePart>() {
             @Override
             public int compare(ChangePart part1, ChangePart part2) {
                 if (part2.relevance - part1.relevance == 0) {
@@ -58,7 +58,7 @@ class ChangeParts {
                 return part2.relevance - part1.relevance;
             }
         });
-        Collections.sort(methods, new Comparator<ChangePart>() {
+        Collections.sort(this.methods, new Comparator<ChangePart>() {
             @Override
             public int compare(ChangePart part1, ChangePart part2) {
                 if (part2.relevance - part1.relevance == 0) {
@@ -67,7 +67,7 @@ class ChangeParts {
                 return part2.relevance - part1.relevance;
             }
         });
-        Collections.sort(files, new Comparator<ChangePart>() {
+        Collections.sort(this.files, new Comparator<ChangePart>() {
             @Override
             public int compare(ChangePart part1, ChangePart part2) {
                 return (part1.getParent() + part1.getName()).compareTo((part2.getParent() + part2.getName()));

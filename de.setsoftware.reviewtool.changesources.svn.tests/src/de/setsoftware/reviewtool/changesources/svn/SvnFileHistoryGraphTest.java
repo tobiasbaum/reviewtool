@@ -25,6 +25,8 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 public class SvnFileHistoryGraphTest {
 
     private static final IRepository STUB_REPO = new AbstractRepository() {
+        private static final long serialVersionUID = 1L;
+
         @Override
         public String getId() {
             return "stub";

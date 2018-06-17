@@ -18,6 +18,7 @@ public class FileLinePosition extends Position {
         return "(" + this.shortName + ", " + this.line + ")";
     }
 
+    @Override
     public int getLine() {
         return this.line;
     }

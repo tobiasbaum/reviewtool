@@ -6,7 +6,7 @@ package de.setsoftware.reviewtool.telemetry;
  */
 public class Telemetry {
 
-    private static AbstractTelemetry instance;
+    private static AbstractTelemetry instance = new NoTelemetry();
 
     public static AbstractTelemetry get() {
         return instance;
@@ -17,6 +17,7 @@ public class Telemetry {
     }
 
     public static void set(AbstractTelemetry t) {
+        assert t != null;
         instance = t;
     }
 
