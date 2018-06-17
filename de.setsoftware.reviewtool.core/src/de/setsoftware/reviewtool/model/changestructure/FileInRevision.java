@@ -122,9 +122,9 @@ public class FileInRevision implements IRevisionedFile {
 
     @Override
     public IPath toLocalPath(final IWorkingCopy wc) {
-        final String absolutePathInWc = wc.toAbsolutePathInWc(this.path);
+        final File absolutePathInWc = wc.toAbsolutePathInWc(this.path);
         if (absolutePathInWc != null) {
-            return new Path(absolutePathInWc);
+            return new Path(absolutePathInWc.getPath());
         } else {
             throw new ReviewtoolException("File " + this + " cannot be mapped to working copy at " + wc.getLocalRoot());
         }

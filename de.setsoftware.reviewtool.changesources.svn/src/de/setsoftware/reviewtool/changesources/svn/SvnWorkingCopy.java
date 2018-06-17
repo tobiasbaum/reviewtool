@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.File;
+import java.nio.file.Path;
 
 import de.setsoftware.reviewtool.model.changestructure.AbstractWorkingCopy;
 import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
@@ -38,14 +39,30 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     }
 
     @Override
-    public String toAbsolutePathInWc(final String absolutePathInRepo) {
+    public File toAbsolutePathInWc(final String absolutePathInRepo) {
         if (absolutePathInRepo.equals(this.relPath)) {
-            return this.workingCopyRoot.toString();
+            return this.workingCopyRoot;
         } else if (absolutePathInRepo.startsWith(this.relPath + "/")) {
             assert !absolutePathInRepo.contains("\\");
             return new File(
                     this.workingCopyRoot,
-                    absolutePathInRepo.substring(this.relPath.length() + 1)).toString();
+                    absolutePathInRepo.substring(this.relPath.length() + 1));
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public String toAbsolutePathInRepo(final File absolutePathInWc) {
+        final Path wcRootPath = this.workingCopyRoot.toPath();
+        final Path wcPath = absolutePathInWc.toPath();
+        if (wcPath.startsWith(wcRootPath)) {
+            try {
+                final String relativePath = wcRootPath.relativize(wcPath).toString().replaceAll("\\\\", "/");
+                return this.relPath + '/' + relativePath;
+            } catch (final IllegalArgumentException e) {
+                return null;
+            }
         } else {
             return null;
         }

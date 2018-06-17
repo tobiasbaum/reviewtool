@@ -34,8 +34,13 @@ final class TestWorkingCopy extends AbstractWorkingCopy {
     }
 
     @Override
-    public String toAbsolutePathInWc(String absolutePathInRepo) {
-        return new File(this.localRoot, absolutePathInRepo).getAbsolutePath();
+    public File toAbsolutePathInWc(final String absolutePathInRepo) {
+        return new File(absolutePathInRepo);
+    }
+
+    @Override
+    public String toAbsolutePathInRepo(final File absolutePathInWc) {
+        return absolutePathInWc.toString();
     }
 
     @Override
