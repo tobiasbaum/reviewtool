@@ -7,14 +7,8 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
@@ -28,32 +22,6 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
  * Manages all known local working copies.
  */
 final class SvnWorkingCopyManager {
-
-    /**
-     * Scheduling rule preventing two jobs to run concurrently for the same working copy.
-     */
-    private static class CacheJobMutexRule implements ISchedulingRule {
-
-        private final File cache;
-
-        CacheJobMutexRule(final File cache) {
-            this.cache = cache;
-        }
-
-        @Override
-        public boolean isConflicting(ISchedulingRule rule) {
-            if (rule instanceof CacheJobMutexRule) {
-                final CacheJobMutexRule other = (CacheJobMutexRule) rule;
-                return this.cache.equals(other.cache);
-            }
-            return false;
-        }
-
-        @Override
-        public boolean contains(ISchedulingRule rule) {
-            return rule == this;
-        }
-    }
 
     private static final SvnWorkingCopyManager INSTANCE = new SvnWorkingCopyManager();
 
@@ -77,26 +45,9 @@ final class SvnWorkingCopyManager {
     /**
      * Initializes the cache.
      * @param mgr The {@link SVNClientManager} for retrieving information about working copies.
-     * @param workingCopyRoots The root directories of all known working copies.
      */
-    void init(
-            final SVNClientManager mgr,
-            final Set<File> workingCopyRoots) {
-
+    void init(final SVNClientManager mgr) {
         this.mgr = mgr;
-
-        for (final File workingCopyRoot : workingCopyRoots) {
-            final Job job = Job.create("Loading SVN review cache for " + workingCopyRoot,
-                    new IJobFunction() {
-                        @Override
-                        public IStatus run(IProgressMonitor monitor) {
-                            SvnWorkingCopyManager.this.getWorkingCopy(workingCopyRoot);
-                            return Status.OK_STATUS;
-                        }
-                    });
-            job.setRule(new CacheJobMutexRule(workingCopyRoot));
-            job.schedule();
-        }
     }
 
     /**
@@ -134,24 +85,31 @@ final class SvnWorkingCopyManager {
     }
 
     /**
-     * Calls the given handler for all recent log entries of the given working copy root.
-     * All revisions returned have an associated working copy.
+     * Calls the given handler for all recent log entries of all known working copies.
      */
-    List<Pair<SvnWorkingCopy, SvnRepoRevision>> traverseRecentEntries(
-            final File workingCopyRoot,
+    synchronized List<Pair<SvnWorkingCopy, SvnRepoRevision>> traverseRecentEntries(
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
-        final SvnWorkingCopy wc = this.getWorkingCopy(workingCopyRoot);
-        if (wc == null) {
-            return Collections.emptyList();
-        }
-
         List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = new ArrayList<>();
-        for (final SvnRepoRevision revision :
-                SvnRepositoryManager.getInstance().traverseRecentEntries(wc.getRepository(), handler, ui)) {
-            revisions.add(Pair.create(wc, revision));
+        for (final SvnWorkingCopy wc : this.wcPerRootDirectory.values()) {
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+
+            for (final SvnRepoRevision revision :
+                    SvnRepositoryManager.getInstance().traverseRecentEntries(wc.getRepository(), handler, ui)) {
+                revisions.add(Pair.create(wc, revision));
+            }
         }
         return revisions;
+    }
+
+    /**
+     * Removes a working copy.
+     * @param workingCopyRoot The root directory of the working copy.
+     */
+    synchronized void removeWorkingCopy(final File workingCopyRoot) {
+        this.wcPerRootDirectory.remove(workingCopyRoot.toString());
     }
 }

@@ -18,6 +18,8 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.IJobFunction;
+import org.eclipse.core.runtime.jobs.Job;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.SVNDepth;
@@ -50,13 +52,12 @@ final class SvnChangeSource implements IChangeSource {
 
     private static final String KEY_PLACEHOLDER = "${key}";
 
-    private final Set<File> workingCopyRoots;
+    private final Map<File, Set<File>> projectsPerWcMap;
     private final String logMessagePattern;
     private final SVNClientManager mgr = SVNClientManager.newInstance();
     private final long maxTextDiffThreshold;
 
     SvnChangeSource(
-            List<File> projectRoots,
             String logMessagePattern,
             String user,
             String pwd,
@@ -64,25 +65,14 @@ final class SvnChangeSource implements IChangeSource {
             int logCacheMinSize) {
         this.mgr.setAuthenticationManager(new DefaultSVNAuthenticationManager(
                 null, false, user, pwd.toCharArray(), null, null));
-        this.workingCopyRoots = this.determineWorkingCopyRoots(projectRoots);
 
+        this.projectsPerWcMap = new LinkedHashMap<>();
         this.logMessagePattern = logMessagePattern;
         //check that the pattern can be parsed
         this.createPatternForKey("TEST-123");
         this.maxTextDiffThreshold = maxTextDiffThreshold;
         SvnRepositoryManager.getInstance().init(this.mgr, logCacheMinSize);
-        SvnWorkingCopyManager.getInstance().init(this.mgr, this.workingCopyRoots);
-    }
-
-    private Set<File> determineWorkingCopyRoots(List<File> projectRoots) {
-        final LinkedHashSet<File> workingCopyRoots = new LinkedHashSet<>();
-        for (final File projectRoot : projectRoots) {
-            final File wcRoot = this.determineWorkingCopyRoot(projectRoot);
-            if (wcRoot != null) {
-                workingCopyRoots.add(wcRoot);
-            }
-        }
-        return workingCopyRoots;
+        SvnWorkingCopyManager.getInstance().init(this.mgr);
     }
 
     private File determineWorkingCopyRoot(File projectRoot) {
@@ -158,6 +148,57 @@ final class SvnChangeSource implements IChangeSource {
             return ChangestructureFactory.createChangeData(this, commits, localPathMap);
         } catch (final SVNException e) {
             throw new ReviewtoolException(e);
+        }
+    }
+
+    @Override
+    public void addProject(final File projectRoot) {
+        final File wcRoot = this.determineWorkingCopyRoot(projectRoot);
+        if (wcRoot != null) {
+            boolean wcCreated = false;
+            synchronized (this.projectsPerWcMap) {
+                Set<File> projects = this.projectsPerWcMap.get(wcRoot);
+                if (projects == null) {
+                    projects = new LinkedHashSet<>();
+                    this.projectsPerWcMap.put(wcRoot, projects);
+                    wcCreated = true;
+                }
+                projects.add(projectRoot);
+            }
+
+            if (wcCreated) {
+                final Job job = Job.create("Analyzing SVN working copy at " + wcRoot,
+                        new IJobFunction() {
+                            @Override
+                            public IStatus run(IProgressMonitor monitor) {
+                                SvnWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
+                                return Status.OK_STATUS;
+                            }
+                        });
+                job.schedule();
+            }
+        }
+    }
+
+    @Override
+    public void removeProject(final File projectRoot) {
+        final File wcRoot = this.determineWorkingCopyRoot(projectRoot);
+        if (wcRoot != null) {
+            boolean wcHasProjects = true;
+            synchronized (this.projectsPerWcMap) {
+                Set<File> projects = this.projectsPerWcMap.get(wcRoot);
+                if (projects != null) {
+                    projects.remove(projectRoot);
+                    if (projects.isEmpty()) {
+                        this.projectsPerWcMap.remove(wcRoot);
+                        wcHasProjects = false;
+                    }
+                }
+            }
+
+            if (!wcHasProjects) {
+                SvnWorkingCopyManager.getInstance().removeWorkingCopy(wcRoot);
+            }
         }
     }
 
@@ -340,7 +381,6 @@ final class SvnChangeSource implements IChangeSource {
             final String key,
             final IChangeSourceUi ui) throws SVNException {
 
-        final List<Pair<SvnWorkingCopy, SvnRepoRevision>> result = new ArrayList<>();
         final Pattern pattern = this.createPatternForKey(key);
         final CachedLogLookupHandler handler = new CachedLogLookupHandler() {
 
@@ -351,13 +391,7 @@ final class SvnChangeSource implements IChangeSource {
             }
         };
 
-        for (final File workingCopyRoot : this.workingCopyRoots) {
-            if (ui.isCanceled()) {
-                throw new OperationCanceledException();
-            }
-            result.addAll(SvnWorkingCopyManager.getInstance().traverseRecentEntries(workingCopyRoot, handler, ui));
-        }
-        return result;
+        return SvnWorkingCopyManager.getInstance().traverseRecentEntries(handler, ui);
     }
 
     private List<ICommit> convertRepoRevisionsToChanges(
