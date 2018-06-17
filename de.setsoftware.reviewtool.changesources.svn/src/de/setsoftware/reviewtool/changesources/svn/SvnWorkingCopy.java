@@ -10,12 +10,12 @@ import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
  */
 final class SvnWorkingCopy extends AbstractWorkingCopy {
 
-    private final SvnRepo repo;
+    private final ISvnRepo repo;
     private final File workingCopyRoot;
     private final String relPath;
     private final VirtualFileHistoryGraph combinedFileHistoryGraph;
 
-    SvnWorkingCopy(final SvnRepo repo, final File workingCopyRoot, final String relPath) {
+    SvnWorkingCopy(final ISvnRepo repo, final File workingCopyRoot, final String relPath) {
         this.repo = repo;
         this.workingCopyRoot = workingCopyRoot;
         this.relPath = relPath;
@@ -23,7 +23,7 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     }
 
     @Override
-    public SvnRepo getRepository() {
+    public ISvnRepo getRepository() {
         return this.repo;
     }
 

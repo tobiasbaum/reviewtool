@@ -29,7 +29,7 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
  * Such a repository contains a cache of the history to speed up the gathering of relevant entries
  * as well as a cache of requested file contents.
  */
-final class SvnRepo extends AbstractRepository {
+final class SvnRepo extends AbstractRepository implements ISvnRepo {
 
     /**
      * References a SVN repository by its remote URL.
@@ -81,26 +81,26 @@ final class SvnRepo extends AbstractRepository {
         this.fileHistoryGraph = new SvnFileHistoryGraph();
     }
 
-    SVNURL getRemoteUrl() {
+    @Override
+    public SVNURL getRemoteUrl() {
         return this.remoteUrl;
     }
 
-    List<CachedLogEntry> getEntries() {
+    @Override
+    public List<CachedLogEntry> getEntries() {
         return Collections.unmodifiableList(this.entries);
     }
 
-    void appendNewEntries(final Collection<CachedLogEntry> newEntries) {
+    @Override
+    public void appendNewEntries(final Collection<CachedLogEntry> newEntries) {
         this.entries.addAll(newEntries);
     }
 
-    IPath getCacheFilePath() {
+    @Override
+    public IPath getCacheFilePath() {
         final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
         final IPath dir = Platform.getStateLocation(bundle);
         return dir.append("svnlog-" + encodeString(this.remoteUrl.toString()) + ".cache");
-    }
-
-    private static String encodeString(final String s) {
-        return Base64.getUrlEncoder().encodeToString(s.getBytes());
     }
 
     @Override
@@ -132,7 +132,8 @@ final class SvnRepo extends AbstractRepository {
         return this.fileHistoryGraph;
     }
 
-    void setFileHistoryGraph(final SvnFileHistoryGraph fileHistoryGraph) {
+    @Override
+    public void setFileHistoryGraph(final SvnFileHistoryGraph fileHistoryGraph) {
         this.fileHistoryGraph = fileHistoryGraph;
     }
 
@@ -141,10 +142,8 @@ final class SvnRepo extends AbstractRepository {
         return this.remoteUrl.toString();
     }
 
-    /**
-     * Determines all commits between passed revision and the latest one.
-     */
-    void getLog(final long startRevision, final ISVNLogEntryHandler handler) throws SVNException {
+    @Override
+    public void getLog(final long startRevision, final ISVNLogEntryHandler handler) throws SVNException {
         this.svnRepo.log(
                 null,   // no target paths (retrieve log entries of whole repository)
                 startRevision,
@@ -157,11 +156,13 @@ final class SvnRepo extends AbstractRepository {
                 handler);
     }
 
-    /**
-     * Returns the latest revision of this repository.
-     */
-    long getLatestRevision() throws SVNException {
+    @Override
+    public long getLatestRevision() throws SVNException {
         return this.svnRepo.getLatestRevision();
+    }
+
+    private static String encodeString(final String s) {
+        return Base64.getUrlEncoder().encodeToString(s.getBytes());
     }
 
     private Object writeReplace() {

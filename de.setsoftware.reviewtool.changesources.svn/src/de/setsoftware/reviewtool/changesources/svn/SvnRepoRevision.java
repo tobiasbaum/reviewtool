@@ -12,7 +12,7 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
  * date, the commit author, and the paths changed.
  */
 final class SvnRepoRevision extends AbstractSvnRevision {
-    private final SvnRepo repository;
+    private final ISvnRepo repository;
     private final CachedLogEntry logEntry;
 
     /**
@@ -20,13 +20,13 @@ final class SvnRepoRevision extends AbstractSvnRevision {
      * @param repository The associated repository.
      * @param logEntry The log entry.
      */
-    SvnRepoRevision(final SvnRepo repository, final CachedLogEntry logEntry) {
+    SvnRepoRevision(final ISvnRepo repository, final CachedLogEntry logEntry) {
         this.repository = repository;
         this.logEntry = logEntry;
     }
 
     @Override
-    public SvnRepo getRepository() {
+    public ISvnRepo getRepository() {
         return this.repository;
     }
 

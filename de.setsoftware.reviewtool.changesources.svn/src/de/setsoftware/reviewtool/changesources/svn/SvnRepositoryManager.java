@@ -49,7 +49,7 @@ final class SvnRepositoryManager {
         }
 
         @Override
-        public boolean isConflicting(ISchedulingRule rule) {
+        public boolean isConflicting(final ISchedulingRule rule) {
             if (rule instanceof CacheJobMutexRule) {
                 final CacheJobMutexRule other = (CacheJobMutexRule) rule;
                 return this.cache.equals(other.cache);
@@ -58,7 +58,7 @@ final class SvnRepositoryManager {
         }
 
         @Override
-        public boolean contains(ISchedulingRule rule) {
+        public boolean contains(final ISchedulingRule rule) {
             return rule == this;
         }
     }
@@ -131,7 +131,7 @@ final class SvnRepositoryManager {
      * Calls the given handler for all recent log entries of the given {@link SvnRepo}.
      */
     List<SvnRepoRevision> traverseRecentEntries(
-            final SvnRepo repo,
+            final ISvnRepo repo,
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
@@ -147,7 +147,7 @@ final class SvnRepositoryManager {
         return result;
     }
 
-    private synchronized List<CachedLogEntry> getEntries(final SvnRepo repo) throws SVNException {
+    private synchronized List<CachedLogEntry> getEntries(final ISvnRepo repo) throws SVNException {
 
         final boolean gotNewEntries = this.loadNewEntries(repo);
 
@@ -155,7 +155,7 @@ final class SvnRepositoryManager {
             final Job job = Job.create("Storing SVN review cache for " + repo,
                     new IJobFunction() {
                         @Override
-                        public IStatus run(IProgressMonitor monitor) {
+                        public IStatus run(final IProgressMonitor monitor) {
                             SvnRepositoryManager.this.tryToStoreCacheToFile(repo);
                             return Status.OK_STATUS;
                         }
@@ -167,7 +167,7 @@ final class SvnRepositoryManager {
         return repo.getEntries();
     }
 
-    private synchronized boolean loadNewEntries(final SvnRepo repo) throws SVNException {
+    private synchronized boolean loadNewEntries(final ISvnRepo repo) throws SVNException {
 
         final List<CachedLogEntry> entries = repo.getEntries();
         final long lastKnownRevision = entries.isEmpty() ? 0 : entries.get(entries.size() - 1).getRevision();
@@ -182,7 +182,7 @@ final class SvnRepositoryManager {
 
             final ISVNLogEntryHandler handler = new ISVNLogEntryHandler() {
                 @Override
-                public void handleLogEntry(SVNLogEntry logEntry) throws SVNException {
+                public void handleLogEntry(final SVNLogEntry logEntry) throws SVNException {
                     final CachedLogEntry entry = new CachedLogEntry(logEntry);
                     SvnRepositoryManager.this.processLogEntry(entry, repo, newEntries.size());
                     newEntries.add(entry);
@@ -195,7 +195,7 @@ final class SvnRepositoryManager {
         return !newEntries.isEmpty();
     }
 
-    private void tryToReadCacheFromFile(final SvnRepo repo) {
+    private void tryToReadCacheFromFile(final ISvnRepo repo) {
         try {
             this.readCacheFromFile(repo);
         } catch (final ClassNotFoundException | IOException | ClassCastException e) {
@@ -203,7 +203,7 @@ final class SvnRepositoryManager {
         }
     }
 
-    private synchronized void readCacheFromFile(final SvnRepo repo)
+    private synchronized void readCacheFromFile(final ISvnRepo repo)
             throws IOException, ClassNotFoundException {
 
         final File cache = repo.getCacheFilePath().toFile();
@@ -225,7 +225,7 @@ final class SvnRepositoryManager {
         Logger.info("Loaded SVN history data for " + repo + " from " + cache);
     }
 
-    private void tryToStoreCacheToFile(final SvnRepo repo) {
+    private void tryToStoreCacheToFile(final ISvnRepo repo) {
         try {
             this.storeCacheToFile(repo);
         } catch (final IOException e) {
@@ -233,7 +233,7 @@ final class SvnRepositoryManager {
         }
     }
 
-    private synchronized void storeCacheToFile(final SvnRepo repo) throws IOException {
+    private synchronized void storeCacheToFile(final ISvnRepo repo) throws IOException {
         final File cache = repo.getCacheFilePath().toFile();
         Logger.info("Storing SVN history data for " + repo + " to " + cache);
         try (ObjectOutputStream oos =
@@ -247,7 +247,7 @@ final class SvnRepositoryManager {
 
     private void processLogEntry(
             final CachedLogEntry entry,
-            final SvnRepo repo,
+            final ISvnRepo repo,
             final int numEntriesProcessed) {
 
         final SvnRepoRevision revision = new SvnRepoRevision(repo, entry);

@@ -34,7 +34,7 @@ final class CachedLogEntryPath implements Serializable {
         this.kind = mapStatusKind(value.getKind());
     }
 
-    CachedLogEntryPath(final SvnRepo repo, final SVNStatus status) {
+    CachedLogEntryPath(final ISvnRepo repo, final SVNStatus status) {
         if (status.getRevision().equals(SVNRevision.UNDEFINED)) {
             this.prevRevision = SVNRevision.BASE.getNumber();
         } else {

@@ -13,7 +13,7 @@ public interface SvnRevision {
     /**
      * Returns the associated repository.
      */
-    public abstract SvnRepo getRepository();
+    public abstract ISvnRepo getRepository();
 
     /**
      * Returns the associated revision number.

@@ -58,11 +58,11 @@ final class SvnChangeSource implements IChangeSource {
     private final long maxTextDiffThreshold;
 
     SvnChangeSource(
-            String logMessagePattern,
-            String user,
-            String pwd,
-            long maxTextDiffThreshold,
-            int logCacheMinSize) {
+            final String logMessagePattern,
+            final String user,
+            final String pwd,
+            final long maxTextDiffThreshold,
+            final int logCacheMinSize) {
         this.mgr.setAuthenticationManager(new DefaultSVNAuthenticationManager(
                 null, false, user, pwd.toCharArray(), null, null));
 
@@ -75,7 +75,7 @@ final class SvnChangeSource implements IChangeSource {
         SvnWorkingCopyManager.getInstance().init(this.mgr);
     }
 
-    private File determineWorkingCopyRoot(File projectRoot) {
+    private File determineWorkingCopyRoot(final File projectRoot) {
         File curPotentialRoot = projectRoot;
         while (!this.isPotentialRoot(curPotentialRoot)) {
             curPotentialRoot = curPotentialRoot.getParentFile();
@@ -92,12 +92,12 @@ final class SvnChangeSource implements IChangeSource {
         }
     }
 
-    private boolean isPotentialRoot(File next) {
+    private boolean isPotentialRoot(final File next) {
         final File dotsvn = new File(next, ".svn");
         return dotsvn.isDirectory();
     }
 
-    private Pattern createPatternForKey(String key) {
+    private Pattern createPatternForKey(final String key) {
         return Pattern.compile(
                 this.logMessagePattern.replace(KEY_PLACEHOLDER, Pattern.quote(key)),
                 Pattern.DOTALL);
@@ -119,11 +119,11 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public IChangeData getRepositoryChanges(String key, IChangeSourceUi ui) {
+    public IChangeData getRepositoryChanges(final String key, final IChangeSourceUi ui) {
         try {
             ui.subTask("Determining relevant commits...");
             final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = this.determineRelevantRevisions(key, ui);
-            final Map<SvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
+            final Map<ISvnRepo, Long> neededRevisionPerRepo = this.determineMaxRevisionPerRepo(revisions);
             ui.subTask("Checking state of working copy...");
             this.checkWorkingCopiesUpToDate(neededRevisionPerRepo, ui);
             ui.subTask("Analyzing commits...");
@@ -170,7 +170,7 @@ final class SvnChangeSource implements IChangeSource {
                 final Job job = Job.create("Analyzing SVN working copy at " + wcRoot,
                         new IJobFunction() {
                             @Override
-                            public IStatus run(IProgressMonitor monitor) {
+                            public IStatus run(final IProgressMonitor monitor) {
                                 SvnWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
                                 return Status.OK_STATUS;
                             }
@@ -186,7 +186,7 @@ final class SvnChangeSource implements IChangeSource {
         if (wcRoot != null) {
             boolean wcHasProjects = true;
             synchronized (this.projectsPerWcMap) {
-                Set<File> projects = this.projectsPerWcMap.get(wcRoot);
+                final Set<File> projects = this.projectsPerWcMap.get(wcRoot);
                 if (projects != null) {
                     projects.remove(projectRoot);
                     if (projects.isEmpty()) {
@@ -207,7 +207,7 @@ final class SvnChangeSource implements IChangeSource {
      * @param neededRevisionPerRepo A map storing the last known revisions for each repository.
      */
     private void checkWorkingCopiesUpToDate(
-            final Map<SvnRepo, Long> neededRevisionPerRepo,
+            final Map<ISvnRepo, Long> neededRevisionPerRepo,
             final IChangeSourceUi ui) throws SVNException {
 
         for (final SvnWorkingCopy wc : SvnWorkingCopyManager.getInstance().getWorkingCopies()) {
@@ -215,7 +215,7 @@ final class SvnChangeSource implements IChangeSource {
                 throw new OperationCanceledException();
             }
 
-            final SvnRepo repo = wc.getRepository();
+            final ISvnRepo repo = wc.getRepository();
             if (neededRevisionPerRepo.containsKey(repo)) {
                 final long remoteRev = neededRevisionPerRepo.get(repo);
                 final File wcRoot = wc.getLocalRoot();
@@ -361,11 +361,13 @@ final class SvnChangeSource implements IChangeSource {
         return result;
     }
 
-    private Map<SvnRepo, Long> determineMaxRevisionPerRepo(List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions) {
-        final Map<SvnRepo, Long> ret = new LinkedHashMap<>();
+    private Map<ISvnRepo, Long> determineMaxRevisionPerRepo(
+            final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions) {
+
+        final Map<ISvnRepo, Long> ret = new LinkedHashMap<>();
         for (final Pair<SvnWorkingCopy, SvnRepoRevision> p : revisions) {
             final SvnRepoRevision revision = p.getSecond();
-            final SvnRepo repo = revision.getRepository();
+            final ISvnRepo repo = revision.getRepository();
             final long curRev = revision.getRevisionNumber();
             if (ret.containsKey(repo)) {
                 if (curRev > ret.get(repo)) {
@@ -445,7 +447,7 @@ final class SvnChangeSource implements IChangeSource {
     private static final class DirectoryCopyInfo {
         private final List<Pair<String, String>> directoryCopies = new ArrayList<>();
 
-        public DirectoryCopyInfo(Collection<CachedLogEntryPath> values) {
+        public DirectoryCopyInfo(final Collection<CachedLogEntryPath> values) {
             for (final CachedLogEntryPath p : values) {
                 if (p.isDir() && p.getCopyPath() != null) {
                     this.directoryCopies.add(Pair.create(p.getCopyPath(), p.getPath()));
@@ -453,7 +455,7 @@ final class SvnChangeSource implements IChangeSource {
             }
         }
 
-        private String determineOldPath(CachedLogEntryPath entryInfo) {
+        private String determineOldPath(final CachedLogEntryPath entryInfo) {
             if (entryInfo.getCopyPath() != null) {
                 return entryInfo.getCopyPath();
             }
@@ -499,7 +501,7 @@ final class SvnChangeSource implements IChangeSource {
                 try {
                     ret.addAll(this.determineChangesInFile(wc, node));
                 } catch (final Exception ex) {
-                    IStatus status = new Status(
+                    final IStatus status = new Status(
                             IStatus.ERROR,
                             "CoRT",
                             "An error occurred while computing changes for " + fileInfo.toString(),
@@ -562,7 +564,7 @@ final class SvnChangeSource implements IChangeSource {
         return !contentLooksBinary(newFileContent) && newFileContent.length <= this.maxTextDiffThreshold;
     }
 
-    private static boolean contentLooksBinary(byte[] fileContent) {
+    private static boolean contentLooksBinary(final byte[] fileContent) {
         if (fileContent.length == 0) {
             return false;
         }
@@ -577,11 +579,14 @@ final class SvnChangeSource implements IChangeSource {
         return false;
     }
 
-    private static boolean isStrangeChar(byte b) {
+    private static boolean isStrangeChar(final byte b) {
         return b != '\n' && b != '\r' && b != '\t' && b < 0x20 && b >= 0;
     }
 
-    private Set<String> determineCopySources(Collection<CachedLogEntryPath> entries, DirectoryCopyInfo dirMoves) {
+    private Set<String> determineCopySources(
+            final Collection<CachedLogEntryPath> entries,
+            final DirectoryCopyInfo dirMoves) {
+
         final Set<String> ret = new LinkedHashSet<>();
 
         for (final CachedLogEntryPath p : entries) {
