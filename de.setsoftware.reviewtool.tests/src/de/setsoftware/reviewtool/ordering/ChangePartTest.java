@@ -38,25 +38,28 @@ public class ChangePartTest {
         return new IRevisionedFile() {
 
             private static final long serialVersionUID = 1L;
+            private final IRevisionedFile file = ChangestructureFactory.createFileInRevision(
+                    name,
+                    ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
 
             @Override
             public IPath toLocalPath(final IWorkingCopy wc) {
-                throw new UnsupportedOperationException();
+                return this.file.toLocalPath(wc);
             }
 
             @Override
             public IRevision getRevision() {
-                return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE);
+                return this.file.getRevision();
             }
 
             @Override
             public IRepository getRepository() {
-                throw new UnsupportedOperationException();
+                return this.file.getRepository();
             }
 
             @Override
             public String getPath() {
-                return name;
+                return this.file.getPath();
             }
 
             @Override
@@ -66,7 +69,12 @@ public class ChangePartTest {
 
             @Override
             public IResource determineResource() {
-                throw new UnsupportedOperationException();
+                return this.file.determineResource();
+            }
+
+            @Override
+            public boolean le(final IRevisionedFile other) {
+                return this.file.le(other);
             }
         };
     }

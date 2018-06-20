@@ -145,6 +145,20 @@ public class FileInRevision implements IRevisionedFile {
             && this.revision.equals(f.revision);
     }
 
+    @Override
+    public boolean le(final IRevisionedFile other) {
+        final IRevision otherRevision = other.getRevision();
+        if (this.revision.le(otherRevision)) {
+            if (otherRevision.le(this.revision)) {
+                return this.path.compareTo(other.getPath()) <= 0;
+            } else {
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+
     /**
      * Sorts the given files topologically by their revisions. Per revision, the files are sorted by path.
      * This makes most sense when they all denote different versions of the same file.
