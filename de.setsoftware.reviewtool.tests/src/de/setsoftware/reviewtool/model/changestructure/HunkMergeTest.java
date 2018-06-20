@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IHunk;
@@ -18,10 +19,10 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 public class HunkMergeTest {
 
     private static FileInRevision file(final int revision) {
-        return new FileInRevision("file", new RepoRevision(revision, StubRepo.INSTANCE));
+        return new FileInRevision("file", new RepoRevision<>(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
     }
 
-    private static PositionInText pos(int line, int col) {
+    private static PositionInText pos(final int line, final int col) {
         return new PositionInText(line, col);
     }
 

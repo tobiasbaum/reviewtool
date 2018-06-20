@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.Collection;
 
+import de.setsoftware.reviewtool.base.IPartiallyComparable;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -28,9 +29,11 @@ public abstract class AbstractRepository implements IRepository {
     }
 
     /**
-     * Simple implementation for {@link #getSmallestRevision} that uses a comparable revision number.
+     * Simple implementation for {@link #getSmallestRevision}.
+     * If the underlying revisions are not totally ordered, some unspecified minimal revision will be returned.
+     * If the collection of revisions passed is empty, {@code null} is returned.
      */
-    public static IRevision getSmallestOfComparableRevisions(Collection<? extends IRevision> revisions) {
+    public static IRevision getSmallestOfComparableRevisions(final Collection<? extends IRevision> revisions) {
         IRevision smallestSoFar = null;
         for (final IRevision r : revisions) {
             if (r instanceof UnknownRevision) {
@@ -40,14 +43,17 @@ public abstract class AbstractRepository implements IRepository {
                 smallestSoFar = r;
             } else if (r instanceof RepoRevision) {
                 if (smallestSoFar instanceof RepoRevision) {
-                    final Object vs = ((IRepoRevision) smallestSoFar).getId();
-                    final Object vr = ((IRepoRevision) r).getId();
+                    final IPartiallyComparable<?> vs = ((IRepoRevision<?>) smallestSoFar).getId();
+                    final IPartiallyComparable<?> vr = ((IRepoRevision<?>) r).getId();
                     if (areCompatibleComparables(vs, vr)) {
                         @SuppressWarnings("unchecked")
-                        final Comparable<Comparable<?>> cs = (Comparable<Comparable<?>>) vs;
+                        final IPartiallyComparable<IPartiallyComparable<?>> cs =
+                                (IPartiallyComparable<IPartiallyComparable<?>>) vs;
                         @SuppressWarnings("unchecked")
-                        final Comparable<Comparable<?>> cr = (Comparable<Comparable<?>>) vr;
-                        if (cr.compareTo(cs) < 0) {
+                        final IPartiallyComparable<IPartiallyComparable<?>> cr =
+                                (IPartiallyComparable<IPartiallyComparable<?>>) vr;
+
+                        if (cr.le(cs) && !cs.le(cr)) {
                             smallestSoFar = r;
                         }
                     }
@@ -59,8 +65,10 @@ public abstract class AbstractRepository implements IRepository {
         return smallestSoFar;
     }
 
-    private static boolean areCompatibleComparables(Object vs, Object vr) {
-        return vs instanceof Comparable<?> && vs.getClass().equals(vr.getClass());
+    private static boolean areCompatibleComparables(
+            final IPartiallyComparable<?> vs,
+            final IPartiallyComparable<?> vr) {
+        return vs.getClass().equals(vr.getClass());
     }
 
 }

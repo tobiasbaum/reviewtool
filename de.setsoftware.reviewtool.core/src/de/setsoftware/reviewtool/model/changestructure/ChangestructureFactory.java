@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import de.setsoftware.reviewtool.base.IPartiallyComparable;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -46,7 +47,7 @@ public class ChangestructureFactory {
     }
 
     public static ITextualChange createTextualChangeHunk(
-            IWorkingCopy wc,
+            final IWorkingCopy wc,
             final IFragment from,
             final IFragment to,
             final boolean irrelevantForReview) {
@@ -57,11 +58,14 @@ public class ChangestructureFactory {
         return new FileInRevision(path, revision);
     }
 
-    public static IFragment createFragment(IRevisionedFile file, IPositionInText from, IPositionInText to) {
+    public static IFragment createFragment(
+            final IRevisionedFile file,
+            final IPositionInText from,
+            final IPositionInText to) {
         return new Fragment(file, from, to);
     }
 
-    public static IHunk createHunk(IFragment from, IFragment to) {
+    public static IHunk createHunk(final IFragment from, final IFragment to) {
         return new Hunk(from, to);
     }
 
@@ -69,15 +73,17 @@ public class ChangestructureFactory {
         return new LocalRevision(wc);
     }
 
-    public static IRepoRevision createRepoRevision(final Object id, final IRepository repo) {
-        return new RepoRevision(id, repo);
+    public static <R extends IPartiallyComparable<R>> IRepoRevision<R> createRepoRevision(
+            final R id,
+            final IRepository repo) {
+        return new RepoRevision<>(id, repo);
     }
 
     public static IUnknownRevision createUnknownRevision(final IRepository repo) {
         return new UnknownRevision(repo);
     }
 
-    public static IPositionInText createPositionInText(int line, int column) {
+    public static IPositionInText createPositionInText(final int line, final int column) {
         return new PositionInText(line, column);
     }
 

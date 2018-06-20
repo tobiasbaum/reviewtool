@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.List;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
@@ -60,8 +61,8 @@ final class TestFileHistoryGraph extends FileHistoryGraph {
             }
 
             @Override
-            public Long handleRepoRevision(final IRepoRevision revision) {
-                return (Long) revision.getId();
+            public Long handleRepoRevision(final IRepoRevision<?> revision) {
+                return ComparableWrapper.<Long> unwrap(revision.getId());
             }
 
             @Override

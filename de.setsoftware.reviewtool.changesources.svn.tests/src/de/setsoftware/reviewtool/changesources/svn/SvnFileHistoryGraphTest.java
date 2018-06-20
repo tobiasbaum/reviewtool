@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
@@ -33,18 +34,18 @@ public class SvnFileHistoryGraphTest {
         }
 
         @Override
-        public IRepoRevision toRevision(final String revisionId) {
-            return ChangestructureFactory.createRepoRevision(revisionId, this);
+        public IRepoRevision<ComparableWrapper<Long>> toRevision(final String revisionId) {
+            return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(Long.parseLong(revisionId)), this);
         }
 
         @Override
-        public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
+        public IRevision getSmallestRevision(final Collection<? extends IRevision> revisions) {
             final List<IRevision> list = new ArrayList<>(revisions);
             Collections.sort(list, new Comparator<IRevision>() {
                 @Override
-                public int compare(IRevision o1, IRevision o2) {
-                    final Long rev1 = (Long) ((IRepoRevision) o1).getId();
-                    final Long rev2 = (Long) ((IRepoRevision) o2).getId();
+                public int compare(final IRevision o1, final IRevision o2) {
+                    final Long rev1 = ComparableWrapper.<Long> unwrap(((IRepoRevision<?>) o1).getId());
+                    final Long rev2 = ComparableWrapper.<Long> unwrap(((IRepoRevision<?>) o2).getId());
                     return Long.compare(rev1, rev2);
                 }
             });
@@ -52,7 +53,7 @@ public class SvnFileHistoryGraphTest {
         }
 
         @Override
-        public byte[] getFileContents(String path, IRepoRevision revision) {
+        public byte[] getFileContents(final String path, final IRepoRevision<?> revision) {
             return new byte[0];
         }
 
@@ -62,14 +63,14 @@ public class SvnFileHistoryGraphTest {
         }
     };
 
-    private static IRevisionedFile file(String path, long revision) {
+    private static IRevisionedFile file(final String path, final long revision) {
         return ChangestructureFactory.createFileInRevision(
                 path,
                 rev(revision));
     }
 
-    private static IRepoRevision rev(long revision) {
-        return ChangestructureFactory.createRepoRevision(revision, STUB_REPO);
+    private static IRepoRevision<ComparableWrapper<Long>> rev(final long revision) {
+        return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), STUB_REPO);
     }
 
     @Test

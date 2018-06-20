@@ -78,7 +78,7 @@ public final class Hunk implements IHunk {
      * @param hunks The collection of hunks.
      * @return A FragmentList containing all source fragments of the hunks in order. Adjacent fragments are merged.
      */
-    public static IFragmentList getSources(final Collection<? extends Hunk> hunks) {
+    public static IFragmentList getSources(final Collection<? extends IHunk> hunks) {
         final IFragmentList result = new FragmentList();
         for (final IHunk hunk : hunks) {
             try {
@@ -96,7 +96,7 @@ public final class Hunk implements IHunk {
      * @param hunks The collection of hunks.
      * @return A FragmentList containing all target fragments of the hunks in order. Adjacent fragments are merged.
      */
-    public static IFragmentList getTargets(final Collection<? extends Hunk> hunks) {
+    public static IFragmentList getTargets(final Collection<? extends IHunk> hunks) {
         final IFragmentList result = new FragmentList();
         for (final IHunk hunk : hunks) {
             try {
@@ -148,7 +148,7 @@ public final class Hunk implements IHunk {
     }
 
     @Override
-    public Hunk adjustTargetFile(final IRevisionedFile target) {
+    public IHunk adjustTargetFile(final IRevisionedFile target) {
         return new Hunk(this.source, this.target.setFile(target));
     }
 

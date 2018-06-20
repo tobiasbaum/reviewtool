@@ -117,19 +117,19 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
                 ancestorFile.getRevision().accept(new IRevisionVisitor<Void>() {
 
                     @Override
-                    public Void handleLocalRevision(ILocalRevision revision) {
+                    public Void handleLocalRevision(final ILocalRevision revision) {
                         edges.add(edge);
                         return null;
                     }
 
                     @Override
-                    public Void handleRepoRevision(IRepoRevision revision) {
+                    public Void handleRepoRevision(final IRepoRevision<?> revision) {
                         edges.add(edge);
                         return null;
                     }
 
                     @Override
-                    public Void handleUnknownRevision(IUnknownRevision revision) {
+                    public Void handleUnknownRevision(final IUnknownRevision revision) {
                         alphaEdges.add(edge);
                         return null;
                     }

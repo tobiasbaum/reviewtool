@@ -20,7 +20,7 @@ public interface IRevisionVisitorE<R, E extends Throwable> {
      * @param revision The revision to handle.
      * @return Some result.
      */
-    public abstract R handleRepoRevision(IRepoRevision revision) throws E;
+    public abstract R handleRepoRevision(IRepoRevision<?> revision) throws E;
 
     /**
      * Handles an {@link IUnknownRevision}.

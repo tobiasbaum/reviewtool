@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -22,18 +23,18 @@ import de.setsoftware.reviewtool.model.changestructure.StubRepo;
  */
 public class TokenSimilarityRelationTest {
 
-    private static IRevisionedFile file(String name, int revision) {
+    private static IRevisionedFile file(final String name, final int revision) {
         return ChangestructureFactory.createFileInRevision(
-                name, ChangestructureFactory.createRepoRevision(revision, StubRepo.INSTANCE));
+                name, ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
     }
 
-    private static Stop binaryStop(String filename) {
+    private static Stop binaryStop(final String filename) {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(null, file(filename, 1), file(filename, 3), false),
                 file(filename, 4));
     }
 
-    private static Stop stop(String commonPrefix, String oldContent, String newContent, String commonSuffix) {
+    private static Stop stop(final String commonPrefix, final String oldContent, final String newContent, final String commonSuffix) {
         final IFragment from = Fragment.createWithContent(file("test.java", 1),
                 ChangestructureFactory.createPositionInText(1, 1 + commonPrefix.length()),
                 ChangestructureFactory.createPositionInText(1, 1 + commonPrefix.length() + oldContent.length()),
@@ -47,15 +48,15 @@ public class TokenSimilarityRelationTest {
                 to);
     }
 
-    private static OrderingInfo oi(Stop s1, Stop s2) {
+    private static OrderingInfo oi(final Stop s1, final Stop s2) {
         return new SimpleUnorderedMatch(HierarchyExplicitness.NONE, null, Arrays.asList(wrap(s1), wrap(s2)));
     }
 
-    private static ChangePart wrap(Stop s) {
+    private static ChangePart wrap(final Stop s) {
         return new ChangePart(Collections.singletonList(s));
     }
 
-    private static List<ChangePart> wrap(Stop[] stops) {
+    private static List<ChangePart> wrap(final Stop[] stops) {
         final List<ChangePart> ret = new ArrayList<>();
         for (final Stop s : stops) {
             ret.add(wrap(s));
@@ -63,7 +64,7 @@ public class TokenSimilarityRelationTest {
         return ret;
     }
 
-    private static Collection<? extends OrderingInfo> determineRelations(Stop... stops) {
+    private static Collection<? extends OrderingInfo> determineRelations(final Stop... stops) {
         return new TokenSimilarityRelation().determineMatches(wrap(stops));
     }
 

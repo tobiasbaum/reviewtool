@@ -2,10 +2,12 @@ package de.setsoftware.reviewtool.model.api;
 
 import java.io.Serializable;
 
+import de.setsoftware.reviewtool.base.IPartiallyComparable;
+
 /**
  * A revision of a file (or a larger unit) in a source code management system.
  */
-public interface IRevision extends Serializable {
+public interface IRevision extends IPartiallyComparable<IRevision>, Serializable {
 
     /**
      * Returns the repository this revision is associated with.

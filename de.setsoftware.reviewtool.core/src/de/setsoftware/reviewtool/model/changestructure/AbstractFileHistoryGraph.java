@@ -46,7 +46,7 @@ public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
         final IFileHistoryNode node = this.getNodeFor(file);
         if (node == null) {
             // unknown file
-            return Collections.<IFileHistoryNode> emptySet();
+            return Collections.emptySet();
         } else {
             // either node for file or descendant node shares history with passed file, follow it
             return this.getLatestFilesHelper(node, returnDeletions);
@@ -84,7 +84,7 @@ public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
                 return result;
             }
         } else {
-            return Collections.<IFileHistoryNode> emptySet();
+            return Collections.emptySet();
         }
     }
 

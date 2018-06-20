@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -24,30 +25,30 @@ import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
  */
 public class TourHierarchyBuilderTest {
 
-    private static IRevisionedFile file(String name, int revision) {
+    private static IRevisionedFile file(final String name, final int revision) {
         return ChangestructureFactory.createFileInRevision(
-                name, ChangestructureFactory.createRepoRevision(revision, StubRepo.INSTANCE));
+                name, ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
     }
 
-    private static Stop stop(String s) {
+    private static Stop stop(final String s) {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(null, file(s, 1), file(s, 3), false),
                 file(s, 4));
     }
 
-    private static Tour tour(String description, TourElement... elements) {
+    private static Tour tour(final String description, final TourElement... elements) {
         return new Tour(description, Arrays.asList(elements));
     }
 
-    private static TourHierarchyBuilder builder(Stop... stops) {
+    private static TourHierarchyBuilder builder(final Stop... stops) {
         return new TourHierarchyBuilder(wrap(stops));
     }
 
-    private static ChangePart cp(Stop... stops) {
+    private static ChangePart cp(final Stop... stops) {
         return new ChangePart(Arrays.asList(stops));
     }
 
-    private static List<ChangePart> wrap(Stop... stops) {
+    private static List<ChangePart> wrap(final Stop... stops) {
         final List<ChangePart> changeParts = new ArrayList<>();
         for (final Stop s : stops) {
             changeParts.add(cp(s));
@@ -73,7 +74,7 @@ public class TourHierarchyBuilderTest {
 
             @Override
             public MatchSet<ChangePart> getMatchSet() {
-                return new MatchSet<ChangePart>(changeParts);
+                return new MatchSet<>(changeParts);
             }
 
             @Override

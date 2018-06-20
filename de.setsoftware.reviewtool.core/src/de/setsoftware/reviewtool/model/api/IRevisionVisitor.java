@@ -19,7 +19,7 @@ public interface IRevisionVisitor<R> {
      * @param revision The revision to handle.
      * @return Some result.
      */
-    public abstract R handleRepoRevision(IRepoRevision revision);
+    public abstract R handleRepoRevision(IRepoRevision<?> revision);
 
     /**
      * Handles an {@link IUnknownRevision}.

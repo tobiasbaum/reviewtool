@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -23,13 +24,13 @@ import de.setsoftware.reviewtool.model.changestructure.StubRepo;
  */
 public class ChangePartTest {
 
-    private static ChangePart cp(Stop... stops) {
+    private static ChangePart cp(final Stop... stops) {
         return new ChangePart(Arrays.asList(stops));
     }
 
-    private static IRevisionedFile file(String name, int revision) {
+    private static IRevisionedFile file(final String name, final int revision) {
         return ChangestructureFactory.createFileInRevision(
-                name, ChangestructureFactory.createRepoRevision(revision, StubRepo.INSTANCE));
+                name, ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
     }
 
     private static IRevisionedFile file(
@@ -45,7 +46,7 @@ public class ChangePartTest {
 
             @Override
             public IRevision getRevision() {
-                return ChangestructureFactory.createRepoRevision(revision, StubRepo.INSTANCE);
+                return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE);
             }
 
             @Override
@@ -70,13 +71,13 @@ public class ChangePartTest {
         };
     }
 
-    private static Stop binaryStop(String filename) {
+    private static Stop binaryStop(final String filename) {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(null, file(filename, 1), file(filename, 3), false),
                 file(filename, 4));
     }
 
-    private static Stop singleLineStop(IRevisionedFile file, int lineNumber) {
+    private static Stop singleLineStop(final IRevisionedFile file, final int lineNumber) {
         final IPositionInText posFrom = ChangestructureFactory.createPositionInText(lineNumber, 1);
         final IPositionInText posTo = ChangestructureFactory.createPositionInText(lineNumber + 1, 1);
         return new Stop(

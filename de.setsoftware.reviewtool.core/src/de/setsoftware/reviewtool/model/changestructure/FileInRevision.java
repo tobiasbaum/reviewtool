@@ -37,7 +37,7 @@ public class FileInRevision implements IRevisionedFile {
     private final String path;
     private final IRevision revision;
 
-    FileInRevision(String path, IRevision revision) {
+    FileInRevision(final String path, final IRevision revision) {
         this.path = path;
         this.revision = revision;
     }
@@ -73,7 +73,7 @@ public class FileInRevision implements IRevisionedFile {
             }
 
             @Override
-            public byte[] handleRepoRevision(final IRepoRevision revision) throws Exception {
+            public byte[] handleRepoRevision(final IRepoRevision<?> revision) throws Exception {
                 return FileInRevision.this.getRepository().getFileContents(FileInRevision.this.path, revision);
             }
 
@@ -136,7 +136,7 @@ public class FileInRevision implements IRevisionedFile {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (!(o instanceof FileInRevision)) {
             return false;
         }
@@ -151,7 +151,7 @@ public class FileInRevision implements IRevisionedFile {
      * For non-comparable revisions, the sort is stable. The earliest revisions come first.
      * Does NOT sort in-place.
      */
-    public static List<? extends IRevisionedFile> sortByRevision(Collection<? extends IRevisionedFile> toSort) {
+    public static List<IRevisionedFile> sortByRevision(final Collection<? extends IRevisionedFile> toSort) {
 
         if (toSort.isEmpty()) {
             return Collections.emptyList();
