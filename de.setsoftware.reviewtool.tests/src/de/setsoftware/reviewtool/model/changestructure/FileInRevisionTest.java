@@ -200,4 +200,72 @@ public class FileInRevisionTest {
         assertThat(fL_b.le(fL_a), is(equalTo(false)));
         assertThat(fL_b.le(fL_b), is(equalTo(true)));
     }
+
+    @Test
+    public void testTopoSortOnTotalOrder() {
+        final IRevision u = ChangestructureFactory.createUnknownRevision(StubRepo.INSTANCE);
+        final IRevision r1 = ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(1), StubRepo.INSTANCE);
+        final IRevision r2 = ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(2), StubRepo.INSTANCE);
+        final IRevision l = ChangestructureFactory.createLocalRevision(StubWorkingCopy.INSTANCE);
+
+        final IRevisionedFile fU_a = ChangestructureFactory.createFileInRevision("/a", u);
+        final IRevisionedFile fU_b = ChangestructureFactory.createFileInRevision("/b", u);
+        final IRevisionedFile fR1_a = ChangestructureFactory.createFileInRevision("/a", r1);
+        final IRevisionedFile fR1_b = ChangestructureFactory.createFileInRevision("/b", r1);
+        final IRevisionedFile fR2_a = ChangestructureFactory.createFileInRevision("/a", r2);
+        final IRevisionedFile fR2_b = ChangestructureFactory.createFileInRevision("/b", r2);
+        final IRevisionedFile fL_a = ChangestructureFactory.createFileInRevision("/a", l);
+        final IRevisionedFile fL_b = ChangestructureFactory.createFileInRevision("/b", l);
+
+        final List<IRevisionedFile> files = new ArrayList<>();
+        files.add(fL_b);
+        files.add(fL_a);
+        files.add(fR2_b);
+        files.add(fR2_a);
+        files.add(fR1_b);
+        files.add(fR1_a);
+        files.add(fU_b);
+        files.add(fU_a);
+
+        assertThat(PartialOrderAlgorithms.topoSort(files),
+                is(equalTo(Arrays.asList(fU_a, fU_b, fR1_a, fR1_b, fR2_a, fR2_b, fL_a, fL_b))));
+    }
+
+    @Test
+    public void testTopoSortOnPartialOrder() {
+        final IRevision u = ChangestructureFactory.createUnknownRevision(PartiallyOrderedRepo.INSTANCE);
+        final IRevision r1 = ChangestructureFactory.createRepoRevision(new PartiallyOrderedID("abcd"),
+                PartiallyOrderedRepo.INSTANCE);
+        final IRevision r2 = ChangestructureFactory.createRepoRevision(new PartiallyOrderedID("efgh"),
+                PartiallyOrderedRepo.INSTANCE);
+        final IRevision l = ChangestructureFactory.createLocalRevision(PartiallyOrderedWorkingCopy.INSTANCE);
+
+        final IRevisionedFile fU_a = ChangestructureFactory.createFileInRevision("/a", u);
+        final IRevisionedFile fU_b = ChangestructureFactory.createFileInRevision("/b", u);
+        final IRevisionedFile fR1_a = ChangestructureFactory.createFileInRevision("/a", r1);
+        final IRevisionedFile fR1_b = ChangestructureFactory.createFileInRevision("/b", r1);
+        final IRevisionedFile fR2_a = ChangestructureFactory.createFileInRevision("/a", r2);
+        final IRevisionedFile fR2_b = ChangestructureFactory.createFileInRevision("/b", r2);
+        final IRevisionedFile fL_a = ChangestructureFactory.createFileInRevision("/a", l);
+        final IRevisionedFile fL_b = ChangestructureFactory.createFileInRevision("/b", l);
+
+        final List<IRevisionedFile> files = new ArrayList<>();
+        files.add(fL_b);
+        files.add(fL_a);
+        files.add(fR2_b);
+        files.add(fR2_a);
+        files.add(fR1_b);
+        files.add(fR1_a);
+        files.add(fU_b);
+        files.add(fU_a);
+
+        assertThat(PartialOrderAlgorithms.topoSort(files), anyOf(
+                is(equalTo(Arrays.asList(fU_a, fU_b, fR1_a, fR1_b, fR2_a, fR2_b, fL_a, fL_b))),
+                is(equalTo(Arrays.asList(fU_a, fU_b, fR1_a, fR2_a, fR1_b, fR2_b, fL_a, fL_b))),
+                is(equalTo(Arrays.asList(fU_a, fU_b, fR1_a, fR2_a, fR2_b, fR1_b, fL_a, fL_b))),
+                is(equalTo(Arrays.asList(fU_a, fU_b, fR2_a, fR2_b, fR1_a, fR1_b, fL_a, fL_b))),
+                is(equalTo(Arrays.asList(fU_a, fU_b, fR2_a, fR1_a, fR2_b, fR1_b, fL_a, fL_b))),
+                is(equalTo(Arrays.asList(fU_a, fU_b, fR2_a, fR1_a, fR1_b, fR2_b, fL_a, fL_b)))
+        ));
+    }
 }

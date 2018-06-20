@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
@@ -18,7 +19,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
 
     @Override
-    public final List<? extends IRevisionedFile> getLatestFiles(final IRevisionedFile file) {
+    public final List<IRevisionedFile> getLatestFiles(final IRevisionedFile file) {
         Set<IFileHistoryNode> nodes = this.getLatestFilesHelper(file, false);
         if (nodes.isEmpty()) {
             nodes = this.getLatestFilesHelper(file, true);
@@ -31,7 +32,7 @@ public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
             for (final IFileHistoryNode node : nodes) {
                 revs.add(node.getFile());
             }
-            return FileInRevision.sortByRevision(revs);
+            return PartialOrderAlgorithms.topoSort(revs);
         }
     }
 
