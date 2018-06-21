@@ -14,7 +14,7 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     private final File workingCopyRoot;
     private final String relPath;
     private SvnFileHistoryGraph localFileHistoryGraph;
-    private VirtualFileHistoryGraph combinedFileHistoryGraph;
+    private final VirtualFileHistoryGraph combinedFileHistoryGraph;
 
     SvnWorkingCopy(final SvnRepo repo, final File workingCopyRoot, final String relPath) {
         this.repo = repo;
@@ -42,7 +42,7 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     }
 
     @Override
-    public String toAbsolutePathInWc(String absolutePathInRepo) {
+    public String toAbsolutePathInWc(final String absolutePathInRepo) {
         if (absolutePathInRepo.equals(this.relPath)) {
             return this.workingCopyRoot.toString();
         } else if (absolutePathInRepo.startsWith(this.relPath + "/")) {
@@ -76,9 +76,7 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
      * Replaces the {@link SvnFileHistoryGraph} by an empty file history graph.
      */
     void clearLocalFileHistoryGraph() {
-        assert this.combinedFileHistoryGraph.size() > 0;
-        this.combinedFileHistoryGraph.remove(this.combinedFileHistoryGraph.size() - 1);
         this.localFileHistoryGraph = new SvnFileHistoryGraph();
-        this.combinedFileHistoryGraph.add(this.localFileHistoryGraph);
+        this.combinedFileHistoryGraph.setLocalFileHistoryGraph(this.localFileHistoryGraph);
     }
 }
