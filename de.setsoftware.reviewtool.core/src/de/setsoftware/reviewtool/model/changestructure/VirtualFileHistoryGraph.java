@@ -1,7 +1,9 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
@@ -56,6 +58,14 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public final Set<IFileHistoryNode> getIncompleteFlowStarts() {
+        final Set<IFileHistoryNode> result = new LinkedHashSet<>();
+        result.addAll(this.remoteFileHistoryGraph.getIncompleteFlowStarts());
+        result.addAll(this.localFileHistoryGraph.getIncompleteFlowStarts());
+        return result;
     }
 
     /**

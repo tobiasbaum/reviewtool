@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.api;
 
 import java.util.List;
+import java.util.Set;
 
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
@@ -31,7 +32,12 @@ public interface IFileHistoryGraph {
      * <p/>
      * The revisions returned are topologically sorted according to their dependencies.
      */
-    public abstract List<? extends IRevisionedFile> getLatestFiles(IRevisionedFile file);
+    public abstract List<IRevisionedFile> getLatestFiles(IRevisionedFile file);
+
+    /**
+     * Returns all non-{@link IFileHistoryNode.Type#ADDED added} nodes that do not have any ancestors but an alpha node.
+     */
+    public abstract Set<IFileHistoryNode> getIncompleteFlowStarts();
 
     /**
      * Returns the algorithm used for computing differences between file revisions.
