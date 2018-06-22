@@ -858,7 +858,13 @@ public class ReviewPlugin implements IReviewConfigurable {
         sourceUi.beginTask(ticketKey + ": Please wait while " + action + "...", IProgressMonitor.UNKNOWN);
         try {
             sourceUi.subTask("Determining relevant changes...");
-            final IChangeData changes = this.changeManager.getChangeSource().getRepositoryChanges(ticketKey, sourceUi);
+            final IChangeData changes;
+            try {
+                changes = this.changeManager.getChangeSource().getRepositoryChanges(ticketKey, sourceUi);
+            } catch (final ReviewtoolException e) {
+                Logger.error("Problem while determining relevant changes", e);
+                return false;
+            }
 
             sourceUi.subTask("Creating tours...");
             this.toursInReview = ToursInReview.create(
