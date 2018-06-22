@@ -5,8 +5,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -154,6 +156,8 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         private final Display display;
         private final IProgressMonitor progressMonitor;
+        private final Deque<String> taskStack;
+        private String currentSubTask;
 
         /**
          * Constructor.
@@ -164,6 +168,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         ChangeSourceUi(final Display display, final IProgressMonitor progressMonitor) {
             this.display = display;
             this.progressMonitor = progressMonitor;
+            this.taskStack = new ArrayDeque<>();
         }
 
         @Override
@@ -234,12 +239,36 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         @Override
         public void subTask(final String name) {
-            this.progressMonitor.subTask(name);
+            this.currentSubTask = name;
+            this.progressMonitor.subTask(this.buildSubTaskName(this.currentSubTask));
         }
 
         @Override
         public void worked(final int work) {
             this.progressMonitor.worked(work);
+        }
+
+        @Override
+        public void increaseTaskNestingLevel() {
+            this.taskStack.push(this.currentSubTask);
+            this.currentSubTask = "";
+        }
+
+        @Override
+        public void decreaseTaskNestingLevel() {
+            this.currentSubTask = this.taskStack.pop();
+            this.progressMonitor.subTask(this.buildSubTaskName(this.currentSubTask));
+        }
+
+        private String buildSubTaskName(final String name) {
+            final StringBuilder sb = new StringBuilder();
+            for (final String task : this.taskStack) {
+                sb.append(" ");
+                sb.append(task);
+            }
+            sb.append(" ");
+            sb.append(name);
+            return sb.toString().trim();
         }
     }
 
