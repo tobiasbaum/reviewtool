@@ -98,15 +98,21 @@ final class SvnWorkingCopyManager {
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
-        List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = new ArrayList<>();
+        final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = new ArrayList<>();
         for (final SvnWorkingCopy wc : this.wcPerRootDirectory.values()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
 
-            for (final SvnRepoRevision revision :
-                    SvnRepositoryManager.getInstance().traverseRecentEntries(wc.getRepository(), handler, ui)) {
+            final Pair<Boolean, List<SvnRepoRevision>> getEntriesResult =
+                    SvnRepositoryManager.getInstance().traverseRecentEntries(wc.getRepository(), handler, ui);
+            for (final SvnRepoRevision revision : getEntriesResult.getSecond()) {
                 revisions.add(Pair.create(wc, revision));
+            }
+
+            if (getEntriesResult.getFirst()) {
+                // remote history has changed, we have to rebuild the local file history graph
+                this.collectWorkingCopyChanges(wc, Collections.emptyList());
             }
         }
         return revisions;

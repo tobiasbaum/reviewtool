@@ -30,6 +30,7 @@ import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 
 /**
@@ -129,14 +130,17 @@ final class SvnRepositoryManager {
 
     /**
      * Calls the given handler for all recent log entries of the given {@link SvnRepo}.
+     * @return A pair of a boolean value and a list of repository revisions. The boolean flag indicates whether new
+     *         history entries have been processed.
      */
-    List<SvnRepoRevision> traverseRecentEntries(
+    Pair<Boolean, List<SvnRepoRevision>> traverseRecentEntries(
             final ISvnRepo repo,
             final CachedLogLookupHandler handler,
             final IChangeSourceUi ui) throws SVNException {
 
         final List<SvnRepoRevision> result = new ArrayList<>();
-        for (final CachedLogEntry entry : this.getEntries(repo)) {
+        final Pair<Boolean, List<CachedLogEntry>> entries = this.getEntries(repo);
+        for (final CachedLogEntry entry : entries.getSecond()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
             }
@@ -144,11 +148,10 @@ final class SvnRepositoryManager {
                 result.add(new SvnRepoRevision(repo, entry));
             }
         }
-        return result;
+        return Pair.create(entries.getFirst(), result);
     }
 
-    private synchronized List<CachedLogEntry> getEntries(final ISvnRepo repo) throws SVNException {
-
+    private synchronized Pair<Boolean, List<CachedLogEntry>> getEntries(final ISvnRepo repo) throws SVNException {
         final boolean gotNewEntries = this.loadNewEntries(repo);
 
         if (gotNewEntries) {
@@ -164,7 +167,7 @@ final class SvnRepositoryManager {
             job.schedule();
         }
 
-        return repo.getEntries();
+        return Pair.create(gotNewEntries, repo.getEntries());
     }
 
     private synchronized boolean loadNewEntries(final ISvnRepo repo) throws SVNException {
