@@ -444,7 +444,7 @@ public class ToursInReview {
             public void handle(final ITextualChange visitee) {
                 final IWorkingCopy wc = c.getWorkingCopy();
                 final List<? extends IFragment> mostRecentFragments =
-                        tracer.traceFragment(wc.getRepository().getFileHistoryGraph(), visitee.getToFragment());
+                        tracer.traceFragment(wc.getRepository().getFileHistoryGraph(), visitee.getToFragment(), false);
                 for (final IFragment fragment : mostRecentFragments) {
                     if (wc.toAbsolutePathInWc(fragment.getFile().getPath()) != null) {
                         ret.add(new Stop(visitee, fragment));
@@ -456,7 +456,7 @@ public class ToursInReview {
             public void handle(final IBinaryChange visitee) {
                 final IWorkingCopy wc = c.getWorkingCopy();
                 for (final IRevisionedFile fileInRevision :
-                        tracer.traceFile(wc.getRepository().getFileHistoryGraph(), visitee.getFrom())) {
+                        tracer.traceFile(wc.getRepository().getFileHistoryGraph(), visitee.getFrom(), false)) {
                     if (wc.toAbsolutePathInWc(fileInRevision.getPath()) != null) {
                         ret.add(new Stop(visitee, fileInRevision));
                     }

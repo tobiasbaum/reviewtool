@@ -37,8 +37,11 @@ public interface IFileHistoryGraph {
      * returned.
      * <p/>
      * The revisions returned are topologically sorted according to their dependencies.
+     *
+     * @param file The {@link IRevisionedFile} to start with.
+     * @param ignoreNonLocalCopies If {@code true}, non-local copies are ignored.
      */
-    public abstract List<IRevisionedFile> getLatestFiles(IRevisionedFile file);
+    public abstract List<IRevisionedFile> getLatestFiles(IRevisionedFile file, boolean ignoreNonLocalCopies);
 
     /**
      * Returns all non-{@link IFileHistoryNode.Type#ADDED added} nodes that do not have any ancestors but an alpha node.

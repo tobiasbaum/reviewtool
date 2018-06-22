@@ -17,12 +17,16 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 public class FragmentTracer implements IFragmentTracer {
 
     @Override
-    public List<IFragment> traceFragment(final IFileHistoryGraph fileHistoryGraph, final IFragment fragment) {
+    public List<IFragment> traceFragment(
+            final IFileHistoryGraph fileHistoryGraph,
+            final IFragment fragment,
+            final boolean ignoreNonLocalCopies) {
+
         final ArrayList<IFragment> result = new ArrayList<>();
         final IRevisionedFile file = fragment.getFile();
         final IFileHistoryNode node = fileHistoryGraph.getNodeFor(file);
         if (node != null) {
-            for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file)) {
+            for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file, ignoreNonLocalCopies)) {
                 final IFileHistoryNode descendant = fileHistoryGraph.getNodeFor(leafRevision);
                 final Set<? extends IFileDiff> fileDiffs = descendant.buildHistories(node);
                 for (final IFileDiff fileDiff : fileDiffs) {
@@ -36,11 +40,15 @@ public class FragmentTracer implements IFragmentTracer {
     }
 
     @Override
-    public List<IRevisionedFile> traceFile(final IFileHistoryGraph fileHistoryGraph, final IRevisionedFile file) {
+    public List<IRevisionedFile> traceFile(
+            final IFileHistoryGraph fileHistoryGraph,
+            final IRevisionedFile file,
+            final boolean ignoreNonLocalCopies) {
+
         final ArrayList<IRevisionedFile> result = new ArrayList<>();
         final IFileHistoryNode node = fileHistoryGraph.getNodeFor(file);
         if (node != null) {
-            for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file)) {
+            for (final IRevisionedFile leafRevision : fileHistoryGraph.getLatestFiles(file, ignoreNonLocalCopies)) {
                 result.add(leafRevision);
             }
         }

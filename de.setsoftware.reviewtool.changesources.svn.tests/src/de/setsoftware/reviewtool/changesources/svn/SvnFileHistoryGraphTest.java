@@ -78,10 +78,10 @@ public class SvnFileHistoryGraphTest {
         final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
         assertEquals(
                 Arrays.asList(file("a", 1)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("bcd", 42)),
-                g.getLatestFiles(file("bcd", 42)));
+                g.getLatestFiles(file("bcd", 42), false));
     }
 
     @Test
@@ -91,16 +91,16 @@ public class SvnFileHistoryGraphTest {
         g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("a", 5), file("b", 6)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("a", 5), file("b", 6)),
-                g.getLatestFiles(file("a", 5)));
+                g.getLatestFiles(file("a", 5), false));
         assertEquals(
                 Arrays.asList(file("a", 6)),
-                g.getLatestFiles(file("a", 6)));
+                g.getLatestFiles(file("a", 6), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("b", 6)));
+                g.getLatestFiles(file("b", 6), false));
     }
 
     @Test
@@ -110,7 +110,7 @@ public class SvnFileHistoryGraphTest {
         g.addDeletion("a", rev(12));
         assertEquals(
                 Arrays.asList(file("a", 1)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
     }
 
     @Test
@@ -119,7 +119,7 @@ public class SvnFileHistoryGraphTest {
         g.addDeletion("a", rev(12));
         assertEquals(
                 Arrays.asList(file("a", 1)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
     }
 
     @Test
@@ -130,13 +130,13 @@ public class SvnFileHistoryGraphTest {
         g.addDeletion("a", rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("a", 5)));
+                g.getLatestFiles(file("a", 5), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("b", 6)));
+                g.getLatestFiles(file("b", 6), false));
     }
 
     @Test
@@ -147,13 +147,13 @@ public class SvnFileHistoryGraphTest {
         g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("a", 5)));
+                g.getLatestFiles(file("a", 5), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("b", 6)));
+                g.getLatestFiles(file("b", 6), false));
     }
 
     @Test
@@ -166,19 +166,19 @@ public class SvnFileHistoryGraphTest {
         g.addCopy("a", "d", rev(5), rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6), file("c", 6), file("d", 6)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("b", 6), file("c", 6), file("d", 6)),
-                g.getLatestFiles(file("a", 5)));
+                g.getLatestFiles(file("a", 5), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("b", 6)));
+                g.getLatestFiles(file("b", 6), false));
         assertEquals(
                 Arrays.asList(file("c", 6)),
-                g.getLatestFiles(file("c", 6)));
+                g.getLatestFiles(file("c", 6), false));
         assertEquals(
                 Arrays.asList(file("d", 6)),
-                g.getLatestFiles(file("d", 6)));
+                g.getLatestFiles(file("d", 6), false));
     }
 
     @Test
@@ -194,13 +194,13 @@ public class SvnFileHistoryGraphTest {
 
         assertEquals(
                 Arrays.asList(file("d", 31)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("d", 31)),
-                g.getLatestFiles(file("a", 10)));
+                g.getLatestFiles(file("a", 10), false));
         assertEquals(
                 Arrays.asList(file("a", 11)),
-                g.getLatestFiles(file("a", 11)));
+                g.getLatestFiles(file("a", 11), false));
     }
 
     @Test
@@ -213,10 +213,10 @@ public class SvnFileHistoryGraphTest {
 
         assertEquals(
                 Arrays.asList(file("b", 11)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("b", 11)),
-                g.getLatestFiles(file("a", 10)));
+                g.getLatestFiles(file("a", 10), false));
     }
 
     @Test
@@ -228,10 +228,10 @@ public class SvnFileHistoryGraphTest {
 
         assertEquals(
                 Arrays.asList(file("a", 1)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("a", 10)), // (a,10)-->(a,11) is not known as the graph starts at revision 11
-                g.getLatestFiles(file("a", 10)));
+                g.getLatestFiles(file("a", 10), false));
     }
 
     @Test
@@ -243,16 +243,16 @@ public class SvnFileHistoryGraphTest {
         g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
                 Arrays.asList(file("b", 23)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("a", 6)),
-                g.getLatestFiles(file("a", 6)));
+                g.getLatestFiles(file("a", 6), false));
         assertEquals(
                 Arrays.asList(file("b", 23)),
-                g.getLatestFiles(file("b", 23)));
+                g.getLatestFiles(file("b", 23), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("b", 6))); //b@6 is non-existing
+                g.getLatestFiles(file("b", 6), false)); //b@6 is non-existing
     }
 
     @Test
@@ -262,19 +262,19 @@ public class SvnFileHistoryGraphTest {
         g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
                 Arrays.asList(file("a", 1)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("a", 5), file("b", 23)),
-                g.getLatestFiles(file("a", 5)));
+                g.getLatestFiles(file("a", 5), false));
         assertEquals(
                 Arrays.asList(file("a", 6)),
-                g.getLatestFiles(file("a", 6)));
+                g.getLatestFiles(file("a", 6), false));
         assertEquals(
                 Arrays.asList(file("b", 23)),
-                g.getLatestFiles(file("b", 23)));
+                g.getLatestFiles(file("b", 23), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("b", 6))); //b@6 is non-existing
+                g.getLatestFiles(file("b", 6), false)); //b@6 is non-existing
     }
 
     @Test
@@ -287,16 +287,16 @@ public class SvnFileHistoryGraphTest {
         g.addCopy("b", "c", rev(23), rev(24));
         assertEquals(
                 Arrays.asList(file("b", 23), file("c", 24)),
-                g.getLatestFiles(file("a", 1)));
+                g.getLatestFiles(file("a", 1), false));
         assertEquals(
                 Arrays.asList(file("a", 6)),
-                g.getLatestFiles(file("a", 6)));
+                g.getLatestFiles(file("a", 6), false));
         assertEquals(
                 Arrays.asList(file("b", 23), file("c", 24)),
-                g.getLatestFiles(file("b", 23)));
+                g.getLatestFiles(file("b", 23), false));
         assertEquals(
                 Arrays.asList(file("b", 6)),
-                g.getLatestFiles(file("b", 6))); //b@6 is non-existing
+                g.getLatestFiles(file("b", 6), false)); //b@6 is non-existing
     }
 
     @Test
@@ -312,12 +312,12 @@ public class SvnFileHistoryGraphTest {
 
         assertEquals(
                 Arrays.asList(file("a/x", 11)),
-                g.getLatestFiles(file("a/x", 11)));
+                g.getLatestFiles(file("a/x", 11), false));
         assertEquals(
                 Arrays.asList(file("a/x", 13)),
-                g.getLatestFiles(file("a/x", 13))); // a/x@13 does not exist
+                g.getLatestFiles(file("a/x", 13), false)); // a/x@13 does not exist
         assertEquals(
                 Arrays.asList(file("a/x", 11), file("b/x", 11)),
-                g.getLatestFiles(file("a/x", 2)));
+                g.getLatestFiles(file("a/x", 2), false));
     }
 }
