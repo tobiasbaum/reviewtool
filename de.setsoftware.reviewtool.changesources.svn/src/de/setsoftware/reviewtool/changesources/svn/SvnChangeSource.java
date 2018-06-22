@@ -278,9 +278,10 @@ final class SvnChangeSource implements IChangeSource {
                     },
                     null); /* no change lists */
 
-            wc.clearLocalFileHistoryGraph();
             final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, paths);
-            wc.getLocalFileHistoryGraph().processRevision(wcRevision);
+            final SvnFileHistoryGraph localFileHistoryGraph = new SvnFileHistoryGraph();
+            localFileHistoryGraph.processRevision(wcRevision);
+            wc.setLocalFileHistoryGraph(localFileHistoryGraph);
             revisions.add(wcRevision);
         }
 
@@ -303,9 +304,10 @@ final class SvnChangeSource implements IChangeSource {
 
         for (final Map.Entry<SvnWorkingCopy, SortedMap<String, CachedLogEntryPath>> entry : changeMap.entrySet()) {
             final SvnWorkingCopy wc = entry.getKey();
-            wc.clearLocalFileHistoryGraph();
             final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, entry.getValue());
-            wc.getLocalFileHistoryGraph().processRevision(wcRevision);
+            final SvnFileHistoryGraph localFileHistoryGraph = new SvnFileHistoryGraph();
+            localFileHistoryGraph.processRevision(wcRevision);
+            wc.setLocalFileHistoryGraph(localFileHistoryGraph);
             revisions.add(wcRevision);
         }
 

@@ -13,17 +13,13 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     private final SvnRepo repo;
     private final File workingCopyRoot;
     private final String relPath;
-    private SvnFileHistoryGraph localFileHistoryGraph;
     private final VirtualFileHistoryGraph combinedFileHistoryGraph;
 
     SvnWorkingCopy(final SvnRepo repo, final File workingCopyRoot, final String relPath) {
         this.repo = repo;
         this.workingCopyRoot = workingCopyRoot;
         this.relPath = relPath;
-        this.localFileHistoryGraph = new SvnFileHistoryGraph();
-        this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(
-                repo.getFileHistoryGraph(),
-                this.localFileHistoryGraph);
+        this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(repo.getFileHistoryGraph());
     }
 
     @Override
@@ -66,17 +62,11 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     }
 
     /**
-     * Returns the local file history graph.
+     * Replaces the {@link SvnFileHistoryGraph} by the passed file history graph.
+     * Note that it is not possible to change the file history graph afterwards, as the combined file history graph
+     * would not recompute the connecting edges.
      */
-    SvnFileHistoryGraph getLocalFileHistoryGraph() {
-        return this.localFileHistoryGraph;
-    }
-
-    /**
-     * Replaces the {@link SvnFileHistoryGraph} by an empty file history graph.
-     */
-    void clearLocalFileHistoryGraph() {
-        this.localFileHistoryGraph = new SvnFileHistoryGraph();
-        this.combinedFileHistoryGraph.setLocalFileHistoryGraph(this.localFileHistoryGraph);
+    void setLocalFileHistoryGraph(final SvnFileHistoryGraph localFileHistoryGraph) {
+        this.combinedFileHistoryGraph.setLocalFileHistoryGraph(localFileHistoryGraph);
     }
 }

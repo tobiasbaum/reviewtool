@@ -26,6 +26,12 @@ public interface IFileHistoryGraph {
     public abstract IFileHistoryNode getNodeFor(IRevisionedFile file);
 
     /**
+     * Returns the nearest ancestor for passed {@link IRevisionedFile} having the same path, or <code>null</code>
+     * if no suitable node exists. To be suitable, the ancestor node must not be deleted.
+     */
+    public abstract IFileHistoryNode findAncestorFor(IRevisionedFile file);
+
+    /**
      * Returns the latest known versions of the given file. If all versions were deleted, the last known versions
      * before deletion are returned. If the file is unknown, a list with the file itself is
      * returned.

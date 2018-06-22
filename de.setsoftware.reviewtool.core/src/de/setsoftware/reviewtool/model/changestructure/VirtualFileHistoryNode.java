@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,8 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
     private final VirtualFileHistoryGraph graph;
     private final IRevisionedFile file;
     private final List<IFileHistoryNode> nodes;
+    private final List<IFileHistoryEdge> ancestors;
+    private final List<IFileHistoryEdge> descendants;
     private final Type type;
 
     /**
@@ -28,7 +31,7 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
      *
      * @param graph The {@link VirtualFileHistoryGraph} this node belongs to.
      * @param file The underlying {@link IRevisionedFile}.
-     * @param nodes The underlying {@link IFileHistoryNode}s, all referrring to {@code file} above.
+     * @param nodes The underlying {@link IFileHistoryNode}s, all referring to {@code file} above.
      * @throws ReviewtoolException if the underlying node types are incompatible.
      */
     VirtualFileHistoryNode(
@@ -40,6 +43,8 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
         this.graph = graph;
         this.file = file;
         this.nodes = nodes;
+        this.ancestors = new ArrayList<>();
+        this.descendants = new ArrayList<>();
         this.type = this.determineNodeType();
     }
 
@@ -102,7 +107,7 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
 
     @Override
     public Set<? extends IFileHistoryEdge> getAncestors() {
-        final Set<IFileHistoryEdge> edges = new LinkedHashSet<>();
+        final Set<IFileHistoryEdge> edges = new LinkedHashSet<>(this.ancestors);
         final Set<IFileHistoryEdge> alphaEdges = new LinkedHashSet<>();
         for (final IFileHistoryNode node : this.nodes) {
             for (final IFileHistoryEdge ancestorEdge : node.getAncestors()) {
@@ -142,7 +147,7 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
 
     @Override
     public Set<? extends IFileHistoryEdge> getDescendants() {
-        final Set<IFileHistoryEdge> edges = new LinkedHashSet<>();
+        final Set<IFileHistoryEdge> edges = new LinkedHashSet<>(this.descendants);
         for (final IFileHistoryNode node : this.nodes) {
             for (final IFileHistoryEdge descendantEdge : node.getDescendants()) {
                 edges.add(new VirtualFileHistoryEdge(
@@ -154,6 +159,32 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
             }
         }
         return edges;
+    }
+
+    /**
+     * Adds an ancestor node explicitly. This is necessary if a connection between two different revisions is needed.
+     * @param ancestor The ancestor node to add.
+     */
+    void addAncestor(final IFileHistoryNode ancestor) {
+        this.ancestors.add(new VirtualFileHistoryEdge(
+                this.graph,
+                ancestor,
+                this,
+                IFileHistoryEdge.Type.NORMAL,
+                new FileDiff(ancestor.getFile(), this.getFile())));
+    }
+
+    /**
+     * Adds a descendant node explicitly. This is necessary if a connection between two different revisions is needed.
+     * @param descendant The descendant node to add.
+     */
+    void addDescendant(final IFileHistoryNode descendant) {
+        this.descendants.add(new VirtualFileHistoryEdge(
+                this.graph,
+                this,
+                descendant,
+                IFileHistoryEdge.Type.NORMAL,
+                new FileDiff(this.getFile(), descendant.getFile())));
     }
 
     @Override

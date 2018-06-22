@@ -518,10 +518,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
         return this.index.get(file.getPath());
     }
 
-    /**
-     * Returns the nearest ancestor for passed {@link IRevisionedFile} having the same path, or <code>null</code>
-     * if no suitable node exists. To be suitable, the ancestor node must not be deleted.
-     */
+    @Override
     public abstract ProxyableFileHistoryNode findAncestorFor(IRevisionedFile file);
 
     @Override
