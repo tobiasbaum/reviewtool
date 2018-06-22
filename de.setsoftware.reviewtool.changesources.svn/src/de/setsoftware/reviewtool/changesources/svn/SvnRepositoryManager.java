@@ -139,7 +139,7 @@ final class SvnRepositoryManager {
             final IChangeSourceUi ui) throws SVNException {
 
         final List<SvnRepoRevision> result = new ArrayList<>();
-        final Pair<Boolean, List<CachedLogEntry>> entries = this.getEntries(repo);
+        final Pair<Boolean, List<CachedLogEntry>> entries = this.getEntries(repo, ui);
         for (final CachedLogEntry entry : entries.getSecond()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
@@ -151,9 +151,10 @@ final class SvnRepositoryManager {
         return Pair.create(entries.getFirst(), result);
     }
 
-    private synchronized Pair<Boolean, List<CachedLogEntry>> getEntries(final ISvnRepo repo) throws SVNException {
-        final boolean gotNewEntries = this.loadNewEntries(repo);
+    private synchronized Pair<Boolean, List<CachedLogEntry>> getEntries(final ISvnRepo repo, final IChangeSourceUi ui)
+            throws SVNException {
 
+        final boolean gotNewEntries = this.loadNewEntries(repo, ui);
         if (gotNewEntries) {
             final Job job = Job.create("Storing SVN review cache for " + repo,
                     new IJobFunction() {
@@ -170,7 +171,7 @@ final class SvnRepositoryManager {
         return Pair.create(gotNewEntries, repo.getEntries());
     }
 
-    private synchronized boolean loadNewEntries(final ISvnRepo repo) throws SVNException {
+    private synchronized boolean loadNewEntries(final ISvnRepo repo, final IChangeSourceUi ui) throws SVNException {
 
         final List<CachedLogEntry> entries = repo.getEntries();
         final long lastKnownRevision = entries.isEmpty() ? 0 : entries.get(entries.size() - 1).getRevision();
@@ -180,18 +181,28 @@ final class SvnRepositoryManager {
         if (lastKnownRevision < latestRevision) {
             final long startRevision = lastKnownRevision == 0
                     ? Math.max(0, latestRevision - this.minCount + 1) : lastKnownRevision + 1;
+            final long numRevisionsTotal = latestRevision - startRevision + 1;
 
             Logger.info("Processing revisions " + startRevision + ".." + latestRevision + " from " + repo);
-
-            final ISVNLogEntryHandler handler = new ISVNLogEntryHandler() {
-                @Override
-                public void handleLogEntry(final SVNLogEntry logEntry) throws SVNException {
-                    final CachedLogEntry entry = new CachedLogEntry(logEntry);
-                    SvnRepositoryManager.this.processLogEntry(entry, repo, newEntries.size());
-                    newEntries.add(entry);
-                }
-            };
-            repo.getLog(startRevision, handler);
+            ui.increaseTaskNestingLevel();
+            try {
+                final ISVNLogEntryHandler handler = new ISVNLogEntryHandler() {
+                    @Override
+                    public void handleLogEntry(final SVNLogEntry logEntry) throws SVNException {
+                        final CachedLogEntry entry = new CachedLogEntry(logEntry);
+                        SvnRepositoryManager.this.processLogEntry(
+                                entry,
+                                repo,
+                                newEntries.size(),
+                                numRevisionsTotal,
+                                ui);
+                        newEntries.add(entry);
+                    }
+                };
+                repo.getLog(startRevision, handler);
+            } finally {
+                ui.decreaseTaskNestingLevel();
+            }
         }
 
         repo.appendNewEntries(newEntries);
@@ -251,11 +262,16 @@ final class SvnRepositoryManager {
     private void processLogEntry(
             final CachedLogEntry entry,
             final ISvnRepo repo,
-            final int numEntriesProcessed) {
+            final long numEntriesProcessed,
+            final long numRevisionsTotal,
+            final IChangeSourceUi ui) {
 
         final SvnRepoRevision revision = new SvnRepoRevision(repo, entry);
+        final long numEntriesProcessedNow = numEntriesProcessed + 1;
+        ui.subTask("Processing revision " + revision.getRevisionNumber()
+                + " (" + numEntriesProcessedNow + "/" + numRevisionsTotal + ")...");
         repo.getFileHistoryGraph().processRevision(revision);
-        final int numEntriesProcessedNow = numEntriesProcessed + 1;
+
         if (numEntriesProcessedNow % REVISION_BLOCK_SIZE == 0) {
             Logger.debug(numEntriesProcessedNow + " revisions processed");
         }
