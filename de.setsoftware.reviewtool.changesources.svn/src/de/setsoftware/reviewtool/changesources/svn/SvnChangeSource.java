@@ -18,8 +18,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
-import org.eclipse.core.runtime.jobs.Job;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.SVNDepth;
@@ -29,7 +27,6 @@ import org.tmatesoft.svn.core.wc.ISVNStatusHandler;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
-
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
@@ -134,17 +131,9 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public IChangeData getLocalChanges(
-            final IChangeData remoteChanges,
-            final List<File> relevantPaths,
-            final IProgressMonitor ui) {
+    public void analyzeLocalChanges(final List<File> relevantPaths) {
         try {
-            ui.subTask("Collecting local changes...");
-            final List<SvnWorkingCopyRevision> revisions = this.collectWorkingCopyChanges(relevantPaths, ui);
-            ui.subTask("Analyzing local changes...");
-            final List<ICommit> commits = this.convertLocalRevisionsToChanges(revisions, ui);
-            final Map<File, IRevisionedFile> localPathMap = this.extractLocalPaths(revisions);
-            return ChangestructureFactory.createChangeData(this, commits, localPathMap);
+            this.collectWorkingCopyChanges(relevantPaths);
         } catch (final SVNException e) {
             throw new ReviewtoolException(e);
         }
@@ -166,15 +155,7 @@ final class SvnChangeSource implements IChangeSource {
             }
 
             if (wcCreated) {
-                final Job job = Job.create("Analyzing SVN working copy at " + wcRoot,
-                        new IJobFunction() {
-                            @Override
-                            public IStatus run(final IProgressMonitor monitor) {
-                                SvnWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
-                                return Status.OK_STATUS;
-                            }
-                        });
-                job.schedule();
+                SvnWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
             }
         }
     }
@@ -234,19 +215,10 @@ final class SvnChangeSource implements IChangeSource {
 
     /**
      * Collects all local changes and integrates them into the {@link SvnFileHistoryGraph}.
-     * @param relevantPaths The list of paths to check. If {@code null}, the whole working copy is analyzed.
-     * @return A list of {@link SvnWorkingCopyRevision}s. May be empty if no relevant local changes have been found.
+     * @param relevantPaths The list of additional paths to check. If {@code null}, the whole working copy is analyzed.
      */
-    private List<SvnWorkingCopyRevision> collectWorkingCopyChanges(
-            final List<File> relevantPaths,
-            final IProgressMonitor ui) throws SVNException {
-
-        final List<SvnWorkingCopyRevision> revisions = new ArrayList<>();
+    private void collectWorkingCopyChanges(final List<File> relevantPaths) throws SVNException {
         for (final SvnWorkingCopy wc : SvnWorkingCopyManager.getInstance().getWorkingCopies()) {
-            if (ui.isCanceled()) {
-                throw new OperationCanceledException();
-            }
-
             final SortedMap<String, CachedLogEntryPath> changeMap = new TreeMap<>();
             final ISVNStatusHandler handler = new ISVNStatusHandler() {
                 @Override
@@ -269,10 +241,7 @@ final class SvnChangeSource implements IChangeSource {
             final SvnFileHistoryGraph localFileHistoryGraph = new SvnFileHistoryGraph();
             localFileHistoryGraph.processRevision(wcRevision);
             wc.setLocalFileHistoryGraph(localFileHistoryGraph);
-            revisions.add(wcRevision);
         }
-
-        return revisions;
     }
 
     /**
@@ -332,22 +301,14 @@ final class SvnChangeSource implements IChangeSource {
             }
         }
 
-        return paths;
-    }
-
-    private Map<File, IRevisionedFile> extractLocalPaths(final Collection<SvnWorkingCopyRevision> revisions) {
-        final Map<File, IRevisionedFile> result = new LinkedHashMap<>();
-        for (final SvnWorkingCopyRevision revision : revisions) {
-            for (final CachedLogEntryPath path : revision.getChangedPaths().values()) {
-                final File localPath = path.getLocalPath();
-                if (localPath != null) {
-                    result.put(
-                            localPath,
-                            ChangestructureFactory.createFileInRevision(path.getPath(), revision.toRevision()));
-                }
+        for (final String repoPath : wc.getLocalFileHistoryGraph().getPaths()) {
+            final File path = wc.toAbsolutePathInWc(repoPath);
+            if (path != null && path.isFile()) {
+                paths.add(path);
             }
         }
-        return result;
+
+        return paths;
     }
 
     private Map<ISvnRepo, Long> determineMaxRevisionPerRepo(
@@ -396,19 +357,6 @@ final class SvnChangeSource implements IChangeSource {
                 throw new OperationCanceledException();
             }
             this.convertToCommitIfPossible(e.getFirst(), e.getSecond(), ret, ui);
-        }
-        return ret;
-    }
-
-    private List<ICommit> convertLocalRevisionsToChanges(
-            final List<SvnWorkingCopyRevision> revisions,
-            final IProgressMonitor ui) {
-        final List<ICommit> ret = new ArrayList<>();
-        for (final SvnWorkingCopyRevision revision : revisions) {
-            if (ui.isCanceled()) {
-                throw new OperationCanceledException();
-            }
-            this.convertToCommitIfPossible(revision.getWorkingCopy(), revision, ret, ui);
         }
         return ret;
     }

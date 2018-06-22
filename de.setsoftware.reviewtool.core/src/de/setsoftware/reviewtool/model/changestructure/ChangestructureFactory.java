@@ -1,9 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.io.File;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import de.setsoftware.reviewtool.base.IPartiallyComparable;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
@@ -91,12 +89,5 @@ public class ChangestructureFactory {
             final IChangeSource source,
             final List<? extends ICommit> commits) {
         return new ChangeData(source, commits);
-    }
-
-    public static IChangeData createChangeData(
-            final IChangeSource source,
-            final List<? extends ICommit> commits,
-            final Map<File, IRevisionedFile> localPathMap) {
-        return new ChangeData(source, commits, localPathMap);
     }
 }

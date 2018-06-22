@@ -1,8 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
-import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -19,11 +17,6 @@ public interface IChangeData {
      * Returns all {@link ICommit}s matching the given ticket, sorted by commit date from oldest to newest.
      */
     public abstract List<? extends ICommit> getMatchedCommits();
-
-    /**
-     * Returns the paths for all locally modified files together with their repository path.
-     */
-    public abstract Map<File, IRevisionedFile> getLocalPathMap();
 
     /**
      * Returns all {@link IRepository}s that contain commits matching the given ticket.

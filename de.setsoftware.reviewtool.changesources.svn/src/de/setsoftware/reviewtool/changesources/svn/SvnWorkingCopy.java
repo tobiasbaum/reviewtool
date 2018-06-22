@@ -21,6 +21,7 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
         this.workingCopyRoot = workingCopyRoot;
         this.relPath = relPath;
         this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(repo.getFileHistoryGraph());
+        this.setLocalFileHistoryGraph(new SvnFileHistoryGraph());
     }
 
     @Override
@@ -76,6 +77,13 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     @Override
     public String toString() {
         return this.workingCopyRoot.toString();
+    }
+
+    /**
+     * Returns the {@link SvnFileHistoryGraph local file history graph}. May be {@code null}.
+     */
+    SvnFileHistoryGraph getLocalFileHistoryGraph() {
+        return (SvnFileHistoryGraph) this.combinedFileHistoryGraph.getLocalFileHistoryGraph();
     }
 
     /**

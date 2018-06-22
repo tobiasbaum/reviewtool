@@ -33,6 +33,14 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     /**
+     * Returns the underlying local file history graph.
+     * @return The {@link IFileHistoryGraph local file history graph}. May be {@code null}.
+     */
+    public IFileHistoryGraph getLocalFileHistoryGraph() {
+        return this.localFileHistoryGraph;
+    }
+
+    /**
      * Sets or unsets the local file history graph.
      * @param localFileHistoryGraph The new local file history graph. May be {@code null}.
      */
@@ -42,6 +50,14 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         if (this.localFileHistoryGraph != null) {
             this.computeIntermediateNodes();
         }
+    }
+
+    /**
+     * Returns the underlying remote file history graph.
+     * @return The {@link IFileHistoryGraph remote file history graph}.
+     */
+    public IFileHistoryGraph getRemoteFileHistoryGraph() {
+        return this.remoteFileHistoryGraph;
     }
 
     private void computeIntermediateNodes() {

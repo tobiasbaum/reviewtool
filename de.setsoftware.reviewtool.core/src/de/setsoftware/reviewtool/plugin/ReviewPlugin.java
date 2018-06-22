@@ -7,32 +7,20 @@ import java.io.StringWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IResourceChangeEvent;
-import org.eclipse.core.resources.IResourceChangeListener;
-import org.eclipse.core.resources.IResourceDelta;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.debug.core.DebugPlugin;
 import org.eclipse.debug.core.ILaunch;
 import org.eclipse.debug.core.ILaunchesListener;
@@ -138,7 +126,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         @Override
-        public String choose(IReviewPersistence persistence, String ticketKeyDefault, boolean forReview) {
+        public String choose(
+                final IReviewPersistence persistence,
+                final String ticketKeyDefault,
+                final boolean forReview) {
             return SelectTicketDialog.get(persistence, ticketKeyDefault, forReview);
         }
 
@@ -148,7 +139,9 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         @Override
-        public ReviewData getCurrentReviewDataParsed(ReviewStateManager persistence, IMarkerFactory factory) {
+        public ReviewData getCurrentReviewDataParsed(
+                final ReviewStateManager persistence,
+                final IMarkerFactory factory) {
             return CorrectSyntaxDialog.getCurrentReviewDataParsed(persistence, factory);
         }
 
@@ -251,112 +244,6 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     /**
-     * Singleton scheduling rule preventing two update jobs to run concurrently.
-     */
-    private static class MutexRule implements ISchedulingRule {
-
-        private static final MutexRule RULE_INSTANCE = new MutexRule();
-
-        private MutexRule() {
-        }
-
-        static MutexRule getInstance() {
-            return RULE_INSTANCE;
-        }
-
-        @Override
-        public boolean isConflicting(ISchedulingRule rule) {
-            return rule == this;
-        }
-
-        @Override
-        public boolean contains(ISchedulingRule rule) {
-            return rule == this;
-        }
-    }
-
-    /**
-     * Handles resource changes.
-     */
-    private final class ResourceChangeListener implements IResourceChangeListener {
-        private boolean logged;
-
-        @Override
-        public void resourceChanged(IResourceChangeEvent event) {
-            this.logged = false;
-            final List<File> projectsAdded = new ArrayList<>();
-            final List<File> projectsRemoved = new ArrayList<>();
-            final List<File> paths = new ArrayList<>();
-
-            if (event.getType() == IResourceChangeEvent.POST_CHANGE) {
-                try {
-                    this.handleResourceDelta(event.getDelta(), projectsAdded, projectsRemoved, paths);
-                } catch (final Exception e) {
-                    Logger.error("Error while processing local changes", e);
-                }
-            } else if (event.getType() == IResourceChangeEvent.PRE_DELETE) {
-                final IPath location = event.getResource().getLocation();
-                assert location != null;
-                projectsRemoved.add(location.toFile());
-            }
-
-            if (!projectsAdded.isEmpty() || !projectsRemoved.isEmpty() || !paths.isEmpty()) {
-                final Job job = Job.create("Processing local changes",
-                        new IJobFunction() {
-                            @Override
-                            public IStatus run(IProgressMonitor monitor) {
-                                ReviewPlugin.this.updateLocalChanges(projectsAdded, projectsRemoved, paths);
-                                return Status.OK_STATUS;
-                            }
-                        });
-                job.setRule(MutexRule.getInstance());
-                job.schedule();
-            }
-        }
-
-        private void handleResourceDelta(
-                final IResourceDelta delta,
-                final List<File> projectsAdded,
-                final List<File> projectsRemoved,
-                final List<File> paths) {
-
-            final IResource resource = delta.getResource();
-            if (resource.isDerived()) {
-                return;
-            }
-
-            final IPath location = resource.getLocation();
-            if (location == null) {
-                return;
-            }
-
-            if (resource.getType() == IResource.FILE) {
-                if (!this.logged && (delta.getFlags() & IResourceDelta.CONTENT) != 0) {
-                    Telemetry.event("fileChanged")
-                        .param("path", delta.getFullPath())
-                        .param("kind", delta.getKind())
-                        .log();
-                    this.logged = true;
-                }
-
-                if (delta.getKind() != IResourceDelta.CHANGED
-                        || (delta.getFlags() & (IResourceDelta.CONTENT | IResourceDelta.REPLACED)) != 0) {
-                    final File filePath = location.toFile();
-                    paths.add(filePath);
-                }
-            } else {
-                if (resource.getType() == IResource.PROJECT && delta.getKind() == IResourceDelta.ADDED) {
-                    projectsAdded.add(location.toFile());
-                }
-
-                for (final IResourceDelta d : delta.getAffectedChildren()) {
-                    this.handleResourceDelta(d, projectsAdded, projectsRemoved, paths);
-                }
-            }
-        }
-    }
-
-    /**
      * Represents a simple callback receiving a single value and returning some value.
      * @param <R> The type of the result returned.
      * @param <T> The type of the value received.
@@ -404,9 +291,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     private static final ReviewPlugin INSTANCE = new ReviewPlugin();
     private final ReviewStateManager persistence;
-    private final Set<File> projectDirs; // synchronized with updateLocalChanges() running in the background
-    private IChangeSource changeSource;  // synchronized with updateLocalChanges() running in the background
-    private ChangeManager changeManager; // synchronized with updateLocalChanges() running in the background
+    private final ChangeManager changeManager = new ChangeManager(true);
     private ToursInReview toursInReview;
     private Mode mode = Mode.IDLE;
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
@@ -421,21 +306,6 @@ public class ReviewPlugin implements IReviewConfigurable {
 
 
     private ReviewPlugin() {
-        this.projectDirs = new LinkedHashSet<>();
-
-        final IResourceChangeListener changeListener = new ResourceChangeListener();
-        ResourcesPlugin.getWorkspace().addResourceChangeListener(
-                changeListener,
-                IResourceChangeEvent.PRE_DELETE | IResourceChangeEvent.POST_CHANGE);
-
-        final IWorkspace root = ResourcesPlugin.getWorkspace();
-        for (final IProject project : root.getRoot().getProjects()) {
-            final IPath location = project.getLocation();
-            if (location != null) {
-                this.projectDirs.add(location.toFile());
-            }
-        }
-
         this.persistence = new ReviewStateManager(
                 new FileReviewDataCache(Activator.getDefault().getStateLocation().toFile()),
                 new FilePersistence(new File("."), "please configure"),
@@ -467,7 +337,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         Activator.getDefault().getPreferenceStore().addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
-            public void propertyChange(PropertyChangeEvent event) {
+            public void propertyChange(final PropertyChangeEvent event) {
                 if (event.getProperty().startsWith("dialog")) {
                     return;
                 }
@@ -476,7 +346,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         });
     }
 
-    private synchronized void reconfigure() {
+    private void reconfigure() {
         final String configFile =
                 Activator.getDefault().getPreferenceStore().getString(ReviewToolPreferencePage.TEAM_CONFIG_FILE);
         if (configFile.isEmpty()) {
@@ -484,7 +354,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             return;
         }
 
-        this.changeSource = null;
+        this.changeManager.setChangeSource(null);
         this.endReviewExtensions.clear();
         this.preferredTransitionStrategies.clear();
         this.relevanceFilters.clear();
@@ -519,7 +389,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     @Override
-    public void addPostInitTask(Runnable r) {
+    public void addPostInitTask(final Runnable r) {
         this.postInitTasks.add(r);
     }
 
@@ -659,7 +529,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void checkConfigured() {
-        if (this.changeSource == null) {
+        if (this.changeManager.getChangeSource() == null) {
             MessageDialog.openInformation(null, "Not configured",
                     "CoRT is not configured. Go to the preferences dialog and select a config file.");
         }
@@ -728,16 +598,13 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    private void setMode(Mode mode) {
+    private void setMode(final Mode mode) {
         if (mode != this.mode) {
             this.mode = mode;
             this.notifyModeListeners();
         }
         if (mode == Mode.IDLE) {
             this.toursInReview = null;
-            synchronized (this) {
-                this.changeManager = null;
-            }
         }
     }
 
@@ -745,7 +612,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.modeListeners.notifyListeners(this::notifyModeListener);
     }
 
-    private void notifyModeListener(ReviewModeListener s) {
+    private void notifyModeListener(final ReviewModeListener s) {
         switch (this.mode) {
         case FIXING:
             s.notifyFixing(this.persistence);
@@ -761,11 +628,11 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    public void registerModeListener(ReviewModeListener reviewPluginModeService) {
+    public void registerModeListener(final ReviewModeListener reviewPluginModeService) {
         this.modeListeners.add(reviewPluginModeService);
     }
 
-    public void registerAndNotifyModeListener(ReviewModeListener reviewPluginModeService) {
+    public void registerAndNotifyModeListener(final ReviewModeListener reviewPluginModeService) {
         this.modeListeners.add(reviewPluginModeService);
         this.notifyModeListener(reviewPluginModeService);
     }
@@ -827,7 +694,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         return !PlatformUI.getWorkbench().saveAllEditors(true);
     }
 
-    private List<String> determinePreferredEndTransitions(EndTransition.Type type) {
+    private List<String> determinePreferredEndTransitions(final EndTransition.Type type) {
         final List<String> ret = new ArrayList<>();
         for (final IPreferredTransitionStrategy strategy : this.preferredTransitionStrategies) {
             ret.addAll(strategy.determinePreferredTransitions(
@@ -871,7 +738,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.leaveActiveMode();
     }
 
-    private boolean invalidMode(Mode expectedMode) {
+    private boolean invalidMode(final Mode expectedMode) {
         if (this.mode == expectedMode) {
             return false;
         } else {
@@ -931,17 +798,17 @@ public class ReviewPlugin implements IReviewConfigurable {
             });
         } catch (final InterruptedException e) {
             StatusManager.getManager().handle(
-                    new Status(Status.WARNING, "CoRT", "CoRT was interrupted while " + action + ".", e),
+                    new Status(IStatus.WARNING, "CoRT", "CoRT was interrupted while " + action + ".", e),
                     StatusManager.LOG);
         } catch (final InvocationTargetException e) {
             this.logException(e);
             StatusManager.getManager().handle(
-                    new Status(Status.ERROR, "CoRT", "An error occurred while " + action + ".", e),
+                    new Status(IStatus.ERROR, "CoRT", "An error occurred while " + action + ".", e),
                     StatusManager.LOG);
         }
     }
 
-    private synchronized boolean doLoadToursAndCreateMarkers(
+    private boolean doLoadToursAndCreateMarkers(
             final Display display,
             final IProgressMonitor progressMonitor,
             final String action) {
@@ -964,7 +831,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                         new Callback<List<? extends Tour>, List<? extends Pair<String, List<? extends Tour>>>>() {
                             @Override
                             public List<? extends Tour> run(
-                                    List<? extends Pair<String, List<? extends Tour>>> choices) {
+                                    final List<? extends Pair<String, List<? extends Tour>>> choices) {
                                 return SelectTourStructureDialog.selectStructure(choices);
                             }
                         });
@@ -980,7 +847,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                         display,
                         new Callback<UserSelectedReductions, Void>() {
                             @Override
-                            public UserSelectedReductions run(Void v) {
+                            public UserSelectedReductions run(final Void v) {
                                 return SelectIrrelevantDialog.show(
                                         changes, strategyResults, reviewRounds);
                             }
@@ -991,8 +858,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         sourceUi.beginTask(ticketKey + ": Please wait while " + action + "...", IProgressMonitor.UNKNOWN);
         try {
             sourceUi.subTask("Determining relevant changes...");
-            final IChangeData changes = this.changeSource.getRepositoryChanges(ticketKey, sourceUi);
-            this.changeManager = new ChangeManager(changes);
+            final IChangeData changes = this.changeManager.getChangeSource().getRepositoryChanges(ticketKey, sourceUi);
 
             sourceUi.subTask("Creating tours...");
             this.toursInReview = ToursInReview.create(
@@ -1006,12 +872,8 @@ public class ReviewPlugin implements IReviewConfigurable {
                     changes,
                     this.getReviewRounds(this.persistence.getCurrentTicketData()));
             if (this.toursInReview == null) {
-                this.changeManager = null;
                 return false;
             }
-
-            sourceUi.subTask("Collecting local changes...");
-            this.collectLocalChanges(sourceUi);
 
             sourceUi.subTask("Creating stop markers...");
             this.toursInReview.createMarkers(new RealMarkerFactory(), sourceUi);
@@ -1021,7 +883,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
-    private List<ReviewRoundInfo> getReviewRounds(ITicketData ticket) {
+    private List<ReviewRoundInfo> getReviewRounds(final ITicketData ticket) {
         final List<ReviewRoundInfo> ret = new ArrayList<>();
         for (int round = 1; round <= ticket.getCurrentRound(); round++) {
             ret.add(new ReviewRoundInfo(
@@ -1033,16 +895,13 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     @Override
-    public void setPersistence(IReviewPersistence newPersistence) {
+    public void setPersistence(final IReviewPersistence newPersistence) {
         this.persistence.setPersistence(newPersistence);
     }
 
     @Override
-    public synchronized void setChangeSource(IChangeSource changeSource) {
-        this.changeSource = changeSource;
-        for (final File projectRoot : this.projectDirs) {
-            this.changeSource.addProject(projectRoot);
-        }
+    public void setChangeSource(final IChangeSource changeSource) {
+        this.changeManager.setChangeSource(changeSource);
     }
 
     public ToursInReview getTours() {
@@ -1052,15 +911,15 @@ public class ReviewPlugin implements IReviewConfigurable {
     private void registerGlobalTelemetryListeners() {
         this.launchesListener = new ILaunchesListener() {
             @Override
-            public void launchesRemoved(ILaunch[] launches) {
+            public void launchesRemoved(final ILaunch[] launches) {
             }
 
             @Override
-            public void launchesChanged(ILaunch[] launches) {
+            public void launchesChanged(final ILaunch[] launches) {
             }
 
             @Override
-            public void launchesAdded(ILaunch[] launches) {
+            public void launchesAdded(final ILaunch[] launches) {
                 try {
                     for (final ILaunch launch : launches) {
                         Telemetry.event("launch")
@@ -1081,22 +940,22 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     @Override
-    public void addIrrelevanceStrategy(IIrrelevanceDetermination strategy) {
+    public void addIrrelevanceStrategy(final IIrrelevanceDetermination strategy) {
         this.relevanceFilters.add(strategy);
     }
 
     @Override
-    public void addEndReviewExtension(EndReviewExtension extension) {
+    public void addEndReviewExtension(final EndReviewExtension extension) {
         this.endReviewExtensions.add(extension);
     }
 
     @Override
-    public void addPreferredTransitionStrategy(IPreferredTransitionStrategy strategy) {
+    public void addPreferredTransitionStrategy(final IPreferredTransitionStrategy strategy) {
         this.preferredTransitionStrategies.add(strategy);
     }
 
     @Override
-    public void setStopViewer(IStopViewer stopViewer) {
+    public void setStopViewer(final IStopViewer stopViewer) {
         this.stopViewer = stopViewer;
     }
 
@@ -1104,42 +963,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         return this.stopViewer;
     }
 
-    private synchronized void collectLocalChanges(final IChangeSourceUi sourceUi) {
-        try {
-            this.changeManager.analyzeLocalChanges(null, sourceUi);
-        } catch (final ReviewtoolException e) {
-            //if there is a problem while determining the local changes, ignore them
-            Logger.warn("problem while determining local changes", e);
-        }
-    }
-
-    private synchronized void updateLocalChanges(
-            final List<File> projectsAdded,
-            final List<File> projectsRemoved,
-            final List<File> paths) {
-
-        if (this.changeSource != null) {
-            for (final File project : projectsAdded) {
-                this.projectDirs.add(project);
-                this.changeSource.addProject(project);
-                Logger.info("Adding project " + project);
-            }
-            for (final File project : projectsRemoved) {
-                this.projectDirs.remove(project);
-                this.changeSource.removeProject(project);
-                Logger.info("Removing project " + project);
-            }
-        }
-
-        if (this.changeManager != null) {
-            this.changeManager.analyzeLocalChanges(paths, new DummyProgressMonitor());
-        }
-    }
-
     /**
      * Logs the given exception. Swallows all follow-up exceptions.
      */
-    public void logException(Throwable t) {
+    public void logException(final Throwable t) {
         try {
             final StringWriter w = new StringWriter();
             t.printStackTrace(new PrintWriter(w));
