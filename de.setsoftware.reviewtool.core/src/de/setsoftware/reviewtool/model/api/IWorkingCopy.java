@@ -30,7 +30,14 @@ public interface IWorkingCopy {
      * @param absolutePathInRepo The path to convert. It must begin with {@link #getRelativePath()}.
      * @return The converted path or {@code null} if the path points outside the working copy.
      */
-    public abstract String toAbsolutePathInWc(String absolutePathInRepo);
+    public abstract File toAbsolutePathInWc(String absolutePathInRepo);
+
+    /**
+     * Converts ab absolute file system path to a path that is absolute in the repository.
+     * @param absolutePathInWc The path to convert. It must begin with {@link #getLocalRoot()}.
+     * @return The converted path or {@code null} if the path points outside the working copy.
+     */
+    public abstract String toAbsolutePathInRepo(File absolutePathInWc);
 
     /**
      * Returns the associated file history graph.

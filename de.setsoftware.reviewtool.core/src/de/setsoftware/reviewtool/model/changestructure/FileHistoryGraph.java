@@ -12,7 +12,6 @@ import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
-import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
@@ -38,8 +37,8 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     }
 
     @Override
-    public final boolean contains(final String path, final IRepository repo) {
-        return !this.index.get(path).isEmpty();
+    public final Set<String> getPaths() {
+        return this.index.keySet();
     }
 
     @Override

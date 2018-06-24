@@ -172,10 +172,11 @@ public class ToursInReview {
             }
         };
         this.changeManager.addListener(this.mostRecentFragmentUpdater);
+        this.updateMostRecentFragmentsWithLocalChanges();
     }
 
     private ToursInReview(final List<? extends Tour> topmostTours) {
-        this.changeManager = new ChangeManager();
+        this.changeManager = new ChangeManager(false);
         this.topmostTours = new ArrayList<>(topmostTours);
         this.currentTourIndex = 0;
         this.mostRecentFragmentUpdater = null;
@@ -259,7 +260,7 @@ public class ToursInReview {
         }
     }
 
-    private void updateMostRecentFragmentsWithLocalChanges() {
+    private synchronized void updateMostRecentFragmentsWithLocalChanges() {
         final IFragmentTracer tracer = new FragmentTracer();
         for (final Tour tour : this.topmostTours) {
             for (final Stop stop : tour.getStops()) {

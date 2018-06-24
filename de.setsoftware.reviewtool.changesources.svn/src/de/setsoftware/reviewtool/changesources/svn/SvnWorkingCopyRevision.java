@@ -32,7 +32,7 @@ final class SvnWorkingCopyRevision extends AbstractSvnRevision {
     }
 
     @Override
-    public SvnRepo getRepository() {
+    public ISvnRepo getRepository() {
         return this.wc.getRepository();
     }
 

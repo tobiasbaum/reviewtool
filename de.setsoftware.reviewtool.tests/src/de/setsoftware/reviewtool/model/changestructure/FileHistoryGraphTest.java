@@ -8,6 +8,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -1825,7 +1826,6 @@ public final class FileHistoryGraphTest {
         assertEquals(Collections.singleton(aCopyEdge), aCopyNode.getAncestors());
     }
 
-    @SuppressWarnings("null")
     @Test
     public void testCopyOfDirectoryWithManyAncestorsIntoItself() {
         final IRepository repo = new TestRepository("123");
@@ -1850,6 +1850,7 @@ public final class FileHistoryGraphTest {
             currentTrunkRev = trunkRev;
         }
 
+        assert oldTrunkRev != null;
         final IRevisionedFile aCopySourceRev =
                 ChangestructureFactory.createFileInRevision("/trunk/a", oldTrunkRev.getRevision());
 
@@ -2901,7 +2902,7 @@ public final class FileHistoryGraphTest {
     }
 
     @Test
-    public void testContains() {
+    public void testGetPaths() {
         final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = new TestFileHistoryGraph();
 
@@ -2917,12 +2918,13 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/x/b", new TestRepoRevision(repo, 3L));
         g.addAddition(bRev.getPath(), bRev.getRevision());
 
-        assertTrue(g.contains("/trunk", repo));
-        assertTrue(g.contains("/trunk/a", repo));
-        assertTrue(g.contains("/trunk/x", repo));
-        assertTrue(g.contains("/trunk/x/b", repo));
-        assertFalse(g.contains("/trunk/b", repo));
-        assertFalse(g.contains("/trunk/x/a", repo));
+        final Set<String> paths = g.getPaths();
+        assertTrue(paths.contains("/trunk"));
+        assertTrue(paths.contains("/trunk/a"));
+        assertTrue(paths.contains("/trunk/x"));
+        assertTrue(paths.contains("/trunk/x/b"));
+        assertFalse(paths.contains("/trunk/b"));
+        assertFalse(paths.contains("/trunk/x/a"));
     }
 
     @Test

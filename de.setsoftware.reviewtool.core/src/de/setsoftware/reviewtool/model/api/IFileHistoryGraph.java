@@ -9,12 +9,9 @@ import java.util.Set;
 public interface IFileHistoryGraph {
 
     /**
-     * Returns true if passed path is known to this {@link IFileHistoryGraph}.
-     * @param path The path to check.
-     * @param repo The repository.
-     * @return <code>true</code> if the path is known, else <code>false</code>
+     * Returns the set of paths known by this file history graph.
      */
-    public abstract boolean contains(String path, IRepository repo);
+    public abstract Set<String> getPaths();
 
     /**
      * Returns the {@link IFileHistoryNode} for the given {@link IRevisionedFile <code>file</code>},

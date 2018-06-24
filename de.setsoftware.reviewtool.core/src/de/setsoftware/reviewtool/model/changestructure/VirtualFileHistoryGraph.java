@@ -14,7 +14,6 @@ import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
@@ -25,12 +24,20 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
 
     private final IFileHistoryGraph remoteFileHistoryGraph;
     private IFileHistoryGraph localFileHistoryGraph;
-    private Map<IRevisionedFile, IFileHistoryNode> virtualNodes;
+    private final Map<IRevisionedFile, IFileHistoryNode> virtualNodes;
 
     public VirtualFileHistoryGraph(final IFileHistoryGraph remoteFileHistoryGraph) {
         this.remoteFileHistoryGraph = remoteFileHistoryGraph;
         this.localFileHistoryGraph = null;
         this.virtualNodes = new LinkedHashMap<>();
+    }
+
+    /**
+     * Returns the underlying local file history graph.
+     * @return The {@link IFileHistoryGraph local file history graph}. May be {@code null}.
+     */
+    public IFileHistoryGraph getLocalFileHistoryGraph() {
+        return this.localFileHistoryGraph;
     }
 
     /**
@@ -43,6 +50,14 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
         if (this.localFileHistoryGraph != null) {
             this.computeIntermediateNodes();
         }
+    }
+
+    /**
+     * Returns the underlying remote file history graph.
+     * @return The {@link IFileHistoryGraph remote file history graph}.
+     */
+    public IFileHistoryGraph getRemoteFileHistoryGraph() {
+        return this.remoteFileHistoryGraph;
     }
 
     private void computeIntermediateNodes() {
@@ -82,9 +97,11 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public boolean contains(final String path, final IRepository repo) {
-        return this.remoteFileHistoryGraph.contains(path, repo)
-                || this.localFileHistoryGraph.contains(path, repo);
+    public Set<String> getPaths() {
+        final Set<String> result = new LinkedHashSet<>();
+        result.addAll(this.remoteFileHistoryGraph.getPaths());
+        result.addAll(this.localFileHistoryGraph.getPaths());
+        return result;
     }
 
     @Override
