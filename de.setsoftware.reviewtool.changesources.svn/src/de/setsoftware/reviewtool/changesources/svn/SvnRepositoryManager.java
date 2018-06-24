@@ -130,6 +130,14 @@ final class SvnRepositoryManager {
 
     /**
      * Calls the given handler for all recent log entries of the given {@link SvnRepo}.
+     * If there are revisions in the remote repository that have not been processed yet, they are loaded and processed
+     * before being filtered.
+     *
+     * <p>Completely processed log entries are stored to disk in the background even if not all log entries could be
+     * loaded due to cancellation via {@link IProgressMonitor#setCanceled(boolean)}.
+     *
+     * @param repo The repository.
+     * @param handler The log entry handler to use for revision filtering.
      * @return A pair of a boolean value and a list of repository revisions. The boolean flag indicates whether new
      *         history entries have been processed.
      */
@@ -139,7 +147,7 @@ final class SvnRepositoryManager {
             final IChangeSourceUi ui) throws SVNException {
 
         final List<SvnRepoRevision> result = new ArrayList<>();
-        final Pair<Boolean, List<CachedLogEntry>> entries = this.getEntries(repo);
+        final Pair<Boolean, List<CachedLogEntry>> entries = this.getEntries(repo, ui);
         for (final CachedLogEntry entry : entries.getSecond()) {
             if (ui.isCanceled()) {
                 throw new OperationCanceledException();
@@ -151,51 +159,105 @@ final class SvnRepositoryManager {
         return Pair.create(entries.getFirst(), result);
     }
 
-    private synchronized Pair<Boolean, List<CachedLogEntry>> getEntries(final ISvnRepo repo) throws SVNException {
-        final boolean gotNewEntries = this.loadNewEntries(repo);
+    /**
+     * Returns all log entries from the repository. If there are revisions in the remote repository that have not been
+     * processed yet, they are loaded and processed.
+     *
+     * <p>Completely processed log entries are stored to disk in the background even if not all log entries could be
+     * loaded due to cancellation via {@link IProgressMonitor#setCanceled(boolean)}.
+     *
+     * @param repo The repository.
+     * @return A pair of a boolean value and a list of log entries. The boolean flag indicates whether new history
+     *         entries have been processed.
+     */
+    private synchronized Pair<Boolean, List<CachedLogEntry>> getEntries(final ISvnRepo repo, final IChangeSourceUi ui)
+            throws SVNException {
 
-        if (gotNewEntries) {
-            final Job job = Job.create("Storing SVN review cache for " + repo,
-                    new IJobFunction() {
-                        @Override
-                        public IStatus run(final IProgressMonitor monitor) {
-                            SvnRepositoryManager.this.tryToStoreCacheToFile(repo);
-                            return Status.OK_STATUS;
-                        }
-                    });
-            job.setRule(new CacheJobMutexRule(repo.getCacheFilePath().toFile()));
-            job.schedule();
-        }
-
+        final boolean gotNewEntries = this.loadNewEntries(repo, ui);
         return Pair.create(gotNewEntries, repo.getEntries());
     }
 
-    private synchronized boolean loadNewEntries(final ISvnRepo repo) throws SVNException {
-
+    /**
+     * Loads and processes all log entries from the repository that have not been processed yet.
+     *
+     * <p>Completely processed log entries are stored to disk in the background even if not all log entries could be
+     * loaded due to cancellation via {@link IProgressMonitor#setCanceled(boolean)}.
+     *
+     * @param repo The repository.
+     * @return {@code true} iff new history entries have been processed.
+     */
+    private boolean loadNewEntries(final ISvnRepo repo, final IChangeSourceUi ui) throws SVNException {
         final List<CachedLogEntry> entries = repo.getEntries();
         final long lastKnownRevision = entries.isEmpty() ? 0 : entries.get(entries.size() - 1).getRevision();
-        final List<CachedLogEntry> newEntries = new ArrayList<>();
 
         final long latestRevision = repo.getLatestRevision();
         if (lastKnownRevision < latestRevision) {
             final long startRevision = lastKnownRevision == 0
                     ? Math.max(0, latestRevision - this.minCount + 1) : lastKnownRevision + 1;
+            this.loadNewEntries(repo, startRevision, latestRevision, ui);
+            return true;
+        } else {
+            return false;
+        }
+    }
 
-            Logger.info("Processing revisions " + startRevision + ".." + latestRevision + " from " + repo);
+    /**
+     * Loads and processes a range of log entries from the repository that have not been processed yet.
+     *
+     * <p>Completely processed log entries are stored to disk in the background even if not all log entries could be
+     * loaded due to cancellation via {@link IProgressMonitor#setCanceled(boolean)}.
+     *
+     * @param repo The repository.
+     * @param firstRevision The first revision to process.
+     * @param lastRevision The last revision to process.
+     */
+    private void loadNewEntries(
+            final ISvnRepo repo,
+            final long firstRevision,
+            final long lastRevision,
+            final IChangeSourceUi ui) throws SVNException {
 
+        if (lastRevision < firstRevision) {
+            return;
+        }
+
+        final List<CachedLogEntry> newEntries = new ArrayList<>();
+        final long numRevisionsTotal = lastRevision - firstRevision + 1;
+
+        Logger.info("Processing revisions " + firstRevision + ".." + lastRevision + " from " + repo);
+        ui.increaseTaskNestingLevel();
+        try {
             final ISVNLogEntryHandler handler = new ISVNLogEntryHandler() {
                 @Override
                 public void handleLogEntry(final SVNLogEntry logEntry) throws SVNException {
                     final CachedLogEntry entry = new CachedLogEntry(logEntry);
-                    SvnRepositoryManager.this.processLogEntry(entry, repo, newEntries.size());
+                    SvnRepositoryManager.this.processLogEntry(
+                            entry,
+                            repo,
+                            newEntries.size(),
+                            numRevisionsTotal,
+                            ui);
                     newEntries.add(entry);
                 }
             };
-            repo.getLog(startRevision, handler);
-        }
+            repo.getLog(firstRevision, handler);
+        } finally {
+            ui.decreaseTaskNestingLevel();
+            repo.appendNewEntries(newEntries);
 
-        repo.appendNewEntries(newEntries);
-        return !newEntries.isEmpty();
+            if (!newEntries.isEmpty()) {
+                final Job job = Job.create("Storing SVN review cache for " + repo,
+                        new IJobFunction() {
+                            @Override
+                            public IStatus run(final IProgressMonitor monitor) {
+                                SvnRepositoryManager.this.tryToStoreCacheToFile(repo);
+                                return Status.OK_STATUS;
+                            }
+                        });
+                job.setRule(new CacheJobMutexRule(repo.getCacheFilePath().toFile()));
+                job.schedule();
+            }
+        }
     }
 
     private void tryToReadCacheFromFile(final ISvnRepo repo) {
@@ -251,11 +313,20 @@ final class SvnRepositoryManager {
     private void processLogEntry(
             final CachedLogEntry entry,
             final ISvnRepo repo,
-            final int numEntriesProcessed) {
+            final long numEntriesProcessed,
+            final long numRevisionsTotal,
+            final IChangeSourceUi ui) {
+
+        if (ui.isCanceled()) {
+            throw new OperationCanceledException();
+        }
 
         final SvnRepoRevision revision = new SvnRepoRevision(repo, entry);
+        final long numEntriesProcessedNow = numEntriesProcessed + 1;
+        ui.subTask("Processing revision " + revision.getRevisionNumber()
+                + " (" + numEntriesProcessedNow + "/" + numRevisionsTotal + ")...");
         repo.getFileHistoryGraph().processRevision(revision);
-        final int numEntriesProcessedNow = numEntriesProcessed + 1;
+
         if (numEntriesProcessedNow % REVISION_BLOCK_SIZE == 0) {
             Logger.debug(numEntriesProcessedNow + " revisions processed");
         }

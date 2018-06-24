@@ -1,11 +1,20 @@
-package de.setsoftware.reviewtool.plugin;
+package de.setsoftware.reviewtool.base;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 
 /**
- * A {@link IProgressMonitor} implementation doing nothing.
+ * A singleton {@link IProgressMonitor} implementation doing nothing.
  */
 public class DummyProgressMonitor implements IProgressMonitor {
+
+    private static final DummyProgressMonitor INSTANCE = new DummyProgressMonitor();
+
+    /**
+     * Returns the singleton instance of this class.
+     */
+    public static DummyProgressMonitor getInstance() {
+        return INSTANCE;
+    }
 
     @Override
     public void beginTask(final String name, final int totalWork) {

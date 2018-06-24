@@ -12,18 +12,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.core.runtime.Status;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
 import org.tmatesoft.svn.core.wc.SVNClientManager;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
@@ -337,13 +333,7 @@ final class SvnChangeSource implements IChangeSource {
                 try {
                     ret.addAll(this.determineChangesInFile(wc, node));
                 } catch (final Exception ex) {
-                    final IStatus status = new Status(
-                            IStatus.ERROR,
-                            "CoRT",
-                            "An error occurred while computing changes for " + fileInfo.toString(),
-                            ex);
-                    final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
-                    Platform.getLog(bundle).log(status);
+                    Logger.error("An error occurred while computing changes for " + fileInfo.toString(), ex);
                 }
             }
         }

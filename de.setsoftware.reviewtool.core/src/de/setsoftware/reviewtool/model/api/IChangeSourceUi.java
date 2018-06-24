@@ -16,4 +16,13 @@ public interface IChangeSourceUi extends IProgressMonitor {
      */
     public abstract Boolean handleLocalWorkingCopyOutOfDate(String detailInfo);
 
+    /**
+     * Increases the task nesting level.
+     */
+    public abstract void increaseTaskNestingLevel();
+
+    /**
+     * Decreases the task nesting level.
+     */
+    public abstract void decreaseTaskNestingLevel();
 }
