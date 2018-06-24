@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Date;
 import java.util.Map;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
@@ -40,8 +41,10 @@ final class SvnRepoRevision extends AbstractSvnRevision {
     }
 
     @Override
-    public IRepoRevision toRevision() {
-        return ChangestructureFactory.createRepoRevision(this.getRevisionNumber(), this.repository);
+    public IRepoRevision<ComparableWrapper<Long>> toRevision() {
+        return ChangestructureFactory.createRepoRevision(
+                ComparableWrapper.wrap(this.getRevisionNumber()),
+                this.repository);
     }
 
     @Override

@@ -18,6 +18,7 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.io.SVNRepository;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
@@ -108,19 +109,19 @@ final class SvnRepo extends AbstractRepository {
     }
 
     @Override
-    public byte[] getFileContents(final String path, final IRepoRevision revision) throws SVNException {
-        return this.fileCache.getFileContents(path, (Long) revision.getId());
+    public byte[] getFileContents(final String path, final IRepoRevision<?> revision) throws SVNException {
+        return this.fileCache.getFileContents(path, ComparableWrapper.<Long> unwrap(revision.getId()));
     }
 
     @Override
-    public IRevision getSmallestRevision(Collection<? extends IRevision> revisions) {
+    public IRevision getSmallestRevision(final Collection<? extends IRevision> revisions) {
         return getSmallestOfComparableRevisions(revisions);
     }
 
     @Override
-    public IRepoRevision toRevision(final String revisionId) {
+    public IRepoRevision<ComparableWrapper<Long>> toRevision(final String revisionId) {
         try {
-            return ChangestructureFactory.createRepoRevision(Long.valueOf(revisionId), this);
+            return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(Long.valueOf(revisionId)), this);
         } catch (final NumberFormatException e) {
             return null;
         }

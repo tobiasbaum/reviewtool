@@ -103,8 +103,8 @@ public class ToursInReview {
         private final List<? extends Pair<String, Set<? extends IChange>>> toMakeIrrelevant;
 
         public UserSelectedReductions(
-                List<? extends ICommit> chosenCommitSubset,
-                List<Pair<String, Set<? extends IChange>>> chosenFilterSubset) {
+                final List<? extends ICommit> chosenCommitSubset,
+                final List<Pair<String, Set<? extends IChange>>> chosenFilterSubset) {
             this.commitSubset = chosenCommitSubset;
             this.toMakeIrrelevant = chosenFilterSubset;
         }
@@ -118,19 +118,19 @@ public class ToursInReview {
         private final Date date;
         private final String user;
 
-        public ReviewRoundInfo(int number, Date date, String user) {
+        public ReviewRoundInfo(final int number, final Date date, final String user) {
             this.number = number;
             this.date = date;
             this.user = user;
         }
 
         @Override
-        public int compareTo(ReviewRoundInfo o) {
+        public int compareTo(final ReviewRoundInfo o) {
             return Integer.compare(this.number, o.number);
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             if (!(o instanceof ReviewRoundInfo)) {
                 return false;
             }
@@ -184,7 +184,7 @@ public class ToursInReview {
     /**
      * Creates a new object with the given tours (mainly for tests).
      */
-    public static ToursInReview create(List<Tour> tours) {
+    public static ToursInReview create(final List<Tour> tours) {
         return new ToursInReview(tours);
     }
 
@@ -196,12 +196,12 @@ public class ToursInReview {
     public static ToursInReview create(
             final ChangeManager changeManager,
             final IChangeSourceUi changeSourceUi,
-            List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
-            List<? extends ITourRestructuring> tourRestructuringStrategies,
-            IStopOrdering orderingAlgorithm,
-            ICreateToursUi createUi,
-            IChangeData changes,
-            List<ReviewRoundInfo> reviewRounds) {
+            final List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
+            final List<? extends ITourRestructuring> tourRestructuringStrategies,
+            final IStopOrdering orderingAlgorithm,
+            final ICreateToursUi createUi,
+            final IChangeData changes,
+            final List<ReviewRoundInfo> reviewRounds) {
         changeSourceUi.subTask("Filtering changes...");
         final List<? extends ICommit> filteredChanges =
                 filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(),
@@ -244,7 +244,10 @@ public class ToursInReview {
     }
 
     private static List<? extends Tour> groupAndSort(
-            List<? extends Tour> userSelection, IStopOrdering orderingAlgorithm, TourCalculatorControl isCanceled) {
+            final List<? extends Tour> userSelection,
+            final IStopOrdering orderingAlgorithm,
+            final TourCalculatorControl isCanceled) {
+
         try {
             final List<Tour> ret = new ArrayList<>();
             for (final Tour t : userSelection) {
@@ -335,7 +338,7 @@ public class ToursInReview {
         return ret;
     }
 
-    private static int countChanges(List<? extends ICommit> changes, boolean onlyRelevant) {
+    private static int countChanges(final List<? extends ICommit> changes, final boolean onlyRelevant) {
         int ret = 0;
         for (final ICommit commit : changes) {
             for (final IChange change : commit.getChanges()) {
@@ -348,8 +351,8 @@ public class ToursInReview {
     }
 
     private static Set<? extends IChange> determineIrrelevantChanges(
-            List<? extends ICommit> changes,
-            IIrrelevanceDetermination strategy) {
+            final List<? extends ICommit> changes,
+            final IIrrelevanceDetermination strategy) {
 
         final Set<IChange> ret = new HashSet<>();
         for (final ICommit commit : changes) {
@@ -362,7 +365,7 @@ public class ToursInReview {
         return ret;
     }
 
-    private static boolean areAllIrrelevant(Set<? extends IChange> changes) {
+    private static boolean areAllIrrelevant(final Set<? extends IChange> changes) {
         for (final IChange change : changes) {
             if (!change.isIrrelevantForReview()) {
                 return false;
@@ -425,7 +428,7 @@ public class ToursInReview {
         return ret;
     }
 
-    private static List<Stop> toSliceFragments(List<? extends IChange> changes, IFragmentTracer tracer) {
+    private static List<Stop> toSliceFragments(final List<? extends IChange> changes, final IFragmentTracer tracer) {
         final List<Stop> ret = new ArrayList<>();
         for (final IChange c : changes) {
             ret.addAll(toSliceFragment(c, tracer));
@@ -433,15 +436,15 @@ public class ToursInReview {
         return ret;
     }
 
-    private static List<Stop> toSliceFragment(IChange c, final IFragmentTracer tracer) {
+    private static List<Stop> toSliceFragment(final IChange c, final IFragmentTracer tracer) {
         final List<Stop> ret = new ArrayList<>();
         c.accept(new IChangeVisitor() {
 
             @Override
-            public void handle(ITextualChange visitee) {
+            public void handle(final ITextualChange visitee) {
                 final IWorkingCopy wc = c.getWorkingCopy();
                 final List<? extends IFragment> mostRecentFragments =
-                        tracer.traceFragment(wc.getFileHistoryGraph(), visitee.getToFragment());
+                        tracer.traceFragment(wc.getRepository().getFileHistoryGraph(), visitee.getToFragment(), false);
                 for (final IFragment fragment : mostRecentFragments) {
                     if (wc.toAbsolutePathInWc(fragment.getFile().getPath()) != null) {
                         ret.add(new Stop(visitee, fragment));
@@ -450,10 +453,10 @@ public class ToursInReview {
             }
 
             @Override
-            public void handle(IBinaryChange visitee) {
+            public void handle(final IBinaryChange visitee) {
                 final IWorkingCopy wc = c.getWorkingCopy();
                 for (final IRevisionedFile fileInRevision :
-                        tracer.traceFile(wc.getFileHistoryGraph(), visitee.getFrom())) {
+                        tracer.traceFile(wc.getRepository().getFileHistoryGraph(), visitee.getFrom(), false)) {
                     if (wc.toAbsolutePathInWc(fileInRevision.getPath()) != null) {
                         ret.add(new Stop(visitee, fileInRevision));
                     }
@@ -481,7 +484,7 @@ public class ToursInReview {
     }
 
     private IMarker createMarkerFor(
-            IStopMarkerFactory markerFactory,
+            final IStopMarkerFactory markerFactory,
             final Map<IResource, PositionLookupTable> lookupTables,
             final Stop f,
             final boolean tourActive) {
@@ -518,7 +521,7 @@ public class ToursInReview {
      * is returned.
      */
     public IMarker createMarkerFor(
-            IStopMarkerFactory markerFactory,
+            final IStopMarkerFactory markerFactory,
             final Stop f) {
         return this.createMarkerFor(markerFactory, new HashMap<IResource, PositionLookupTable>(), f, true);
     }
@@ -531,7 +534,7 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(Tour t, IStopMarkerFactory markerFactory) {
+    public void ensureTourActive(final Tour t, final IStopMarkerFactory markerFactory) {
         this.ensureTourActive(t, markerFactory, true);
     }
 
@@ -539,7 +542,7 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(Tour t, final IStopMarkerFactory markerFactory, boolean notify) {
+    public void ensureTourActive(final Tour t, final IStopMarkerFactory markerFactory, final boolean notify) {
 
         final int index = this.topmostTours.indexOf(t);
         if (index != this.currentTourIndex) {
@@ -547,7 +550,7 @@ public class ToursInReview {
             this.currentTourIndex = index;
             new WorkspaceJob("Review marker update") {
                 @Override
-                public IStatus runInWorkspace(IProgressMonitor progressMonitor) throws CoreException {
+                public IStatus runInWorkspace(final IProgressMonitor progressMonitor) throws CoreException {
                     ToursInReview.this.clearMarkers();
                     ToursInReview.this.createMarkers(markerFactory, progressMonitor);
                     return Status.OK_STATUS;
@@ -581,14 +584,14 @@ public class ToursInReview {
                 ? null : this.topmostTours.get(this.currentTourIndex);
     }
 
-    public void registerListener(IToursInReviewChangeListener listener) {
+    public void registerListener(final IToursInReviewChangeListener listener) {
         this.listeners.add(listener);
     }
 
     /**
      * Returns all stops (from all tours) that refer to the given file.
      */
-    public List<Stop> getStopsFor(File absolutePath) {
+    public List<Stop> getStopsFor(final File absolutePath) {
         final List<Stop> ret = new ArrayList<>();
         for (final Tour t : this.topmostTours) {
             for (final Stop s : t.getStops()) {
@@ -604,7 +607,7 @@ public class ToursInReview {
      * Returns the (first) tour that contains the given stop.
      * If none exists, -1 is returned.
      */
-    public int findTourIndexWithStop(Stop currentStop) {
+    public int findTourIndexWithStop(final Stop currentStop) {
         for (int i = 0; i < this.topmostTours.size(); i++) {
             for (final Stop s : this.topmostTours.get(i).getStops()) {
                 if (s == currentStop) {
@@ -620,7 +623,7 @@ public class ToursInReview {
      * The closeness measure is tweaked to (hopefully) capture the users intention as good as possible
      * for cases where he did not click directly on a stop.
      */
-    public Pair<Tour, Stop> findNearestStop(IPath absoluteResourcePath, int line) {
+    public Pair<Tour, Stop> findNearestStop(final IPath absoluteResourcePath, final int line) {
         if (this.topmostTours.isEmpty()) {
             return null;
         }
@@ -640,7 +643,7 @@ public class ToursInReview {
         return Pair.create(bestTour, bestStop);
     }
 
-    private int calculateDistance(Stop stop, IPath resource, int line) {
+    private int calculateDistance(final Stop stop, final IPath resource, final int line) {
         if (!stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()).equals(resource)) {
             return Integer.MAX_VALUE;
         }
@@ -665,7 +668,7 @@ public class ToursInReview {
      * Determines the direct parent tour of the given element.
      * Returns null when none is found.
      */
-    public Tour getParentFor(TourElement element) {
+    public Tour getParentFor(final TourElement element) {
         for (final Tour t : this.topmostTours) {
             final Tour parent = t.findParentFor(element);
             if (parent != null) {
@@ -679,7 +682,7 @@ public class ToursInReview {
      * Determines the topmost parent tour of the given element.
      * Returns null when none is found.
      */
-    public Tour getTopmostTourWith(TourElement element) {
+    public Tour getTopmostTourWith(final TourElement element) {
         for (final Tour t : this.topmostTours) {
             final Tour parent = t.findParentFor(element);
             if (parent != null) {

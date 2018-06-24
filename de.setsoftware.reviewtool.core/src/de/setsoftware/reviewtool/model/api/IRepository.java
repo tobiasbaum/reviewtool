@@ -16,7 +16,7 @@ public interface IRepository extends Serializable {
     /**
      * Converts the string representation of a repository revision into a {@link IRepoRevision}.
      */
-    public abstract IRepoRevision toRevision(String revisionId);
+    public abstract IRepoRevision<?> toRevision(String revisionId);
 
     /**
      * Returns one of the smallest revisions from the given collection. When there are multiple,
@@ -31,7 +31,7 @@ public interface IRepository extends Serializable {
      * @return The file contents as a byte array.
      * @throws Exception if an error occurs.
      */
-    public abstract byte[] getFileContents(String path, IRepoRevision revision) throws Exception;
+    public abstract byte[] getFileContents(String path, IRepoRevision<?> revision) throws Exception;
 
     /**
      * Returns the associated file history graph.

@@ -2,17 +2,13 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.Collection;
 
-import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 
-/**
- * A stub implementation of {@link AbstractRepository} for use by tests.
- */
-public final class StubRepo extends AbstractRepository {
+final class PartiallyOrderedRepo extends AbstractRepository {
 
-    public static StubRepo INSTANCE = new StubRepo();
+    public static PartiallyOrderedRepo INSTANCE = new PartiallyOrderedRepo();
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -21,8 +17,8 @@ public final class StubRepo extends AbstractRepository {
     }
 
     @Override
-    public IRepoRevision<ComparableWrapper<Integer>> toRevision(final String revisionId) {
-        return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(Integer.parseInt(revisionId)), this);
+    public IRepoRevision<PartiallyOrderedID> toRevision(final String revisionId) {
+        return ChangestructureFactory.createRepoRevision(new PartiallyOrderedID(revisionId), this);
     }
 
     @Override

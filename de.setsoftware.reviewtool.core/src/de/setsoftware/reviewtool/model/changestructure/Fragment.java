@@ -76,7 +76,10 @@ public final class Fragment implements IFragment {
      * the {@link ChangestructureFactory}.
      */
     public static IFragment createWithContent(
-            IRevisionedFile file, IPositionInText from, IPositionInText to, String content) {
+            final IRevisionedFile file,
+            final IPositionInText from,
+            final IPositionInText to,
+            final String content) {
         final Fragment ret = new Fragment(file, from, to);
         ret.content = content;
         return ret;
@@ -141,7 +144,7 @@ public final class Fragment implements IFragment {
         }
     }
 
-    private static int countCharsInLastLine(String s) {
+    private static int countCharsInLastLine(final String s) {
         int count = s.endsWith("\n") ? 1 : 0;
         for (int i = s.length() - count - 1; i >= 0; i--) {
             if (s.charAt(i) == '\n') {
@@ -252,12 +255,12 @@ public final class Fragment implements IFragment {
     }
 
     @Override
-    public FragmentList subtract(final IFragment other) {
+    public IFragmentList subtract(final IFragment other) {
         if (!this.overlaps(other)) {
             return new FragmentList(this);
         } else {
             try {
-                final FragmentList fragmentList = new FragmentList();
+                final IFragmentList fragmentList = new FragmentList();
                 if (this.from.lessThan(other.getFrom())) {
                     fragmentList.addFragment(new Fragment(this.file, this.from, other.getFrom(), this));
                 }
@@ -317,7 +320,7 @@ public final class Fragment implements IFragment {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (!(obj instanceof Fragment)) {
             return false;
         }

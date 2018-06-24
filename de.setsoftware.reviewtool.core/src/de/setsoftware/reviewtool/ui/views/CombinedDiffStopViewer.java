@@ -36,6 +36,7 @@ import org.eclipse.ui.IViewPart;
 
 import de.setsoftware.reviewtool.base.LineSequence;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.Constants;
@@ -46,7 +47,6 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IStop;
-import de.setsoftware.reviewtool.model.changestructure.FileInRevision;
 
 /**
  * Displays all differences of a {@link IStop} combined in a single window.
@@ -354,7 +354,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
     private static final int CONTEXT_LENGTH = 3;
 
-    private List<? extends IRevisionedFile> allRevisions;
+    private List<IRevisionedFile> allRevisions;
     private Combo comboLeft;
     private Combo comboRight;
     private SelectableMergeViewer viewer;
@@ -389,7 +389,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
         final Set<IRevisionedFile> revisionsForStop = new LinkedHashSet<>();
         revisionsForStop.addAll(stop.getHistory().keySet());
         revisionsForStop.addAll(stop.getHistory().values());
-        final List<? extends IRevisionedFile> sortedStopRevisions = FileInRevision.sortByRevision(revisionsForStop);
+        final List<IRevisionedFile> sortedStopRevisions = PartialOrderAlgorithms.topoSort(revisionsForStop);
         final IRevisionedFile initialLeftRevision = sortedStopRevisions.get(0);
         final IRevisionedFile initialRightRevision = sortedStopRevisions.get(sortedStopRevisions.size() - 1);
 
@@ -525,12 +525,12 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
     }
 
-    private List<? extends IRevisionedFile> determineAllRevisionsOfFile(final IStop stop) {
+    private List<IRevisionedFile> determineAllRevisionsOfFile(final IStop stop) {
         final IRevisionedFile lastRevision = stop.getOriginalMostRecentFile();
         final IFileHistoryNode node = stop.getWorkingCopy().getFileHistoryGraph().getNodeFor(lastRevision);
         final LinkedHashSet<IRevisionedFile> filesBuffer = new LinkedHashSet<>();
         this.determineAllRevisionsOfFileRec(node, filesBuffer);
-        return FileInRevision.sortByRevision(filesBuffer);
+        return PartialOrderAlgorithms.topoSort(filesBuffer);
     }
 
     private void determineAllRevisionsOfFileRec(final IFileHistoryNode node, final Set<IRevisionedFile> buffer) {

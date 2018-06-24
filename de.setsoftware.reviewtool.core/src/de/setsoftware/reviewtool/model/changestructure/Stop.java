@@ -138,19 +138,19 @@ public class Stop extends TourElement implements IStop {
     public synchronized void updateMostRecentData(final IFragmentTracer tracer) {
         if (this.mostRecentFragment != null) {
             final List<? extends IFragment> fragments =
-                    tracer.traceFragment(this.wc.getFileHistoryGraph(), this.mostRecentFragment);
+                    tracer.traceFragment(this.wc.getFileHistoryGraph(), this.mostRecentFragment, true);
             for (final IFragment fragment : fragments) {
                 if (this.wc.toAbsolutePathInWc(fragment.getFile().getPath()) != null) {
                     this.mostRecentFragmentConsideringLocalChanges = fragment;
-                    break;
+                    break; // we don't support multiple locally changed files per stop
                 }
             }
         }
-        final List<IRevisionedFile> files = tracer.traceFile(this.wc.getFileHistoryGraph(), this.mostRecentFile);
+        final List<IRevisionedFile> files = tracer.traceFile(this.wc.getFileHistoryGraph(), this.mostRecentFile, true);
         for (final IRevisionedFile file : files) {
             if (this.wc.toAbsolutePathInWc(file.getPath()) != null) {
                 this.mostRecentFileConsideringLocalChanges = file;
-                break;
+                break; // we don't support multiple locally changed files per stop
             }
         }
     }

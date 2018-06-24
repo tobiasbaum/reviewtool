@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IFragment;
 
 /**
@@ -12,12 +13,12 @@ import de.setsoftware.reviewtool.model.api.IFragment;
  */
 public class TourTest {
 
-    private static PositionInText pos(int line, int column) {
+    private static PositionInText pos(final int line, final int column) {
         return new PositionInText(line, column);
     }
 
-    private static FileInRevision file(String name, int revision) {
-        return new FileInRevision(name, new RepoRevision(revision, StubRepo.INSTANCE));
+    private static FileInRevision file(final String name, final int revision) {
+        return new FileInRevision(name, new RepoRevision<>(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
     }
 
     @Test

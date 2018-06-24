@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentList;
@@ -19,11 +20,11 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
  */
 public class FileDiffTest {
 
-    private static FileInRevision file(String name, int revision) {
-        return new FileInRevision(name, new RepoRevision(revision, StubRepo.INSTANCE));
+    private static FileInRevision file(final String name, final int revision) {
+        return new FileInRevision(name, new RepoRevision<>(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
     }
 
-    private static PositionInText pos(int line, int col) {
+    private static PositionInText pos(final int line, final int col) {
         return new PositionInText(line, col);
     }
 

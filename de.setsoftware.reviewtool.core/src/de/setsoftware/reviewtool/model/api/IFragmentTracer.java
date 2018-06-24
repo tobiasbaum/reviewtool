@@ -14,8 +14,12 @@ public interface IFragmentTracer {
      *
      * @param fileHistoryGraph The file history graph to use for tracing.
      * @param fragment The source fragment to start with.
+     * @param ignoreNonLocalCopies If {@code true}, non-local copies are ignored while tracing.
      */
-    public abstract List<? extends IFragment> traceFragment(IFileHistoryGraph fileHistoryGraph, IFragment fragment);
+    public abstract List<? extends IFragment> traceFragment(
+            IFileHistoryGraph fileHistoryGraph,
+            IFragment fragment,
+            boolean ignoreNonLocalCopies);
 
     /**
      * Determines the target file that most closely represents the given source file in the most recent revision.
@@ -23,7 +27,10 @@ public interface IFragmentTracer {
      *
      * @param fileHistoryGraph The file history graph to use for tracing.
      * @param file The source file to start with.
+     * @param ignoreNonLocalCopies If {@code true}, non-local copies are ignored while tracing.
      */
-    public abstract List<IRevisionedFile> traceFile(IFileHistoryGraph fileHistoryGraph, IRevisionedFile file);
-
+    public abstract List<IRevisionedFile> traceFile(
+            IFileHistoryGraph fileHistoryGraph,
+            IRevisionedFile file,
+            boolean ignoreNonLocalCopies);
 }

@@ -30,7 +30,7 @@ public final class FileDiff implements IFileDiff {
      */
     private final List<IHunk> hunks;
     private final IRevisionedFile fromRevision;
-    private IRevisionedFile toRevision;
+    private final IRevisionedFile toRevision;
 
     /**
      * Creates an empty FileDiff object that will be filled with hunks.
@@ -63,7 +63,7 @@ public final class FileDiff implements IFileDiff {
     }
 
     @Override
-    public List<? extends IHunk> getHunks() {
+    public List<IHunk> getHunks() {
         return Collections.unmodifiableList(this.hunks);
     }
 
@@ -92,7 +92,7 @@ public final class FileDiff implements IFileDiff {
     }
 
     @Override
-    public List<? extends IHunk> getHunksWithTargetChangesInOneOf(final Collection<? extends IFragment> fragments) {
+    public List<IHunk> getHunksWithTargetChangesInOneOf(final Collection<? extends IFragment> fragments) {
         final List<IHunk> result = new ArrayList<>();
         for (final IHunk hunk : this.hunks) {
             if (hunk.getTarget().containsChangeInOneOf(fragments)) {
@@ -143,7 +143,7 @@ public final class FileDiff implements IFileDiff {
         IFileDiff result = this;
         IDelta delta = new Delta();
         int lastLine = 0;
-        for (IHunk hunk : hunksToMerge) {
+        for (final IHunk hunk : hunksToMerge) {
             delta = delta.ignoreColumnOffset(hunk.getSource().getFrom().getLine() != lastLine);
             result = result.merge(hunk.adjustSource(delta));
             delta = delta.plus(hunk.getDelta());
@@ -288,7 +288,7 @@ public final class FileDiff implements IFileDiff {
      *              or if the resulting target parts cannot be combined into one fragment.
      */
     private IFragment combineTargets(final IHunk hunkToMerge, final IFragmentList targets)
-            throws Error, IncompatibleFragmentException {
+            throws IncompatibleFragmentException {
 
         final IFragmentList adjustedTargets = new FragmentList();
         final IDelta hunkDelta = hunkToMerge.getDelta();

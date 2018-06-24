@@ -4,11 +4,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map.Entry;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
@@ -65,8 +65,8 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
             }
 
             @Override
-            public Long handleRepoRevision(final IRepoRevision revision) {
-                return (Long) revision.getId();
+            public Long handleRepoRevision(final IRepoRevision<?> revision) {
+                return ComparableWrapper.<Long> unwrap(revision.getId());
             }
 
             @Override
@@ -96,7 +96,8 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
                             path,
                             revision.toRevision(),
                             copyPath,
-                            ChangestructureFactory.createRepoRevision(pathInfo.getCopyRevision(),
+                            ChangestructureFactory.createRepoRevision(
+                                    ComparableWrapper.wrap(pathInfo.getCopyRevision()),
                                     revision.getRepository()));
                 } else {
                     this.addReplacement(path, revision.toRevision());
@@ -107,7 +108,7 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
                             copyPath,
                             path,
                             ChangestructureFactory.createRepoRevision(
-                                    pathInfo.getCopyRevision(),
+                                    ComparableWrapper.wrap(pathInfo.getCopyRevision()),
                                     revision.getRepository()),
                             revision.toRevision());
                 } else {
@@ -117,8 +118,8 @@ final class SvnFileHistoryGraph extends FileHistoryGraph {
                 this.addChange(
                         path,
                         revision.toRevision(),
-                        Collections.<IRevision>singleton(ChangestructureFactory.createRepoRevision(
-                                e.getValue().getAncestorRevision(),
+                        Collections.singleton(ChangestructureFactory.createRepoRevision(
+                                ComparableWrapper.wrap(e.getValue().getAncestorRevision()),
                                 revision.getRepository())));
             }
         }

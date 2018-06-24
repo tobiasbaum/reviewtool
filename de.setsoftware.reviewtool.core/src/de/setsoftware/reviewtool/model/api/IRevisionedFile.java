@@ -6,10 +6,12 @@ import java.io.Serializable;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 
+import de.setsoftware.reviewtool.base.IPartiallyComparable;
+
 /**
  * Denotes a certain revision of a file.
  */
-public interface IRevisionedFile extends Serializable {
+public interface IRevisionedFile extends IPartiallyComparable<IRevisionedFile>, Serializable {
 
     /**
      * Returns the path of the file (relative to the SCM repository root).

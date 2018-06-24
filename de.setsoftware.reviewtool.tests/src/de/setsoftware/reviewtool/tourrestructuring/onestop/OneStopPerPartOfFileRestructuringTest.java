@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -22,13 +23,13 @@ import de.setsoftware.reviewtool.model.changestructure.Tour;
  */
 public class OneStopPerPartOfFileRestructuringTest {
 
-    private static IRevisionedFile fileInRevision(String file, int i) {
+    private static IRevisionedFile fileInRevision(final String file, final int i) {
         return ChangestructureFactory.createFileInRevision(
                 file,
-                ChangestructureFactory.createRepoRevision(i, StubRepo.INSTANCE));
+                ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(i), StubRepo.INSTANCE));
     }
 
-    private static Stop stop(final String file, int revision) {
+    private static Stop stop(final String file, final int revision) {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(
                         null,
@@ -36,7 +37,7 @@ public class OneStopPerPartOfFileRestructuringTest {
                 fileInRevision(file, 100));
     }
 
-    private static Stop stop(final String file, int... revisions) {
+    private static Stop stop(final String file, final int... revisions) {
         Stop s = stop(file, revisions[0]);
         for (int i = 1; i < revisions.length; i++) {
             s = s.merge(stop(file, revisions[i]));
@@ -44,7 +45,7 @@ public class OneStopPerPartOfFileRestructuringTest {
         return s;
     }
 
-    private static Stop stopWithLines(final String file, int revision, int lineFrom, int lineTo) {
+    private static Stop stopWithLines(final String file, final int revision, final int lineFrom, final int lineTo) {
         final IPositionInText posFrom = ChangestructureFactory.createPositionInText(lineFrom, 1);
         final IPositionInText posTo = ChangestructureFactory.createPositionInText(lineTo + 1, 1);
         return new Stop(
@@ -56,7 +57,7 @@ public class OneStopPerPartOfFileRestructuringTest {
                 ChangestructureFactory.createFragment(fileInRevision(file, 100), posFrom, posTo));
     }
 
-    private static Tour tour(String description, int revision, String... filesWithStops) {
+    private static Tour tour(final String description, final int revision, final String... filesWithStops) {
         final List<Stop> stops = new ArrayList<>();
         for (final String file : filesWithStops) {
             stops.add(stop(file, revision));
@@ -64,7 +65,7 @@ public class OneStopPerPartOfFileRestructuringTest {
         return new Tour(description, stops);
     }
 
-    private static Tour tour(String description, Stop... stops) {
+    private static Tour tour(final String description, final Stop... stops) {
         return new Tour(description, Arrays.asList(stops));
     }
 

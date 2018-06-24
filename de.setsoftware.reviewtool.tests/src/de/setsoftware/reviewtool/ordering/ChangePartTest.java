@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -23,13 +24,13 @@ import de.setsoftware.reviewtool.model.changestructure.StubRepo;
  */
 public class ChangePartTest {
 
-    private static ChangePart cp(Stop... stops) {
+    private static ChangePart cp(final Stop... stops) {
         return new ChangePart(Arrays.asList(stops));
     }
 
-    private static IRevisionedFile file(String name, int revision) {
+    private static IRevisionedFile file(final String name, final int revision) {
         return ChangestructureFactory.createFileInRevision(
-                name, ChangestructureFactory.createRepoRevision(revision, StubRepo.INSTANCE));
+                name, ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
     }
 
     private static IRevisionedFile file(
@@ -37,25 +38,28 @@ public class ChangePartTest {
         return new IRevisionedFile() {
 
             private static final long serialVersionUID = 1L;
+            private final IRevisionedFile file = ChangestructureFactory.createFileInRevision(
+                    name,
+                    ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
 
             @Override
             public IPath toLocalPath(final IWorkingCopy wc) {
-                throw new UnsupportedOperationException();
+                return this.file.toLocalPath(wc);
             }
 
             @Override
             public IRevision getRevision() {
-                return ChangestructureFactory.createRepoRevision(revision, StubRepo.INSTANCE);
+                return this.file.getRevision();
             }
 
             @Override
             public IRepository getRepository() {
-                throw new UnsupportedOperationException();
+                return this.file.getRepository();
             }
 
             @Override
             public String getPath() {
-                return name;
+                return this.file.getPath();
             }
 
             @Override
@@ -65,18 +69,23 @@ public class ChangePartTest {
 
             @Override
             public IResource determineResource() {
-                throw new UnsupportedOperationException();
+                return this.file.determineResource();
+            }
+
+            @Override
+            public boolean le(final IRevisionedFile other) {
+                return this.file.le(other);
             }
         };
     }
 
-    private static Stop binaryStop(String filename) {
+    private static Stop binaryStop(final String filename) {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(null, file(filename, 1), file(filename, 3), false),
                 file(filename, 4));
     }
 
-    private static Stop singleLineStop(IRevisionedFile file, int lineNumber) {
+    private static Stop singleLineStop(final IRevisionedFile file, final int lineNumber) {
         final IPositionInText posFrom = ChangestructureFactory.createPositionInText(lineNumber, 1);
         final IPositionInText posTo = ChangestructureFactory.createPositionInText(lineNumber + 1, 1);
         return new Stop(

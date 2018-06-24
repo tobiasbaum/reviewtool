@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.Collection;
 
+import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
@@ -26,7 +27,7 @@ final class TestRepository extends AbstractRepository {
     }
 
     @Override
-    public IRepoRevision toRevision(final String revisionId) {
+    public IRepoRevision<ComparableWrapper<Long>> toRevision(final String revisionId) {
         try {
             return new TestRepoRevision(this, Long.parseLong(revisionId));
         } catch (final NumberFormatException e) {
@@ -40,7 +41,7 @@ final class TestRepository extends AbstractRepository {
     }
 
     @Override
-    public byte[] getFileContents(final String path, final IRepoRevision revision) throws Exception {
+    public byte[] getFileContents(final String path, final IRepoRevision<?> revision) {
         return new byte[0];
     }
 

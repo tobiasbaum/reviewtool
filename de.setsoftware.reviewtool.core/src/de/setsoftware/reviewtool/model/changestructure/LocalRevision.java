@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
+import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitorE;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
@@ -40,7 +41,7 @@ public final class LocalRevision implements ILocalRevision {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (!(o instanceof LocalRevision)) {
             return false;
         }
@@ -49,12 +50,17 @@ public final class LocalRevision implements ILocalRevision {
     }
 
     @Override
-    public <R> R accept(IRevisionVisitor<R> visitor) {
+    public <R> R accept(final IRevisionVisitor<R> visitor) {
         return visitor.handleLocalRevision(this);
     }
 
     @Override
-    public <R, E extends Throwable> R accept(IRevisionVisitorE<R, E> visitor) throws E {
+    public <R, E extends Throwable> R accept(final IRevisionVisitorE<R, E> visitor) throws E {
         return visitor.handleLocalRevision(this);
+    }
+
+    @Override
+    public boolean le(final IRevision other) {
+        return this.equals(other);
     }
 }
