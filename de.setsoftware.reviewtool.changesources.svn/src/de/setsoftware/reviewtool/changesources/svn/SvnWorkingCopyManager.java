@@ -112,7 +112,7 @@ final class SvnWorkingCopyManager {
 
             if (getEntriesResult.getFirst()) {
                 // remote history has changed, we have to rebuild the local file history graph
-                this.collectWorkingCopyChanges(wc, Collections.emptyList());
+                this.collectWorkingCopyChanges(wc, Collections.<File>emptyList());
             }
         }
         return revisions;
@@ -141,7 +141,7 @@ final class SvnWorkingCopyManager {
      * Collects all local changes of a given working copy and integrates them into the {@link SvnFileHistoryGraph}.
      * @param relevantPaths The list of additional paths to check. If {@code null}, the whole working copy is analyzed.
      */
-    private void collectWorkingCopyChanges(final SvnWorkingCopy wc, final List<File> relevantPaths)
+    private void collectWorkingCopyChanges(final SvnWorkingCopy wc, final List<? extends File> relevantPaths)
             throws SVNException {
 
         final SortedMap<String, CachedLogEntryPath> changeMap = new TreeMap<>();
@@ -216,7 +216,7 @@ final class SvnWorkingCopyManager {
      * @param wc The relevant working copy.
      * @return A set of filtered paths.
      */
-    private Set<File> filterPaths(final List<File> relevantPaths, final SvnWorkingCopy wc) {
+    private Set<File> filterPaths(final List<? extends File> relevantPaths, final SvnWorkingCopy wc) {
         final Set<File> paths = new LinkedHashSet<>();
         for (final File path : relevantPaths) {
             final String repoPath = wc.toAbsolutePathInRepo(path);

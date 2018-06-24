@@ -2,7 +2,7 @@ package de.setsoftware.reviewtool.base;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertThat;
 
 import org.junit.Test;
@@ -21,10 +21,10 @@ public class ComparableWrapperTest {
         assertThat(l1, is(equalTo(l1)));
         assertThat(l1, is(equalTo(ComparableWrapper.wrap(1L))));
 
-        assertThat(l1, is(not(equalTo(l2))));
-        assertThat(l2, is(not(equalTo(l1))));
-        assertThat(l2, is(not(equalTo(i2))));
-        assertThat(i2, is(not(equalTo(l2))));
+        assertNotEquals(l1, l2);
+        assertNotEquals(l2, l1);
+        assertNotEquals(l2, i2);
+        assertNotEquals(i2, l2);
     }
 
     @Test
