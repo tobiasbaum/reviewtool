@@ -66,6 +66,7 @@ import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
@@ -896,7 +897,7 @@ public class ReviewPlugin implements IReviewConfigurable {
                                     + "Error log whether there were problems accessing the repository.");
                     return false;
                 }
-            } catch (final ReviewtoolException e) {
+            } catch (final ChangeSourceException e) {
                 Logger.error("Problem while determining relevant changes", e);
                 return false;
             }

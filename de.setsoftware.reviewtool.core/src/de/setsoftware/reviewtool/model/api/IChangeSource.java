@@ -11,7 +11,7 @@ public interface IChangeSource extends IRepositoryProvider {
     /**
      * Returns all repository changes (that are relevant for the review tool) for the ticket with the given key.
      */
-    public abstract IChangeData getRepositoryChanges(String key, IChangeSourceUi ui);
+    public abstract IChangeData getRepositoryChanges(String key, IChangeSourceUi ui) throws ChangeSourceException;
 
     /**
      * Collects all local changes (that are relevant for the review tool) and updates the local file history graph.
@@ -19,19 +19,19 @@ public interface IChangeSource extends IRepositoryProvider {
      * @param relevantPaths The files to consider while searching for modifications. If {@code null},
      *      the whole working copy is considered.
      */
-    public abstract void analyzeLocalChanges(List<File> relevantPaths);
+    public abstract void analyzeLocalChanges(List<File> relevantPaths) throws ChangeSourceException;
 
     /**
      * Notifies the change source that a project has been added.
      *
      * @param projectRoot The root directory of the project.
      */
-    public abstract void addProject(final File projectRoot);
+    public abstract void addProject(final File projectRoot) throws ChangeSourceException;
 
     /**
      * Notifies the change source that a project has been removed.
      *
      * @param projectRoot The root directory of the project.
      */
-    public abstract void removeProject(final File projectRoot);
+    public abstract void removeProject(final File projectRoot) throws ChangeSourceException;
 }
