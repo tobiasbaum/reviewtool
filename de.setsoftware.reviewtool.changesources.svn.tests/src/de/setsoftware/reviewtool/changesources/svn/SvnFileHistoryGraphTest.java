@@ -12,6 +12,7 @@ import java.util.List;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
@@ -19,6 +20,7 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 
 /**
  * Tests for {@link SvnFileHistoryGraph}.
@@ -63,6 +65,10 @@ public class SvnFileHistoryGraphTest {
         }
     };
 
+    private static IMutableFileHistoryGraph graph() {
+        return new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
+    }
+
     private static IRevisionedFile file(final String path, final long revision) {
         return ChangestructureFactory.createFileInRevision(
                 path,
@@ -75,7 +81,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testUnknownFile() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         assertEquals(
                 Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1), false));
@@ -86,7 +92,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testCopy() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addCopy("a", "b", rev(5), rev(6));
         assertEquals(
@@ -105,7 +111,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testDeletion() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(12));
         assertEquals(
@@ -115,7 +121,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testDeletionOfUnknown() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addDeletion("a", rev(12));
         assertEquals(
                 Arrays.asList(file("a", 1)),
@@ -124,7 +130,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testMoveOneWay() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addCopy("a", "b", rev(5), rev(6));
         g.addDeletion("a", rev(6));
@@ -141,7 +147,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testMoveOtherWay() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(6));
         g.addCopy("a", "b", rev(5), rev(6));
@@ -158,7 +164,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testMoveWithMultipleCopies() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)) );
         g.addCopy("a", "b", rev(5), rev(6));
         g.addDeletion("a", rev(6));
@@ -183,7 +189,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testMoveMultipleTimes() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
@@ -205,7 +211,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testMoveAndDeleteAfterwards() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
@@ -221,7 +227,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testMoveAndDeleteAfterwardsStartWithDeletion() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addDeletion("a", rev(11));
         g.addCopy("a", "b", rev(10), rev(11));
         g.addDeletion("b", rev(21));
@@ -236,7 +242,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testCopyWithRevisionSkip() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addChange("a", rev(6), Collections.singleton(rev(5)));
         g.addDeletion("a", rev(20));
@@ -257,7 +263,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testCopyWithRevisionSkipStartWithDeletion() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addDeletion("a", rev(20));
         g.addCopy("a", "b", rev(5), rev(23));
         assertEquals(
@@ -279,7 +285,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testCopyMultipleTimesWithRevisionSkip() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addChange("a", rev(6), Collections.singleton(rev(5)));
         g.addDeletion("a", rev(20));
@@ -301,7 +307,7 @@ public class SvnFileHistoryGraphTest {
 
     @Test
     public void testMoveParentDirectory() {
-        final SvnFileHistoryGraph g = new SvnFileHistoryGraph();
+        final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addChange("a/x", rev(2), Collections.singleton(rev(1)));
         g.addCopy("a", "b", rev(10), rev(11));

@@ -23,7 +23,10 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 
 /**
  * Manages all known local working copies.
@@ -167,8 +170,9 @@ final class SvnWorkingCopyManager {
         }
 
         final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, changeMap);
-        final SvnFileHistoryGraph localFileHistoryGraph = new SvnFileHistoryGraph();
-        localFileHistoryGraph.processRevision(wcRevision);
+        final IMutableFileHistoryGraph localFileHistoryGraph =
+                new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
+        wcRevision.integrateInto(localFileHistoryGraph);
         wc.setLocalFileHistoryGraph(localFileHistoryGraph);
     }
 

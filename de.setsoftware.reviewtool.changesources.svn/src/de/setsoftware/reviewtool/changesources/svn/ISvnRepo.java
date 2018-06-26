@@ -8,6 +8,7 @@ import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepository;
 
 /**
@@ -46,10 +47,10 @@ interface ISvnRepo extends IRepository {
     public abstract long getLatestRevision() throws SVNException;
 
     @Override
-    public abstract SvnFileHistoryGraph getFileHistoryGraph();
+    public abstract IMutableFileHistoryGraph getFileHistoryGraph();
 
     /**
      * Sets the underlying {@link SvnFileHistoryGraph}.
      */
-    public abstract void setFileHistoryGraph(final SvnFileHistoryGraph fileHistoryGraph);
+    public abstract void setFileHistoryGraph(final IMutableFileHistoryGraph fileHistoryGraph);
 }

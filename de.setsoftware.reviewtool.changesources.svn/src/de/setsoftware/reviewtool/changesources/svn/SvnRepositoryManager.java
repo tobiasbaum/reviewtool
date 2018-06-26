@@ -32,6 +32,7 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 
 /**
  * Manages all known remote repositories.
@@ -284,7 +285,7 @@ final class SvnRepositoryManager {
 
             @SuppressWarnings("unchecked") final List<CachedLogEntry> value =
                     (List<CachedLogEntry>) ois.readObject();
-            final SvnFileHistoryGraph historyGraph = (SvnFileHistoryGraph) ois.readObject();
+            final IMutableFileHistoryGraph historyGraph = (IMutableFileHistoryGraph) ois.readObject();
 
             repo.appendNewEntries(value);
             repo.setFileHistoryGraph(historyGraph);
@@ -327,7 +328,7 @@ final class SvnRepositoryManager {
         final long numEntriesProcessedNow = numEntriesProcessed + 1;
         ui.subTask("Processing revision " + revision.getRevisionNumber()
                 + " (" + numEntriesProcessedNow + "/" + numRevisionsTotal + ")...");
-        repo.getFileHistoryGraph().processRevision(revision);
+        revision.integrateInto(repo.getFileHistoryGraph());
 
         if (numEntriesProcessedNow % REVISION_BLOCK_SIZE == 0) {
             Logger.debug(numEntriesProcessedNow + " revisions processed");
