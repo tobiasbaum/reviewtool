@@ -60,6 +60,32 @@ public class PartialOrderAlgorithmsTest {
     }
 
     @Test
+    public void testGetSomeMaximum() {
+        final MyNumber n1 = new MyNumber(1L);
+        final MyNumber n2 = new MyNumber(2L);
+        final MyNumber n3 = new MyNumber(3L);
+        final MyNumber n4 = new MyNumber(4L);
+
+        final List<MyNumber> numbers = new ArrayList<>();
+        numbers.addAll(Arrays.asList(n1, n2, n3, n4));
+        assertThat(PartialOrderAlgorithms.getSomeMaximum(numbers), is(equalTo(n4)));
+
+        numbers.remove(n4);
+        assertThat(PartialOrderAlgorithms.getSomeMaximum(numbers), anyOf(
+                is(equalTo(n2)),
+                is(equalTo(n3))));
+
+        numbers.remove(n3);
+        assertThat(PartialOrderAlgorithms.getSomeMaximum(numbers), is(equalTo(n2)));
+
+        numbers.remove(n2);
+        assertThat(PartialOrderAlgorithms.getSomeMaximum(numbers), is(equalTo(n1)));
+
+        numbers.remove(n1);
+        assertThat(PartialOrderAlgorithms.getSomeMaximum(numbers), is(nullValue()));
+    }
+
+    @Test
     public void testTopoSortSortedSet() {
         final MyNumber n1 = new MyNumber(1L);
         final MyNumber n2 = new MyNumber(2L);

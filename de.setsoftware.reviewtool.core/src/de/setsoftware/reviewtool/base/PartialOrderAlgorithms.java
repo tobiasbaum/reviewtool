@@ -30,6 +30,24 @@ public final class PartialOrderAlgorithms {
     }
 
     /**
+     * Returns some maximal element of a partially ordered set.
+     * If the underlying revisions are not totally ordered, it is unspecified which maximal element will be returned.
+     * If the collection of revisions passed is empty, {@code null} is returned.
+     * @param elements The collection of elements where to find some maximal element.
+     */
+    public static <T extends IPartiallyComparable<T>, U extends T> U getSomeMaximum(final Collection<U> elements) {
+        U smallestSoFar = null;
+        for (final U e : elements) {
+            if (smallestSoFar == null) {
+                smallestSoFar = e;
+            } else if (smallestSoFar.le(e)) {
+                smallestSoFar = e;
+            }
+        }
+        return smallestSoFar;
+    }
+
+    /**
      * Performs a topological sort on a partially ordered collection.
      * @param toSort The collection to be sorted topologically.
      * @return The sorted set, represented as a list.
