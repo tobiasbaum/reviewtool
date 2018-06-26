@@ -1,8 +1,11 @@
 package de.setsoftware.reviewtool.base;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -48,6 +51,58 @@ public final class PartialOrderAlgorithms {
     }
 
     /**
+     * Returns all minimal elements of a partially ordered set.
+     * If the collection of revisions passed is empty, an empty list is returned.
+     * @param elements A partially ordered collection of elements where to find all minimal elements.
+     */
+    public static <T extends IPartiallyComparable<T>, U extends T> List<U> getAllMinimalElements(
+            final Collection<U> elements) {
+
+        final List<U> result = new ArrayList<>();
+        final Deque<U> input = new ArrayDeque<>(elements);
+        while (!input.isEmpty()) {
+            final U minimum = input.removeFirst();
+            result.add(minimum);
+
+            final Iterator<U> it = input.iterator();
+            while (it.hasNext()) {
+                final U element = it.next();
+                if (minimum.le(element)) {
+                    it.remove();
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Returns all maximal elements of a partially ordered set.
+     * If the collection of revisions passed is empty, an empty list is returned.
+     * @param elements A partially ordered collection of elements where to find all maximal elements.
+     */
+    public static <T extends IPartiallyComparable<T>, U extends T> List<U> getAllMaximalElements(
+            final Collection<U> elements) {
+
+        final List<U> result = new ArrayList<>();
+        final Deque<U> input = new ArrayDeque<>(elements);
+        while (!input.isEmpty()) {
+            final U maximum = input.removeLast();
+            result.add(maximum);
+
+            final Iterator<U> it = input.iterator();
+            while (it.hasNext()) {
+                final U element = it.next();
+                if (element.le(maximum)) {
+                    it.remove();
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /**
      * Performs a topological sort on a partially ordered collection.
      * @param toSort The collection to be sorted topologically.
      * @return The sorted set, represented as a list.
@@ -57,12 +112,12 @@ public final class PartialOrderAlgorithms {
             return Collections.emptyList();
         }
 
-        final LinkedHashSet<U> remainingRevisions = new LinkedHashSet<>(toSort);
+        final LinkedHashSet<U> remainingElements = new LinkedHashSet<>(toSort);
         final List<U> ret = new ArrayList<>();
-        while (!remainingRevisions.isEmpty()) {
-            final U minimum = getSomeMinimum(remainingRevisions);
+        while (!remainingElements.isEmpty()) {
+            final U minimum = getSomeMinimum(remainingElements);
             ret.add(minimum);
-            remainingRevisions.remove(minimum);
+            remainingElements.remove(minimum);
         }
         return ret;
     }

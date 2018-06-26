@@ -8,6 +8,7 @@ import static org.junit.Assert.assertThat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Test;
@@ -83,6 +84,74 @@ public class PartialOrderAlgorithmsTest {
 
         numbers.remove(n1);
         assertThat(PartialOrderAlgorithms.getSomeMaximum(numbers), is(nullValue()));
+    }
+
+    @Test
+    public void testGetAllMinimalElements() {
+        final MyNumber n1 = new MyNumber(1L);
+        final MyNumber n2 = new MyNumber(2L);
+        final MyNumber n3 = new MyNumber(3L);
+        final MyNumber n4 = new MyNumber(4L);
+        final MyNumber n5 = new MyNumber(5L);
+
+        final List<MyNumber> numbers = new ArrayList<>();
+        numbers.addAll(Arrays.asList(n1, n2, n3, n4, n5));
+        assertThat(PartialOrderAlgorithms.getAllMinimalElements(numbers), is(equalTo(
+                Arrays.asList(n1))));
+
+        numbers.remove(n1);
+        assertThat(PartialOrderAlgorithms.getAllMinimalElements(numbers), is(equalTo(
+                Arrays.asList(n2, n3, n5))));
+
+        numbers.remove(n2);
+        assertThat(PartialOrderAlgorithms.getAllMinimalElements(numbers), is(equalTo(
+                Arrays.asList(n3, n4, n5))));
+
+        numbers.remove(n3);
+        assertThat(PartialOrderAlgorithms.getAllMinimalElements(numbers), is(equalTo(
+                Arrays.asList(n4, n5))));
+
+        numbers.remove(n4);
+        assertThat(PartialOrderAlgorithms.getAllMinimalElements(numbers), is(equalTo(
+                Arrays.asList(n5))));
+
+        numbers.remove(n5);
+        assertThat(PartialOrderAlgorithms.getAllMinimalElements(numbers), is(equalTo(
+                Collections.emptyList())));
+    }
+
+    @Test
+    public void testGetAllMaximalElements() {
+        final MyNumber n1 = new MyNumber(1L);
+        final MyNumber n2 = new MyNumber(2L);
+        final MyNumber n3 = new MyNumber(3L);
+        final MyNumber n4 = new MyNumber(4L);
+        final MyNumber n5 = new MyNumber(5L);
+
+        final List<MyNumber> numbers = new ArrayList<>();
+        numbers.addAll(Arrays.asList(n1, n2, n3, n4, n5));
+        assertThat(PartialOrderAlgorithms.getAllMaximalElements(numbers), is(equalTo(
+                Arrays.asList(n5, n4, n3))));
+
+        numbers.remove(n5);
+        assertThat(PartialOrderAlgorithms.getAllMaximalElements(numbers), is(equalTo(
+                Arrays.asList(n4, n3))));
+
+        numbers.remove(n4);
+        assertThat(PartialOrderAlgorithms.getAllMaximalElements(numbers), is(equalTo(
+                Arrays.asList(n3, n2))));
+
+        numbers.remove(n3);
+        assertThat(PartialOrderAlgorithms.getAllMaximalElements(numbers), is(equalTo(
+                Arrays.asList(n2))));
+
+        numbers.remove(n2);
+        assertThat(PartialOrderAlgorithms.getAllMaximalElements(numbers), is(equalTo(
+                Arrays.asList(n1))));
+
+        numbers.remove(n1);
+        assertThat(PartialOrderAlgorithms.getAllMaximalElements(numbers), is(equalTo(
+                Collections.emptyList())));
     }
 
     @Test
