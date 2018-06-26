@@ -1,13 +1,9 @@
-package de.setsoftware.reviewtool.changesources.svn;
+package de.setsoftware.reviewtool.model.changestructure;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 import org.junit.Test;
 
@@ -15,55 +11,12 @@ import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.api.IRepository;
-import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
-import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 
 /**
- * Tests for {@link SvnFileHistoryGraph}.
+ * Tests {@link FileHistoryGraph#getLatestFiles(IRevisionedFile, boolean)}.
  */
-public class SvnFileHistoryGraphTest {
-
-    private static final IRepository STUB_REPO = new AbstractRepository() {
-        private static final long serialVersionUID = 1L;
-
-        @Override
-        public String getId() {
-            return "stub";
-        }
-
-        @Override
-        public IRepoRevision<ComparableWrapper<Long>> toRevision(final String revisionId) {
-            return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(Long.parseLong(revisionId)), this);
-        }
-
-        @Override
-        public IRevision getSmallestRevision(final Collection<? extends IRevision> revisions) {
-            final List<IRevision> list = new ArrayList<>(revisions);
-            Collections.sort(list, new Comparator<IRevision>() {
-                @Override
-                public int compare(final IRevision o1, final IRevision o2) {
-                    final Long rev1 = ComparableWrapper.<Long> unwrap(((IRepoRevision<?>) o1).getId());
-                    final Long rev2 = ComparableWrapper.<Long> unwrap(((IRepoRevision<?>) o2).getId());
-                    return Long.compare(rev1, rev2);
-                }
-            });
-            return list.get(0);
-        }
-
-        @Override
-        public byte[] getFileContents(final String path, final IRepoRevision<?> revision) {
-            return new byte[0];
-        }
-
-        @Override
-        public IMutableFileHistoryGraph getFileHistoryGraph() {
-            return null;
-        }
-    };
+public class FileHistoryGraphGetLatestFilesTest {
 
     private static IMutableFileHistoryGraph graph() {
         return new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
@@ -76,7 +29,7 @@ public class SvnFileHistoryGraphTest {
     }
 
     private static IRepoRevision<ComparableWrapper<Long>> rev(final long revision) {
-        return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), STUB_REPO);
+        return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE);
     }
 
     @Test
