@@ -390,7 +390,7 @@ public class VirtualFileHistoryGraphTest {
     @Test
     public void testLocalCopyOfLatestRevision() {
         final IMutableFileHistoryGraph localGraph = graph();
-        localGraph.addCopy("/dir1/dir2/a.txt", "/dir1/dir2/e.txt", this.rev(2), this.localRev());
+        localGraph.addCopy("/dir1/dir2/a.txt", this.rev(2), "/dir1/dir2/e.txt", this.localRev());
         this.virtualFileHistoryGraph.setLocalFileHistoryGraph(localGraph);
 
         final IFileHistoryNode aNodeR2 = this.virtualFileHistoryGraph.getNodeFor(this.file("/dir1/dir2/a.txt", this.rev(2)));
@@ -417,7 +417,7 @@ public class VirtualFileHistoryGraphTest {
     @Test
     public void testLocalCopyOfOlderRevision() {
         final IMutableFileHistoryGraph localGraph = graph();
-        localGraph.addCopy("/dir1/dir2/a.txt", "/dir1/dir2/e.txt", this.rev(1), this.localRev());
+        localGraph.addCopy("/dir1/dir2/a.txt", this.rev(1), "/dir1/dir2/e.txt", this.localRev());
         this.virtualFileHistoryGraph.setLocalFileHistoryGraph(localGraph);
 
         final IFileHistoryNode aNodeR1 = this.virtualFileHistoryGraph.getNodeFor(this.file("/dir1/dir2/a.txt", this.rev(1)));
@@ -518,7 +518,7 @@ public class VirtualFileHistoryGraphTest {
     public void testLocalReplacementByCopyOfLatestRevision() {
         final IMutableFileHistoryGraph localGraph = graph();
         localGraph.addDeletion("/dir1/dir2/c.txt", this.localRev());
-        localGraph.addCopy("/dir1/dir2/a.txt", "/dir1/dir2/c.txt", this.rev(2), this.localRev());
+        localGraph.addCopy("/dir1/dir2/a.txt", this.rev(2), "/dir1/dir2/c.txt", this.localRev());
         this.virtualFileHistoryGraph.setLocalFileHistoryGraph(localGraph);
 
         final IFileHistoryNode aNodeR2 = this.virtualFileHistoryGraph.getNodeFor(this.file("/dir1/dir2/a.txt", this.rev(2)));
@@ -555,7 +555,7 @@ public class VirtualFileHistoryGraphTest {
     public void testLocalReplacementByCopyOfOlderRevision() {
         final IMutableFileHistoryGraph localGraph = graph();
         localGraph.addDeletion("/dir1/dir2/c.txt", this.localRev());
-        localGraph.addCopy("/dir1/dir2/a.txt", "/dir1/dir2/c.txt", this.rev(1), this.localRev());
+        localGraph.addCopy("/dir1/dir2/a.txt", this.rev(1), "/dir1/dir2/c.txt", this.localRev());
         this.virtualFileHistoryGraph.setLocalFileHistoryGraph(localGraph);
 
         final IFileHistoryNode aNodeR1 = this.virtualFileHistoryGraph.getNodeFor(this.file("/dir1/dir2/a.txt", this.rev(1)));

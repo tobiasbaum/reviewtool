@@ -102,8 +102,8 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     @Override
     public final void addCopy(
             final String pathFrom,
-            final String pathTo,
             final IRevision revisionFrom,
+            final String pathTo,
             final IRevision revisionTo) {
 
         final IRevisionedFile fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom);
@@ -161,8 +161,8 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
                 final String childPath = child.getFile().getPath();
                 this.addCopy(
                         childPath,
-                        toParentPath.concat(childPath.substring(fromParentPath.length())),
                         fromRevision,
+                        toParentPath.concat(childPath.substring(fromParentPath.length())),
                         toRevision);
             }
         }

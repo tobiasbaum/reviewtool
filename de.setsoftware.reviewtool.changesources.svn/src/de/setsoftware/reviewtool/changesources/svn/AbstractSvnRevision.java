@@ -35,10 +35,10 @@ abstract class AbstractSvnRevision implements SvnRevision {
                 if (copyPath != null) {
                     graph.addCopy(
                             copyPath,
-                            path,
                             ChangestructureFactory.createRepoRevision(
                                     ComparableWrapper.wrap(pathInfo.getCopyRevision()),
                                     this.getRepository()),
+                            path,
                             this.toRevision());
                 } else {
                     graph.addAddition(path, this.toRevision());
