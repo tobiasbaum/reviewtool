@@ -27,6 +27,7 @@ Bundle-ClassPath: target/lib/minimal-json-0.9.5.jar,
 Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator
 Bundle-ActivationPolicy: lazy
 Export-Package: de.setsoftware.reviewtool.base,
+ de.setsoftware.reviewtool.changesources.core,
  de.setsoftware.reviewtool.config,
  de.setsoftware.reviewtool.diffalgorithms,
  de.setsoftware.reviewtool.model,
