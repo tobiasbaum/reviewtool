@@ -161,6 +161,28 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
         return edges;
     }
 
+    @Override
+    public Set<? extends IFileHistoryNode> getMoveSources() {
+        final Set<IFileHistoryNode> moveSources = new LinkedHashSet<>();
+        for (final IFileHistoryNode node : this.nodes) {
+            for (final IFileHistoryNode moveSource : node.getMoveSources()) {
+                moveSources.add(this.graph.getNodeFor(moveSource.getFile()));
+            }
+        }
+        return moveSources;
+    }
+
+    @Override
+    public Set<? extends IFileHistoryNode> getMoveTargets() {
+        final Set<IFileHistoryNode> moveTargets = new LinkedHashSet<>();
+        for (final IFileHistoryNode node : this.nodes) {
+            for (final IFileHistoryNode moveTarget : node.getMoveTargets()) {
+                moveTargets.add(this.graph.getNodeFor(moveTarget.getFile()));
+            }
+        }
+        return moveTargets;
+    }
+
     /**
      * Adds an ancestor node explicitly. This is necessary if a connection between two different revisions is needed.
      * @param ancestor The ancestor node to add.

@@ -16,7 +16,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
  */
 public final class FileHistoryNode extends ProxyableFileHistoryNode {
 
-    private static final long serialVersionUID = 7938054839176372206L;
+    private static final long serialVersionUID = 2567109993505151053L;
 
     private final FileHistoryGraph graph;
     private final IRevisionedFile file;
@@ -24,6 +24,8 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
     private final Set<ProxyableFileHistoryEdge> descendants;
     private transient ProxyableFileHistoryNode parent;
     private final Set<ProxyableFileHistoryNode> children;
+    private final Set<ProxyableFileHistoryNode> moveSources;
+    private final Set<ProxyableFileHistoryNode> moveTargets;
     private Type type;
     private boolean hasAllChildren;
 
@@ -39,6 +41,8 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
         this.children = new LinkedHashSet<>();
+        this.moveSources = new LinkedHashSet<>();
+        this.moveTargets = new LinkedHashSet<>();
         this.type = type;
         this.hasAllChildren = false;
     }
@@ -56,6 +60,8 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
             final Set<ProxyableFileHistoryEdge> descendants,
             final ProxyableFileHistoryNode parent,
             final Set<ProxyableFileHistoryNode> children,
+            final Set<ProxyableFileHistoryNode> moveSources,
+            final Set<ProxyableFileHistoryNode> moveTargets,
             final Type type) {
 
         this.graph = graph;
@@ -64,6 +70,8 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
         this.descendants = descendants;
         this.parent = parent;
         this.children = children;
+        this.moveSources = moveSources;
+        this.moveTargets = moveTargets;
         this.type = type;
     }
 
@@ -90,6 +98,16 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
     @Override
     public Set<ProxyableFileHistoryEdge> getDescendants() {
         return this.descendants;
+    }
+
+    @Override
+    public Set<? extends ProxyableFileHistoryNode> getMoveSources() {
+        return this.moveSources;
+    }
+
+    @Override
+    public Set<? extends ProxyableFileHistoryNode> getMoveTargets() {
+        return this.moveTargets;
     }
 
     @Override
@@ -151,6 +169,16 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
         final ProxyableFileHistoryEdge edge = new FileHistoryEdge(this.graph, this, descendant, type);
         this.descendants.add(edge);
         descendant.addAncestor(edge);
+    }
+
+    @Override
+    void addMoveSource(final ProxyableFileHistoryNode node) {
+        this.moveSources.add(node);
+    }
+
+    @Override
+    void addMoveTarget(final ProxyableFileHistoryNode node) {
+        this.moveTargets.add(node);
     }
 
     @Override
@@ -246,6 +274,8 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
                 this.descendants,
                 this.parent == null ? null : this.parent.getFile(),
                 toFiles(this.children),
+                toFiles(this.moveSources),
+                toFiles(this.moveTargets),
                 this.type);
     }
 

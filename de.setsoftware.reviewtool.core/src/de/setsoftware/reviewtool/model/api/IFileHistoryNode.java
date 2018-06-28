@@ -88,6 +88,26 @@ public interface IFileHistoryNode {
     public abstract Set<? extends IFileHistoryEdge> getDescendants();
 
     /**
+     * Returns the set of nodes that constitute the move sources of this node. A path P1 is determined to has moved
+     * to path P2 in revision R if P1 is deleted in R and there is a copy from P1@R' to P2@R (with R' < R).
+     * In this case, P1@R is a move source of P2@R.
+     * Note that for movement detection to work, the deletion must be processed before the copy.
+     * Note that there may exist multiple move sources as each copy constitutes a move in this case (all copy
+     * operations are handled equally).
+     */
+    public abstract Set<? extends IFileHistoryNode> getMoveSources();
+
+    /**
+     * Returns the set of nodes that constitute the move targets of this node. A path P1 is determined to has moved
+     * to path P2 in revision R if P1 is deleted in R and there is a copy from P1@R' to P2@R (with R' < R).
+     * In this case, P2@R is a move target of P1@R.
+     * Note that for movement detection to work, the deletion must be processed before the copy.
+     * Note that there may exist multiple move targets as each copy constitutes a move in this case (all copy
+     * operations are handled equally).
+     */
+    public abstract Set<? extends IFileHistoryNode> getMoveTargets();
+
+    /**
      * Computes {@link FileDiff}s from passed history node to this one. There may be none (if {@code from} is not an
      * ancestor), one (if {@code from} is reached by a single path backwards in history), or multiple ones
      * (if {@code from} can be reached by multiple paths backwards in history).

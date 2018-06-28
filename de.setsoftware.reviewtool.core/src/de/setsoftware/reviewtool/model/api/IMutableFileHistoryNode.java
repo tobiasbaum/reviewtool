@@ -17,4 +17,9 @@ public interface IMutableFileHistoryNode extends IFileHistoryNode, Serializable 
     @Override
     public abstract Set<? extends IMutableFileHistoryEdge> getDescendants();
 
+    @Override
+    public abstract Set<? extends IMutableFileHistoryNode> getMoveSources();
+
+    @Override
+    public abstract Set<? extends IMutableFileHistoryNode> getMoveTargets();
 }

@@ -18,6 +18,12 @@ public abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode i
     @Override
     public abstract Set<? extends ProxyableFileHistoryEdge> getDescendants();
 
+    @Override
+    public abstract Set<? extends ProxyableFileHistoryNode> getMoveSources();
+
+    @Override
+    public abstract Set<? extends ProxyableFileHistoryNode> getMoveTargets();
+
     /**
      * Adds some nearest ancestor {@link ProxyableFileHistoryNode}.
      * This operation is called internally when this node starts being a descendant
@@ -36,6 +42,16 @@ public abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode i
      * Adds a descendant {@link ProxyableFileHistoryNode} of this node.
      */
     abstract void addDescendant(final ProxyableFileHistoryNode descendant, final IFileHistoryEdge.Type type);
+
+    /**
+     * Adds a {@link ProxyableFileHistoryNode} as move source.
+     */
+    abstract void addMoveSource(final ProxyableFileHistoryNode node);
+
+    /**
+     * Adds a {@link ProxyableFileHistoryNode} as move target.
+     */
+    abstract void addMoveTarget(final ProxyableFileHistoryNode node);
 
     /**
      * Makes this node a deleted node. Requires that the node is a {@link Type#ADDED} or {@link Type#CHANGED} node.

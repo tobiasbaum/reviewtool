@@ -1587,6 +1587,10 @@ public final class FileHistoryGraphTest {
         final FileHistoryEdge trunkEdge = new FileHistoryEdge(g, trunkNode, trunkNode2, IFileHistoryEdge.Type.NORMAL);
         assertEquals(Collections.singleton(trunkEdge), trunkNode.getDescendants());
         assertEquals(Collections.singleton(trunkEdge), trunkNode2.getAncestors());
+
+        // move not detected as deletion was processed after copy
+        assertEquals(Collections.emptySet(), aDelNode.getMoveTargets());
+        assertEquals(Collections.emptySet(), aCopyNode.getMoveSources());
     }
 
     @Test
@@ -1643,6 +1647,9 @@ public final class FileHistoryGraphTest {
 
         assertEquals(Collections.emptySet(), trunkNode.getDescendants());
         assertEquals(Collections.singleton(createAlphaNode(repo, g, trunkNode2)), trunkNode2.getAncestors());
+
+        assertEquals(Collections.singleton(aCopyNode), aDelNode.getMoveTargets());
+        assertEquals(Collections.singleton(aDelNode), aCopyNode.getMoveSources());
     }
 
     @Test
@@ -2833,6 +2840,12 @@ public final class FileHistoryGraphTest {
         assertEquals(new HashSet<>(Arrays.asList(xyEdgeCopy, xyEdgeDel)), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdgeCopy), yNode.getAncestors());
         assertEquals(Collections.singleton(xyEdgeDel), xDelNode.getAncestors());
+
+        // move not detected as deletion was processed after copy
+        assertEquals(Collections.emptySet(), xDelNode.getMoveTargets());
+        assertEquals(Collections.emptySet(), yNode.getMoveSources());
+        assertEquals(Collections.emptySet(), aDelNode.getMoveTargets());
+        assertEquals(Collections.emptySet(), aCopyNode.getMoveSources());
     }
 
     @Test
@@ -2910,6 +2923,11 @@ public final class FileHistoryGraphTest {
         assertEquals(new HashSet<>(Arrays.asList(xyEdgeCopy, xyEdgeDel)), xNode.getDescendants());
         assertEquals(Collections.singleton(xyEdgeCopy), yNode.getAncestors());
         assertEquals(Collections.singleton(xyEdgeDel), xDelNode.getAncestors());
+
+        assertEquals(Collections.singleton(yNode), xDelNode.getMoveTargets());
+        assertEquals(Collections.singleton(xDelNode), yNode.getMoveSources());
+        assertEquals(Collections.singleton(aCopyNode), aDelNode.getMoveTargets());
+        assertEquals(Collections.singleton(aDelNode), aCopyNode.getMoveSources());
     }
 
     @Test
