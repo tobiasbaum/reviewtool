@@ -42,7 +42,7 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph, Serializabl
      */
     public abstract void addCopy(
             String pathFrom,
-            String pathTo,
             IRevision revisionFrom,
+            String pathTo,
             IRevision revisionTo);
 }

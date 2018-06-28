@@ -47,7 +47,7 @@ public class FileHistoryGraphGetLatestFilesTest {
     public void testCopy() {
         final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
-        g.addCopy("a", "b", rev(5), rev(6));
+        g.addCopy("a", rev(5), "b", rev(6));
         assertEquals(
                 Arrays.asList(file("a", 5), file("b", 6)),
                 g.getLatestFiles(file("a", 1), false));
@@ -85,7 +85,7 @@ public class FileHistoryGraphGetLatestFilesTest {
     public void testMoveOneWay() {
         final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
-        g.addCopy("a", "b", rev(5), rev(6));
+        g.addCopy("a", rev(5), "b", rev(6));
         g.addDeletion("a", rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
@@ -103,7 +103,7 @@ public class FileHistoryGraphGetLatestFilesTest {
         final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(6));
-        g.addCopy("a", "b", rev(5), rev(6));
+        g.addCopy("a", rev(5), "b", rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6)),
                 g.getLatestFiles(file("a", 1), false));
@@ -119,10 +119,10 @@ public class FileHistoryGraphGetLatestFilesTest {
     public void testMoveWithMultipleCopies() {
         final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)) );
-        g.addCopy("a", "b", rev(5), rev(6));
+        g.addCopy("a", rev(5), "b", rev(6));
         g.addDeletion("a", rev(6));
-        g.addCopy("a", "c", rev(5), rev(6));
-        g.addCopy("a", "d", rev(5), rev(6));
+        g.addCopy("a", rev(5), "c", rev(6));
+        g.addCopy("a", rev(5), "d", rev(6));
         assertEquals(
                 Arrays.asList(file("b", 6), file("c", 6), file("d", 6)),
                 g.getLatestFiles(file("a", 1), false));
@@ -145,11 +145,11 @@ public class FileHistoryGraphGetLatestFilesTest {
         final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(11));
-        g.addCopy("a", "b", rev(10), rev(11));
+        g.addCopy("a", rev(10), "b", rev(11));
         g.addDeletion("b", rev(21));
-        g.addCopy("b", "c", rev(20), rev(21));
+        g.addCopy("b", rev(20), "c", rev(21));
         g.addDeletion("c", rev(31));
-        g.addCopy("c", "d", rev(30), rev(31));
+        g.addCopy("c", rev(30), "d", rev(31));
 
         assertEquals(
                 Arrays.asList(file("d", 31)),
@@ -167,7 +167,7 @@ public class FileHistoryGraphGetLatestFilesTest {
         final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addDeletion("a", rev(11));
-        g.addCopy("a", "b", rev(10), rev(11));
+        g.addCopy("a", rev(10), "b", rev(11));
         g.addDeletion("b", rev(21));
 
         assertEquals(
@@ -182,7 +182,7 @@ public class FileHistoryGraphGetLatestFilesTest {
     public void testMoveAndDeleteAfterwardsStartWithDeletion() {
         final IMutableFileHistoryGraph g = graph();
         g.addDeletion("a", rev(11));
-        g.addCopy("a", "b", rev(10), rev(11));
+        g.addCopy("a", rev(10), "b", rev(11));
         g.addDeletion("b", rev(21));
 
         assertEquals(
@@ -199,7 +199,7 @@ public class FileHistoryGraphGetLatestFilesTest {
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addChange("a", rev(6), Collections.singleton(rev(5)));
         g.addDeletion("a", rev(20));
-        g.addCopy("a", "b", rev(5), rev(23));
+        g.addCopy("a", rev(5), "b", rev(23));
         assertEquals(
                 Arrays.asList(file("b", 23)),
                 g.getLatestFiles(file("a", 1), false));
@@ -218,7 +218,7 @@ public class FileHistoryGraphGetLatestFilesTest {
     public void testCopyWithRevisionSkipStartWithDeletion() {
         final IMutableFileHistoryGraph g = graph();
         g.addDeletion("a", rev(20));
-        g.addCopy("a", "b", rev(5), rev(23));
+        g.addCopy("a", rev(5), "b", rev(23));
         assertEquals(
                 Arrays.asList(file("a", 1)),
                 g.getLatestFiles(file("a", 1), false));
@@ -242,8 +242,8 @@ public class FileHistoryGraphGetLatestFilesTest {
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addChange("a", rev(6), Collections.singleton(rev(5)));
         g.addDeletion("a", rev(20));
-        g.addCopy("a", "b", rev(5), rev(23));
-        g.addCopy("b", "c", rev(23), rev(24));
+        g.addCopy("a", rev(5), "b", rev(23));
+        g.addCopy("b", rev(23), "c", rev(24));
         assertEquals(
                 Arrays.asList(file("b", 23), file("c", 24)),
                 g.getLatestFiles(file("a", 1), false));
@@ -263,7 +263,7 @@ public class FileHistoryGraphGetLatestFilesTest {
         final IMutableFileHistoryGraph g = graph();
         g.addChange("a", rev(1), Collections.singleton(rev(0)));
         g.addChange("a/x", rev(2), Collections.singleton(rev(1)));
-        g.addCopy("a", "b", rev(10), rev(11));
+        g.addCopy("a", rev(10), "b", rev(11));
         g.addChange("a/x", rev(11), Collections.singleton(rev(10)));
         g.addChange("b/x", rev(11), Collections.singleton(rev(10)));
         g.addDeletion("a", rev(13));
