@@ -78,7 +78,8 @@ public class VirtualFileHistoryGraphTest {
         // revision 2
         this.remoteFileHistoryGraph.addChange("/dir1/dir2/a.txt", this.rev(2), Collections.singleton(this.rev(1)));
         this.remoteFileHistoryGraph.addDeletion("/dir1/dir2/b.txt", this.rev(2));
-        this.remoteFileHistoryGraph.addReplacement("/dir1/dir2/c.txt", this.rev(2));
+        this.remoteFileHistoryGraph.addDeletion("/dir1/dir2/c.txt", this.rev(2));
+        this.remoteFileHistoryGraph.addAddition("/dir1/dir2/c.txt", this.rev(2));
     }
 
     @Test
@@ -454,9 +455,12 @@ public class VirtualFileHistoryGraphTest {
     @Test
     public void testLocalReplacement() {
         final IMutableFileHistoryGraph localGraph = graph();
-        localGraph.addReplacement("/dir1/dir2/a.txt", this.localRev());
-        localGraph.addReplacement("/dir1/dir2/c.txt", this.localRev());
-        localGraph.addReplacement("/dir1/dir2/d.txt", this.localRev());
+        localGraph.addDeletion("/dir1/dir2/a.txt", this.localRev());
+        localGraph.addAddition("/dir1/dir2/a.txt", this.localRev());
+        localGraph.addDeletion("/dir1/dir2/c.txt", this.localRev());
+        localGraph.addAddition("/dir1/dir2/c.txt", this.localRev());
+        localGraph.addDeletion("/dir1/dir2/d.txt", this.localRev());
+        localGraph.addAddition("/dir1/dir2/d.txt", this.localRev());
         this.virtualFileHistoryGraph.setLocalFileHistoryGraph(localGraph);
 
         final IFileHistoryNode aNodeR2 = this.virtualFileHistoryGraph.getNodeFor(this.file("/dir1/dir2/a.txt", this.rev(2)));
@@ -513,7 +517,8 @@ public class VirtualFileHistoryGraphTest {
     @Test
     public void testLocalReplacementByCopyOfLatestRevision() {
         final IMutableFileHistoryGraph localGraph = graph();
-        localGraph.addReplacement("/dir1/dir2/c.txt", this.localRev(), "/dir1/dir2/a.txt", this.rev(2));
+        localGraph.addDeletion("/dir1/dir2/c.txt", this.localRev());
+        localGraph.addCopy("/dir1/dir2/a.txt", "/dir1/dir2/c.txt", this.rev(2), this.localRev());
         this.virtualFileHistoryGraph.setLocalFileHistoryGraph(localGraph);
 
         final IFileHistoryNode aNodeR2 = this.virtualFileHistoryGraph.getNodeFor(this.file("/dir1/dir2/a.txt", this.rev(2)));
@@ -549,7 +554,8 @@ public class VirtualFileHistoryGraphTest {
     @Test
     public void testLocalReplacementByCopyOfOlderRevision() {
         final IMutableFileHistoryGraph localGraph = graph();
-        localGraph.addReplacement("/dir1/dir2/c.txt", this.localRev(), "/dir1/dir2/a.txt", this.rev(1));
+        localGraph.addDeletion("/dir1/dir2/c.txt", this.localRev());
+        localGraph.addCopy("/dir1/dir2/a.txt", "/dir1/dir2/c.txt", this.rev(1), this.localRev());
         this.virtualFileHistoryGraph.setLocalFileHistoryGraph(localGraph);
 
         final IFileHistoryNode aNodeR1 = this.virtualFileHistoryGraph.getNodeFor(this.file("/dir1/dir2/a.txt", this.rev(1)));
