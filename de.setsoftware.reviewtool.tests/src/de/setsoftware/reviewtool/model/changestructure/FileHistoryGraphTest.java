@@ -893,7 +893,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNode = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNode.getFile());
@@ -943,7 +944,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNodePrev = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNodePrev.getFile());
@@ -985,7 +987,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addDeletion(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addAddition(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNode = g.getNodeFor(aRevPrev);
@@ -1067,7 +1070,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addDeletion(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addAddition(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNodeReplaced = g.getNodeFor(aRevReplaced);
@@ -2132,9 +2136,10 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
-        g.addReplacement(bRevReplaced.getPath(), bRevReplaced.getRevision(),
-                bRevOrig.getPath(), bRevOrig.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(bRevReplaced.getPath(), bRevReplaced.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevReplaced.getPath(), bRevOrig.getRevision(), bRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -2212,9 +2217,10 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
         g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
-        g.addReplacement(bRevReplaced.getPath(), bRevReplaced.getRevision(),
-                bRevOrig.getPath(), bRevOrig.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(bRevReplaced.getPath(), bRevReplaced.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevReplaced.getPath(), bRevOrig.getRevision(), bRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
