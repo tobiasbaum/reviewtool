@@ -279,36 +279,6 @@ final class SvnChangeSource implements IChangeSource {
         }
     }
 
-    /**
-     * Helpers class to account for the fact that SVN does not fill the copy path
-     * for single files when the whole containing directory has been copied.
-     */
-    private static final class DirectoryCopyInfo {
-        private final List<Pair<String, String>> directoryCopies = new ArrayList<>();
-
-        public DirectoryCopyInfo(final Collection<CachedLogEntryPath> values) {
-            for (final CachedLogEntryPath p : values) {
-                if (p.isDir() && p.getCopyPath() != null) {
-                    this.directoryCopies.add(Pair.create(p.getCopyPath(), p.getPath()));
-                }
-            }
-        }
-
-        private String determineOldPath(final CachedLogEntryPath entryInfo) {
-            if (entryInfo.getCopyPath() != null) {
-                return entryInfo.getCopyPath();
-            }
-            final String path = entryInfo.getPath();
-            for (final Pair<String, String> dirCopy : this.directoryCopies) {
-                if (path.startsWith(dirCopy.getSecond())) {
-                    return dirCopy.getFirst() + path.substring(dirCopy.getSecond().length());
-                }
-            }
-            return path;
-        }
-
-    }
-
     private List<? extends IChange> determineChangesInCommit(
             final SvnWorkingCopy wc,
             final SvnRevision e,
@@ -316,8 +286,6 @@ final class SvnChangeSource implements IChangeSource {
 
         final List<IChange> ret = new ArrayList<>();
         final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();
-        final DirectoryCopyInfo dirCopies = new DirectoryCopyInfo(changedPaths.values());
-        final Set<String> copySources = this.determineCopySources(changedPaths.values(), dirCopies);
         final List<String> sortedPaths = new ArrayList<>(changedPaths.keySet());
         Collections.sort(sortedPaths);
         for (final String path : sortedPaths) {
@@ -329,14 +297,14 @@ final class SvnChangeSource implements IChangeSource {
             if (!value.isFile()) {
                 continue;
             }
-            if (value.isDeleted() && copySources.contains(value.getPath())) {
-                //Moves are contained twice, as a copy and a deletion. The deletion shall not result in a fragment.
-                continue;
-            }
 
             final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(path, e.toRevision());
             final IFileHistoryNode node = wc.getFileHistoryGraph().getNodeFor(fileInfo);
             if (node != null) {
+                if (node.getType().equals(IFileHistoryNode.Type.DELETED) && !node.getMoveTargets().isEmpty()) {
+                    // Moves are contained twice, as a copy and a deletion. The deletion shall not result in a fragment.
+                    continue;
+                }
                 try {
                     ret.addAll(this.determineChangesInFile(wc, node));
                 } catch (final Exception ex) {
@@ -425,21 +393,5 @@ final class SvnChangeSource implements IChangeSource {
 
     private static boolean isStrangeChar(final byte b) {
         return b != '\n' && b != '\r' && b != '\t' && b < 0x20 && b >= 0;
-    }
-
-    private Set<String> determineCopySources(
-            final Collection<CachedLogEntryPath> entries,
-            final DirectoryCopyInfo dirMoves) {
-
-        final Set<String> ret = new LinkedHashSet<>();
-
-        for (final CachedLogEntryPath p : entries) {
-            final String copyPath = dirMoves.determineOldPath(p);
-            if (!copyPath.equals(p.getPath())) {
-                ret.add(copyPath);
-            }
-        }
-
-        return ret;
     }
 }

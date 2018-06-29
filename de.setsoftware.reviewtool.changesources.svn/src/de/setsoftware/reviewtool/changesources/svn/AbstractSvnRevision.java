@@ -1,9 +1,12 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -22,30 +25,70 @@ abstract class AbstractSvnRevision implements SvnRevision {
      * @param revision The revision to process,
      */
     void integrateInto(final IMutableFileHistoryGraph graph) {
-        for (final Entry<String, CachedLogEntryPath> e : this.getChangedPaths().entrySet()) {
+        this.integrateInto(graph, new ArrayList<>(this.getChangedPaths().entrySet()), false);
+    }
+
+    /**
+     * Processes a single SVN repository revision by translating it into a file history graph operation.
+     *
+     * @param revision The revision to process,
+     * @param deferredBatches Copy operations to be processed later.
+     * @param skipFirstCopy If {@code true}, the first copy operation is processed "as is", else it is deferred.
+     */
+    private void integrateInto(
+            final IMutableFileHistoryGraph graph,
+            final List<Map.Entry<String, CachedLogEntryPath>> entries,
+            final boolean skipFirstCopy) {
+
+        final List<List<Map.Entry<String, CachedLogEntryPath>>> deferredCopies = new ArrayList<>();
+        final ListIterator<Map.Entry<String, CachedLogEntryPath>> it = entries.listIterator();
+        boolean firstEntryProcessed = false;
+
+        while (it.hasNext()) {
+            final Map.Entry<String, CachedLogEntryPath> e = it.next();
             final String path = e.getKey();
             final CachedLogEntryPath pathInfo = e.getValue();
+            final String copyPath = pathInfo.getCopyPath();
 
-            if (pathInfo.isDeleted() || pathInfo.isReplaced()) {
-                graph.addDeletion(path, this.toRevision());
-            }
-
-            if (pathInfo.isNew() || pathInfo.isReplaced()) {
-                final String copyPath = pathInfo.getCopyPath();
+            if (pathInfo.isReplaced()) {
                 if (copyPath != null) {
-                    graph.addCopy(
-                            copyPath,
-                            ChangestructureFactory.createRepoRevision(
-                                    ComparableWrapper.wrap(pathInfo.getCopyRevision()),
-                                    this.getRepository()),
-                            path,
-                            this.toRevision());
+                    if (skipFirstCopy && !firstEntryProcessed) {
+                        graph.addDeletion(path, this.toRevision());
+                        graph.addCopy(
+                                copyPath,
+                                ChangestructureFactory.createRepoRevision(
+                                        ComparableWrapper.wrap(pathInfo.getCopyRevision()),
+                                        this.getRepository()),
+                                path,
+                                this.toRevision());
+                        firstEntryProcessed = true;
+                    } else {
+                        deferredCopies.add(this.deferCopy(e, it));
+                    }
+                } else {
+                    graph.addDeletion(path, this.toRevision());
+                    graph.addAddition(path, this.toRevision());
+                }
+            } else if (pathInfo.isDeleted()) {
+                graph.addDeletion(path, this.toRevision());
+            } else if (pathInfo.isNew()) {
+                if (copyPath != null) {
+                    if (skipFirstCopy && !firstEntryProcessed) {
+                        graph.addCopy(
+                                copyPath,
+                                ChangestructureFactory.createRepoRevision(
+                                        ComparableWrapper.wrap(pathInfo.getCopyRevision()),
+                                        this.getRepository()),
+                                path,
+                                this.toRevision());
+                        firstEntryProcessed = true;
+                    } else {
+                        deferredCopies.add(this.deferCopy(e, it));
+                    }
                 } else {
                     graph.addAddition(path, this.toRevision());
                 }
-            }
-
-            if (!pathInfo.isDeleted() && !pathInfo.isNew()  && !pathInfo.isReplaced()) {
+            } else {
                 graph.addChange(
                         path,
                         this.toRevision(),
@@ -54,6 +97,36 @@ abstract class AbstractSvnRevision implements SvnRevision {
                                 this.getRepository())));
             }
         }
+
+        for (final List<Map.Entry<String, CachedLogEntryPath>> deferredCopy : deferredCopies) {
+            this.integrateInto(graph, deferredCopy, true);
+        }
+    }
+
+    /**
+     * Defers a copy target and all entries that refer to a subpath of the copy target.
+     * @param firstEntry The first entry denoting the copy operation.
+     * @param it The entry iterator.
+     * @return The batch containing all deferred entries.
+     */
+    private List<Map.Entry<String, CachedLogEntryPath>> deferCopy(
+            final Map.Entry<String, CachedLogEntryPath> firstEntry,
+            final ListIterator<Map.Entry<String, CachedLogEntryPath>> it) {
+
+        final List<Map.Entry<String, CachedLogEntryPath>> batch = new ArrayList<>();
+        batch.add(firstEntry);
+
+        while (it.hasNext()) {
+            final Map.Entry<String, CachedLogEntryPath> entry = it.next();
+            if (Paths.get(entry.getKey()).startsWith(firstEntry.getKey())) {
+                batch.add(entry);
+            } else {
+                it.previous();
+                return batch;
+            }
+        }
+
+        return batch;
     }
 
     /**

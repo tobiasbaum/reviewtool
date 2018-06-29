@@ -56,6 +56,26 @@ final class CachedLogEntryPath implements Serializable {
         this.kind = mapStatusKind(status.getKind());
     }
 
+    /**
+     * Constructor. Only for testing.
+     */
+    CachedLogEntryPath(
+            final String path,
+            final File localPath,
+            final long prevRevision,
+            final String copyPath,
+            final long copyRevision,
+            final char type,
+            final char kind) {
+        this.path = path;
+        this.localPath = localPath;
+        this.prevRevision = prevRevision;
+        this.copyPath = copyPath;
+        this.copyRevision = copyRevision;
+        this.type = type;
+        this.kind = kind;
+    }
+
     private static char mapStatusKind(final SVNNodeKind nodeKind) {
         if (nodeKind.equals(SVNNodeKind.FILE)) {
             return 'F';

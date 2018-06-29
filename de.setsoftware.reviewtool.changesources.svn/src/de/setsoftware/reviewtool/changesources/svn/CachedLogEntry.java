@@ -35,6 +35,22 @@ final class CachedLogEntry implements Serializable {
         }
     }
 
+    /**
+     * Constructor. Only for testing.
+     */
+    CachedLogEntry(
+            final long revision,
+            final String message,
+            final String author,
+            final Date date,
+            final SortedMap<String, CachedLogEntryPath> paths) {
+        this.revision = revision;
+        this.message = message;
+        this.author = author;
+        this.date = date;
+        this.paths = paths;
+    }
+
     String getMessage() {
         return this.message;
     }
