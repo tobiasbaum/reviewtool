@@ -70,25 +70,29 @@ final class SvnWorkingCopyManager {
      * @return A {@link SvnRepo} or {@code null} if not found.
      */
     synchronized SvnWorkingCopy getWorkingCopy(final File workingCopyRoot) {
-        try {
-            SvnWorkingCopy wc = this.wcPerRootDirectory.get(workingCopyRoot.toString());
-            if (wc == null) {
-                final SVNInfo wcInfo = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.WORKING);
-                final SVNURL wcUrl = wcInfo.getURL();
-                final SvnRepo repo = SvnRepositoryManager.getInstance().getRepo(wcUrl);
-                if (repo == null) {
-                    return null;
-                }
-
-                final SVNURL repoUrl = repo.getRemoteUrl();
-                final String relPath = wcUrl.toString().substring(repoUrl.toString().length());
-                wc = new SvnWorkingCopy(repo, workingCopyRoot, relPath);
-                this.wcPerRootDirectory.put(workingCopyRoot.toString(), wc);
+        SvnWorkingCopy wc = this.wcPerRootDirectory.get(workingCopyRoot.toString());
+        if (wc == null) {
+            final SVNInfo wcInfo;
+            try {
+                wcInfo = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.WORKING);
+            } catch (final SVNException e) {
+                // not a working copy
+                // don't log this one as it is probably an unversioned project and hence not an error
+                return null;
             }
-            return wc;
-        } catch (final SVNException e) {
-            return null;
+
+            final SVNURL wcUrl = wcInfo.getURL();
+            final SvnRepo repo = SvnRepositoryManager.getInstance().getRepo(wcUrl);
+            if (repo == null) {
+                return null;
+            }
+
+            final SVNURL repoUrl = repo.getRemoteUrl();
+            final String relPath = wcUrl.toString().substring(repoUrl.toString().length());
+            wc = new SvnWorkingCopy(repo, workingCopyRoot, relPath);
+            this.wcPerRootDirectory.put(workingCopyRoot.toString(), wc);
         }
+        return wc;
     }
 
     /**

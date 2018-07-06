@@ -109,9 +109,9 @@ final class SvnRepositoryManager {
      * @return A {@link SvnRepo} that always points at the root of the remote repository.
      */
     synchronized SvnRepo getRepo(final SVNURL remoteUrl) {
-        try {
-            SvnRepo c = this.repoPerRemoteUrl.get(remoteUrl);
-            if (c == null) {
+        SvnRepo c = this.repoPerRemoteUrl.get(remoteUrl);
+        if (c == null) {
+            try {
                 final SVNRepository svnRepo = this.mgr.createRepository(remoteUrl, false);
                 final SVNURL repositoryRoot = svnRepo.getRepositoryRoot(true);
                 if (!repositoryRoot.equals(remoteUrl)) {
@@ -119,13 +119,15 @@ final class SvnRepositoryManager {
                 }
 
                 c = new SvnRepo(svnRepo, remoteUrl);
-                this.repoPerRemoteUrl.put(remoteUrl, c);
-                SvnRepositoryManager.this.tryToReadCacheFromFile(c);
+            } catch (final SVNException e) {
+                Logger.error("Could not access repository " + remoteUrl, e);
+                return null;
             }
-            return c;
-        } catch (final SVNException e) {
-            return null;
+
+            this.repoPerRemoteUrl.put(remoteUrl, c);
+            SvnRepositoryManager.this.tryToReadCacheFromFile(c);
         }
+        return c;
     }
 
     /**
