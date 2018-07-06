@@ -890,6 +890,12 @@ public class ReviewPlugin implements IReviewConfigurable {
             final IChangeData changes;
             try {
                 changes = this.changeManager.getChangeSource().getRepositoryChanges(ticketKey, sourceUi);
+                if (changes.getMatchedCommits().isEmpty()) {
+                    MessageDialog.openWarning(null, "No commits found",
+                            "No commits have been found for ticket key " + ticketKey + ". Please look into the "
+                                    + "Error log whether there were problems accessing the repository.");
+                    return false;
+                }
             } catch (final ReviewtoolException e) {
                 Logger.error("Problem while determining relevant changes", e);
                 return false;
