@@ -1,10 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.Collection;
-
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.api.IRevision;
 
 final class PartiallyOrderedRepo extends AbstractRepository {
 
@@ -19,11 +16,6 @@ final class PartiallyOrderedRepo extends AbstractRepository {
     @Override
     public IRepoRevision<PartiallyOrderedID> toRevision(final String revisionId) {
         return ChangestructureFactory.createRepoRevision(new PartiallyOrderedID(revisionId), this);
-    }
-
-    @Override
-    public IRevision getSmallestRevision(final Collection<? extends IRevision> revisions) {
-        return getSmallestOfComparableRevisions(revisions);
     }
 
     @Override

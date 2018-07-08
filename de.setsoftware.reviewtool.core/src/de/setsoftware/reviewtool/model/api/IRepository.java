@@ -1,7 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
 import java.io.Serializable;
-import java.util.Collection;
 
 /**
  * A source code management repository.
@@ -20,12 +19,6 @@ public interface IRepository extends Serializable {
      * @return A {@link IRepoRevision} object or {@code null} if ID could not be converted.
      */
     public abstract IRepoRevision<?> toRevision(String revisionId);
-
-    /**
-     * Returns one of the smallest revisions from the given collection. When there are multiple,
-     * mutually incomparable, smallest elements, the first in iteration order is returned.
-     */
-    public abstract IRevision getSmallestRevision(Collection<? extends IRevision> revisions);
 
     /**
      * Returns the contents of some revisioned file in the repository.

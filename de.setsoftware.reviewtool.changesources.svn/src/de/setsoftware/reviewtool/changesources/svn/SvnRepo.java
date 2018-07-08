@@ -22,7 +22,6 @@ import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
-import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
@@ -114,11 +113,6 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
     @Override
     public byte[] getFileContents(final String path, final IRepoRevision<?> revision) throws SVNException {
         return this.fileCache.getFileContents(path, ComparableWrapper.<Long> unwrap(revision.getId()));
-    }
-
-    @Override
-    public IRevision getSmallestRevision(final Collection<? extends IRevision> revisions) {
-        return getSmallestOfComparableRevisions(revisions);
     }
 
     @Override

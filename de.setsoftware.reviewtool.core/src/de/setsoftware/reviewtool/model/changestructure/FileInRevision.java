@@ -16,6 +16,7 @@ import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
@@ -170,8 +171,6 @@ public class FileInRevision implements IRevisionedFile {
         if (toSort.isEmpty()) {
             return Collections.emptyList();
         }
-        //TODO better handling of multiple different repos
-        final IRepository repo = toSort.iterator().next().getRepository();
 
         final LinkedHashSet<IRevision> remainingRevisions = new LinkedHashSet<>();
         final Multimap<IRevision, IRevisionedFile> filesForRevision = new Multimap<>();
@@ -182,7 +181,7 @@ public class FileInRevision implements IRevisionedFile {
 
         final List<IRevisionedFile> ret = new ArrayList<>();
         while (!remainingRevisions.isEmpty()) {
-            final IRevision smallest = repo.getSmallestRevision(remainingRevisions);
+            final IRevision smallest = PartialOrderAlgorithms.getSomeMinimum(remainingRevisions);
             final List<IRevisionedFile> revs = new ArrayList<>(filesForRevision.get(smallest));
             Collections.sort(revs, new Comparator<IRevisionedFile>() {
 
