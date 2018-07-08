@@ -11,10 +11,13 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 
 /**
  * A stub implementation of {@link AbstractRepository} for use by tests.
@@ -24,7 +27,7 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     public static StubRepo INSTANCE = new StubRepo();
     private static final long serialVersionUID = 1L;
 
-    private SvnFileHistoryGraph fileHistoryGraph = new SvnFileHistoryGraph();
+    private IMutableFileHistoryGraph fileHistoryGraph = new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
 
     @Override
     public String getId() {
@@ -47,7 +50,7 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     }
 
     @Override
-    public SvnFileHistoryGraph getFileHistoryGraph() {
+    public IMutableFileHistoryGraph getFileHistoryGraph() {
         return this.fileHistoryGraph;
     }
 
@@ -82,7 +85,7 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     }
 
     @Override
-    public void setFileHistoryGraph(final SvnFileHistoryGraph fileHistoryGraph) {
+    public void setFileHistoryGraph(final IMutableFileHistoryGraph fileHistoryGraph) {
         this.fileHistoryGraph = fileHistoryGraph;
     }
 }

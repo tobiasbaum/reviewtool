@@ -3,7 +3,10 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.io.File;
 import java.nio.file.Path;
 
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.AbstractWorkingCopy;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
 
 /**
@@ -21,7 +24,7 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
         this.workingCopyRoot = workingCopyRoot;
         this.relPath = relPath;
         this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(repo.getFileHistoryGraph());
-        this.setLocalFileHistoryGraph(new SvnFileHistoryGraph());
+        this.setLocalFileHistoryGraph(new FileHistoryGraph(DiffAlgorithmFactory.createDefault()));
     }
 
     @Override
@@ -82,8 +85,8 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     /**
      * Returns the {@link SvnFileHistoryGraph local file history graph}. May be {@code null}.
      */
-    SvnFileHistoryGraph getLocalFileHistoryGraph() {
-        return (SvnFileHistoryGraph) this.combinedFileHistoryGraph.getLocalFileHistoryGraph();
+    IMutableFileHistoryGraph getLocalFileHistoryGraph() {
+        return (IMutableFileHistoryGraph) this.combinedFileHistoryGraph.getLocalFileHistoryGraph();
     }
 
     /**
@@ -91,7 +94,7 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
      * Note that it is not possible to change the file history graph afterwards, as the combined file history graph
      * would not recompute the connecting edges.
      */
-    void setLocalFileHistoryGraph(final SvnFileHistoryGraph localFileHistoryGraph) {
+    void setLocalFileHistoryGraph(final IMutableFileHistoryGraph localFileHistoryGraph) {
         this.combinedFileHistoryGraph.setLocalFileHistoryGraph(localFileHistoryGraph);
     }
 }

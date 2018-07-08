@@ -19,10 +19,13 @@ import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.io.SVNRepository;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 
 /**
  * Represents a remote Subversion repository.
@@ -70,7 +73,7 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
     private final SVNURL remoteUrl;
     private final SvnFileCache fileCache;
     private final List<CachedLogEntry> entries;
-    private SvnFileHistoryGraph fileHistoryGraph;
+    private IMutableFileHistoryGraph fileHistoryGraph;
 
     SvnRepo(final SVNRepository svnRepo, final SVNURL remoteUrl) throws SVNException {
         this.svnRepo = svnRepo;
@@ -78,7 +81,7 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
         this.remoteUrl = remoteUrl;
         this.fileCache = new SvnFileCache(this.svnRepo);
         this.entries = new ArrayList<>();
-        this.fileHistoryGraph = new SvnFileHistoryGraph();
+        this.fileHistoryGraph = new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
     }
 
     @Override
@@ -128,12 +131,12 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
     }
 
     @Override
-    public SvnFileHistoryGraph getFileHistoryGraph() {
+    public IMutableFileHistoryGraph getFileHistoryGraph() {
         return this.fileHistoryGraph;
     }
 
     @Override
-    public void setFileHistoryGraph(final SvnFileHistoryGraph fileHistoryGraph) {
+    public void setFileHistoryGraph(final IMutableFileHistoryGraph fileHistoryGraph) {
         this.fileHistoryGraph = fileHistoryGraph;
     }
 

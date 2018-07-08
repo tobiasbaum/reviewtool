@@ -23,7 +23,10 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 
 /**
  * Manages all known local working copies.
@@ -70,25 +73,29 @@ final class SvnWorkingCopyManager {
      * @return A {@link SvnRepo} or {@code null} if not found.
      */
     synchronized SvnWorkingCopy getWorkingCopy(final File workingCopyRoot) {
-        try {
-            SvnWorkingCopy wc = this.wcPerRootDirectory.get(workingCopyRoot.toString());
-            if (wc == null) {
-                final SVNInfo wcInfo = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.WORKING);
-                final SVNURL wcUrl = wcInfo.getURL();
-                final SvnRepo repo = SvnRepositoryManager.getInstance().getRepo(wcUrl);
-                if (repo == null) {
-                    return null;
-                }
-
-                final SVNURL repoUrl = repo.getRemoteUrl();
-                final String relPath = wcUrl.toString().substring(repoUrl.toString().length());
-                wc = new SvnWorkingCopy(repo, workingCopyRoot, relPath);
-                this.wcPerRootDirectory.put(workingCopyRoot.toString(), wc);
+        SvnWorkingCopy wc = this.wcPerRootDirectory.get(workingCopyRoot.toString());
+        if (wc == null) {
+            final SVNInfo wcInfo;
+            try {
+                wcInfo = this.mgr.getWCClient().doInfo(workingCopyRoot, SVNRevision.WORKING);
+            } catch (final SVNException e) {
+                // not a working copy
+                // don't log this one as it is probably an unversioned project and hence not an error
+                return null;
             }
-            return wc;
-        } catch (final SVNException e) {
-            return null;
+
+            final SVNURL wcUrl = wcInfo.getURL();
+            final SvnRepo repo = SvnRepositoryManager.getInstance().getRepo(wcUrl);
+            if (repo == null) {
+                return null;
+            }
+
+            final SVNURL repoUrl = repo.getRemoteUrl();
+            final String relPath = wcUrl.toString().substring(repoUrl.toString().length());
+            wc = new SvnWorkingCopy(repo, workingCopyRoot, relPath);
+            this.wcPerRootDirectory.put(workingCopyRoot.toString(), wc);
         }
+        return wc;
     }
 
     /**
@@ -163,8 +170,9 @@ final class SvnWorkingCopyManager {
         }
 
         final SvnWorkingCopyRevision wcRevision = new SvnWorkingCopyRevision(wc, changeMap);
-        final SvnFileHistoryGraph localFileHistoryGraph = new SvnFileHistoryGraph();
-        localFileHistoryGraph.processRevision(wcRevision);
+        final IMutableFileHistoryGraph localFileHistoryGraph =
+                new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
+        wcRevision.integrateInto(localFileHistoryGraph);
         wc.setLocalFileHistoryGraph(localFileHistoryGraph);
     }
 

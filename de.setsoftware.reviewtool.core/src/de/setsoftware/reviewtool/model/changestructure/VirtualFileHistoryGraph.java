@@ -67,7 +67,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     private void computeIntermediateNodes(final IFileHistoryNode localNode) {
-        IFileHistoryNode remoteNode = this.remoteFileHistoryGraph.getNodeFor(localNode.getFile());
+        final IFileHistoryNode remoteNode = this.remoteFileHistoryGraph.getNodeFor(localNode.getFile());
         if (remoteNode != null) {
             final VirtualFileHistoryNode virtualNode = new VirtualFileHistoryNode(
                     this,
@@ -77,22 +77,25 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
             return;
         }
 
-        remoteNode = this.remoteFileHistoryGraph.findAncestorFor(localNode.getFile());
-        if (remoteNode != null) {
-            final VirtualFileHistoryNode virtualAncestorNode = new VirtualFileHistoryNode(
-                    this,
-                    remoteNode.getFile(),
-                    Collections.singletonList(remoteNode));
-            final VirtualFileHistoryNode virtualDescendantNode = new VirtualFileHistoryNode(
-                    this,
-                    localNode.getFile(),
-                    Collections.singletonList(localNode));
+        final Set<? extends IFileHistoryNode> remoteNodes =
+                this.remoteFileHistoryGraph.findAncestorsFor(localNode.getFile());
+        if (!remoteNodes.isEmpty()) {
+            for (final IFileHistoryNode node : remoteNodes) {
+                final VirtualFileHistoryNode virtualAncestorNode = new VirtualFileHistoryNode(
+                        this,
+                        node.getFile(),
+                        Collections.singletonList(node));
+                final VirtualFileHistoryNode virtualDescendantNode = new VirtualFileHistoryNode(
+                        this,
+                        localNode.getFile(),
+                        Collections.singletonList(localNode));
 
-            virtualAncestorNode.addDescendant(virtualDescendantNode);
-            virtualDescendantNode.addAncestor(virtualAncestorNode);
+                virtualAncestorNode.addDescendant(virtualDescendantNode);
+                virtualDescendantNode.addAncestor(virtualAncestorNode);
 
-            this.virtualNodes.put(virtualAncestorNode.getFile(), virtualAncestorNode);
-            this.virtualNodes.put(virtualDescendantNode.getFile(), virtualDescendantNode);
+                this.virtualNodes.put(virtualAncestorNode.getFile(), virtualAncestorNode);
+                this.virtualNodes.put(virtualDescendantNode.getFile(), virtualDescendantNode);
+            }
         }
     }
 
@@ -134,23 +137,28 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public IFileHistoryNode findAncestorFor(final IRevisionedFile file) {
+    public Set<VirtualFileHistoryNode> findAncestorsFor(final IRevisionedFile file) {
         final Multimap<IRevisionedFile, IFileHistoryNode> nodeMap = new Multimap<>();
 
-        final IFileHistoryNode remoteAncestor = this.remoteFileHistoryGraph.findAncestorFor(file);
-        if (remoteAncestor != null) {
-            nodeMap.put(remoteAncestor.getFile(), remoteAncestor);
+        final Set<? extends IFileHistoryNode> remoteAncestors = this.remoteFileHistoryGraph.findAncestorsFor(file);
+        for (final IFileHistoryNode ancestor : remoteAncestors) {
+            nodeMap.put(ancestor.getFile(), ancestor);
         }
 
-        final IFileHistoryNode localAncestor = this.localFileHistoryGraph.findAncestorFor(file);
-        if (localAncestor != null) {
-            nodeMap.put(localAncestor.getFile(), localAncestor);
+        final Set<? extends IFileHistoryNode> localAncestors = this.localFileHistoryGraph.findAncestorsFor(file);
+        for (final IFileHistoryNode ancestor : localAncestors) {
+            nodeMap.put(ancestor.getFile(), ancestor);
         }
 
         if (!nodeMap.isEmpty()) {
             final List<IRevisionedFile> sortedFiles = PartialOrderAlgorithms.topoSort(nodeMap.keySet());
-            final List<IFileHistoryNode> nodes = nodeMap.get(sortedFiles.get(sortedFiles.size() - 1));
-            return new VirtualFileHistoryNode(this, file, nodes);
+            final List<IRevisionedFile> maximalFiles = PartialOrderAlgorithms.getAllMaximalElements(sortedFiles);
+            final Set<VirtualFileHistoryNode> ancestors = new LinkedHashSet<>();
+            for (final IRevisionedFile ancestorFile : maximalFiles) {
+                final List<IFileHistoryNode> nodes = nodeMap.get(ancestorFile);
+                ancestors.add(new VirtualFileHistoryNode(this, file, nodes));
+            }
+            return ancestors;
         } else {
             return null;
         }

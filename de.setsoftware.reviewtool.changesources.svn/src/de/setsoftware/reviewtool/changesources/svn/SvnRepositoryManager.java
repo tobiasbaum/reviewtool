@@ -32,6 +32,7 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 
 /**
  * Manages all known remote repositories.
@@ -109,9 +110,9 @@ final class SvnRepositoryManager {
      * @return A {@link SvnRepo} that always points at the root of the remote repository.
      */
     synchronized SvnRepo getRepo(final SVNURL remoteUrl) {
-        try {
-            SvnRepo c = this.repoPerRemoteUrl.get(remoteUrl);
-            if (c == null) {
+        SvnRepo c = this.repoPerRemoteUrl.get(remoteUrl);
+        if (c == null) {
+            try {
                 final SVNRepository svnRepo = this.mgr.createRepository(remoteUrl, false);
                 final SVNURL repositoryRoot = svnRepo.getRepositoryRoot(true);
                 if (!repositoryRoot.equals(remoteUrl)) {
@@ -119,13 +120,15 @@ final class SvnRepositoryManager {
                 }
 
                 c = new SvnRepo(svnRepo, remoteUrl);
-                this.repoPerRemoteUrl.put(remoteUrl, c);
-                SvnRepositoryManager.this.tryToReadCacheFromFile(c);
+            } catch (final SVNException e) {
+                Logger.error("Could not access repository " + remoteUrl, e);
+                return null;
             }
-            return c;
-        } catch (final SVNException e) {
-            return null;
+
+            this.repoPerRemoteUrl.put(remoteUrl, c);
+            SvnRepositoryManager.this.tryToReadCacheFromFile(c);
         }
+        return c;
     }
 
     /**
@@ -282,7 +285,7 @@ final class SvnRepositoryManager {
 
             @SuppressWarnings("unchecked") final List<CachedLogEntry> value =
                     (List<CachedLogEntry>) ois.readObject();
-            final SvnFileHistoryGraph historyGraph = (SvnFileHistoryGraph) ois.readObject();
+            final IMutableFileHistoryGraph historyGraph = (IMutableFileHistoryGraph) ois.readObject();
 
             repo.appendNewEntries(value);
             repo.setFileHistoryGraph(historyGraph);
@@ -325,7 +328,7 @@ final class SvnRepositoryManager {
         final long numEntriesProcessedNow = numEntriesProcessed + 1;
         ui.subTask("Processing revision " + revision.getRevisionNumber()
                 + " (" + numEntriesProcessedNow + "/" + numRevisionsTotal + ")...");
-        repo.getFileHistoryGraph().processRevision(revision);
+        revision.integrateInto(repo.getFileHistoryGraph());
 
         if (numEntriesProcessedNow % REVISION_BLOCK_SIZE == 0) {
             Logger.debug(numEntriesProcessedNow + " revisions processed");

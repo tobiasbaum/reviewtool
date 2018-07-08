@@ -1,13 +1,18 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.model.api.IDiffAlgorithm;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
@@ -18,7 +23,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 /**
  *  A graph of files. Tracks renames, copies and deletion, so that the history of a file forms a tree.
  */
-public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implements IMutableFileHistoryGraph {
+public final class FileHistoryGraph extends AbstractFileHistoryGraph implements IMutableFileHistoryGraph {
 
     private static final long serialVersionUID = -1211314455688759596L;
 
@@ -30,7 +35,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * Constructor.
      * @param diffAlgorithm The algorithm to be used for computing differences between file revisions.
      */
-    protected FileHistoryGraph(final IDiffAlgorithm diffAlgorithm) {
+    public FileHistoryGraph(final IDiffAlgorithm diffAlgorithm) {
         this.diffAlgorithm = diffAlgorithm;
         this.index = new Multimap<>();
         this.incompleteFlowStarts = new Multimap<>();
@@ -210,6 +215,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
 
                 if (inheritCopy && parent.isCopyTarget() && !node.getType().equals(IFileHistoryNode.Type.ADDED)) {
                     final String name = path.substring(path.lastIndexOf("/") + 1);
+                    final Set<ProxyableFileHistoryNode> ancestors = new LinkedHashSet<>();
                     for (final ProxyableFileHistoryEdge parentAncestorEdge : parent.getAncestors()) {
                         final ProxyableFileHistoryNode parentAncestor = parentAncestorEdge.getAncestor();
                         final IRevisionedFile parentAncestorRev = parentAncestor.getFile();
@@ -218,8 +224,9 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
                                 parentAncestorRev.getRevision());
                         final ProxyableFileHistoryNode ancestor =
                                 this.getOrCreateConnectedNode(ancestorRev, IFileHistoryNode.Type.UNCONFIRMED);
-                        this.addNodeWithAncestor(node, ancestor, IFileHistoryEdge.Type.COPY);
+                        ancestors.add(ancestor);
                     }
+                    this.addNodeWithAncestors(node, ancestors, IFileHistoryEdge.Type.COPY);
                 }
             }
         }
@@ -332,7 +339,7 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             final ProxyableFileHistoryNode targetChild = this.getOrCreateUnconnectedNode(
                     file,
                     IFileHistoryNode.Type.CHANGED);
-            this.addNodeWithAncestor(targetChild, ancestorChild, IFileHistoryEdge.Type.NORMAL);
+            this.addNodeWithAncestors(targetChild, Collections.singleton(ancestorChild), IFileHistoryEdge.Type.NORMAL);
         }
     }
 
@@ -406,22 +413,22 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
             this.addParentNodes(node, inheritCopy);
 
             if (node.isRoot() && connected) {
-                ProxyableFileHistoryNode ancestor = node.getType().equals(IFileHistoryNode.Type.ADDED)
-                        ? null
-                        : this.findAncestorFor(file);
-                if (ancestor == null) {
+                final Set<ProxyableFileHistoryNode> ancestors = node.getType().equals(IFileHistoryNode.Type.ADDED)
+                        ? new LinkedHashSet<>()
+                        : this.findAncestorsFor(file);
+                if (ancestors.isEmpty()) {
                     final IRevisionedFile alphaFile = ChangestructureFactory.createFileInRevision(
                             file.getPath(), ChangestructureFactory.createUnknownRevision(file.getRepository()));
                     if (!alphaFile.equals(file)) {
                         if (!node.getType().equals(IFileHistoryNode.Type.ADDED)) {
                             this.incompleteFlowStarts.put(file, node);
                         }
-                        ancestor = this.getOrCreateUnconnectedNode(alphaFile, IFileHistoryNode.Type.UNCONFIRMED);
+                        ancestors.add(this.getOrCreateUnconnectedNode(alphaFile, IFileHistoryNode.Type.UNCONFIRMED));
                     }
                 }
 
-                if (ancestor != null) {
-                    this.addNodeWithAncestor(node, ancestor, IFileHistoryEdge.Type.NORMAL);
+                if (!ancestors.isEmpty()) {
+                    this.addNodeWithAncestors(node, ancestors, IFileHistoryEdge.Type.NORMAL);
                 }
             }
         } else {
@@ -441,20 +448,22 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
      * @param ancestor The ancestor node.
      * @param edgeType The edge to be inserted between the ancestor node and the node to add.
      */
-    private void addNodeWithAncestor(
+    private void addNodeWithAncestors(
             final ProxyableFileHistoryNode node,
-            final ProxyableFileHistoryNode ancestor,
+            final Set<ProxyableFileHistoryNode> ancestors,
             final IFileHistoryEdge.Type edgeType) {
 
-        if (ancestor.isConfirmed() && !node.isConfirmed()) {
-            node.makeConfirmed();
-        }
+        for (final ProxyableFileHistoryNode ancestor : ancestors) {
+            if (ancestor.isConfirmed() && !node.isConfirmed()) {
+                node.makeConfirmed();
+            }
 
-        if (node.isConfirmed()) {
-            this.injectInteriorNode(ancestor, node);
-        }
+            if (node.isConfirmed()) {
+                this.injectInteriorNode(ancestor, node);
+            }
 
-        ancestor.addDescendant(node, edgeType);
+            ancestor.addDescendant(node, edgeType);
+        }
     }
 
     /**
@@ -500,6 +509,25 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     }
 
     @Override
+    public Set<ProxyableFileHistoryNode> findAncestorsFor(final IRevisionedFile file) {
+        final List<ProxyableFileHistoryNode> nodesForKey = this.lookupFile(file);
+
+        final Map<IRevisionedFile, ProxyableFileHistoryNode> ancestorNodes = nodesForKey.stream().filter(
+                (final ProxyableFileHistoryNode node) ->
+                    node.getFile().le(file) && !file.le(node.getFile()))
+                .collect(Collectors.toMap(ProxyableFileHistoryNode::getFile, Function.identity()));
+
+        final List<IRevisionedFile> maximalRevisions =
+                PartialOrderAlgorithms.getAllMaximalElements(PartialOrderAlgorithms.topoSort(ancestorNodes.keySet()));
+
+        final Set<ProxyableFileHistoryNode> result = maximalRevisions.stream()
+                .map((final IRevisionedFile ancestorFile) -> ancestorNodes.get(ancestorFile))
+                .filter((final ProxyableFileHistoryNode node) -> !node.getType().equals(IFileHistoryNode.Type.DELETED))
+                .collect(Collectors.toSet());
+        return result;
+    }
+
+    @Override
     public final Set<IFileHistoryNode> getIncompleteFlowStarts() {
         final Set<IFileHistoryNode> result = new LinkedHashSet<>();
         for (final IRevisionedFile file : this.incompleteFlowStarts.keySet()) {
@@ -516,9 +544,6 @@ public abstract class FileHistoryGraph extends AbstractFileHistoryGraph implemen
     protected final List<ProxyableFileHistoryNode> lookupFile(final IRevisionedFile file) {
         return this.index.get(file.getPath());
     }
-
-    @Override
-    public abstract ProxyableFileHistoryNode findAncestorFor(IRevisionedFile file);
 
     @Override
     public IDiffAlgorithm getDiffAlgorithm() {
