@@ -21,7 +21,7 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -108,7 +108,7 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public IChangeData getRepositoryChanges(final String key, final IChangeSourceUi ui) {
+    public IChangeData getRepositoryChanges(final String key, final IChangeSourceUi ui) throws ChangeSourceException {
         try {
             ui.subTask("Determining relevant commits...");
             final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = this.determineRelevantRevisions(key, ui);
@@ -119,16 +119,16 @@ final class SvnChangeSource implements IChangeSource {
             final List<ICommit> commits = this.convertRepoRevisionsToChanges(revisions, ui);
             return ChangestructureFactory.createChangeData(this, commits);
         } catch (final SVNException e) {
-            throw new ReviewtoolException(e);
+            throw new ChangeSourceException(this, e);
         }
     }
 
     @Override
-    public void analyzeLocalChanges(final List<File> relevantPaths) {
+    public void analyzeLocalChanges(final List<File> relevantPaths) throws ChangeSourceException {
         try {
             SvnWorkingCopyManager.getInstance().collectWorkingCopyChanges(relevantPaths);
         } catch (final SVNException e) {
-            throw new ReviewtoolException(e);
+            throw new ChangeSourceException(this, e);
         }
     }
 
@@ -424,5 +424,4 @@ final class SvnChangeSource implements IChangeSource {
 
         return ret;
     }
-
 }

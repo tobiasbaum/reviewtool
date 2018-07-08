@@ -23,8 +23,8 @@ import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 
 import de.setsoftware.reviewtool.base.Logger;
-import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
+import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
@@ -220,7 +220,8 @@ public final class ChangeManager {
      * @param changeSource The change source to use.
      * @param filesToAnalyze Files to analyze. If {@code null}, all local files are checked for local modifications.
      */
-    private void analyzeLocalChanges(final IChangeSource changeSource, final List<File> filesToAnalyze) {
+    private void analyzeLocalChanges(final IChangeSource changeSource, final List<File> filesToAnalyze)
+            throws ChangeSourceException {
         changeSource.analyzeLocalChanges(filesToAnalyze);
         this.changeManagerListeners.notifyListeners(listener -> listener.localChangeInfoUpdated(this));
     }
@@ -236,7 +237,7 @@ public final class ChangeManager {
                     changeSource.addProject(projectRoot);
                 }
                 this.analyzeLocalChanges(changeSource, null);
-            } catch (final ReviewtoolException e) {
+            } catch (final ChangeSourceException e) {
                 //if there is a problem while determining local changes, ignore them
                 Logger.warn("Problem while initially collecting local changes", e);
             }
@@ -268,7 +269,7 @@ public final class ChangeManager {
                     Logger.info("Removing project " + project);
                 }
                 this.analyzeLocalChanges(changeSource, filesChanged);
-            } catch (final ReviewtoolException e) {
+            } catch (final ChangeSourceException e) {
                 //if there is a problem while determining local changes, ignore them
                 Logger.warn("Problem while processing local changes incrementally", e);
             }
