@@ -3,7 +3,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryEdge;
 
 /**
- * TODO.
+ * Implementation of a {@link IMutableFileHistoryEdge} that can act as a proxy.
  */
 abstract class ProxyableFileHistoryEdge extends AbstractFileHistoryEdge implements IMutableFileHistoryEdge {
 

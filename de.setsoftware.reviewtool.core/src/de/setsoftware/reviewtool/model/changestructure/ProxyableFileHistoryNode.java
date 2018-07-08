@@ -6,7 +6,7 @@ import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
 
 /**
- * TODO.
+ * Implementation of a {@link IMutableFileHistoryNode} that can act as a proxy.
  */
 public abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 

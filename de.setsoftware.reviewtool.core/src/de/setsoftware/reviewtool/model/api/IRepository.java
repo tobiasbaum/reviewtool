@@ -15,6 +15,9 @@ public interface IRepository extends Serializable {
 
     /**
      * Converts the string representation of a repository revision into a {@link IRepoRevision}.
+     *
+     * @param revisionId The revision to convert.
+     * @return A {@link IRepoRevision} object or {@code null} if ID could not be converted.
      */
     public abstract IRepoRevision<?> toRevision(String revisionId);
 
