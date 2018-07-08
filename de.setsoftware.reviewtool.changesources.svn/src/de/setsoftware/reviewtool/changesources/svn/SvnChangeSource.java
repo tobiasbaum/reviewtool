@@ -93,6 +93,11 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     @Override
+    public String getId() {
+        return this.getClass().getName();
+    }
+
+    @Override
     public Collection<SvnRepo> getRepositories() {
         return Collections.unmodifiableCollection(SvnRepositoryManager.getInstance().getRepositories());
     }

@@ -9,6 +9,12 @@ import java.util.List;
 public interface IChangeSource extends IRepositoryProvider {
 
     /**
+     * Returns the ID of this change source.
+     * Implementation note: To make the ID unique, use the package name.
+     */
+    public abstract String getId();
+
+    /**
      * Returns all repository changes (that are relevant for the review tool) for the ticket with the given key.
      */
     public abstract IChangeData getRepositoryChanges(String key, IChangeSourceUi ui) throws ChangeSourceException;
