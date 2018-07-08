@@ -1,2 +1,2 @@
 language: java
-script: mvn integration-test -B
+script: mvn install -Dmaven.javadoc.skip=true -B -V
