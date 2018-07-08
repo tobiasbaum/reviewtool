@@ -79,7 +79,7 @@ public final class RepoRevision<RevIdT extends IPartiallyComparable<RevIdT>> imp
                 if (RepoRevision.this.id.getClass().equals(revision.getId().getClass())) {
                     @SuppressWarnings("unchecked")
                     final RevIdT otherId = (RevIdT) revision.getId();
-                    return RepoRevision.this.id.le(otherId);
+                    return RepoRevision.this.repo.equals(revision.getRepository()) && RepoRevision.this.id.le(otherId);
                 }
                 return false;
             }
