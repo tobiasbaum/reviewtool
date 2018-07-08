@@ -117,7 +117,7 @@ public class PartialOrderAlgorithmsTest {
 
         numbers.remove(n5);
         assertThat(PartialOrderAlgorithms.getAllMinimalElements(numbers), is(equalTo(
-                Collections.emptyList())));
+                Collections.<MyNumber>emptyList())));
     }
 
     @Test
@@ -151,7 +151,7 @@ public class PartialOrderAlgorithmsTest {
 
         numbers.remove(n1);
         assertThat(PartialOrderAlgorithms.getAllMaximalElements(numbers), is(equalTo(
-                Collections.emptyList())));
+                Collections.<MyNumber>emptyList())));
     }
 
     @Test
