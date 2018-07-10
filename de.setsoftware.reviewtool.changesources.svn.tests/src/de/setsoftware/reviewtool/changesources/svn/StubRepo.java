@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -81,5 +82,10 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     @Override
     public void setFileHistoryGraph(final IMutableFileHistoryGraph fileHistoryGraph) {
         this.fileHistoryGraph = fileHistoryGraph;
+    }
+
+    @Override
+    public Set<? extends File> getFiles(final String path, final IRepoRevision<?> revision) {
+        return Collections.emptySet();
     }
 }
