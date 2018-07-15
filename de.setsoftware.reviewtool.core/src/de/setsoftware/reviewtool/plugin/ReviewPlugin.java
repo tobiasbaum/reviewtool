@@ -892,9 +892,23 @@ public class ReviewPlugin implements IReviewConfigurable {
             try {
                 changes = this.changeManager.getChangeSource().getRepositoryChanges(ticketKey, sourceUi);
                 if (changes.getMatchedCommits().isEmpty()) {
-                    final boolean ok = MessageDialog.openConfirm(null, "No commits found",
-                            "No commits have been found for ticket key " + ticketKey + ". If this is unexpected, "
-                            + "please look into the Error log whether there were problems accessing the repository.");
+                    final boolean ok = ReviewPlugin.this.callUiFromBackgroundJob(
+                            null,
+                            display,
+                            new Callback<Boolean, Void>() {
+                                @Override
+                                public Boolean run(final Void input) {
+                                    return MessageDialog.openConfirm(
+                                            display.getActiveShell(),
+                                            "No commits found, continue review?",
+                                            String.format("No commits have been found for ticket key %s.\n\n"
+                                                    + "If this is unexpected, please abort the review and look into "
+                                                    + "the Error log whether there were problems accessing the "
+                                                    + "repository. Otherwise confirm to continue the review.",
+                                                    ticketKey));
+                                }
+                            });
+
                     if (!ok) {
                         return false;
                     }
