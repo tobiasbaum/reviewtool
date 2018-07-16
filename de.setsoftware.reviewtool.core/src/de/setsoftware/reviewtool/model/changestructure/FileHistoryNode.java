@@ -133,7 +133,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
 
     @Override
     public int hashCode() {
-        return this.file.hashCode() ^ this.type.hashCode();
+        return this.file.hashCode();
     }
 
     @Override
