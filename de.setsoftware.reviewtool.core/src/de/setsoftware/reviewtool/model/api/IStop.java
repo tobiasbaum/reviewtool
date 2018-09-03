@@ -101,4 +101,9 @@ public interface IStop {
      * Returns true iff this stop was classified as irrelevant for code review.
      */
     public abstract boolean isIrrelevantForReview();
+
+    /**
+     * Returns the classifications for this stop.
+     */
+    public abstract IClassification[] getClassification();
 }

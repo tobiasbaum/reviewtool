@@ -13,6 +13,7 @@ import de.setsoftware.reviewtool.base.IMultimap;
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.Util;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IHunk;
@@ -316,6 +317,14 @@ public class Stop extends TourElement implements IStop {
     @Override
     public boolean isIrrelevantForReview() {
         return this.irrelevantForReview;
+    }
+
+    @Override
+    public IClassification[] getClassification() {
+        //TEST
+        return this.isIrrelevantForReview()
+                ? new IClassification[] {new Classification("irrelevant")}
+                : new IClassification[0];
     }
 
     @Override

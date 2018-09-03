@@ -59,6 +59,7 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -723,17 +724,32 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         @Override
         public String getToolTipText(Object element) {
             if (element instanceof Tour) {
-                return ((Tour) element).getDescription().replace(" + ", "\n + ");
+                final Tour t = (Tour) element;
+                return this.formatClassification(t)
+                    + t.getDescription().replace(" + ", "\n + ");
             } else if (element instanceof Stop) {
                 final Stop f = (Stop) element;
                 if (f.getMostRecentFragment() != null) {
-                    return f.getMostRecentFragment().toString();
+                    return this.formatClassification(f) + f.getMostRecentFragment().toString();
                 } else {
-                    return f.getMostRecentFile().toString();
+                    return this.formatClassification(f) + f.getMostRecentFile().toString();
                 }
             } else {
                 return element.toString() + "(" + element.getClass() + ")";
             }
+        }
+
+        private String formatClassification(TourElement e) {
+            final IClassification[] cl = e.getClassification();
+            if (cl.length == 0) {
+                return "";
+            }
+            final StringBuilder ret = new StringBuilder(cl[0].getName());
+            for (int i = 1; i < cl.length; i++) {
+                ret.append(", ").append(cl[i].getName());
+            }
+            ret.append("\n");
+            return ret.toString();
         }
 
         @Override

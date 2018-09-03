@@ -1,9 +1,14 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.telemetry.TelemetryEventBuilder;
 import de.setsoftware.reviewtool.telemetry.TelemetryParamSource;
 
@@ -199,6 +204,25 @@ public class Tour extends TourElement {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the intersection of the classification of all children.
+     */
+    @Override
+    public IClassification[] getClassification() {
+        if (this.children.isEmpty()) {
+            return Classification.NONE;
+        }
+        final Iterator<TourElement> iter = this.children.iterator();
+        final Set<IClassification> ret = new LinkedHashSet<>(Arrays.asList(iter.next().getClassification()));
+        while (iter.hasNext()) {
+            ret.retainAll(Arrays.asList(iter.next().getClassification()));
+            if (ret.isEmpty()) {
+                return Classification.NONE;
+            }
+        }
+        return ret.toArray(new IClassification[ret.size()]);
     }
 
 }
