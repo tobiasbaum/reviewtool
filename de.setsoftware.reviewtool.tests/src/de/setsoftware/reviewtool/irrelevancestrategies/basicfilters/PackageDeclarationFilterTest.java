@@ -29,28 +29,28 @@ public class PackageDeclarationFilterTest {
 
     @Test
     public void testFilterPackageChanged() {
-        assertTrue(new PackageDeclarationFilter().isIrrelevant(change(
+        assertTrue(new PackageDeclarationFilter(0).isIrrelevant(change(
                 "package some.test.package;\n",
                 "package another.test.package;\n")));
     }
 
     @Test
     public void testDontFilterAddedPackage() {
-        assertFalse(new PackageDeclarationFilter().isIrrelevant(change(
+        assertFalse(new PackageDeclarationFilter(0).isIrrelevant(change(
                 "",
                 "package some.test.package;\n")));
     }
 
     @Test
     public void testDontFilterRemovedPackage() {
-        assertFalse(new PackageDeclarationFilter().isIrrelevant(change(
+        assertFalse(new PackageDeclarationFilter(0).isIrrelevant(change(
                 "package some.test.package;\n",
                 "")));
     }
 
     @Test
     public void testDontFilterMoreThanPackageChanged() {
-        assertFalse(new PackageDeclarationFilter().isIrrelevant(change(
+        assertFalse(new PackageDeclarationFilter(0).isIrrelevant(change(
                 "package some.test.package;\n",
                 "package another.test.package;\n"
                 + "something more\n")));
@@ -58,7 +58,7 @@ public class PackageDeclarationFilterTest {
 
     @Test
     public void testDontFilterNoPackageAtAll() {
-        assertFalse(new PackageDeclarationFilter().isIrrelevant(change(
+        assertFalse(new PackageDeclarationFilter(0).isIrrelevant(change(
                 "public static class Class1 {\n",
                 "public static class Class2 {\n")));
     }

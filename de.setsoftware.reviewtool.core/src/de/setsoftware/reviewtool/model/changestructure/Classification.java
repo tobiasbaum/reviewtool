@@ -13,10 +13,12 @@ public class Classification implements IClassification {
 
     public static final IClassification[] NONE = new IClassification[0];
 
+    private final int number;
     private final String name;
     private final boolean mergeAsAnd;
 
-    public Classification(String name, boolean mergeAsAnd) {
+    public Classification(int number, String name, boolean mergeAsAnd) {
+        this.number = number;
         this.name = name;
         this.mergeAsAnd = mergeAsAnd;
     }
@@ -24,6 +26,11 @@ public class Classification implements IClassification {
     @Override
     public String getName() {
         return this.name;
+    }
+
+    @Override
+    public int getNumber() {
+        return this.number;
     }
 
     @Override

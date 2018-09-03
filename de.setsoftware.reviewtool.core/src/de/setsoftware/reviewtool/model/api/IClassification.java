@@ -20,4 +20,6 @@ public interface IClassification {
      */
     public abstract boolean mergeAsAnd();
 
+    public abstract int getNumber();
+
 }

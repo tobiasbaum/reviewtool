@@ -15,6 +15,10 @@ import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
  */
 public class ImportChangeFilter extends IIrrelevanceDetermination {
 
+    public ImportChangeFilter(int number) {
+        super(number);
+    }
+
     @Override
     public String getDescription() {
         return "ignore changes in imports";

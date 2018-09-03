@@ -9,6 +9,12 @@ import de.setsoftware.reviewtool.model.api.IClassification;
  */
 public abstract class IIrrelevanceDetermination implements IChangeClassifier {
 
+    private final int number;
+
+    public IIrrelevanceDetermination(int number) {
+        this.number = number;
+    }
+
     /**
      * Returns a description for this irrelevance determination strategy.
      * This description is shown to the user, together with the strategy's result, to allow
@@ -25,7 +31,7 @@ public abstract class IIrrelevanceDetermination implements IChangeClassifier {
     @Override
     public final IClassification classify(IChange change) {
         if (this.isIrrelevant(change)) {
-            return new Classification(this.getDescription(), true);
+            return new Classification(this.number, this.getDescription(), true);
         } else {
             return null;
         }

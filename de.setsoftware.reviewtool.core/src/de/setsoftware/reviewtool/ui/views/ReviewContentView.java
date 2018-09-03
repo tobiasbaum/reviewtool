@@ -40,6 +40,7 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
@@ -54,13 +55,17 @@ import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.part.ViewPart;
 
+import de.setsoftware.reviewtool.base.IMultimap;
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Multiset;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IHunk;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
@@ -596,6 +601,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         };
 
         private static final RGB IRRELEVANT_COLOR = new RGB(170, 170, 170);
+        private static final RGB NOT_VIEWED_COLOR = new RGB(10, 10, 10);
 
         private String getText(Object element) {
             if (element instanceof Tour) {
@@ -614,20 +620,20 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             }
         }
 
-        private Image getImage(Object element) {
+        private Pair<Image, Boolean> getImageAndIrrelevance(Object element) {
             if (element instanceof Stop) {
                 return this.determineImageForStop((Stop) element);
             } else if (element instanceof Tour) {
                 return this.determineImageForTour((Tour) element);
             } else {
-                return null;
+                return Pair.create(null, Boolean.FALSE);
             }
         }
 
-        private Image determineImageForTour(Tour tour) {
+        private Pair<Image, Boolean> determineImageForTour(Tour tour) {
             final ToursInReview tours = ViewDataSource.get().getToursInReview();
             if (tours != null && tours.getActiveTour() == tour) {
-                return ImageCache.getColoredDot(new RGB(255, 0, 0));
+                return Pair.create(ImageCache.getColoredDot(new RGB(255, 0, 0)), Boolean.FALSE);
             }
             final ViewStatistics statistics = TrackerManager.get().getStatistics();
             boolean allIrrelevant = true;
@@ -652,44 +658,110 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             }
 
             if (count > 0 && allMarkedAsChecked) {
-                return ImageCache.getGreenCheckMark();
+                return Pair.create(ImageCache.getGreenCheckMark(), allIrrelevant);
             }
-            return this.determineImage(allNotViewedAtAll, maxRatio, sumRatio / count, allIrrelevant);
+            return Pair.create(
+                    this.determineImage(
+                            allNotViewedAtAll, maxRatio, sumRatio / count, allIrrelevant, this.iconForTour(tour)),
+                    allIrrelevant);
         }
 
-        private Image determineImageForStop(final Stop f) {
+        private IconGrammar iconForTour(Tour tour) {
+            final Multiset<IconGrammar> childIcons = new Multiset<>();
+            for (final Stop s : tour.getStops()) {
+                childIcons.add(this.iconForStop(s));
+            }
+            IconGrammar mostCommon = null;
+            for (final IconGrammar g : childIcons.keySet()) {
+                if (mostCommon == null || childIcons.get(g) > childIcons.get(mostCommon)) {
+                    mostCommon = g;
+                }
+            }
+            return mostCommon;
+        }
+
+        private int classificationToShapeId(TourElement e) {
+            int ret = 0;
+            for (final IClassification cl : e.getClassification()) {
+                ret += cl.getNumber();
+            }
+            return ret;
+        }
+
+        private Pair<Image, Boolean> determineImageForStop(final Stop f) {
             final ViewStatistics statistics = TrackerManager.get().getStatistics();
+            final boolean isIrrelevant =
+                    f.isIrrelevantForReview(ViewDataSource.get().getToursInReview().getIrrelevantCategories());
             if (statistics != null && statistics.isMarkedAsChecked(f)) {
-                return ImageCache.getGreenCheckMark();
+                return Pair.create(ImageCache.getGreenCheckMark(), isIrrelevant);
             }
             final ViewStatDataForStop viewRatio = this.determineViewRatio(f);
-            return this.determineImage(
-                    viewRatio.isNotViewedAtAll(),
-                    viewRatio.getMaxRatio(),
-                    viewRatio.getAverageRatio(),
-                    f.isIrrelevantForReview(ViewDataSource.get().getToursInReview().getIrrelevantCategories()));
+            return Pair.create(
+                    this.determineImage(
+                        viewRatio.isNotViewedAtAll(),
+                        viewRatio.getMaxRatio(),
+                        viewRatio.getAverageRatio(),
+                        isIrrelevant,
+                        this.iconForStop(f)),
+                    isIrrelevant);
+        }
+
+        private IconGrammar iconForStop(Stop f) {
+            return IconGrammar.create(
+                    this.classificationToShapeId(f),
+                    this.srcdirToNumber(f) * 4 + this.historyToNumber(f),
+                    this.curSizeToNumber(f));
+        }
+
+        private int historyToNumber(Stop f) {
+            int sum = 0;
+            final IMultimap<IRevisionedFile, IHunk> history = f.getHunks();
+            for (final IRevisionedFile file : history.keySet()) {
+                for (final IHunk h : history.get(file)) {
+                    sum += h.getSource().getNumberOfLines();
+                }
+            }
+            return Math.min(sum, 3);
+        }
+
+        private int srcdirToNumber(Stop f) {
+            final String filename = f.getMostRecentFile().getPath();
+            if (filename.contains("/src/")) {
+                return 2;
+            } else if (filename.contains("/test/")) {
+                return 1;
+            } else {
+                return 0;
+            }
+        }
+
+        private int curSizeToNumber(Stop f) {
+            final IFragment fragment = f.getMostRecentFragment();
+            if (fragment == null) {
+                return 0;
+            }
+            return Math.min(11, Integer.numberOfTrailingZeros(Integer.highestOneBit(fragment.getNumberOfLines())) + 1);
         }
 
         private Image determineImage(boolean notViewedAtAll, double maxRatio, double averageRatio,
-                boolean irrelevantForReview) {
+                boolean irrelevantForReview, IconGrammar icon) {
             if (notViewedAtAll) {
                 if (irrelevantForReview) {
-                    return ImageCache.getColoredHalfCircle(
+                    return ImageCache.getGrammarBasedIcon(
+                            icon,
                             IRRELEVANT_COLOR,
                             IRRELEVANT_COLOR);
                 } else {
-                    return null;
+                    return ImageCache.getGrammarBasedIcon(
+                            icon,
+                            NOT_VIEWED_COLOR,
+                            NOT_VIEWED_COLOR);
                 }
             } else {
-                if (irrelevantForReview) {
-                    return ImageCache.getColoredHalfCircle(
-                            VIEW_COLORS[toColorIndex(maxRatio)],
-                            VIEW_COLORS[toColorIndex(averageRatio)]);
-                } else {
-                    return ImageCache.getColoredRectangle(
-                            VIEW_COLORS[toColorIndex(maxRatio)],
-                            VIEW_COLORS[toColorIndex(averageRatio)]);
-                }
+                return ImageCache.getGrammarBasedIcon(
+                        icon,
+                        VIEW_COLORS[toColorIndex(maxRatio)],
+                        VIEW_COLORS[toColorIndex(averageRatio)]);
             }
         }
 
@@ -755,7 +827,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         public void update(ViewerCell cell) {
             final Object element = cell.getElement();
             cell.setText(this.getText(element));
-            cell.setImage(this.getImage(element));
+            final Pair<Image, Boolean> imageAndIrrelevant = this.getImageAndIrrelevance(element);
+            cell.setImage(imageAndIrrelevant.getFirst());
+            cell.setForeground(Display.getCurrent().getSystemColor(
+                    imageAndIrrelevant.getSecond() ? SWT.COLOR_GRAY : SWT.COLOR_BLACK));
         }
     }
 

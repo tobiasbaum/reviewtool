@@ -11,6 +11,10 @@ import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
  */
 public class PackageDeclarationFilter extends IIrrelevanceDetermination {
 
+    public PackageDeclarationFilter(int number) {
+        super(number);
+    }
+
     @Override
     public String getDescription() {
         return "ignore changes in package declarations";

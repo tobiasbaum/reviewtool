@@ -77,8 +77,8 @@ public class ImageCache {
     /**
      * Returns a half circle in tree icon size with a border and fill in the given colors.
      */
-    public static Image getColoredHalfCircle(RGB border, RGB fill) {
-        final String key = "cc:" + border.toString() + fill.toString();
+    public static Image getGrammarBasedIcon(IconGrammar icon, RGB border, RGB fill) {
+        final String key = "ic:" + icon + border.toString() + fill.toString();
         if (images.containsKey(key)) {
             return images.get(key);
         }
@@ -87,12 +87,12 @@ public class ImageCache {
         final Image img = new Image(dev, TREE_IMAGE_SIZE);
         final GC gc = new GC(img);
         final Color colorBorder = new Color(dev, border);
-        gc.setBackground(colorBorder);
-        gc.fillArc(8, 3, 12, 8, 90, 180);
-        colorBorder.dispose();
         final Color colorFill = new Color(dev, fill);
+        gc.setForeground(colorBorder);
         gc.setBackground(colorFill);
-        gc.fillArc(9, 4, 10, 6, 90, 180);
+        gc.drawLine(16, 0, 16, 15);
+        icon.paint(gc, 15, 15);
+        colorBorder.dispose();
         colorFill.dispose();
         gc.dispose();
 

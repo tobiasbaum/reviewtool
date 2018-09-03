@@ -13,7 +13,8 @@ public class PathFilter extends IIrrelevanceDetermination {
     private final String description;
     private final Pattern pattern;
 
-    public PathFilter(String pattern, String description) {
+    public PathFilter(int number, String pattern, String description) {
+        super(number);
         this.pattern = convertAntToRegex(pattern);
         this.description = description;
     }

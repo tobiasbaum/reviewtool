@@ -21,7 +21,15 @@ public class PathIrrelevanceFilterConfigurator implements IConfigurator {
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
         configurable.addClassificationStrategy(
-                new PathFilter(xml.getAttribute("pattern"), xml.getAttribute("description")));
+                new PathFilter(this.getNumber(xml), xml.getAttribute("pattern"), xml.getAttribute("description")));
+    }
+
+    private int getNumber(Element xml) {
+        final String s = xml.getAttribute("number");
+        if (s.isEmpty()) {
+            return 23;
+        }
+        return Integer.parseInt(s);
     }
 
 }

@@ -11,6 +11,10 @@ import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
  */
 public class WhitespaceChangeFilter extends IIrrelevanceDetermination {
 
+    public WhitespaceChangeFilter(int number) {
+        super(number);
+    }
+
     @Override
     public String getDescription() {
         return "ignore whitespace only changes";

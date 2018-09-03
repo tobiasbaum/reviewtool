@@ -29,7 +29,7 @@ public class WhitespaceChangeFilterTest {
 
     @Test
     public void testFilterChangedIndentation() {
-        assertTrue(new WhitespaceChangeFilter().isIrrelevant(change(
+        assertTrue(new WhitespaceChangeFilter(0).isIrrelevant(change(
                 "    abc\n"
                 + "    def\n"
                 + "    xyz\n",
@@ -40,7 +40,7 @@ public class WhitespaceChangeFilterTest {
 
     @Test
     public void testFilterTabsToSpaces() {
-        assertTrue(new WhitespaceChangeFilter().isIrrelevant(change(
+        assertTrue(new WhitespaceChangeFilter(0).isIrrelevant(change(
                 "    abc\n"
                 + "    def\n"
                 + "    xyz\n",
@@ -51,7 +51,7 @@ public class WhitespaceChangeFilterTest {
 
     @Test
     public void testFilterDifferentEol() {
-        assertTrue(new WhitespaceChangeFilter().isIrrelevant(change(
+        assertTrue(new WhitespaceChangeFilter(0).isIrrelevant(change(
                 "abc\r\n"
                 + "def\r\n",
                 "abc\n"
@@ -60,28 +60,28 @@ public class WhitespaceChangeFilterTest {
 
     @Test
     public void testFilterTrailingSpaces() {
-        assertTrue(new WhitespaceChangeFilter().isIrrelevant(change(
+        assertTrue(new WhitespaceChangeFilter(0).isIrrelevant(change(
                 "abc    ",
                 "abc")));
     }
 
     @Test
     public void testFilterRemoveDuplicateSpace() {
-        assertTrue(new WhitespaceChangeFilter().isIrrelevant(change(
+        assertTrue(new WhitespaceChangeFilter(0).isIrrelevant(change(
                 "int  a;",
                 "int a;")));
     }
 
     @Test
     public void testDontFilterRealChange() {
-        assertFalse(new WhitespaceChangeFilter().isIrrelevant(change(
+        assertFalse(new WhitespaceChangeFilter(0).isIrrelevant(change(
                 "int a;",
                 "long a;")));
     }
 
     @Test
     public void testChangeInLineBreaking() {
-        assertTrue(new WhitespaceChangeFilter().isIrrelevant(change(
+        assertTrue(new WhitespaceChangeFilter(0).isIrrelevant(change(
                 "{doStuff(1, 2, 3);}",
                 "{\n  doStuff(\n    1,\n    2,\n    3);\n}")));
     }
