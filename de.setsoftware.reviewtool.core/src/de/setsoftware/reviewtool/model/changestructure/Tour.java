@@ -152,7 +152,8 @@ public class Tour extends TourElement {
      * Determines some statistics on the size of the given tours and stores them as params
      * in the given @{link {@link TelemetryEventBuilder}.
      */
-    public static TelemetryParamSource determineSize(final List<? extends Tour> tours, Set<? extends IClassification> irrelevantCategories) {
+    public static TelemetryParamSource determineSize(
+            final List<? extends Tour> tours, Set<? extends IClassification> irrelevantCategories) {
         return new TelemetryParamSource() {
             @Override
             public void addParams(TelemetryEventBuilder event) {

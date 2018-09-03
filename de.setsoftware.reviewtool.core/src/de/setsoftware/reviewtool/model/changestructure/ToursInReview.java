@@ -262,7 +262,11 @@ public class ToursInReview {
         try {
             final List<Tour> ret = new ArrayList<>();
             for (final Tour t : userSelection) {
-                ret.add(new Tour(t.getDescription(), orderingAlgorithm.groupAndSort(t.getStops(), isCanceled, irrelevantCategories)));
+                ret.add(new Tour(
+                        t.getDescription(),
+                        orderingAlgorithm.groupAndSort(t.getStops(),
+                        isCanceled,
+                        irrelevantCategories)));
             }
             return ret;
         } catch (final InterruptedException e) {

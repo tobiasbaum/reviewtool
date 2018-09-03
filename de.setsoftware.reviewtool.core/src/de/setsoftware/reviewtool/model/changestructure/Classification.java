@@ -6,6 +6,9 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IClassification;
 
+/**
+ * Implementation for classification types.
+ */
 public class Classification implements IClassification {
 
     public static final IClassification[] NONE = new IClassification[0];

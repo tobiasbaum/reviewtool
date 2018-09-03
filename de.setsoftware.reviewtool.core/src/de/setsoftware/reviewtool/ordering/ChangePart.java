@@ -104,14 +104,17 @@ public class ChangePart {
     }
 
     private static void groupStopsInFile(
-            List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile, Set<? extends IClassification> irrelevantCategories) {
+            List<ChangePart> resultBuffer,
+            List<Stop> stopsInCurrentFile,
+            Set<? extends IClassification> irrelevantCategories) {
 
         if (stopsInCurrentFile.isEmpty()) {
             return;
         }
         if (stopsInCurrentFile.size() == 1) {
             //optimization: don't parse the file if it is not needed
-            resultBuffer.add(new ChangePart(Collections.singletonList(stopsInCurrentFile.get(0)), irrelevantCategories));
+            resultBuffer.add(new ChangePart(
+                    Collections.singletonList(stopsInCurrentFile.get(0)), irrelevantCategories));
             return;
         }
         if (stopsInCurrentFile.get(0).isBinaryChange()) {
@@ -128,13 +131,19 @@ public class ChangePart {
 
     }
 
-    private static void dontGroup(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile, Set<? extends IClassification> irrelevantCategories) {
+    private static void dontGroup(
+            List<ChangePart> resultBuffer,
+            List<Stop> stopsInCurrentFile,
+            Set<? extends IClassification> irrelevantCategories) {
         for (final Stop s : stopsInCurrentFile) {
             resultBuffer.add(new ChangePart(Collections.singletonList(s), irrelevantCategories));
         }
     }
 
-    private static void groupForJava(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile, Set<? extends IClassification> irrelevantCategories) {
+    private static void groupForJava(
+            List<ChangePart> resultBuffer,
+            List<Stop> stopsInCurrentFile,
+            Set<? extends IClassification> irrelevantCategories) {
         final byte[] contents;
         try {
             contents = stopsInCurrentFile.get(0).getOriginalMostRecentFile().getContents();

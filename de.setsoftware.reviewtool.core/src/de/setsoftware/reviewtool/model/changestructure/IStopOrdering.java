@@ -12,6 +12,8 @@ import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorContr
 public interface IStopOrdering {
 
     public abstract List<? extends TourElement> groupAndSort(
-            List<Stop> stops, TourCalculatorControl isCanceled, Set<? extends IClassification> irrelevantCategories) throws InterruptedException;
+            List<Stop> stops,
+            TourCalculatorControl isCanceled,
+            Set<? extends IClassification> irrelevantCategories) throws InterruptedException;
 
 }

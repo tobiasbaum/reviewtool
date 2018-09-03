@@ -85,7 +85,8 @@ public class SelectIrrelevantDialog extends Dialog {
                 this.createReviewRoundWidget(reviewRoundQueue.remove(), scrollContent);
             }
 
-            final CommitComposite cc = new CommitComposite(scrollContent, SWT.NONE, commit, this.filterChoices.keySet());
+            final CommitComposite cc =
+                    new CommitComposite(scrollContent, SWT.NONE, commit, this.filterChoices.keySet());
             this.commitComposites.add(cc);
             cc.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
         }
