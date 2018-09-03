@@ -40,14 +40,14 @@ public class ChangestructureFactory {
             final IWorkingCopy wc,
             final IRevisionedFile from,
             final IRevisionedFile to) {
-        return new BinaryChange(wc, from, to, false);
+        return new BinaryChange(wc, from, to, Classification.NONE);
     }
 
     public static ITextualChange createTextualChangeHunk(
             final IWorkingCopy wc,
             final IFragment from,
             final IFragment to) {
-        return new TextualChangeHunk(wc, from, to, false);
+        return new TextualChangeHunk(wc, from, to, Classification.NONE);
     }
 
     public static IRevisionedFile createFileInRevision(final String path, final IRevision revision) {

@@ -278,8 +278,7 @@ public class ToursInReview {
             final List<ReviewRoundInfo> reviewRounds) {
 
         Telemetry.event("originalChanges")
-            .param("count", countChanges(changes, false))
-            .param("relevant", countChanges(changes, true))
+            .param("count", countChanges(changes))
             .log();
 
         final List<ICommit> changesWithClassifications = new ArrayList<>();
@@ -342,8 +341,7 @@ public class ToursInReview {
             try {
                 final IClassification cl = strategy.classify(ret);
                 if (cl != null) {
-                    //TEST TODO
-                    ret = ret.makeIrrelevant();
+                    ret = ret.addClassification(cl);
                 }
             } catch (final Exception e) {
                 Logger.error("exception in classification", e);
@@ -352,14 +350,10 @@ public class ToursInReview {
         return ret;
     }
 
-    private static int countChanges(final List<? extends ICommit> changes, final boolean onlyRelevant) {
+    private static int countChanges(final List<? extends ICommit> changes) {
         int ret = 0;
         for (final ICommit commit : changes) {
-            for (final IChange change : commit.getChanges()) {
-                if (!(onlyRelevant && change.isIrrelevantForReview())) {
-                    ret++;
-                }
-            }
+            ret += commit.getChanges().size();
         }
         return ret;
     }

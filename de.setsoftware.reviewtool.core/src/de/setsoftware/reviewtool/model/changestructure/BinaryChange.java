@@ -1,7 +1,10 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.Arrays;
+
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
@@ -17,8 +20,8 @@ public class BinaryChange extends Change implements IBinaryChange {
             final IWorkingCopy wc,
             final IRevisionedFile from,
             final IRevisionedFile to,
-            final boolean irrelevantForReview) {
-        super(wc, irrelevantForReview);
+            final IClassification[] classification) {
+        super(wc, classification);
         this.from = from;
         this.to = to;
     }
@@ -39,10 +42,10 @@ public class BinaryChange extends Change implements IBinaryChange {
     }
 
     @Override
-    public IBinaryChange makeIrrelevant() {
-        if (this.isIrrelevantForReview()) {
+    public IBinaryChange addClassification(IClassification cl) {
+        if (Arrays.asList(this.getClassification()).contains(cl)) {
             return this;
         }
-        return new BinaryChange(this.getWorkingCopy(), this.from, this.to, true);
+        return new BinaryChange(this.getWorkingCopy(), this.from, this.to, this.concatClassification(cl));
     }
 }

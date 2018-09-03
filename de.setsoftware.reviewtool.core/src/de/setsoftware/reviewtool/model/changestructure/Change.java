@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.Arrays;
+
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
@@ -10,28 +12,25 @@ import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 public abstract class Change implements IChange {
 
     private final IWorkingCopy wc;
-    private final boolean irrelevantForReview;
+    private final IClassification[] classification;
 
     /**
      * Constructs a change.
      */
-    public Change(final IWorkingCopy wc, final boolean irrelevantForReview) {
+    public Change(final IWorkingCopy wc, final IClassification[] classification) {
         this.wc = wc;
-        this.irrelevantForReview = irrelevantForReview;
+        this.classification = classification;
     }
 
-    @Override
-    public final boolean isIrrelevantForReview() {
-        return this.irrelevantForReview;
+    protected IClassification[] concatClassification(IClassification cl) {
+        final IClassification[] ret = Arrays.copyOf(this.classification, this.classification.length + 1);
+        ret[this.classification.length] = cl;
+        return ret;
     }
 
     @Override
     public final IClassification[] getClassification() {
-        if (this.isIrrelevantForReview()) {
-            return new IClassification[] {new Classification("irrelevant")};
-        } else {
-            return Classification.NONE;
-        }
+        return this.classification;
     }
 
     @Override

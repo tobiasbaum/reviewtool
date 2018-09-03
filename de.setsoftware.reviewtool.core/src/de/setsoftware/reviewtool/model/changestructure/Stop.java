@@ -57,7 +57,7 @@ public class Stop extends TourElement implements IStop {
         this.mostRecentFileConsideringLocalChanges = null;
         this.mostRecentFragmentConsideringLocalChanges = null;
 
-        this.irrelevantForReview = change.isIrrelevantForReview();
+        this.irrelevantForReview = change.getClassification().length > 0;
     }
 
     /**
@@ -77,7 +77,7 @@ public class Stop extends TourElement implements IStop {
         this.mostRecentFileConsideringLocalChanges = null;
         this.mostRecentFragmentConsideringLocalChanges = null;
 
-        this.irrelevantForReview = change.isIrrelevantForReview();
+        this.irrelevantForReview = change.getClassification().length > 0;
     }
 
     /**

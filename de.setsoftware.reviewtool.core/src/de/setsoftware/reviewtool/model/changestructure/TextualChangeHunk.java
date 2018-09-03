@@ -1,6 +1,9 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.Arrays;
+
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
@@ -18,8 +21,8 @@ public class TextualChangeHunk extends Change implements ITextualChange {
             final IWorkingCopy wc,
             final IFragment from,
             final IFragment to,
-            final boolean irrelevantForReview) {
-        super(wc, irrelevantForReview);
+            final IClassification[] classification) {
+        super(wc, classification);
         this.from = from;
         this.to = to;
     }
@@ -40,11 +43,11 @@ public class TextualChangeHunk extends Change implements ITextualChange {
     }
 
     @Override
-    public ITextualChange makeIrrelevant() {
-        if (this.isIrrelevantForReview()) {
+    public ITextualChange addClassification(IClassification cl) {
+        if (Arrays.asList(this.getClassification()).contains(cl)) {
             return this;
         }
-        return new TextualChangeHunk(this.getWorkingCopy(), this.from, this.to, true);
+        return new TextualChangeHunk(this.getWorkingCopy(), this.from, this.to, this.concatClassification(cl));
     }
 
     @Override
