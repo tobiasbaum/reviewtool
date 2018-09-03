@@ -13,4 +13,11 @@ public interface IClassification {
      */
     public abstract String getName();
 
+    /**
+     * Determines the behavior when merging stops of which only one has this classification.
+     * If this method returns true, the classification is only kept when both stops have it.
+     * Otherwise, only one occurrence suffices.
+     */
+    public abstract boolean mergeAsAnd();
+
 }

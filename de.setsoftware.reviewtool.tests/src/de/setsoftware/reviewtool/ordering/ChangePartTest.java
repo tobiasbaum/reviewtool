@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
@@ -25,7 +26,7 @@ import de.setsoftware.reviewtool.model.changestructure.StubRepo;
 public class ChangePartTest {
 
     private static ChangePart cp(final Stop... stops) {
-        return new ChangePart(Arrays.asList(stops));
+        return new ChangePart(Arrays.asList(stops), Collections.emptySet());
     }
 
     private static IRevisionedFile file(final String name, final int revision) {
@@ -96,16 +97,20 @@ public class ChangePartTest {
                 ChangestructureFactory.createFragment(file, posFrom, posTo));
     }
 
+    private static List<ChangePart> group(final List<Stop> stopsToGroup) {
+        return ChangePart.groupToMinimumGranularity(stopsToGroup, Collections.emptySet());
+    }
+
     @Test
     public void testGroupEmpty() {
-        assertEquals(Collections.emptyList(), ChangePart.groupToMinimumGranularity(Collections.<Stop>emptyList()));
+        assertEquals(Collections.emptyList(), group(Collections.<Stop>emptyList()));
     }
 
     @Test
     public void testGroupSingle() {
         assertEquals(
                 Arrays.asList(cp(binaryStop("A.java"))),
-                ChangePart.groupToMinimumGranularity(Arrays.asList(binaryStop("A.java"))));
+                group(Arrays.asList(binaryStop("A.java"))));
     }
 
     @Test
@@ -115,7 +120,7 @@ public class ChangePartTest {
                         cp(binaryStop("A.java")),
                         cp(binaryStop("B.java")),
                         cp(binaryStop("C.java"))),
-                ChangePart.groupToMinimumGranularity(Arrays.asList(
+                group(Arrays.asList(
                         binaryStop("A.java"),
                         binaryStop("B.java"),
                         binaryStop("C.java"))));
@@ -140,7 +145,7 @@ public class ChangePartTest {
                 Arrays.asList(
                         cp(s1),
                         cp(s2)),
-                ChangePart.groupToMinimumGranularity(Arrays.asList(
+                group(Arrays.asList(
                         s1,
                         s2)));
     }
@@ -163,7 +168,7 @@ public class ChangePartTest {
         assertEquals(
                 Arrays.asList(
                         cp(s1, s2)),
-                ChangePart.groupToMinimumGranularity(Arrays.asList(
+                group(Arrays.asList(
                         s1,
                         s2)));
     }
@@ -187,7 +192,7 @@ public class ChangePartTest {
                 Arrays.asList(
                         cp(s1),
                         cp(s2)),
-                ChangePart.groupToMinimumGranularity(Arrays.asList(
+                group(Arrays.asList(
                         s1,
                         s2)));
     }
@@ -286,7 +291,7 @@ public class ChangePartTest {
                         cp(s29),
                         cp(s30, s31, s32, s33, s34, s35),
                         cp(s36)),
-                ChangePart.groupToMinimumGranularity(Arrays.asList(
+                group(Arrays.asList(
                         s1,
                         s2,
                         s3,

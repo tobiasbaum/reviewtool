@@ -25,7 +25,7 @@ public abstract class IIrrelevanceDetermination implements IChangeClassifier {
     @Override
     public final IClassification classify(IChange change) {
         if (this.isIrrelevant(change)) {
-            return new Classification(this.getDescription());
+            return new Classification(this.getDescription(), true);
         } else {
             return null;
         }

@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -37,7 +38,7 @@ public class Stop extends TourElement implements IStop {
     private transient IRevisionedFile mostRecentFileConsideringLocalChanges;
     private transient IFragment mostRecentFragmentConsideringLocalChanges;
 
-    private final boolean irrelevantForReview;
+    private final IClassification[] classification;
 
     /**
      * Constructor for textual changes.
@@ -57,7 +58,7 @@ public class Stop extends TourElement implements IStop {
         this.mostRecentFileConsideringLocalChanges = null;
         this.mostRecentFragmentConsideringLocalChanges = null;
 
-        this.irrelevantForReview = change.getClassification().length > 0;
+        this.classification = change.getClassification();
     }
 
     /**
@@ -77,7 +78,7 @@ public class Stop extends TourElement implements IStop {
         this.mostRecentFileConsideringLocalChanges = null;
         this.mostRecentFragmentConsideringLocalChanges = null;
 
-        this.irrelevantForReview = change.getClassification().length > 0;
+        this.classification = change.getClassification();
     }
 
     /**
@@ -91,7 +92,7 @@ public class Stop extends TourElement implements IStop {
             final IFragment mostRecentFragment,
             final IRevisionedFile mostRecentFileConsideringLocalChanges,
             final IFragment mostRecentFragmentConsideringLocalChanges,
-            final boolean irrelevantForReview) {
+            final IClassification[] classification) {
 
         this.wc = wc;
         this.historyOrder = historyOrder;
@@ -100,7 +101,7 @@ public class Stop extends TourElement implements IStop {
         this.mostRecentFragment = mostRecentFragment;
         this.mostRecentFileConsideringLocalChanges = mostRecentFileConsideringLocalChanges;
         this.mostRecentFragmentConsideringLocalChanges = mostRecentFragmentConsideringLocalChanges;
-        this.irrelevantForReview = irrelevantForReview;
+        this.classification = classification;
     }
 
     @Override
@@ -180,8 +181,7 @@ public class Stop extends TourElement implements IStop {
      * Return true iff this stop can be merged with the given other stop.
      * Two stops can be merged if they denote the same file and directly
      * neighboring or overlapping segments of that file (or the whole binary file).
-     * Neighboring segments are only considered mergeable if both are either
-     * irrelevant or relevant.
+     * Neighboring segments are only considered mergeable if both have the same classification.
      */
     public boolean canBeMergedWith(final IStop other) {
         if (!this.mostRecentFile.equals(other.getOriginalMostRecentFile())) {
@@ -199,7 +199,7 @@ public class Stop extends TourElement implements IStop {
             } else {
                 final boolean fragmentsMergeable =
                         this.mostRecentFragment.canBeMergedWith(other.getOriginalMostRecentFragment());
-                if (this.irrelevantForReview == other.isIrrelevantForReview()) {
+                if (Arrays.equals(this.getClassification(), other.getClassification())) {
                     return fragmentsMergeable;
                 } else {
                     return fragmentsMergeable
@@ -236,16 +236,12 @@ public class Stop extends TourElement implements IStop {
                 this.mostRecentFragmentConsideringLocalChanges == null ? null
                         : this.mostRecentFragmentConsideringLocalChanges.merge(
                                 other.mostRecentFragmentConsideringLocalChanges),
-                //the result is only irrelevant if both parts are irrelevant. It would probably be more accurate
-                //  to track which part is relevant and which is not (so that a merge could result in multiple
-                //  stops), but this complicates some algorithms and is only useful for large irrelevant stops,
-                //  which should be quite rare
-                this.irrelevantForReview && other.irrelevantForReview);
+                Classification.merge(this.classification, other.classification));
     }
 
     @Override
     public String toString() {
-        return "Stop " + (this.irrelevantForReview ? "(irr.)" : "") + " at "
+        return "Stop " + (this.classification.length > 0 ? Arrays.toString(this.classification) : "") + " at "
                 + (this.mostRecentFragment != null ? this.mostRecentFragment : this.mostRecentFile);
     }
 
@@ -264,7 +260,7 @@ public class Stop extends TourElement implements IStop {
             && Util.sameOrEquals(this.mostRecentFragment, s.mostRecentFragment)
             && this.historyOrder.equals(s.historyOrder)
             && this.history.equals(s.history)
-            && this.irrelevantForReview == s.irrelevantForReview;
+            && Arrays.equals(this.classification, s.classification);
     }
 
     public File getAbsoluteFile() {
@@ -315,16 +311,18 @@ public class Stop extends TourElement implements IStop {
      * @see de.setsoftware.reviewtool.model.changestructure.IStop#isIrrelevantForReview()
      */
     @Override
-    public boolean isIrrelevantForReview() {
-        return this.irrelevantForReview;
+    public boolean isIrrelevantForReview(Set<? extends IClassification> irrelevantCategories) {
+        for (final IClassification c : this.classification) {
+            if (irrelevantCategories.contains(c)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
     public IClassification[] getClassification() {
-        //TEST
-        return this.isIrrelevantForReview()
-                ? new IClassification[] {new Classification("irrelevant")}
-                : new IClassification[0];
+        return this.classification;
     }
 
     @Override

@@ -171,7 +171,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         this.hideIrrelevant = new FilterStateAction("hideIrrelevant", "Hide irrelevant stops") {
             @Override
             protected boolean shallShow(Stop s) {
-                return !s.isIrrelevantForReview();
+                return !s.isIrrelevantForReview(ViewDataSource.get().getToursInReview().getIrrelevantCategories());
             }
         };
 
@@ -648,7 +648,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 maxRatio = Math.max(maxRatio, viewRatio.getMaxRatio());
                 sumRatio += viewRatio.getAverageRatio();
                 count++;
-                allIrrelevant &= f.isIrrelevantForReview();
+                allIrrelevant &= f.isIrrelevantForReview(tours.getIrrelevantCategories());
             }
 
             if (count > 0 && allMarkedAsChecked) {
@@ -667,7 +667,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     viewRatio.isNotViewedAtAll(),
                     viewRatio.getMaxRatio(),
                     viewRatio.getAverageRatio(),
-                    f.isIrrelevantForReview());
+                    f.isIrrelevantForReview(ViewDataSource.get().getToursInReview().getIrrelevantCategories()));
         }
 
         private Image determineImage(boolean notViewedAtAll, double maxRatio, double averageRatio,

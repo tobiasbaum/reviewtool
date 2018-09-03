@@ -3,7 +3,9 @@ package de.setsoftware.reviewtool.ordering;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.changestructure.IStopOrdering;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -30,10 +32,10 @@ public class StopOrdering implements IStopOrdering {
      */
     @Override
     public List<? extends TourElement> groupAndSort(
-            List<Stop> stops, TourCalculatorControl isCanceled)
+            List<Stop> stops, TourCalculatorControl isCanceled, Set<? extends IClassification> irrelevantCategories)
         throws InterruptedException {
 
-        final List<ChangePart> changeParts = ChangePart.groupToMinimumGranularity(stops);
+        final List<ChangePart> changeParts = ChangePart.groupToMinimumGranularity(stops, irrelevantCategories);
 
         TourCalculator.checkInterruption(isCanceled);
 

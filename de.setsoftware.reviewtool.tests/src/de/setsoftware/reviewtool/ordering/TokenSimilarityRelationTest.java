@@ -53,7 +53,7 @@ public class TokenSimilarityRelationTest {
     }
 
     private static ChangePart wrap(final Stop s) {
-        return new ChangePart(Collections.singletonList(s));
+        return new ChangePart(Collections.singletonList(s), Collections.emptySet());
     }
 
     private static List<ChangePart> wrap(final Stop[] stops) {

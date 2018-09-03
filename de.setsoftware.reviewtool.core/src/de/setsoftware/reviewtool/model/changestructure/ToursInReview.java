@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -161,8 +162,12 @@ public class ToursInReview {
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
     private final IChangeManagerListener mostRecentFragmentUpdater;
+    private final Set<? extends IClassification> irrelevantCategories;
 
-    private ToursInReview(final ChangeManager changeManager, final List<? extends Tour> topmostTours) {
+    private ToursInReview(
+            final ChangeManager changeManager,
+            final List<? extends Tour> topmostTours,
+            final Set<? extends IClassification> irrelevantCategories) {
         this.changeManager = changeManager;
         this.topmostTours = new ArrayList<>(topmostTours);
         this.currentTourIndex = 0;
@@ -173,6 +178,7 @@ public class ToursInReview {
             }
         };
         this.changeManager.addListener(this.mostRecentFragmentUpdater);
+        this.irrelevantCategories = irrelevantCategories;
         this.updateMostRecentFragmentsWithLocalChanges();
     }
 
@@ -181,6 +187,7 @@ public class ToursInReview {
         this.topmostTours = new ArrayList<>(topmostTours);
         this.currentTourIndex = 0;
         this.mostRecentFragmentUpdater = null;
+        this.irrelevantCategories = Collections.emptySet();
     }
 
     /**
@@ -205,7 +212,7 @@ public class ToursInReview {
             final IChangeData changes,
             final List<ReviewRoundInfo> reviewRounds) {
         changeSourceUi.subTask("Filtering changes...");
-        final List<? extends ICommit> filteredChanges =
+        final UserSelectedReductions filteredChanges =
                 filterChanges(changeClassificationStrategies, changes.getMatchedCommits(),
                         createUi, changeSourceUi, reviewRounds);
         if (filteredChanges == null) {
@@ -214,12 +221,12 @@ public class ToursInReview {
 
         changeSourceUi.subTask("Creating tours from changes...");
         final List<Tour> tours = toTours(
-                filteredChanges,
+                filteredChanges.commitSubset,
                 new FragmentTracer(),
                 changeSourceUi);
 
-        final List<? extends Tour> userSelection =
-                determinePossibleRestructurings(tourRestructuringStrategies, tours, createUi, changeSourceUi);
+        final List<? extends Tour> userSelection = determinePossibleRestructurings(
+                tourRestructuringStrategies, tours, createUi, changeSourceUi, filteredChanges.toMakeIrrelevant);
         if (userSelection == null) {
             return null;
         }
@@ -227,6 +234,7 @@ public class ToursInReview {
         changeSourceUi.subTask("Ordering stops...");
         final List<? extends Tour> toursToShow = groupAndSort(
                 userSelection,
+                filteredChanges.toMakeIrrelevant,
                 orderingAlgorithm,
                 new TourCalculatorControl() {
                     private static final long FAST_MODE_THRESHOLD = 20000;
@@ -242,18 +250,19 @@ public class ToursInReview {
                     }
                 });
 
-        return new ToursInReview(changeManager, toursToShow);
+        return new ToursInReview(changeManager, toursToShow, filteredChanges.toMakeIrrelevant);
     }
 
     private static List<? extends Tour> groupAndSort(
             final List<? extends Tour> userSelection,
+            final Set<? extends IClassification> irrelevantCategories,
             final IStopOrdering orderingAlgorithm,
             final TourCalculatorControl isCanceled) {
 
         try {
             final List<Tour> ret = new ArrayList<>();
             for (final Tour t : userSelection) {
-                ret.add(new Tour(t.getDescription(), orderingAlgorithm.groupAndSort(t.getStops(), isCanceled)));
+                ret.add(new Tour(t.getDescription(), orderingAlgorithm.groupAndSort(t.getStops(), isCanceled, irrelevantCategories)));
             }
             return ret;
         } catch (final InterruptedException e) {
@@ -270,7 +279,7 @@ public class ToursInReview {
         }
     }
 
-    private static List<? extends ICommit> filterChanges(
+    private static UserSelectedReductions filterChanges(
             final List<? extends IChangeClassifier> changeClassificationStrategies,
             final List<? extends ICommit> changes,
             final ICreateToursUi createUi,
@@ -319,14 +328,9 @@ public class ToursInReview {
             .param("commits", selectedCommits)
             .log();
 
-        final List<ICommit> ret = new ArrayList<>();
-        for (final ICommit c : selected.commitSubset) {
-            ret.add(c);
-        }
+        CommitsInReview.setCommits(new ArrayList<>(selected.commitSubset));
 
-        CommitsInReview.setCommits(ret);
-
-        return ret;
+        return selected;
     }
 
     private static IChange addClassifications(
@@ -362,13 +366,14 @@ public class ToursInReview {
             final List<? extends ITourRestructuring> tourRestructuringStrategies,
             final List<Tour> originalTours,
             final ICreateToursUi createUi,
-            final IProgressMonitor progressMonitor) {
+            final IProgressMonitor progressMonitor,
+            final Set<? extends IClassification> irrelevantCategories) {
 
         final List<Pair<String, List<? extends Tour>>> possibleRestructurings = new ArrayList<>();
 
         possibleRestructurings.add(Pair.<String, List<? extends Tour>>create("one tour per commit", originalTours));
         Telemetry.event("originalTourStructure")
-                .params(Tour.determineSize(originalTours))
+                .params(Tour.determineSize(originalTours, irrelevantCategories))
                 .log();
 
         for (final ITourRestructuring restructuringStrategy : tourRestructuringStrategies) {
@@ -382,7 +387,7 @@ public class ToursInReview {
 
                 Telemetry.event("possibleTourStructure")
                     .param("strategy", restructuringStrategy.getClass())
-                    .params(Tour.determineSize(restructuredTour))
+                    .params(Tour.determineSize(restructuredTour, irrelevantCategories))
                     .log();
 
                 if (restructuredTour != null) {
@@ -674,5 +679,9 @@ public class ToursInReview {
             }
         }
         return null;
+    }
+
+    public Set<? extends IClassification> getIrrelevantCategories() {
+        return this.irrelevantCategories;
     }
 }

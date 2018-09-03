@@ -14,7 +14,7 @@ import de.setsoftware.reviewtool.model.api.IFragment;
  */
 public class TourTest {
 
-    private static IClassification[] IRRELEVANT = new IClassification[] { new Classification("irrelevant") };
+    private static IClassification[] IRRELEVANT = new IClassification[] { new Classification("irrelevant", true) };
 
     private static PositionInText pos(final int line, final int column) {
         return new PositionInText(line, column);

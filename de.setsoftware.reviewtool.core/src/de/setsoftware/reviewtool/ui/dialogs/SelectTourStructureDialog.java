@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -103,7 +104,7 @@ public class SelectTourStructureDialog extends Dialog {
     private int countStops(List<? extends Tour> toursInStructure) {
         int count = 0;
         for (final Tour t : toursInStructure) {
-            count += t.getNumberOfStops(false);
+            count += t.getNumberOfStops(false, Collections.emptySet());
         }
         return count;
     }

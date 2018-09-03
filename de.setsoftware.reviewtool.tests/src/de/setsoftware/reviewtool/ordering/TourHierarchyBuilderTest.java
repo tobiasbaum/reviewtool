@@ -45,7 +45,7 @@ public class TourHierarchyBuilderTest {
     }
 
     private static ChangePart cp(final Stop... stops) {
-        return new ChangePart(Arrays.asList(stops));
+        return new ChangePart(Arrays.asList(stops), Collections.emptySet());
     }
 
     private static List<ChangePart> wrap(final Stop... stops) {

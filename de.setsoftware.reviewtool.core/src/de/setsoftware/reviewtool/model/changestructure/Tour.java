@@ -95,16 +95,16 @@ public class Tour extends TourElement {
         return index <= 0 ? Collections.<Stop>emptyList() : allStops.subList(0, index - 1);
     }
 
-    public int getNumberOfStops(boolean onlyRelevant) {
-        return this.filterRelevance(onlyRelevant).size();
+    public int getNumberOfStops(boolean onlyRelevant, Set<? extends IClassification> irrelevantCategories) {
+        return this.filterRelevance(onlyRelevant, irrelevantCategories).size();
     }
 
     /**
      * Returns the count of all fragments in the contained stops.
      */
-    public int getNumberOfFragments(boolean onlyRelevant) {
+    public int getNumberOfFragments(boolean onlyRelevant, Set<? extends IClassification> irrelevantCategories) {
         int ret = 0;
-        for (final Stop s : this.filterRelevance(onlyRelevant)) {
+        for (final Stop s : this.filterRelevance(onlyRelevant, irrelevantCategories)) {
             ret += s.getNumberOfFragments();
         }
         return ret;
@@ -114,9 +114,9 @@ public class Tour extends TourElement {
      * Returns the total count of all added lines (left-hand side of a fragment).
      * A change is counted as both remove and add.
      */
-    public int getNumberOfAddedLines(boolean onlyRelevant) {
+    public int getNumberOfAddedLines(boolean onlyRelevant, Set<? extends IClassification> irrelevantCategories) {
         int ret = 0;
-        for (final Stop s : this.filterRelevance(onlyRelevant)) {
+        for (final Stop s : this.filterRelevance(onlyRelevant, irrelevantCategories)) {
             ret += s.getNumberOfAddedLines();
         }
         return ret;
@@ -126,19 +126,19 @@ public class Tour extends TourElement {
      * Returns the total count of all removed lines (left-hand side of a fragment).
      * A change is counted as both remove and add.
      */
-    public int getNumberOfRemovedLines(boolean onlyRelevant) {
+    public int getNumberOfRemovedLines(boolean onlyRelevant, Set<? extends IClassification> irrelevantCategories) {
         int ret = 0;
-        for (final Stop s : this.filterRelevance(onlyRelevant)) {
+        for (final Stop s : this.filterRelevance(onlyRelevant, irrelevantCategories)) {
             ret += s.getNumberOfRemovedLines();
         }
         return ret;
     }
 
-    private List<Stop> filterRelevance(boolean onlyRelevant) {
+    private List<Stop> filterRelevance(boolean onlyRelevant, Set<? extends IClassification> irrelevantCategories) {
         if (onlyRelevant) {
             final List<Stop> ret = new ArrayList<>();
             for (final Stop s : this.getStops()) {
-                if (!s.isIrrelevantForReview()) {
+                if (!s.isIrrelevantForReview(irrelevantCategories)) {
                     ret.add(s);
                 }
             }
@@ -152,7 +152,7 @@ public class Tour extends TourElement {
      * Determines some statistics on the size of the given tours and stores them as params
      * in the given @{link {@link TelemetryEventBuilder}.
      */
-    public static TelemetryParamSource determineSize(final List<? extends Tour> tours) {
+    public static TelemetryParamSource determineSize(final List<? extends Tour> tours, Set<? extends IClassification> irrelevantCategories) {
         return new TelemetryParamSource() {
             @Override
             public void addParams(TelemetryEventBuilder event) {
@@ -170,14 +170,14 @@ public class Tour extends TourElement {
                 int numberOfAddedLinesRel = 0;
                 int numberOfRemovedLinesRel = 0;
                 for (final Tour t : tours) {
-                    numberOfStops += t.getNumberOfStops(false);
-                    numberOfFragments += t.getNumberOfFragments(false);
-                    numberOfAddedLines += t.getNumberOfAddedLines(false);
-                    numberOfRemovedLines += t.getNumberOfRemovedLines(false);
-                    numberOfStopsRel += t.getNumberOfStops(true);
-                    numberOfFragmentsRel += t.getNumberOfFragments(true);
-                    numberOfAddedLinesRel += t.getNumberOfAddedLines(true);
-                    numberOfRemovedLinesRel += t.getNumberOfRemovedLines(true);
+                    numberOfStops += t.getNumberOfStops(false, irrelevantCategories);
+                    numberOfFragments += t.getNumberOfFragments(false, irrelevantCategories);
+                    numberOfAddedLines += t.getNumberOfAddedLines(false, irrelevantCategories);
+                    numberOfRemovedLines += t.getNumberOfRemovedLines(false, irrelevantCategories);
+                    numberOfStopsRel += t.getNumberOfStops(true, irrelevantCategories);
+                    numberOfFragmentsRel += t.getNumberOfFragments(true, irrelevantCategories);
+                    numberOfAddedLinesRel += t.getNumberOfAddedLines(true, irrelevantCategories);
+                    numberOfRemovedLinesRel += t.getNumberOfRemovedLines(true, irrelevantCategories);
                 }
                 event.param("cntTours", tours.size());
                 event.param("cntStops", numberOfStops);

@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.api;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.base.IMultimap;
 
@@ -98,9 +99,9 @@ public interface IStop {
     public abstract int getNumberOfRemovedLines();
 
     /**
-     * Returns true iff this stop was classified as irrelevant for code review.
+     * Returns true iff this stop contains one of the given classifications that make it irrelevant.
      */
-    public abstract boolean isIrrelevantForReview();
+    public abstract boolean isIrrelevantForReview(Set<? extends IClassification> irrelevantCategories);
 
     /**
      * Returns the classifications for this stop.

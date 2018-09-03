@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -18,9 +20,11 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 public class ChangePart {
 
     private final List<Stop> stops;
+    private final Set<? extends IClassification> irrelevantCategories;
 
-    public ChangePart(List<Stop> stops) {
+    public ChangePart(List<Stop> stops, Set<? extends IClassification> irrelevantCategories) {
         this.stops = stops;
+        this.irrelevantCategories = irrelevantCategories;
     }
 
     /**
@@ -53,7 +57,7 @@ public class ChangePart {
      */
     public boolean isFullyIrrelevantForReview() {
         for (final Stop s : this.stops) {
-            if (!s.isIrrelevantForReview()) {
+            if (!s.isIrrelevantForReview(this.irrelevantCategories)) {
                 return false;
             }
         }
@@ -63,7 +67,8 @@ public class ChangePart {
     /**
      * Groups the given stops into change parts.
      */
-    public static List<ChangePart> groupToMinimumGranularity(List<Stop> stopsToGroup) {
+    public static List<ChangePart> groupToMinimumGranularity(
+            List<Stop> stopsToGroup, Set<? extends IClassification> irrelevantCategories) {
         //sort by file and by line inside the files
         final List<Stop> sortedStops = new ArrayList<>(stopsToGroup);
         Collections.sort(sortedStops, new Comparator<Stop>() {
@@ -88,47 +93,48 @@ public class ChangePart {
         final List<ChangePart> ret = new ArrayList<>();
         for (final Stop s : sortedStops) {
             if (currentFile == null || !currentFile.equals(s.getOriginalMostRecentFile())) {
-                groupStopsInFile(ret, stopsInCurrentFile);
+                groupStopsInFile(ret, stopsInCurrentFile, irrelevantCategories);
                 currentFile = s.getOriginalMostRecentFile();
                 stopsInCurrentFile.clear();
             }
             stopsInCurrentFile.add(s);
         }
-        groupStopsInFile(ret, stopsInCurrentFile);
+        groupStopsInFile(ret, stopsInCurrentFile, irrelevantCategories);
         return ret;
     }
 
-    private static void groupStopsInFile(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile) {
+    private static void groupStopsInFile(
+            List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile, Set<? extends IClassification> irrelevantCategories) {
 
         if (stopsInCurrentFile.isEmpty()) {
             return;
         }
         if (stopsInCurrentFile.size() == 1) {
             //optimization: don't parse the file if it is not needed
-            resultBuffer.add(new ChangePart(Collections.singletonList(stopsInCurrentFile.get(0))));
+            resultBuffer.add(new ChangePart(Collections.singletonList(stopsInCurrentFile.get(0)), irrelevantCategories));
             return;
         }
         if (stopsInCurrentFile.get(0).isBinaryChange()) {
-            dontGroup(resultBuffer, stopsInCurrentFile);
+            dontGroup(resultBuffer, stopsInCurrentFile, irrelevantCategories);
             return;
         }
 
         final String filename = stopsInCurrentFile.get(0).getOriginalMostRecentFile().getPath().toLowerCase();
         if (filename.endsWith(".java") || filename.endsWith(".jav")) {
-            groupForJava(resultBuffer, stopsInCurrentFile);
+            groupForJava(resultBuffer, stopsInCurrentFile, irrelevantCategories);
         } else {
-            dontGroup(resultBuffer, stopsInCurrentFile);
+            dontGroup(resultBuffer, stopsInCurrentFile, irrelevantCategories);
         }
 
     }
 
-    private static void dontGroup(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile) {
+    private static void dontGroup(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile, Set<? extends IClassification> irrelevantCategories) {
         for (final Stop s : stopsInCurrentFile) {
-            resultBuffer.add(new ChangePart(Collections.singletonList(s)));
+            resultBuffer.add(new ChangePart(Collections.singletonList(s), irrelevantCategories));
         }
     }
 
-    private static void groupForJava(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile) {
+    private static void groupForJava(List<ChangePart> resultBuffer, List<Stop> stopsInCurrentFile, Set<? extends IClassification> irrelevantCategories) {
         final byte[] contents;
         try {
             contents = stopsInCurrentFile.get(0).getOriginalMostRecentFile().getContents();
@@ -139,7 +145,7 @@ public class ChangePart {
             throw new ReviewtoolException(e);
         }
         if (contents == null) {
-            dontGroup(resultBuffer, stopsInCurrentFile);
+            dontGroup(resultBuffer, stopsInCurrentFile, irrelevantCategories);
             return;
         }
 
@@ -154,7 +160,7 @@ public class ChangePart {
             } else {
                 //stop belongs to one of the next block, end the current one and determine new block
                 if (!stopsInCurrentBlock.isEmpty()) {
-                    resultBuffer.add(new ChangePart(stopsInCurrentBlock));
+                    resultBuffer.add(new ChangePart(stopsInCurrentBlock, irrelevantCategories));
                 }
                 do {
                     currentBlockEnd = scanner.getNextRegionEndLineNumber();
@@ -163,7 +169,7 @@ public class ChangePart {
                 stopsInCurrentBlock.add(s);
             }
         }
-        resultBuffer.add(new ChangePart(stopsInCurrentBlock));
+        resultBuffer.add(new ChangePart(stopsInCurrentBlock, irrelevantCategories));
     }
 
     /**

@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
@@ -151,7 +152,7 @@ public class ViewStatistics {
             }
 
             for (final Stop possibleNextStop : remainingStops) {
-                if (this.shouldStillVisit(possibleNextStop)) {
+                if (this.shouldStillVisit(possibleNextStop, tours.getIrrelevantCategories())) {
                     if (i > 0 || !tour.getStops().contains(currentStop)) {
                         if (startTourIndex + i >= tourCount) {
                             nextStopCallback.wrappedAround();
@@ -168,10 +169,10 @@ public class ViewStatistics {
         return null;
     }
 
-    private boolean shouldStillVisit(final Stop possibleNextStop) {
+    private boolean shouldStillVisit(final Stop possibleNextStop, Set<? extends IClassification> irrelevantCategories) {
         return this.determineViewRatio(possibleNextStop, 1).isPartlyUnvisited()
                 && !this.explicitMarks.contains(possibleNextStop)
-                && !possibleNextStop.isIrrelevantForReview();
+                && !possibleNextStop.isIrrelevantForReview(irrelevantCategories);
     }
 
 }
