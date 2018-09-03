@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
@@ -45,6 +44,7 @@ import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Multiset;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.ValueWrapper;
@@ -67,13 +67,13 @@ import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
-import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
-import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
+import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
@@ -327,7 +327,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final WeakListeners<ReviewModeListener> modeListeners = new WeakListeners<>();
     private final ConfigurationInterpreter configInterpreter = new ConfigurationInterpreter();
     private ILaunchesListener launchesListener;
-    private final List<IIrrelevanceDetermination> relevanceFilters = new ArrayList<>();
+    private final List<IChangeClassifier> relevanceFilters = new ArrayList<>();
     private final List<EndReviewExtension> endReviewExtensions = new ArrayList<>();
     private final List<IPreferredTransitionStrategy> preferredTransitionStrategies = new ArrayList<>();
     private final List<RelationMatcher> relationTypes = new ArrayList<>();
@@ -870,7 +870,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             @Override
             public UserSelectedReductions selectIrrelevant(
                     final List<? extends ICommit> changes,
-                    final List<Pair<String, Set<? extends IChange>>> strategyResults,
+                    final Multiset<IClassification> strategyResults,
                     final List<ReviewRoundInfo> reviewRounds) {
                 return ReviewPlugin.this.callUiFromBackgroundJob(
                         null,
@@ -998,7 +998,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     @Override
-    public void addIrrelevanceStrategy(final IIrrelevanceDetermination strategy) {
+    public void addClassificationStrategy(final IChangeClassifier strategy) {
         this.relevanceFilters.add(strategy);
     }
 

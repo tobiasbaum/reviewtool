@@ -301,8 +301,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             final ITextualChange change = ChangestructureFactory.createTextualChangeHunk(
                     stop.getWorkingCopy(),
                     fragment,
-                    fragment,
-                    false);
+                    fragment);
             jumpTarget = new Stop(change, fragment);
         } else {
             jumpTarget = stop;

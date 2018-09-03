@@ -29,7 +29,7 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
-import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
+import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
 import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtension;
 
@@ -112,7 +112,7 @@ public class ConfigurationInterpreterTest {
         }
 
         @Override
-        public void addIrrelevanceStrategy(IIrrelevanceDetermination strategy) {
+        public void addClassificationStrategy(IChangeClassifier strategy) {
         }
 
     }

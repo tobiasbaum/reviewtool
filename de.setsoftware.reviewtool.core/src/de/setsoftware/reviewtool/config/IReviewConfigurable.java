@@ -3,7 +3,7 @@ package de.setsoftware.reviewtool.config;
 import de.setsoftware.reviewtool.model.IReviewPersistence;
 import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
-import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
+import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
 import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtension;
 
@@ -44,8 +44,8 @@ public interface IReviewConfigurable {
     public abstract void addPreferredTransitionStrategy(IPreferredTransitionStrategy strategy);
 
     /**
-     * Adds a strategy to determine irrelevant fragments.
+     * Adds a strategy to determine classify fragments.
      */
-    public abstract void addIrrelevanceStrategy(IIrrelevanceDetermination strategy);
+    public abstract void addClassificationStrategy(IChangeClassifier strategy);
 
 }

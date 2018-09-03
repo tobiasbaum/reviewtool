@@ -31,6 +31,11 @@ public interface IChange {
     public abstract boolean isIrrelevantForReview();
 
     /**
+     * Returns the classifications that were attached to this change. Can be empty.
+     */
+    public abstract IClassification[] getClassification();
+
+    /**
      * Returns a copy (if needed) of this change that is marked as "irrelevant for review".
      */
     public abstract IChange makeIrrelevant();
@@ -39,4 +44,5 @@ public interface IChange {
      * Returns the associated {@link IWorkingCopy}.
      */
     public abstract IWorkingCopy getWorkingCopy();
+
 }

@@ -8,7 +8,7 @@ import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination
 /**
  * Marks changes as irrelevant when both the old and the new path matches a pattern.
  */
-public class PathFilter implements IIrrelevanceDetermination {
+public class PathFilter extends IIrrelevanceDetermination {
 
     private final String description;
     private final Pattern pattern;

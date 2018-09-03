@@ -5,7 +5,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,7 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.Multiset;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
@@ -33,6 +33,7 @@ import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
@@ -84,12 +85,12 @@ public class ToursInReview {
          * When the user cancels, null is returned.
          *
          * @param changes All commits belonging to the review.
-         * @param strategyResults Pairs with a description of the filter strategy and the resulting filter candidates
+         * @param strategyResults The classifications assigned to the changes, with the number of changes classified
          * @param reviewRounds The review rounds conducted so far (to show them to the user).
          */
         public abstract UserSelectedReductions selectIrrelevant(
                 List<? extends ICommit> changes,
-                List<Pair<String, Set<? extends IChange>>> strategyResults,
+                Multiset<IClassification> strategyResults,
                 List<ReviewRoundInfo> reviewRounds);
 
     }
@@ -100,11 +101,11 @@ public class ToursInReview {
      */
     public static final class UserSelectedReductions {
         private final List<? extends ICommit> commitSubset;
-        private final List<? extends Pair<String, Set<? extends IChange>>> toMakeIrrelevant;
+        private final Set<? extends IClassification> toMakeIrrelevant;
 
         public UserSelectedReductions(
                 final List<? extends ICommit> chosenCommitSubset,
-                final List<Pair<String, Set<? extends IChange>>> chosenFilterSubset) {
+                final Set<? extends IClassification> chosenFilterSubset) {
             this.commitSubset = chosenCommitSubset;
             this.toMakeIrrelevant = chosenFilterSubset;
         }
@@ -197,7 +198,7 @@ public class ToursInReview {
     public static ToursInReview create(
             final ChangeManager changeManager,
             final IChangeSourceUi changeSourceUi,
-            final List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
+            final List<? extends IChangeClassifier> changeClassificationStrategies,
             final List<? extends ITourRestructuring> tourRestructuringStrategies,
             final IStopOrdering orderingAlgorithm,
             final ICreateToursUi createUi,
@@ -205,7 +206,7 @@ public class ToursInReview {
             final List<ReviewRoundInfo> reviewRounds) {
         changeSourceUi.subTask("Filtering changes...");
         final List<? extends ICommit> filteredChanges =
-                filterChanges(irrelevanceDeterminationStrategies, changes.getMatchedCommits(),
+                filterChanges(changeClassificationStrategies, changes.getMatchedCommits(),
                         createUi, changeSourceUi, reviewRounds);
         if (filteredChanges == null) {
             return null;
@@ -270,7 +271,7 @@ public class ToursInReview {
     }
 
     private static List<? extends ICommit> filterChanges(
-            final List<? extends IIrrelevanceDetermination> irrelevanceDeterminationStrategies,
+            final List<? extends IChangeClassifier> changeClassificationStrategies,
             final List<? extends ICommit> changes,
             final ICreateToursUi createUi,
             final IProgressMonitor progressMonitor,
@@ -281,45 +282,35 @@ public class ToursInReview {
             .param("relevant", countChanges(changes, true))
             .log();
 
-        final List<Pair<String, Set<? extends IChange>>> strategyResults = new ArrayList<>();
-        for (final IIrrelevanceDetermination strategy : irrelevanceDeterminationStrategies) {
-            try {
-                if (progressMonitor.isCanceled()) {
-                    throw new OperationCanceledException();
-                }
+        final List<ICommit> changesWithClassifications = new ArrayList<>();
+        for (final ICommit commit : changes) {
+            changesWithClassifications.add(commit.transformChanges(
+                    (IChange c) -> addClassifications(c, changeClassificationStrategies, progressMonitor)));
+        }
 
-                final Set<? extends IChange> irrelevantChanges = determineIrrelevantChanges(changes, strategy);
-                Telemetry.event("relevanceFilterResult")
-                    .param("description", strategy.getDescription())
-                    .param("size", irrelevantChanges.size())
-                    .log();
-
-                if (areAllIrrelevant(irrelevantChanges)) {
-                    //skip strategies that won't result in further changes to irrelevant
-                    continue;
+        final Multiset<IClassification> strategyResults = new Multiset<>();
+        for (final ICommit commit : changesWithClassifications) {
+            for (final IChange change : commit.getChanges()) {
+                for (final IClassification classification : change.getClassification()) {
+                    strategyResults.add(classification);
                 }
-                strategyResults.add(Pair.<String, Set<? extends IChange>>create(
-                        strategy.getDescription(),
-                        irrelevantChanges));
-            } catch (final Exception e) {
-                //skip instable strategies
-                Logger.error("exception in filtering", e);
             }
         }
 
+        for (final IClassification classification : strategyResults.keySet()) {
+            Telemetry.event("classificationResult")
+                .param("description", classification.getName())
+                .param("size", strategyResults.get(classification))
+                .log();
+        }
+
         final UserSelectedReductions selected =
-                createUi.selectIrrelevant(changes, strategyResults, reviewRounds);
+                createUi.selectIrrelevant(changesWithClassifications, strategyResults, reviewRounds);
         if (selected == null) {
             return null;
         }
-        final Set<IChange> toMakeIrrelevant = new HashSet<>();
-        final Set<String> selectedDescriptions = new LinkedHashSet<>();
-        for (final Pair<String, Set<? extends IChange>> set : selected.toMakeIrrelevant) {
-            toMakeIrrelevant.addAll(set.getSecond());
-            selectedDescriptions.add(set.getFirst());
-        }
         Telemetry.event("selectedRelevanceFilter")
-            .param("descriptions", selectedDescriptions)
+            .param("descriptions", selected.toMakeIrrelevant)
             .log();
         final Set<String> selectedCommits = new LinkedHashSet<>();
         for (final ICommit commit : selected.commitSubset) {
@@ -331,11 +322,33 @@ public class ToursInReview {
 
         final List<ICommit> ret = new ArrayList<>();
         for (final ICommit c : selected.commitSubset) {
-            ret.add(c.makeChangesIrrelevant(toMakeIrrelevant));
+            ret.add(c);
         }
 
         CommitsInReview.setCommits(ret);
 
+        return ret;
+    }
+
+    private static IChange addClassifications(
+            IChange change,
+            List<? extends IChangeClassifier> changeClassificationStrategies,
+            final IProgressMonitor progressMonitor) {
+        IChange ret = change;
+        for (final IChangeClassifier strategy : changeClassificationStrategies) {
+            if (progressMonitor.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+            try {
+                final IClassification cl = strategy.classify(ret);
+                if (cl != null) {
+                    //TEST TODO
+                    ret = ret.makeIrrelevant();
+                }
+            } catch (final Exception e) {
+                Logger.error("exception in classification", e);
+            }
+        }
         return ret;
     }
 
@@ -349,30 +362,6 @@ public class ToursInReview {
             }
         }
         return ret;
-    }
-
-    private static Set<? extends IChange> determineIrrelevantChanges(
-            final List<? extends ICommit> changes,
-            final IIrrelevanceDetermination strategy) {
-
-        final Set<IChange> ret = new HashSet<>();
-        for (final ICommit commit : changes) {
-            for (final IChange change : commit.getChanges()) {
-                if (strategy.isIrrelevant(change)) {
-                    ret.add(change);
-                }
-            }
-        }
-        return ret;
-    }
-
-    private static boolean areAllIrrelevant(final Set<? extends IChange> changes) {
-        for (final IChange change : changes) {
-            if (!change.isIrrelevantForReview()) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private static List<? extends Tour> determinePossibleRestructurings(

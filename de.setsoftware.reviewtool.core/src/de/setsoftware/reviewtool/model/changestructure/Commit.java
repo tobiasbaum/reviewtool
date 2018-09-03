@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
+import java.util.function.Function;
 
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;
@@ -52,14 +52,10 @@ public class Commit implements ICommit {
     }
 
     @Override
-    public Commit makeChangesIrrelevant(Set<? extends IChange> toMakeIrrelevant) {
-        final List<IChange> adjustedChanges = new ArrayList<>();
+    public Commit transformChanges(Function<IChange, IChange> f) {
+        final List<IChange> adjustedChanges = new ArrayList<>(this.changes.size());
         for (final IChange change : this.changes) {
-            if (toMakeIrrelevant.contains(change)) {
-                adjustedChanges.add(change.makeIrrelevant());
-            } else {
-                adjustedChanges.add(change);
-            }
+            adjustedChanges.add(f.apply(change));
         }
         return new Commit(this.wc, this.message, adjustedChanges, this.revision, this.getTime());
     }

@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 
 /**
@@ -22,6 +23,15 @@ public abstract class Change implements IChange {
     @Override
     public final boolean isIrrelevantForReview() {
         return this.irrelevantForReview;
+    }
+
+    @Override
+    public final IClassification[] getClassification() {
+        if (this.isIrrelevantForReview()) {
+            return new IClassification[] {new Classification("irrelevant")};
+        } else {
+            return Classification.NONE;
+        }
     }
 
     @Override

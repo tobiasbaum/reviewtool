@@ -13,7 +13,7 @@ import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 /**
  * Filter that marks changes as irrelevant which only consist of lines starting with "import ".
  */
-public class ImportChangeFilter implements IIrrelevanceDetermination {
+public class ImportChangeFilter extends IIrrelevanceDetermination {
 
     @Override
     public String getDescription() {

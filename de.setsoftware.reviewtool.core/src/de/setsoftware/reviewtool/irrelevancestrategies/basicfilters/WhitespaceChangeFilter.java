@@ -9,7 +9,7 @@ import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 /**
  * Filter that marks changes as irrelevant which only contain changes in whitespace.
  */
-public class WhitespaceChangeFilter implements IIrrelevanceDetermination {
+public class WhitespaceChangeFilter extends IIrrelevanceDetermination {
 
     @Override
     public String getDescription() {

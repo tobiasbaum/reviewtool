@@ -33,7 +33,7 @@ public class OneStopPerPartOfFileRestructuringTest {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(
                         null,
-                        fileInRevision(file, revision - 1), fileInRevision(file, revision), false),
+                        fileInRevision(file, revision - 1), fileInRevision(file, revision)),
                 fileInRevision(file, 100));
     }
 
@@ -52,8 +52,7 @@ public class OneStopPerPartOfFileRestructuringTest {
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
                         ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),
-                        ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo),
-                        false),
+                        ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo)),
                 ChangestructureFactory.createFragment(fileInRevision(file, 100), posFrom, posTo));
     }
 

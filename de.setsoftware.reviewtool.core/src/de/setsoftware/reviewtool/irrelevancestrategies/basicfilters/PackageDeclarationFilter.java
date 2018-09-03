@@ -9,7 +9,7 @@ import de.setsoftware.reviewtool.model.changestructure.TextualChangeHunk;
 /**
  * Filter that marks changes as irrelevant where only the declared package has changed.
  */
-public class PackageDeclarationFilter implements IIrrelevanceDetermination {
+public class PackageDeclarationFilter extends IIrrelevanceDetermination {
 
     @Override
     public String getDescription() {

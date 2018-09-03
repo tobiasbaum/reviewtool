@@ -357,8 +357,7 @@ final class SvnChangeSource implements IChangeSource {
         return ChangestructureFactory.createBinaryChange(
                 wc,
                 oldFileInfo,
-                node.getFile(),
-                false);
+                node.getFile());
     }
 
     private List<? extends IChange> determineChangesInFile(
@@ -381,8 +380,7 @@ final class SvnChangeSource implements IChangeSource {
                     changes.add(ChangestructureFactory.createTextualChangeHunk(
                             wc,
                             hunk.getSource(),
-                            hunk.getTarget(),
-                            false));
+                            hunk.getTarget()));
                 }
             } else {
                 changes.add(this.createBinaryChange(wc, node, ancestor));

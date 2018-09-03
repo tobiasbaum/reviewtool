@@ -1,7 +1,8 @@
 package de.setsoftware.reviewtool.base;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A simple multiset.
@@ -16,7 +17,7 @@ public class Multiset<T> {
         private int cnt;
     }
 
-    private final Map<T, Counter> items = new HashMap<>();
+    private final Map<T, Counter> items = new LinkedHashMap<>();
 
     /**
      * Add an item to the multiset.
@@ -39,6 +40,14 @@ public class Multiset<T> {
     }
 
     /**
+     * Returns the count for the given item.
+     */
+    public int get(Object item) {
+        final Counter c = this.items.get(item);
+        return c == null ? 0 : c.cnt;
+    }
+
+    /**
      * Removes one occurrence of the given item from this multiset.
      */
     public void remove(T item) {
@@ -50,6 +59,13 @@ public class Multiset<T> {
         if (c.cnt <= 0) {
             this.items.remove(item);
         }
+    }
+
+    /**
+     * Returns only the keys, without the counts.
+     */
+    public Set<T> keySet() {
+        return this.items.keySet();
     }
 
 }

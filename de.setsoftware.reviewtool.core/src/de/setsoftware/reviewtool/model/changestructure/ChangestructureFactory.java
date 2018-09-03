@@ -39,17 +39,15 @@ public class ChangestructureFactory {
     public static IBinaryChange createBinaryChange(
             final IWorkingCopy wc,
             final IRevisionedFile from,
-            final IRevisionedFile to,
-            final boolean irrelevantForReview) {
-        return new BinaryChange(wc, from, to, irrelevantForReview);
+            final IRevisionedFile to) {
+        return new BinaryChange(wc, from, to, false);
     }
 
     public static ITextualChange createTextualChangeHunk(
             final IWorkingCopy wc,
             final IFragment from,
-            final IFragment to,
-            final boolean irrelevantForReview) {
-        return new TextualChangeHunk(wc, from, to, irrelevantForReview);
+            final IFragment to) {
+        return new TextualChangeHunk(wc, from, to, false);
     }
 
     public static IRevisionedFile createFileInRevision(final String path, final IRevision revision) {

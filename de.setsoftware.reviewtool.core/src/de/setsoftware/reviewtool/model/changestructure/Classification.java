@@ -30,4 +30,9 @@ public class Classification implements IClassification {
         return this.name.equals(c.name);
     }
 
+    @Override
+    public String toString() {
+        return this.name;
+    }
+
 }

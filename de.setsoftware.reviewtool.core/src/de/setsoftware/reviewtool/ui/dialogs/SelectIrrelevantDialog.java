@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -22,8 +23,8 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
-import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.base.Multiset;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ReviewRoundInfo;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.UserSelectedReductions;
@@ -34,17 +35,17 @@ import de.setsoftware.reviewtool.model.changestructure.ToursInReview.UserSelecte
 public class SelectIrrelevantDialog extends Dialog {
 
     private final List<? extends ICommit> allCommits;
-    private final List<? extends Pair<String, Set<? extends IChange>>> filterChoices;
+    private final Multiset<? extends IClassification> filterChoices;
     private final List<ReviewRoundInfo> reviewRounds;
     private List<CommitComposite> commitComposites;
     private List<Button> filterCheckboxes;
     private List<ICommit> chosenCommitSubset;
-    private List<Pair<String, Set<? extends IChange>>> chosenFilterSubset;
+    private Set<IClassification> chosenFilterSubset;
 
     protected SelectIrrelevantDialog(
             Shell parentShell,
             List<? extends ICommit> changes,
-            List<? extends Pair<String, Set<? extends IChange>>> filterChoices,
+            Multiset<? extends IClassification> filterChoices,
             List<ReviewRoundInfo> reviewRounds) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
@@ -84,7 +85,7 @@ public class SelectIrrelevantDialog extends Dialog {
                 this.createReviewRoundWidget(reviewRoundQueue.remove(), scrollContent);
             }
 
-            final CommitComposite cc = new CommitComposite(scrollContent, SWT.NONE, commit, this.filterChoices);
+            final CommitComposite cc = new CommitComposite(scrollContent, SWT.NONE, commit, this.filterChoices.keySet());
             this.commitComposites.add(cc);
             cc.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
         }
@@ -118,7 +119,7 @@ public class SelectIrrelevantDialog extends Dialog {
                 SelectIrrelevantDialog.this.updateCountsInCommits();
             }
         };
-        for (final Pair<String, Set<? extends IChange>> choice : this.filterChoices) {
+        for (final IClassification choice : this.filterChoices.keySet()) {
             final Button b = new Button(buttonGroup, SWT.CHECK);
             b.setText(this.createText(choice));
             b.setData(choice);
@@ -141,10 +142,9 @@ public class SelectIrrelevantDialog extends Dialog {
     }
 
     private void updateCountsInCommits() {
-        final List<Pair<String, Set<? extends IChange>>> activeFilters = new ArrayList<>();
+        final Set<IClassification> activeFilters = new LinkedHashSet<>();
         for (final Button b : this.filterCheckboxes) {
-            @SuppressWarnings("unchecked")
-            final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
+            final IClassification data = (IClassification) b.getData();
             if (b.getSelection()) {
                 activeFilters.add(data);
             }
@@ -155,16 +155,15 @@ public class SelectIrrelevantDialog extends Dialog {
         }
     }
 
-    private String createText(Pair<String, Set<? extends IChange>> choice) {
+    private String createText(IClassification choice) {
         return String.format("%s (applies to %d changes)",
-                choice.getFirst(),
-                choice.getSecond().size());
+                choice.getName(),
+                this.filterChoices.get(choice));
     }
 
     private void restoreSavedSelection() {
         for (final Button b : this.filterCheckboxes) {
-            @SuppressWarnings("unchecked")
-            final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
+            final IClassification data = (IClassification) b.getData();
             b.setSelection(this.getSavedSelectionState(data));
         }
     }
@@ -178,10 +177,9 @@ public class SelectIrrelevantDialog extends Dialog {
             }
         }
 
-        this.chosenFilterSubset = new ArrayList<>();
+        this.chosenFilterSubset = new LinkedHashSet<>();
         for (final Button b : this.filterCheckboxes) {
-            @SuppressWarnings("unchecked")
-            final Pair<String, Set<? extends IChange>> data = (Pair<String, Set<? extends IChange>>) b.getData();
+            final IClassification data = (IClassification) b.getData();
             if (b.getSelection()) {
                 this.chosenFilterSubset.add(data);
             }
@@ -192,7 +190,7 @@ public class SelectIrrelevantDialog extends Dialog {
         super.okPressed();
     }
 
-    private boolean getSavedSelectionState(Pair<String, Set<? extends IChange>> data) {
+    private boolean getSavedSelectionState(IClassification data) {
         final String s = DialogHelper.getSetting(this.makeSettingId(data));
         if (s.isEmpty()) {
             //default: activate filter
@@ -201,12 +199,12 @@ public class SelectIrrelevantDialog extends Dialog {
         return Boolean.parseBoolean(s);
     }
 
-    private void saveSelectionState(Pair<String, Set<? extends IChange>> data, boolean selection) {
+    private void saveSelectionState(IClassification data, boolean selection) {
         DialogHelper.saveSetting(this.makeSettingId(data), Boolean.toString(selection));
     }
 
-    private String makeSettingId(Pair<String, Set<? extends IChange>> data) {
-        return data.getFirst().replaceAll("[^a-zA-Z0-9]", "");
+    private String makeSettingId(IClassification data) {
+        return data.getName().replaceAll("[^a-zA-Z0-9]", "");
     }
 
     @Override
@@ -221,7 +219,7 @@ public class SelectIrrelevantDialog extends Dialog {
      */
     public static UserSelectedReductions show(
             List<? extends ICommit> changes,
-            List<Pair<String, Set<? extends IChange>>> filterChoices,
+            Multiset<IClassification> filterChoices,
             List<ReviewRoundInfo> reviewRounds) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
 

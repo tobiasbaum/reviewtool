@@ -1,8 +1,9 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.text.DateFormat;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jface.resource.JFaceResources;
@@ -14,8 +15,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Text;
 
-import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
@@ -26,15 +27,14 @@ public class CommitComposite extends Composite {
 
     private final Button checkbox;
     private final ICommit commit;
-    private List<? extends Pair<String, Set<? extends IChange>>> filters;
+    private Set<? extends IClassification> chosenFilters;
 
-    public CommitComposite(Composite parent, int style, ICommit commit,
-            List<? extends Pair<String, Set<? extends IChange>>> filterChoices) {
+    public CommitComposite(Composite parent, int style, ICommit commit, Set<? extends IClassification> chosenFilters) {
         super(parent, style);
         this.setLayout(new GridLayout(1, false));
 
         this.commit = commit;
-        this.filters = filterChoices;
+        this.chosenFilters = chosenFilters;
 
         this.checkbox = new Button(this, SWT.CHECK);
         this.checkbox.setSelection(true);
@@ -80,15 +80,7 @@ public class CommitComposite extends Composite {
     }
 
     private boolean isRelevant(IChange change) {
-        if (change.isIrrelevantForReview()) {
-            return false;
-        }
-        for (final Pair<String, Set<? extends IChange>> filter : this.filters) {
-            if (filter.getSecond().contains(change)) {
-                return false;
-            }
-        }
-        return true;
+        return Collections.disjoint(this.chosenFilters, Arrays.asList(change.getClassification()));
     }
 
     public ICommit getCommit() {
@@ -99,8 +91,8 @@ public class CommitComposite extends Composite {
         return this.checkbox.getSelection();
     }
 
-    public void updateFilters(List<Pair<String, Set<? extends IChange>>> activeFilters) {
-        this.filters = activeFilters;
+    public void updateFilters(Set<? extends IClassification> activeFilters) {
+        this.chosenFilters = activeFilters;
         this.updateHeadLabel();
     }
 
