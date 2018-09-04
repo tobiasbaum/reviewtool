@@ -10,6 +10,7 @@ import java.util.List;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -26,6 +27,7 @@ public class FileCountInCommitFilterTest {
         final IRevision prev = revision(id - 1);
         for (final String filename : filenames) {
             changes.add(ChangestructureFactory.createBinaryChange(null,
+                    FileChangeType.OTHER,
                     ChangestructureFactory.createFileInRevision(filename, prev),
                     ChangestructureFactory.createFileInRevision(filename, cur)));
         }

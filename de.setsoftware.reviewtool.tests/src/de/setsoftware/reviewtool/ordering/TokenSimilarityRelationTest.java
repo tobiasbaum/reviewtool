@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -30,7 +31,8 @@ public class TokenSimilarityRelationTest {
 
     private static Stop binaryStop(final String filename) {
         return new Stop(
-                ChangestructureFactory.createBinaryChange(null, file(filename, 1), file(filename, 3)),
+                ChangestructureFactory.createBinaryChange(
+                        null, FileChangeType.OTHER, file(filename, 1), file(filename, 3)),
                 file(filename, 4));
     }
 
@@ -44,7 +46,7 @@ public class TokenSimilarityRelationTest {
                 ChangestructureFactory.createPositionInText(1, 1 + commonPrefix.length() + newContent.length()),
                 commonPrefix + newContent + commonSuffix);
         return new Stop(
-                ChangestructureFactory.createTextualChangeHunk(null, from, to),
+                ChangestructureFactory.createTextualChangeHunk(null, FileChangeType.OTHER, from, to),
                 to);
     }
 

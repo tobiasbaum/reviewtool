@@ -62,6 +62,7 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IHunk;
@@ -306,6 +307,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                     stop.getMostRecentFragment().getFrom());
             final ITextualChange change = ChangestructureFactory.createTextualChangeHunk(
                     stop.getWorkingCopy(),
+                    FileChangeType.OTHER,
                     fragment,
                     fragment);
             jumpTarget = new Stop(change, fragment);

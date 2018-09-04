@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -33,6 +34,7 @@ public class OneStopPerPartOfFileRestructuringTest {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(
                         null,
+                        FileChangeType.OTHER,
                         fileInRevision(file, revision - 1), fileInRevision(file, revision)),
                 fileInRevision(file, 100));
     }
@@ -51,6 +53,7 @@ public class OneStopPerPartOfFileRestructuringTest {
         return new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
+                        FileChangeType.OTHER,
                         ChangestructureFactory.createFragment(fileInRevision(file, revision - 1), posFrom, posTo),
                         ChangestructureFactory.createFragment(fileInRevision(file, revision), posFrom, posTo)),
                 ChangestructureFactory.createFragment(fileInRevision(file, 100), posFrom, posTo));

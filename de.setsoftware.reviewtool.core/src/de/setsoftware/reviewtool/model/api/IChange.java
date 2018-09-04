@@ -38,5 +38,9 @@ public interface IChange {
      */
     public abstract IWorkingCopy getWorkingCopy();
 
+    /**
+     * Returns the {@link FileChangeType} for the underlying file change.
+     */
+    public abstract FileChangeType getType();
 
 }

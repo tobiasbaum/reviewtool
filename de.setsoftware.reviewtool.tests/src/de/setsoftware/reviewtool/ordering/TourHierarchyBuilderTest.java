@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -32,7 +33,7 @@ public class TourHierarchyBuilderTest {
 
     private static Stop stop(final String s) {
         return new Stop(
-                ChangestructureFactory.createBinaryChange(null, file(s, 1), file(s, 3)),
+                ChangestructureFactory.createBinaryChange(null, FileChangeType.OTHER, file(s, 1), file(s, 3)),
                 file(s, 4));
     }
 

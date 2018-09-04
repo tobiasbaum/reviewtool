@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.IPath;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 import de.setsoftware.reviewtool.model.api.IRepository;
 import de.setsoftware.reviewtool.model.api.IRevision;
@@ -82,8 +83,8 @@ public class ChangePartTest {
 
     private static Stop binaryStop(final String filename) {
         return new Stop(
-                ChangestructureFactory.createBinaryChange(null, file(filename, 1), file(filename, 3)),
-                file(filename, 4));
+                ChangestructureFactory.createBinaryChange(
+                        null, FileChangeType.OTHER, file(filename, 1), file(filename, 3)), file(filename, 4));
     }
 
     private static Stop singleLineStop(final IRevisionedFile file, final int lineNumber) {
@@ -92,6 +93,7 @@ public class ChangePartTest {
         return new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
+                        FileChangeType.OTHER,
                         ChangestructureFactory.createFragment(file(file.getPath(), 1), posFrom, posTo),
                         ChangestructureFactory.createFragment(file, posFrom, posTo)),
                 ChangestructureFactory.createFragment(file, posFrom, posTo));

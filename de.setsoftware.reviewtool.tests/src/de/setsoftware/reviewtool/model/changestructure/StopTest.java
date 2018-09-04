@@ -8,6 +8,7 @@ import java.util.Map;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 
 /**
@@ -26,10 +27,10 @@ public class StopTest {
     @Test
     public void testRevisionsInHistoryAreSortedAfterMerge() {
         final Stop s1 = new Stop(
-                ChangestructureFactory.createBinaryChange(null, file("a.java", 1), file("a.java", 3)),
+                ChangestructureFactory.createBinaryChange(null, FileChangeType.OTHER, file("a.java", 1), file("a.java", 3)),
                 file("a.java", 4));
         final Stop s2 = new Stop(
-                ChangestructureFactory.createBinaryChange(null, file("a.java", 2), file("a.java", 4)),
+                ChangestructureFactory.createBinaryChange(null, FileChangeType.OTHER, file("a.java", 2), file("a.java", 4)),
                 file("a.java", 4));
         final Stop merged = s1.merge(s2);
         final Stop merged2 = s2.merge(s1);
@@ -46,6 +47,7 @@ public class StopTest {
         final Stop s = new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
+                        FileChangeType.OTHER,
                         ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13))),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(8), line(13)));
@@ -59,12 +61,14 @@ public class StopTest {
         final Stop s1 = new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
+                        FileChangeType.OTHER,
                         ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13))),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(8), line(13)));
         final Stop s2 = new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
+                        FileChangeType.OTHER,
                         ChangestructureFactory.createFragment(file("a.java", 1), line(23), line(26)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(13), line(17))),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(13), line(17)));
@@ -79,12 +83,14 @@ public class StopTest {
         final Stop s1 = new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
+                        FileChangeType.OTHER,
                         ChangestructureFactory.createFragment(file("a.java", 1), line(3), line(6)),
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13))),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)));
         final Stop s2 = new Stop(
                 ChangestructureFactory.createTextualChangeHunk(
                         null,
+                        FileChangeType.OTHER,
                         ChangestructureFactory.createFragment(file("a.java", 3), line(8), line(13)),
                         ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17))),
                 ChangestructureFactory.createFragment(file("a.java", 4), line(12), line(17)));

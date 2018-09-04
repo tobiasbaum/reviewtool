@@ -22,6 +22,7 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -30,6 +31,7 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
 import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -356,8 +358,20 @@ final class SvnChangeSource implements IChangeSource {
 
         return ChangestructureFactory.createBinaryChange(
                 wc,
+                this.mapChangeType(node.getType()),
                 oldFileInfo,
                 node.getFile());
+    }
+
+    private FileChangeType mapChangeType(Type type) {
+        switch (type) {
+        case ADDED:
+            return FileChangeType.ADDED;
+        case DELETED:
+            return FileChangeType.DELETED;
+        default:
+            return FileChangeType.OTHER;
+        }
     }
 
     private List<? extends IChange> determineChangesInFile(
@@ -379,6 +393,7 @@ final class SvnChangeSource implements IChangeSource {
                 for (final IHunk hunk : hunks) {
                     changes.add(ChangestructureFactory.createTextualChangeHunk(
                             wc,
+                            this.mapChangeType(node.getType()),
                             hunk.getSource(),
                             hunk.getTarget()));
                 }

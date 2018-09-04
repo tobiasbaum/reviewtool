@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import de.setsoftware.reviewtool.base.IPartiallyComparable;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -38,16 +39,18 @@ public class ChangestructureFactory {
 
     public static IBinaryChange createBinaryChange(
             final IWorkingCopy wc,
+            final FileChangeType fileChangeType,
             final IRevisionedFile from,
             final IRevisionedFile to) {
-        return new BinaryChange(wc, from, to, Classification.NONE);
+        return new BinaryChange(wc, fileChangeType, from, to, Classification.NONE);
     }
 
     public static ITextualChange createTextualChangeHunk(
             final IWorkingCopy wc,
+            final FileChangeType fileChangeType,
             final IFragment from,
             final IFragment to) {
-        return new TextualChangeHunk(wc, from, to, Classification.NONE);
+        return new TextualChangeHunk(wc, fileChangeType, from, to, Classification.NONE);
     }
 
     public static IRevisionedFile createFileInRevision(final String path, final IRevision revision) {

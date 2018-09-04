@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -16,7 +17,8 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 public class WhitespaceChangeFilterTest {
 
     private static IChange change(String from, String to) {
-        return ChangestructureFactory.createTextualChangeHunk(null, fragment(from), fragment(to));
+        return ChangestructureFactory.createTextualChangeHunk(
+                null, FileChangeType.OTHER, fragment(from), fragment(to));
     }
 
     private static IFragment fragment(String content) {

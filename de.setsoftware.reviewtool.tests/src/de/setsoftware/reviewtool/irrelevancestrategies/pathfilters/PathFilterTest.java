@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
@@ -16,7 +17,8 @@ import de.setsoftware.reviewtool.model.changestructure.Fragment;
 public class PathFilterTest {
 
     private static ITextualChange change(String pathFrom, String pathTo) {
-        return ChangestructureFactory.createTextualChangeHunk(null, fragment(pathFrom), fragment(pathTo));
+        return ChangestructureFactory.createTextualChangeHunk(
+                null, FileChangeType.OTHER, fragment(pathFrom), fragment(pathTo));
     }
 
     private static IFragment fragment(String path) {

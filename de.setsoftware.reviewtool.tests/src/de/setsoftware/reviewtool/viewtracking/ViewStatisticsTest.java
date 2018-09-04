@@ -7,6 +7,7 @@ import java.util.Collections;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
@@ -43,7 +44,8 @@ public class ViewStatisticsTest {
     private static Stop stop(String string) {
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(
                 string, ChangestructureFactory.createLocalRevision(StubWorkingCopy.INSTANCE));
-        return new Stop(ChangestructureFactory.createBinaryChange(StubWorkingCopy.INSTANCE, file, file), file);
+        return new Stop(ChangestructureFactory.createBinaryChange(
+                StubWorkingCopy.INSTANCE, FileChangeType.OTHER, file, file), file);
     }
 
     private static void doTest(

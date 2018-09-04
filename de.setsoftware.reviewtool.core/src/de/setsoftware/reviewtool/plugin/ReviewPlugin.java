@@ -56,6 +56,7 @@ import de.setsoftware.reviewtool.connectors.file.FilePersistence;
 import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
 import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.BasicIrrelevanceFilterConfigurator;
+import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.FileDeletionFilterConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.PathIrrelevanceFilterConfigurator;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.FileReviewDataCache;
@@ -351,6 +352,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.configInterpreter.addConfigurator(new PathRegexStrategyConfigurator());
         this.configInterpreter.addConfigurator(new BasicIrrelevanceFilterConfigurator());
         this.configInterpreter.addConfigurator(new PathIrrelevanceFilterConfigurator());
+        this.configInterpreter.addConfigurator(new FileDeletionFilterConfigurator());
         final IExtensionPoint configuratorExtensions =
                 Platform.getExtensionRegistry().getExtensionPoint("de.setsoftware.reviewtool.configurator");
         for (final IExtension extension : configuratorExtensions.getExtensions()) {
