@@ -24,6 +24,13 @@ public abstract class IIrrelevanceDetermination implements IChangeClassifier {
     public abstract String getDescription();
 
     /**
+     * Returns the number that will be used for the classifications of this class.
+     */
+    public int getNumber() {
+        return this.number;
+    }
+
+    /**
      * Returns true if, according to this strategy, the given change should be considered irrelevant for review.
      * Does not have to take the existing irrelevance flag into account.
      */

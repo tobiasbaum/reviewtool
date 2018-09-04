@@ -10,6 +10,7 @@ import java.util.List;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.FileCountInCommitFilter;
 import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.ICommit;

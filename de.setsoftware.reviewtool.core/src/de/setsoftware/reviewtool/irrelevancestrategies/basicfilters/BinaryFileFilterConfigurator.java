@@ -9,19 +9,19 @@ import de.setsoftware.reviewtool.config.IConfigurator;
 import de.setsoftware.reviewtool.config.IReviewConfigurable;
 
 /**
- * Configurator for "fileDeletionFilter".
+ * Configurator for "binaryFileFilter".
  */
-public class FileDeletionFilterConfigurator implements IConfigurator {
+public class BinaryFileFilterConfigurator implements IConfigurator {
 
     @Override
     public Collection<String> getRelevantElementNames() {
-        return Collections.singleton("fileDeletionFilter");
+        return Collections.singleton("binaryFileFilter");
     }
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
         configurable.addClassificationStrategy(
-                new FileDeletionFilter(Integer.parseInt(xml.getAttribute("number"))));
+                new BinaryFileFilter(Integer.parseInt(xml.getAttribute("number"))));
     }
 
 }

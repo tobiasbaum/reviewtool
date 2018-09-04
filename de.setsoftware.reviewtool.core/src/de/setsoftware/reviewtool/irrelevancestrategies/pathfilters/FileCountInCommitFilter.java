@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.irrelevancestrategies.basicfilters;
+package de.setsoftware.reviewtool.irrelevancestrategies.pathfilters;
 
 import java.util.HashSet;
 import java.util.Set;

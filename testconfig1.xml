@@ -38,4 +38,7 @@
   <basicIrrelevanceFilters />
   <pathIrrelevanceFilter number="4" pattern="**/*.bmp" description="BMP-Bitmaps" />
   <fileDeletionFilter number="5"/>
+  <binaryFileFilter number="6"/>
+  <fileCountInCommitFilter number="7" threshold="10" description="large commit" />
+  <fileCountInCommitAndPathFilter number="8" threshold="5" pattern="**/testdata/**" description="testdata in larger commit" />
 </reviewToolConfig>
