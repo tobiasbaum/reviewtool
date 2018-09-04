@@ -29,21 +29,21 @@ public class ImportChangeFilterTest {
 
     @Test
     public void testFilterImportDeleted() {
-        assertTrue(new ImportChangeFilter(0).isIrrelevant(change(
+        assertTrue(new ImportChangeFilter(0).isIrrelevant(null, change(
                 "import some.test.package.Class;\n",
                 "")));
     }
 
     @Test
     public void testFilterImportAdded() {
-        assertTrue(new ImportChangeFilter(0).isIrrelevant(change(
+        assertTrue(new ImportChangeFilter(0).isIrrelevant(null, change(
                 "",
                 "import some.test.package.Class;\n")));
     }
 
     @Test
     public void testFilterImportsChanged() {
-        assertTrue(new ImportChangeFilter(0).isIrrelevant(change(
+        assertTrue(new ImportChangeFilter(0).isIrrelevant(null, change(
                 "import some.test.package.Class1;\n"
                 + "import some.test.package.Class2;\n",
                 "import another.test.package.Class1;\n"
@@ -53,7 +53,7 @@ public class ImportChangeFilterTest {
 
     @Test
     public void testDontFilterMoreThanImportsChanged() {
-        assertFalse(new ImportChangeFilter(0).isIrrelevant(change(
+        assertFalse(new ImportChangeFilter(0).isIrrelevant(null, change(
                 "import some.test.package.Class1;\n"
                 + "this is not an import\n",
                 "import another.test.package.Class1;\n"
@@ -62,14 +62,14 @@ public class ImportChangeFilterTest {
 
     @Test
     public void testDontFilterNoImportsAtAll() {
-        assertFalse(new ImportChangeFilter(0).isIrrelevant(change(
+        assertFalse(new ImportChangeFilter(0).isIrrelevant(null, change(
                 "public static class Class1 {\n",
                 "public static class Class2 {\n")));
     }
 
     @Test
     public void testDontFilterPureWhitespaceChange() {
-        assertFalse(new ImportChangeFilter(0).isIrrelevant(change(
+        assertFalse(new ImportChangeFilter(0).isIrrelevant(null, change(
                 "",
                 "\n")));
     }

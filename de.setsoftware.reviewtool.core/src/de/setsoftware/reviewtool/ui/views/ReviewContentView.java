@@ -260,6 +260,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 .param("line", stop.getMostRecentFragment() == null
                     ? -1 : stop.getMostRecentFragment().getFrom().getLine())
                 .param("type", typeForTelemetry)
+                .param("irrelevant", stop.isIrrelevantForReview(tours.getIrrelevantCategories()))
                 .log();
             openEditorFor(tours, stop, false);
         } catch (final CoreException | IOException e) {

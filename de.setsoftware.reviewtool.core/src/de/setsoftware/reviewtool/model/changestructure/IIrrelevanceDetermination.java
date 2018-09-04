@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IClassification;
+import de.setsoftware.reviewtool.model.api.ICommit;
 
 /**
  * Interface for strategies that can determine irrelevant changes. Irrelevant changes can for example be changes
@@ -26,15 +27,19 @@ public abstract class IIrrelevanceDetermination implements IChangeClassifier {
      * Returns true if, according to this strategy, the given change should be considered irrelevant for review.
      * Does not have to take the existing irrelevance flag into account.
      */
-    public abstract boolean isIrrelevant(IChange change);
+    public abstract boolean isIrrelevant(ICommit commit, IChange change);
 
     @Override
-    public final IClassification classify(IChange change) {
-        if (this.isIrrelevant(change)) {
+    public final IClassification classify(ICommit commit, IChange change) {
+        if (this.isIrrelevant(commit, change)) {
             return new Classification(this.number, this.getDescription(), true);
         } else {
             return null;
         }
+    }
+
+    @Override
+    public void clearCaches() {
     }
 
 }

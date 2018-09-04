@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.StringReader;
 
 import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
@@ -25,7 +26,7 @@ public class ImportChangeFilter extends IIrrelevanceDetermination {
     }
 
     @Override
-    public boolean isIrrelevant(IChange change) {
+    public boolean isIrrelevant(ICommit commit, IChange change) {
         if (change instanceof TextualChangeHunk) {
             final ITextualChange hunk = (ITextualChange) change;
             return this.isOnlyImports(hunk.getFromFragment()) && this.isOnlyImports(hunk.getToFragment())

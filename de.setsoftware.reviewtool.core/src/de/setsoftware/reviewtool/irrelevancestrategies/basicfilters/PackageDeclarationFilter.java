@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.irrelevancestrategies.basicfilters;
 
 import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.IIrrelevanceDetermination;
@@ -21,7 +22,7 @@ public class PackageDeclarationFilter extends IIrrelevanceDetermination {
     }
 
     @Override
-    public boolean isIrrelevant(IChange change) {
+    public boolean isIrrelevant(ICommit commit, IChange change) {
         if (change instanceof TextualChangeHunk) {
             final ITextualChange hunk = (ITextualChange) change;
             return this.isPackageDeclaration(hunk.getFromFragment()) && this.isPackageDeclaration(hunk.getToFragment());

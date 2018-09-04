@@ -294,10 +294,18 @@ public class ToursInReview {
             .param("count", countChanges(changes))
             .log();
 
+        for (final IChangeClassifier cl : changeClassificationStrategies) {
+            cl.clearCaches();
+        }
+
         final List<ICommit> changesWithClassifications = new ArrayList<>();
         for (final ICommit commit : changes) {
             changesWithClassifications.add(commit.transformChanges(
-                    (IChange c) -> addClassifications(c, changeClassificationStrategies, progressMonitor)));
+                    (IChange c) -> addClassifications(commit, c, changeClassificationStrategies, progressMonitor)));
+        }
+
+        for (final IChangeClassifier cl : changeClassificationStrategies) {
+            cl.clearCaches();
         }
 
         final Multiset<IClassification> strategyResults = new Multiset<>();
@@ -338,6 +346,7 @@ public class ToursInReview {
     }
 
     private static IChange addClassifications(
+            ICommit commit,
             IChange change,
             List<? extends IChangeClassifier> changeClassificationStrategies,
             final IProgressMonitor progressMonitor) {
@@ -347,7 +356,7 @@ public class ToursInReview {
                 throw new OperationCanceledException();
             }
             try {
-                final IClassification cl = strategy.classify(ret);
+                final IClassification cl = strategy.classify(commit, ret);
                 if (cl != null) {
                     ret = ret.addClassification(cl);
                 }
