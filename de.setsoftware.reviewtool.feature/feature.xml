@@ -2,7 +2,7 @@
 <feature
       id="de.setsoftware.reviewtool.feature"
       label="Review-Tool"
-      version="1.21.0.qualifier"
+      version="1.22.0.qualifier"
       provider-name="Tobias Baum">
 
    <description url="http://www.example.com/description">
