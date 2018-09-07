@@ -1,40 +1,47 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
-import java.io.File;
-import java.io.Serializable;
-
 import org.tmatesoft.svn.core.SVNLogEntryPath;
 import org.tmatesoft.svn.core.SVNNodeKind;
 import org.tmatesoft.svn.core.wc.SVNRevision;
 import org.tmatesoft.svn.core.wc.SVNStatus;
 import org.tmatesoft.svn.core.wc.SVNStatusType;
 
-/**
- * Stores all relevant data from a {@link SVNLogEntryPath} or a {@link SVNStatus}.
- */
-final class CachedLogEntryPath implements Serializable {
+import de.setsoftware.reviewtool.changesources.core.IScmChangeItem;
 
-    private static final long serialVersionUID = -7052753449952234943L;
+/**
+ * Implements {@link IScmChangeItem} for Subversion.
+ */
+final class SvnChangeItem implements IScmChangeItem {
+
+    private static final long serialVersionUID = -3997711069754371839L;
 
     private final String path;
-    private final File localPath;
     private final long prevRevision;
     private final String copyPath;
     private final long copyRevision;
     private final char type;
     private final char kind;
 
-    CachedLogEntryPath(final SVNLogEntryPath value, final long prevRevision) {
-        this.path = value.getPath();
-        this.localPath = null;
-        this.copyPath = value.getCopyPath();
+    /**
+     * Constructor.
+     * @param logEntryPath The log entry path.
+     * @param prevRevision The previous revision.
+     */
+    SvnChangeItem(final SVNLogEntryPath logEntryPath, final long prevRevision) {
+        this.path = logEntryPath.getPath();
+        this.copyPath = logEntryPath.getCopyPath();
         this.prevRevision = prevRevision;
-        this.copyRevision = value.getCopyRevision();
-        this.type = value.getType();
-        this.kind = mapStatusKind(value.getKind());
+        this.copyRevision = logEntryPath.getCopyRevision();
+        this.type = logEntryPath.getType();
+        this.kind = mapStatusKind(logEntryPath.getKind());
     }
 
-    CachedLogEntryPath(final ISvnRepo repo, final SVNStatus status) {
+    /**
+     * Constructor.
+     * @param repo The Subversion repository.
+     * @param status The Subversion status of the change item.
+     */
+    SvnChangeItem(final SvnRepository repo, final SVNStatus status) {
         if (status.getRevision().equals(SVNRevision.UNDEFINED)) {
             this.prevRevision = SVNRevision.BASE.getNumber();
         } else {
@@ -44,14 +51,13 @@ final class CachedLogEntryPath implements Serializable {
         final String copySourceUrl = status.getCopyFromURL();
         if (copySourceUrl != null) {
             this.path = '/' + status.getRepositoryRelativePath();
-            this.copyPath = copySourceUrl.substring(repo.getRemoteUrl().toString().length());
+            this.copyPath = copySourceUrl.substring(repo.getId().length());
             this.copyRevision = status.getCopyFromRevision().getNumber();
         } else {
             this.path = '/' + status.getRepositoryRelativePath();
             this.copyPath = null;
             this.copyRevision = -1;
         }
-        this.localPath = status.getFile();
         this.type = mapStatusTypeToLogEntryType(status.getNodeStatus());
         this.kind = mapStatusKind(status.getKind());
     }
@@ -59,16 +65,14 @@ final class CachedLogEntryPath implements Serializable {
     /**
      * Constructor. Only for testing.
      */
-    CachedLogEntryPath(
+    SvnChangeItem(
             final String path,
-            final File localPath,
             final long prevRevision,
             final String copyPath,
             final long copyRevision,
             final char type,
             final char kind) {
         this.path = path;
-        this.localPath = localPath;
         this.prevRevision = prevRevision;
         this.copyPath = copyPath;
         this.copyRevision = copyRevision;
@@ -100,12 +104,34 @@ final class CachedLogEntryPath implements Serializable {
         }
     }
 
-    String getPath() {
+    @Override
+    public String getPath() {
         return this.path;
     }
 
-    File getLocalPath() {
-        return this.localPath;
+    @Override
+    public boolean isFile() {
+        return this.kind == 'F';
+    }
+
+    @Override
+    public boolean isDirectory() {
+        return this.kind == 'D';
+    }
+
+    @Override
+    public boolean isAdded() {
+        return this.type == SVNLogEntryPath.TYPE_ADDED || this.type == SVNLogEntryPath.TYPE_REPLACED;
+    }
+
+    @Override
+    public boolean isChanged() {
+        return this.type == SVNLogEntryPath.TYPE_MODIFIED;
+    }
+
+    @Override
+    public boolean isDeleted() {
+        return this.type == SVNLogEntryPath.TYPE_DELETED || this.type == SVNLogEntryPath.TYPE_REPLACED;
     }
 
     long getAncestorRevision() {
@@ -119,25 +145,4 @@ final class CachedLogEntryPath implements Serializable {
     long getCopyRevision() {
         return this.copyRevision;
     }
-
-    boolean isFile() {
-        return this.kind == 'F';
-    }
-
-    boolean isDir() {
-        return this.kind == 'D';
-    }
-
-    boolean isNew() {
-        return this.type == SVNLogEntryPath.TYPE_ADDED;
-    }
-
-    boolean isDeleted() {
-        return this.type == SVNLogEntryPath.TYPE_DELETED;
-    }
-
-    boolean isReplaced() {
-        return this.type == SVNLogEntryPath.TYPE_REPLACED;
-    }
-
 }

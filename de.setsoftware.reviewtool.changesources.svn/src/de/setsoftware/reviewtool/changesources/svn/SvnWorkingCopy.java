@@ -1,100 +1,32 @@
 package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.File;
-import java.nio.file.Path;
 
-import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
-import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.AbstractWorkingCopy;
-import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
-import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
+import de.setsoftware.reviewtool.changesources.core.DefaultScmWorkingCopy;
 
 /**
- * Represents a local Subversion working copy.
+ * Implements {@link DefaultScmWorkingCopy} for Subversion.
  */
-final class SvnWorkingCopy extends AbstractWorkingCopy {
-
-    private final ISvnRepo repo;
-    private final File workingCopyRoot;
-    private final String relPath;
-    private final VirtualFileHistoryGraph combinedFileHistoryGraph;
-
-    SvnWorkingCopy(final ISvnRepo repo, final File workingCopyRoot, final String relPath) {
-        this.repo = repo;
-        this.workingCopyRoot = workingCopyRoot;
-        this.relPath = relPath;
-        this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(repo.getFileHistoryGraph());
-        this.setLocalFileHistoryGraph(new FileHistoryGraph(DiffAlgorithmFactory.createDefault()));
-    }
-
-    @Override
-    public ISvnRepo getRepository() {
-        return this.repo;
-    }
-
-    @Override
-    public File getLocalRoot() {
-        return this.workingCopyRoot;
-    }
-
-    @Override
-    public String getRelativePath() {
-        return this.relPath;
-    }
-
-    @Override
-    public File toAbsolutePathInWc(final String absolutePathInRepo) {
-        if (absolutePathInRepo.equals(this.relPath)) {
-            return this.workingCopyRoot;
-        } else if (absolutePathInRepo.startsWith(this.relPath + "/")) {
-            assert !absolutePathInRepo.contains("\\");
-            return new File(
-                    this.workingCopyRoot,
-                    absolutePathInRepo.substring(this.relPath.length() + 1));
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public String toAbsolutePathInRepo(final File absolutePathInWc) {
-        final Path wcRootPath = this.workingCopyRoot.toPath();
-        final Path wcPath = absolutePathInWc.toPath();
-        if (wcPath.startsWith(wcRootPath)) {
-            try {
-                final String relativePath = wcRootPath.relativize(wcPath).toString().replaceAll("\\\\", "/");
-                return this.relPath + '/' + relativePath;
-            } catch (final IllegalArgumentException e) {
-                return null;
-            }
-        } else {
-            return null;
-        }
-    }
-
-    @Override
-    public VirtualFileHistoryGraph getFileHistoryGraph() {
-        return this.combinedFileHistoryGraph;
-    }
-
-    @Override
-    public String toString() {
-        return this.workingCopyRoot.toString();
-    }
+final class SvnWorkingCopy extends
+        DefaultScmWorkingCopy<SvnChangeItem, SvnCommitId, SvnCommit, SvnRepository, SvnLocalChange, SvnWorkingCopy> {
 
     /**
-     * Returns the {@link SvnFileHistoryGraph local file history graph}. May be {@code null}.
+     * Constructor.
+     * @param repo The associated Subversion repository.
+     * @param scmBridge The {@link SvnWorkingCopyBridge} to use.
+     * @param workingCopyRoot The directory at the root of the working copy.
+     * @param relPath The relative path of the working copy root wrt. the URL of the remote repository.
      */
-    IMutableFileHistoryGraph getLocalFileHistoryGraph() {
-        return (IMutableFileHistoryGraph) this.combinedFileHistoryGraph.getLocalFileHistoryGraph();
+    SvnWorkingCopy(
+            final SvnRepository repo,
+            final SvnWorkingCopyBridge scmBridge,
+            final File workingCopyRoot,
+            final String relPath) {
+        super(repo, scmBridge, workingCopyRoot, relPath);
     }
 
-    /**
-     * Replaces the {@link SvnFileHistoryGraph} by the passed file history graph.
-     * Note that it is not possible to change the file history graph afterwards, as the combined file history graph
-     * would not recompute the connecting edges.
-     */
-    void setLocalFileHistoryGraph(final IMutableFileHistoryGraph localFileHistoryGraph) {
-        this.combinedFileHistoryGraph.setLocalFileHistoryGraph(localFileHistoryGraph);
+    @Override
+    public SvnWorkingCopy getThis() {
+        return this;
     }
 }
