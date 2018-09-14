@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
@@ -22,10 +21,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
     private final IRevisionedFile file;
     private final Set<ProxyableFileHistoryEdge> ancestors;
     private final Set<ProxyableFileHistoryEdge> descendants;
-    private transient ProxyableFileHistoryNode parent;
-    private final Set<ProxyableFileHistoryNode> children;
     private Type type;
-    private boolean hasAllChildren;
 
     /**
      * Creates a {@link FileHistoryNode}. The ancestor and parent are initially set to <code>null</code>.
@@ -38,9 +34,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
         this.file = file;
         this.ancestors = new LinkedHashSet<>();
         this.descendants = new LinkedHashSet<>();
-        this.children = new LinkedHashSet<>();
         this.type = type;
-        this.hasAllChildren = false;
     }
 
     /**
@@ -54,16 +48,12 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
             final IRevisionedFile file,
             final Set<ProxyableFileHistoryEdge> ancestors,
             final Set<ProxyableFileHistoryEdge> descendants,
-            final ProxyableFileHistoryNode parent,
-            final Set<ProxyableFileHistoryNode> children,
             final Type type) {
 
         this.graph = graph;
         this.file = file;
         this.ancestors = ancestors;
         this.descendants = descendants;
-        this.parent = parent;
-        this.children = children;
         this.type = type;
     }
 
@@ -177,62 +167,6 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
     void makeConfirmed() {
         assert this.type.equals(Type.UNCONFIRMED);
         this.type = Type.CHANGED;
-
-        if (this.parent != null && !this.parent.isConfirmed()) {
-            this.parent.makeConfirmed();
-        }
-    }
-
-    @Override
-    Set<ProxyableFileHistoryNode> getChildren() {
-        return this.children;
-    }
-
-    @Override
-    void addChild(final ProxyableFileHistoryNode child) {
-        this.children.add(child);
-        child.setParent(this);
-    }
-
-    @Override
-    void setHasAllChildren() {
-        this.hasAllChildren = true;
-    }
-
-    @Override
-    boolean hasAllChildren() {
-        return this.hasAllChildren;
-    }
-
-    @Override
-    ProxyableFileHistoryNode getParent() {
-        return this.parent;
-    }
-
-    @Override
-    void setParent(final ProxyableFileHistoryNode newParent) {
-        this.parent = newParent;
-    }
-
-    @Override
-    String getPathRelativeToParent() {
-        if (this.parent == null) {
-            return this.file.getPath();
-        } else {
-            return this.file.getPath().substring(this.parent.getFile().getPath().length());
-        }
-    }
-
-    /**
-     * Fills a list of additional attributes used by toString().
-     * @param attributes A list containing elements to be included in the output of {@link #toString()}.
-     */
-    @Override
-    protected void attributesToString(final List<String> attributes) {
-        super.attributesToString(attributes);
-        if (!this.children.isEmpty()) {
-            attributes.add("children=" + this.children);
-        }
     }
 
     /**
@@ -244,16 +178,6 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
                 this.file,
                 this.ancestors,
                 this.descendants,
-                this.parent == null ? null : this.parent.getFile(),
-                toFiles(this.children),
                 this.type);
-    }
-
-    private static Set<IRevisionedFile> toFiles(final Set<ProxyableFileHistoryNode> nodes) {
-        final Set<IRevisionedFile> result = new LinkedHashSet<>();
-        for (final ProxyableFileHistoryNode node : nodes) {
-            result.add(node.getFile());
-        }
-        return result;
     }
 }

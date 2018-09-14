@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
@@ -17,8 +16,6 @@ final class FileHistoryNodeProxy extends ProxyableFileHistoryNode {
     private final IRevisionedFile file;
     private final Set<ProxyableFileHistoryEdge> ancestors;
     private final Set<ProxyableFileHistoryEdge> descendants;
-    private final IRevisionedFile parentFile;
-    private final Set<IRevisionedFile> childFiles;
     private final Type type;
     private transient FileHistoryNode target;
 
@@ -29,8 +26,6 @@ final class FileHistoryNodeProxy extends ProxyableFileHistoryNode {
      * @param file The path and revision of the node.
      * @param ancestors The ancestor edges of the node.
      * @param descendants The descendant edges of the node.
-     * @param parentFile The path and revision of the parent node.
-     * @param childFiles The paths and revisions of the child nodes.
      * @param type The type of the node.
      */
     FileHistoryNodeProxy(
@@ -38,16 +33,12 @@ final class FileHistoryNodeProxy extends ProxyableFileHistoryNode {
             final IRevisionedFile file,
             final Set<ProxyableFileHistoryEdge> ancestors,
             final Set<ProxyableFileHistoryEdge> descendants,
-            final IRevisionedFile parentFile,
-            final Set<IRevisionedFile> childFiles,
             final Type type) {
 
         this.graph = graph;
         this.file = file;
         this.ancestors = ancestors;
         this.descendants = descendants;
-        this.parentFile = parentFile;
-        this.childFiles = childFiles;
         this.type = type;
     }
 
@@ -121,68 +112,16 @@ final class FileHistoryNodeProxy extends ProxyableFileHistoryNode {
         this.getTarget().makeConfirmed();
     }
 
-    @Override
-    Set<ProxyableFileHistoryNode> getChildren() {
-        return this.getTarget().getChildren();
-    }
-
-    @Override
-    void addChild(ProxyableFileHistoryNode child) {
-        this.getTarget().addChild(child);
-    }
-
-    @Override
-    void setHasAllChildren() {
-        this.getTarget().setHasAllChildren();
-    }
-
-    @Override
-    boolean hasAllChildren() {
-        return this.getTarget().hasAllChildren();
-    }
-
-    @Override
-    ProxyableFileHistoryNode getParent() {
-        return this.getTarget().getParent();
-    }
-
-    @Override
-    void setParent(ProxyableFileHistoryNode newParent) {
-        this.getTarget().setParent(newParent);
-    }
-
-    @Override
-    String getPathRelativeToParent() {
-        return this.getTarget().getPathRelativeToParent();
-    }
-
     /**
      * Returns the proxy target. The first time this method is called, it is looked up in the graph.
      */
     private synchronized FileHistoryNode getTarget() {
         if (this.target == null) {
-            final ProxyableFileHistoryNode parent;
-            if (this.parentFile != null) {
-                parent = this.graph.getNodeFor(this.parentFile);
-                assert parent != null;
-            } else {
-                parent = null;
-            }
-
-            final Set<ProxyableFileHistoryNode> children = new LinkedHashSet<>();
-            for (final IRevisionedFile childFile : this.childFiles) {
-                final ProxyableFileHistoryNode child = this.graph.getNodeFor(childFile);
-                assert child != null;
-                children.add(child);
-            }
-
             this.target = new FileHistoryNode(
                     this.graph,
                     this.file,
                     this.ancestors,
                     this.descendants,
-                    parent,
-                    children,
                     this.type);
         }
 

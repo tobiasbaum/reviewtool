@@ -257,26 +257,4 @@ public class FileHistoryGraphGetLatestFilesTest {
                 Arrays.asList(file("/b", 6)),
                 g.getLatestFiles(file("/b", 6), false)); //b@6 is non-existing
     }
-
-    @Test
-    public void testMoveParentDirectory() {
-        final IMutableFileHistoryGraph g = graph();
-        g.addChange("a", rev(1), Collections.singleton(rev(0)));
-        g.addChange("a/x", rev(2), Collections.singleton(rev(1)));
-        g.addCopy("a", rev(10), "b", rev(11));
-        g.addChange("a/x", rev(11), Collections.singleton(rev(10)));
-        g.addChange("b/x", rev(11), Collections.singleton(rev(10)));
-        g.addDeletion("a", rev(13));
-        g.addDeletion("b/x", rev(21));
-
-        assertEquals(
-                Arrays.asList(file("a/x", 11)),
-                g.getLatestFiles(file("a/x", 11), false));
-        assertEquals(
-                Arrays.asList(file("a/x", 13)),
-                g.getLatestFiles(file("a/x", 13), false)); // a/x@13 does not exist
-        assertEquals(
-                Arrays.asList(file("a/x", 11), file("b/x", 11)),
-                g.getLatestFiles(file("a/x", 2), false));
-    }
 }
