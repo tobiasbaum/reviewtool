@@ -32,6 +32,25 @@ public class PartialOrderAlgorithmsTest {
         public boolean le(final MyNumber other) {
             return other.value % this.value == 0;
         }
+
+        @Override
+        public boolean equals(final Object obj) {
+            if (obj instanceof MyNumber) {
+                final MyNumber o = (MyNumber) obj;
+                return this.value == o.value;
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return Long.hashCode(this.value);
+        }
+
+        @Override
+        public String toString() {
+            return Long.toString(this.value);
+        }
     }
 
     @Test
