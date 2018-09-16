@@ -16,13 +16,11 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
 
     private final ISvnRepo repo;
     private final File workingCopyRoot;
-    private final String relPath;
     private final VirtualFileHistoryGraph combinedFileHistoryGraph;
 
-    SvnWorkingCopy(final ISvnRepo repo, final File workingCopyRoot, final String relPath) {
+    SvnWorkingCopy(final ISvnRepo repo, final File workingCopyRoot) {
         this.repo = repo;
         this.workingCopyRoot = workingCopyRoot;
-        this.relPath = relPath;
         this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(repo.getFileHistoryGraph());
         this.setLocalFileHistoryGraph(new FileHistoryGraph(DiffAlgorithmFactory.createDefault()));
     }
@@ -38,19 +36,15 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
     }
 
     @Override
-    public String getRelativePath() {
-        return this.relPath;
-    }
-
-    @Override
     public File toAbsolutePathInWc(final String absolutePathInRepo) {
-        if (absolutePathInRepo.equals(this.relPath)) {
+        final String relPath = this.repo.getRelativePath();
+        if (absolutePathInRepo.equals(relPath)) {
             return this.workingCopyRoot;
-        } else if (absolutePathInRepo.startsWith(this.relPath + "/")) {
+        } else if (absolutePathInRepo.startsWith(relPath + "/")) {
             assert !absolutePathInRepo.contains("\\");
             return new File(
                     this.workingCopyRoot,
-                    absolutePathInRepo.substring(this.relPath.length() + 1));
+                    absolutePathInRepo.substring(relPath.length() + 1));
         } else {
             return null;
         }
@@ -61,9 +55,10 @@ final class SvnWorkingCopy extends AbstractWorkingCopy {
         final Path wcRootPath = this.workingCopyRoot.toPath();
         final Path wcPath = absolutePathInWc.toPath();
         if (wcPath.startsWith(wcRootPath)) {
+            final String relPath = this.repo.getRelativePath();
             try {
                 final String relativePath = wcRootPath.relativize(wcPath).toString().replaceAll("\\\\", "/");
-                return this.relPath + '/' + relativePath;
+                return relPath + '/' + relativePath;
             } catch (final IllegalArgumentException e) {
                 return null;
             }

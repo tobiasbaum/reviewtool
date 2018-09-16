@@ -24,10 +24,15 @@ import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
  */
 public final class StubRepo extends AbstractRepository implements ISvnRepo {
 
-    public static StubRepo INSTANCE = new StubRepo();
+    public static StubRepo INSTANCE = new StubRepo("");
     private static final long serialVersionUID = 1L;
 
     private IMutableFileHistoryGraph fileHistoryGraph = new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
+    private final String relPath;
+
+    public StubRepo(final String relPath) {
+        this.relPath = relPath;
+    }
 
     @Override
     public String getId() {
@@ -52,6 +57,11 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     @Override
     public SVNURL getRemoteUrl() {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getRelativePath() {
+        return this.relPath;
     }
 
     @Override

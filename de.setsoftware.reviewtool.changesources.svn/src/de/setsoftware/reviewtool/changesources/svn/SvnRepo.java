@@ -20,6 +20,7 @@ import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNLogEntry;
 import org.tmatesoft.svn.core.SVNPropertyValue;
 import org.tmatesoft.svn.core.SVNURL;
 import org.tmatesoft.svn.core.io.ISVNEditor;
@@ -27,9 +28,11 @@ import org.tmatesoft.svn.core.io.ISVNReporter;
 import org.tmatesoft.svn.core.io.ISVNReporterBaton;
 import org.tmatesoft.svn.core.io.SVNRepository;
 import org.tmatesoft.svn.core.io.diff.SVNDiffWindow;
+import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.base.ValueWrapper;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
@@ -103,6 +106,7 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
     private final SVNRepository svnRepo;
     private final String id;
     private final SVNURL remoteUrl;
+    private final String relPath;
     private final SvnFileCache fileCache;
     private final List<CachedLogEntry> entries;
     private IMutableFileHistoryGraph fileHistoryGraph;
@@ -114,6 +118,13 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
         this.fileCache = new SvnFileCache(this.svnRepo);
         this.entries = new ArrayList<>();
         this.fileHistoryGraph = new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
+
+        final SVNURL repositoryRoot = svnRepo.getRepositoryRoot(true);
+        if (!repositoryRoot.equals(remoteUrl)) {
+            this.relPath = remoteUrl.toString().substring(repositoryRoot.toString().length());
+        } else {
+            this.relPath = "";
+        }
     }
 
     @Override
@@ -266,7 +277,9 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
             // (2) While we process a commit in an ISVNLogEntryHandler, we are not allowed to call back the server
             //     using the same repository object as SVNRepository methods are not reentrant.
             //
-            final SVNRepository repo = SvnRepositoryManager.getInstance().getTemporaryRepo(this.remoteUrl, path);
+            final SVNRepository repo = SvnRepositoryManager.getInstance().getTemporaryRepo(
+                    this.svnRepo.getRepositoryRoot(false),
+                    path);
             repo.status(revisionNumber, null, SVNDepth.INFINITY, reporter, editor);
         } catch (final SVNException e) {
             Logger.warn("Error while collecting files for directory " + path + "@" + revisionNumber, e);
@@ -305,7 +318,29 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
 
     @Override
     public long getLatestRevision() throws SVNException {
-        return this.svnRepo.getLatestRevision();
+        final ValueWrapper<Long> latestRevision = new ValueWrapper<>(SVNRevision.UNDEFINED.getNumber());
+        final ISVNLogEntryHandler handler = new ISVNLogEntryHandler() {
+            @Override
+            public void handleLogEntry(final SVNLogEntry logEntry) {
+                latestRevision.setValue(logEntry.getRevision());
+            }
+        };
+        this.svnRepo.log(
+                null,   // no target paths (retrieve log entries of whole repository)
+                this.svnRepo.getLatestRevision(),
+                0,
+                false,  // don't discover changed paths
+                true,   // stop at copy operations
+                1,      // consider only the latest revision
+                false,  // don't include merge history
+                new String[0],
+                handler);
+        return latestRevision.get();
+    }
+
+    @Override
+    public String getRelativePath() {
+        return this.relPath;
     }
 
     private static String encodeString(final String s) {

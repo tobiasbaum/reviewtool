@@ -90,9 +90,7 @@ final class SvnWorkingCopyManager {
                 return null;
             }
 
-            final SVNURL repoUrl = repo.getRemoteUrl();
-            final String relPath = wcUrl.toString().substring(repoUrl.toString().length());
-            wc = new SvnWorkingCopy(repo, workingCopyRoot, relPath);
+            wc = new SvnWorkingCopy(repo, workingCopyRoot);
             this.wcPerRootDirectory.put(workingCopyRoot.toString(), wc);
         }
         return wc;
