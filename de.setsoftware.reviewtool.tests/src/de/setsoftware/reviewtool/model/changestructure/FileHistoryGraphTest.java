@@ -273,6 +273,45 @@ public final class FileHistoryGraphTest {
     }
 
     @Test
+    public void testAdditionDeletionAndAdditionOfSameFile() {
+        final IRepository repo = new TestRepository("123");
+        final FileHistoryGraph g = graph();
+
+        final IRevisionedFile aRevNew =
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 1L));
+        final IRevisionedFile aRevDel =
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
+        final IRevisionedFile aRevNewAgain =
+                ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 3L));
+
+        g.addAddition(aRevNew.getPath(), aRevNew.getRevision());
+        g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
+        g.addAddition(aRevNew.getPath(), aRevNewAgain.getRevision());
+
+        final ProxyableFileHistoryNode aNode = g.getNodeFor(aRevNew);
+        assertEquals(aRevNew, aNode.getFile());
+        assertEquals(IFileHistoryNode.Type.ADDED, aNode.getType());
+        assertEquals(false, aNode.isCopyTarget());
+        assertEquals(Collections.singleton(createAlphaNode(repo, g, aNode)), aNode.getAncestors());
+
+        final ProxyableFileHistoryNode aNodeDel = g.getNodeFor(aRevDel);
+        assertEquals(aRevDel, aNodeDel.getFile());
+        assertEquals(IFileHistoryNode.Type.DELETED, aNodeDel.getType());
+        assertEquals(false, aNodeDel.isCopyTarget());
+        assertEquals(Collections.emptySet(), aNodeDel.getDescendants());
+
+        final ProxyableFileHistoryNode aNodeAgain = g.getNodeFor(aRevNewAgain);
+        assertEquals(aRevNewAgain, aNodeAgain.getFile());
+        assertEquals(IFileHistoryNode.Type.ADDED, aNodeAgain.getType());
+        assertEquals(false, aNodeAgain.isCopyTarget());
+        assertEquals(Collections.singleton(createAlphaNode(repo, g, aNodeAgain)), aNodeAgain.getAncestors());
+
+        final FileHistoryEdge aEdge = new FileHistoryEdge(g, aNode, aNodeDel, IFileHistoryEdge.Type.NORMAL);
+        assertEquals(Collections.singleton(aEdge), aNode.getDescendants());
+        assertEquals(Collections.singleton(aEdge), aNodeDel.getAncestors());
+    }
+
+    @Test
     public void testChangeOfKnownFile() {
         final IRepository repo = new TestRepository("123");
         final FileHistoryGraph g = graph();

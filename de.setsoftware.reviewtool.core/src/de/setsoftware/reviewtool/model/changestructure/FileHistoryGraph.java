@@ -183,7 +183,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
             node = new FileHistoryNode(this, file, nodeType);
             this.index.put(file.getPath(), node);
 
-            if (node.isRoot() && connected) {
+            if (connected) {
                 final Set<ProxyableFileHistoryNode> ancestors = node.getType().equals(IFileHistoryNode.Type.ADDED)
                         ? new LinkedHashSet<>()
                         : this.findAncestorsFor(file);
@@ -225,7 +225,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
                 node.makeConfirmed();
             }
 
-            if (node.isConfirmed()) {
+            if (node.isConfirmed() && !ancestor.isRoot()) {
                 this.injectInteriorNode(ancestor, node);
             }
 
