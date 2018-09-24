@@ -52,7 +52,10 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
             final IRevision revision) {
 
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
-        this.getOrCreateConnectedNode(file, IFileHistoryNode.Type.ADDED);
+        final ProxyableFileHistoryNode node = this.getOrCreateConnectedNode(file, IFileHistoryNode.Type.ADDED);
+        if (node.getType().equals(IFileHistoryNode.Type.DELETED)) {
+            node.makeReplaced();
+        }
     }
 
     @Override
@@ -97,47 +100,21 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public final void addReplacement(
-            final String path,
-            final IRevision revision) {
-
-        this.addDeletion(path, revision);
-        this.addAddition(path, revision);
-    }
-
-    @Override
-    public final void addReplacement(
-            final String path,
-            final IRevision revision,
-            final String pathFrom,
-            final IRevision revisionFrom) {
-
-        this.addDeletion(path, revision);
-        this.addCopy(pathFrom, path, revisionFrom, revision, IFileHistoryNode.Type.ADDED);
-    }
-
-    @Override
     public final void addCopy(
             final String pathFrom,
-            final String pathTo,
             final IRevision revisionFrom,
+            final String pathTo,
             final IRevision revisionTo) {
-        this.addCopy(pathFrom, pathTo, revisionFrom, revisionTo, IFileHistoryNode.Type.CHANGED);
-    }
-
-    private void addCopy(
-            final String pathFrom,
-            final String pathTo,
-            final IRevision revisionFrom,
-            final IRevision revisionTo,
-            final IFileHistoryNode.Type nodeType) {
 
         final IRevisionedFile fileFrom = ChangestructureFactory.createFileInRevision(pathFrom, revisionFrom);
         final IRevisionedFile fileTo = ChangestructureFactory.createFileInRevision(pathTo, revisionTo);
 
         final ProxyableFileHistoryNode fromNode =
                 this.getOrCreateConnectedNode(fileFrom, IFileHistoryNode.Type.UNCONFIRMED);
-        final ProxyableFileHistoryNode toNode = this.getOrCreateUnconnectedNode(fileTo, nodeType);
+        final ProxyableFileHistoryNode toNode = this.getOrCreateUnconnectedNode(fileTo, IFileHistoryNode.Type.CHANGED);
+        if (toNode.getType().equals(IFileHistoryNode.Type.DELETED)) {
+            toNode.makeReplaced();
+        }
 
         this.createMissingChildren(fromNode);
 
@@ -184,8 +161,8 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
                 final String childPath = child.getFile().getPath();
                 this.addCopy(
                         childPath,
-                        toParentPath.concat(childPath.substring(fromParentPath.length())),
                         fromRevision,
+                        toParentPath.concat(childPath.substring(fromParentPath.length())),
                         toRevision);
             }
         }
@@ -430,10 +407,6 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
                 if (!ancestors.isEmpty()) {
                     this.addNodeWithAncestors(node, ancestors, IFileHistoryEdge.Type.NORMAL);
                 }
-            }
-        } else {
-            if (nodeType.equals(IFileHistoryNode.Type.ADDED)) {
-                node.makeReplaced();
             }
         }
 

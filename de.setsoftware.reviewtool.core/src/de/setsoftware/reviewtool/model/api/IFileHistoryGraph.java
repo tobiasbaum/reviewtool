@@ -23,7 +23,7 @@ public interface IFileHistoryGraph {
     public abstract IFileHistoryNode getNodeFor(IRevisionedFile file);
 
     /**
-     * Returns the nearest ancestors for passed {@link IRevisionedFile} having the same path, or <code>null</code>
+     * Returns the nearest ancestors for passed {@link IRevisionedFile} having the same path, or an empty set
      * if no suitable nodes exist. To be suitable, the ancestor node must not be deleted.
      */
     public abstract Set<? extends IFileHistoryNode> findAncestorsFor(IRevisionedFile file);

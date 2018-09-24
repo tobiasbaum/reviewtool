@@ -37,31 +37,12 @@ public interface IMutableFileHistoryGraph extends IFileHistoryGraph, Serializabl
             IRevision revision);
 
     /**
-     * Adds the information that the path {@code path} was replaced by a fresh path (file or directory) in revision
-     * {@code revision}.
-     */
-    public abstract void addReplacement(
-            String path,
-            IRevision revision);
-
-    /**
-     * Adds the information that the path {@code path} was replaced by a fresh path (file or directory) in revision
-     * {@code revision}, copied from {@code pathFrom} at revision {@code revisionFrom}.
-     */
-    public abstract void addReplacement(
-            String path,
-            IRevision revision,
-            String pathFrom,
-            IRevision revisionFrom);
-
-    /**
      * Adds the information that the path {@code pathFrom} at revision {@code revisionFrom} was copied to
      * path {@code pathTo} in revision {@code revisionTo}.
      */
     public abstract void addCopy(
             String pathFrom,
-            String pathTo,
             IRevision revisionFrom,
+            String pathTo,
             IRevision revisionTo);
-
 }

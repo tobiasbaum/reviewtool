@@ -705,7 +705,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile yRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/b/y", trunk3Rev.getRevision());
 
-        g.addCopy(aRev2.getPath(), bRevOrig.getPath(), aRev2.getRevision(), bRevOrig.getRevision());
+        g.addCopy(aRev2.getPath(), aRev2.getRevision(), bRevOrig.getPath(), bRevOrig.getRevision());
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final IRevisionedFile trunk4Rev =
@@ -893,7 +893,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNode = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNode.getFile());
@@ -943,7 +944,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNodePrev = g.getNodeFor(aRevPrev);
         assertEquals(aRevPrev, aNodePrev.getFile());
@@ -985,7 +987,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addDeletion(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addAddition(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNode = g.getNodeFor(aRevPrev);
@@ -1067,7 +1070,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", new TestRepoRevision(repo, 2L));
 
-        g.addReplacement(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addDeletion(xRevReplaced.getPath(), xRevReplaced.getRevision());
+        g.addAddition(xRevReplaced.getPath(), xRevReplaced.getRevision());
         g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aNodeReplaced = g.getNodeFor(aRevReplaced);
@@ -1364,7 +1368,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
-        g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
+        g.addCopy(aRevOrig.getPath(), aRevOrig.getRevision(), aRevCopy.getPath(), aRevCopy.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1413,7 +1417,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
-        g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
+        g.addCopy(aRevOrig.getPath(), aRevOrig.getRevision(), aRevCopy.getPath(), aRevCopy.getRevision());
         g.addChange(aRevCopy.getPath(), aRevCopy.getRevision(), Collections.singleton(aRevOrig.getRevision()));
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -1475,8 +1479,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy2 =
                 ChangestructureFactory.createFileInRevision("/trunk/c", new TestRepoRevision(repo, 5L));
 
-        g.addCopy(aRevChanged.getPath(), aRevCopy.getPath(), aRevChanged.getRevision(), aRevCopy.getRevision());
-        g.addCopy(aRevSource2.getPath(), aRevCopy2.getPath(), aRevSource2.getRevision(), aRevCopy2.getRevision());
+        g.addCopy(aRevChanged.getPath(), aRevChanged.getRevision(), aRevCopy.getPath(), aRevCopy.getRevision());
+        g.addCopy(aRevSource2.getPath(), aRevSource2.getRevision(), aRevCopy2.getPath(), aRevCopy2.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1539,7 +1543,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
-        g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
+        g.addCopy(aRevOrig.getPath(), aRevOrig.getRevision(), aRevCopy.getPath(), aRevCopy.getRevision());
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -1598,7 +1602,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/b", new TestRepoRevision(repo, 2L));
 
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
-        g.addCopy(aRevOrig.getPath(), aRevCopy.getPath(), aRevOrig.getRevision(), aRevCopy.getRevision());
+        g.addCopy(aRevOrig.getPath(), aRevOrig.getRevision(), aRevCopy.getPath(), aRevCopy.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1658,7 +1662,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
-        g.addCopy(xRev.getPath(), yRev.getPath(), xRev.getRevision(), yRev.getRevision());
+        g.addCopy(xRev.getPath(), xRev.getRevision(), yRev.getPath(), yRev.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1716,7 +1720,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile yRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 3L));
 
-        g.addCopy(xRev.getPath(), yRev.getPath(), xRev.getRevision(), yRev.getRevision());
+        g.addCopy(xRev.getPath(), xRev.getRevision(), yRev.getPath(), yRev.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -1778,7 +1782,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", trunkRev.getRevision());
 
-        g.addCopy(trunkRevOrig.getPath(), xRev.getPath(), trunkRevOrig.getRevision(), xRev.getRevision());
+        g.addCopy(trunkRevOrig.getPath(), trunkRevOrig.getRevision(), xRev.getPath(), xRev.getRevision());
 
         final ProxyableFileHistoryNode trunkOrigNode = g.getNodeFor(trunkRevOrig);
         assertEquals(trunkRevOrig, trunkOrigNode.getFile());
@@ -1866,7 +1870,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/x/a", trunkRev.getRevision());
 
-        g.addCopy(oldTrunkRev.getPath(), xRev.getPath(), oldTrunkRev.getRevision(), xRev.getRevision());
+        g.addCopy(oldTrunkRev.getPath(), oldTrunkRev.getRevision(), xRev.getPath(), xRev.getRevision());
 
         final ProxyableFileHistoryNode trunkCopySourceNode = g.getNodeFor(oldTrunkRev);
         assertEquals(oldTrunkRev, trunkCopySourceNode.getFile());
@@ -1931,7 +1935,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile yRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
 
         final IRevisionedFile aRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
@@ -1974,7 +1978,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile yRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y", new TestRepoRevision(repo, 2L));
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
 
         final IRevisionedFile aRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
@@ -2024,7 +2028,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2076,7 +2080,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevDel =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
         g.addDeletion(aRevDel.getPath(), aRevDel.getRevision());
 
         final ProxyableFileHistoryNode aNode = g.getNodeFor(aRevOrig);
@@ -2131,10 +2135,11 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile bRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
-        g.addReplacement(bRevReplaced.getPath(), bRevReplaced.getRevision(),
-                bRevOrig.getPath(), bRevOrig.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(bRevReplaced.getPath(), bRevReplaced.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevOrig.getRevision(), bRevReplaced.getPath(), bRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -2211,10 +2216,11 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile bRevReplaced =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addReplacement(aRevReplaced.getPath(), aRevReplaced.getRevision());
-        g.addReplacement(bRevReplaced.getPath(), bRevReplaced.getRevision(),
-                bRevOrig.getPath(), bRevOrig.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
+        g.addDeletion(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addAddition(aRevReplaced.getPath(), aRevReplaced.getRevision());
+        g.addDeletion(bRevReplaced.getPath(), bRevReplaced.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevOrig.getRevision(), bRevReplaced.getPath(), bRevReplaced.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -2286,7 +2292,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevChanged =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
         g.addChange(aRevChanged.getPath(), aRevChanged.getRevision(), Collections.singleton(aRevOrig.getRevision()));
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2338,7 +2344,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevChanged =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
         g.addChange(aRevChanged.getPath(), aRevChanged.getRevision(), Collections.singleton(xRevOrig.getRevision()));
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2392,7 +2398,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevChanged =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRevChanged.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
         g.addChange(aRevChanged.getPath(), aRevChanged.getRevision(), Collections.singleton(yRev.getRevision()));
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2452,8 +2458,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile bRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addCopy(bRevOrig.getPath(), bRev.getPath(), bRevOrig.getRevision(), bRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevOrig.getRevision(), bRev.getPath(), bRev.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());
@@ -2522,8 +2528,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile bRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addCopy(bRevOrig.getPath(), bRev.getPath(), bRevOrig.getRevision(), bRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevOrig.getRevision(), bRev.getPath(), bRev.getRevision());
 
         final ProxyableFileHistoryNode bOrigNode = g.getNodeFor(bRevOrig);
         assertEquals(bRevOrig, bOrigNode.getFile());
@@ -2577,8 +2583,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile bRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", new TestRepoRevision(repo, 3L));
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addCopy(bRevOrig.getPath(), bRev.getPath(), bRevOrig.getRevision(), bRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevOrig.getRevision(), bRev.getPath(), bRev.getRevision());
 
         final ProxyableFileHistoryNode bOrigNode = g.getNodeFor(bRevOrig);
         assertEquals(bRevOrig, bOrigNode.getFile());
@@ -2643,8 +2649,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile bRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addCopy(bRevOrig.getPath(), bRev.getPath(), bRevOrig.getRevision(), bRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevOrig.getRevision(), bRev.getPath(), bRev.getRevision());
         g.addChange(bRev.getPath(), bRev.getRevision(), Collections.singleton(bRevOrig.getRevision()));
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2714,8 +2720,8 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile bRev =
                 ChangestructureFactory.createFileInRevision("/trunk/y/b", yRev.getRevision());
 
-        g.addCopy(xRevOrig.getPath(), yRev.getPath(), xRevOrig.getRevision(), yRev.getRevision());
-        g.addCopy(bRevOrig.getPath(), bRev.getPath(), bRevOrig.getRevision(), bRev.getRevision());
+        g.addCopy(xRevOrig.getPath(), xRevOrig.getRevision(), yRev.getPath(), yRev.getRevision());
+        g.addCopy(bRevOrig.getPath(), bRevOrig.getRevision(), bRev.getPath(), bRev.getRevision());
         g.addChange(bRev.getPath(), bRev.getRevision(), Collections.singleton(bRevOrig.getRevision()));
 
         final ProxyableFileHistoryNode bOrigNode = g.getNodeFor(bRevOrig);
@@ -2773,7 +2779,7 @@ public final class FileHistoryGraphTest {
         final IRevisionedFile aRevCopy =
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
-        g.addCopy(xRev.getPath(), yRev.getPath(), xRev.getRevision(), yRev.getRevision());
+        g.addCopy(xRev.getPath(), xRev.getRevision(), yRev.getPath(), yRev.getRevision());
         g.addDeletion(xRevDel.getPath(), xRevDel.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
@@ -2851,7 +2857,7 @@ public final class FileHistoryGraphTest {
                 ChangestructureFactory.createFileInRevision("/trunk/y/a", yRev.getRevision());
 
         g.addDeletion(xRevDel.getPath(), xRevDel.getRevision());
-        g.addCopy(xRev.getPath(), yRev.getPath(), xRev.getRevision(), yRev.getRevision());
+        g.addCopy(xRev.getPath(), xRev.getRevision(), yRev.getPath(), yRev.getRevision());
 
         final ProxyableFileHistoryNode aOrigNode = g.getNodeFor(aRevOrig);
         assertEquals(aRevOrig, aOrigNode.getFile());

@@ -92,7 +92,7 @@ public final class FileHistoryEdge extends ProxyableFileHistoryEdge {
 
     @Override
     public int hashCode() {
-        return this.ancestor.hashCode() ^ this.descendant.hashCode() ^ this.type.hashCode();
+        return this.ancestor.hashCode() ^ this.descendant.hashCode();
     }
 
     /**
@@ -131,7 +131,7 @@ public final class FileHistoryEdge extends ProxyableFileHistoryEdge {
         }
     }
 
-    private String guessEncoding(byte[] oldFileContent, byte[] newFileContent) {
+    private String guessEncoding(final byte[] oldFileContent, final byte[] newFileContent) {
         if (this.isValidUtf8(oldFileContent) && this.isValidUtf8(newFileContent)) {
             return "UTF-8";
         } else {
@@ -142,7 +142,7 @@ public final class FileHistoryEdge extends ProxyableFileHistoryEdge {
     /**
      * Returns true iff the given bytes are syntactically valid UTF-8.
      */
-    private boolean isValidUtf8(byte[] content) {
+    private boolean isValidUtf8(final byte[] content) {
         try {
             StandardCharsets.UTF_8.newDecoder()
                 .onMalformedInput(CodingErrorAction.REPORT)

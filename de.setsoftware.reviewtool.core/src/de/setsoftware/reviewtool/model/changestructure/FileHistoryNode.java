@@ -133,7 +133,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
 
     @Override
     public int hashCode() {
-        return this.file.hashCode() ^ this.type.hashCode();
+        return this.file.hashCode();
     }
 
     @Override
@@ -155,7 +155,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
 
     @Override
     void makeDeleted() {
-        assert this.type.equals(Type.ADDED) || this.type.equals(Type.CHANGED);
+        assert !this.type.equals(Type.UNCONFIRMED) && !this.type.equals(Type.DELETED);
         this.type = Type.DELETED;
 
         final Iterator<ProxyableFileHistoryEdge> it = this.ancestors.iterator();

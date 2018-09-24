@@ -160,7 +160,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
             }
             return ancestors;
         } else {
-            return null;
+            return new LinkedHashSet<>();
         }
     }
 

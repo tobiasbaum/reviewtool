@@ -24,36 +24,28 @@ abstract class AbstractSvnRevision implements SvnRevision {
     void integrateInto(final IMutableFileHistoryGraph graph) {
         for (final Entry<String, CachedLogEntryPath> e : this.getChangedPaths().entrySet()) {
             final String path = e.getKey();
-
             final CachedLogEntryPath pathInfo = e.getValue();
-            final String copyPath = pathInfo.getCopyPath();
-            if (pathInfo.isDeleted()) {
+
+            if (pathInfo.isDeleted() || pathInfo.isReplaced()) {
                 graph.addDeletion(path, this.toRevision());
-            } else if (pathInfo.isReplaced()) {
-                if (copyPath != null) {
-                    graph.addReplacement(
-                            path,
-                            this.toRevision(),
-                            copyPath,
-                            ChangestructureFactory.createRepoRevision(
-                                    ComparableWrapper.wrap(pathInfo.getCopyRevision()),
-                                    this.getRepository()));
-                } else {
-                    graph.addReplacement(path, this.toRevision());
-                }
-            } else if (pathInfo.isNew()) {
+            }
+
+            if (pathInfo.isNew() || pathInfo.isReplaced()) {
+                final String copyPath = pathInfo.getCopyPath();
                 if (copyPath != null) {
                     graph.addCopy(
                             copyPath,
-                            path,
                             ChangestructureFactory.createRepoRevision(
                                     ComparableWrapper.wrap(pathInfo.getCopyRevision()),
                                     this.getRepository()),
+                            path,
                             this.toRevision());
                 } else {
                     graph.addAddition(path, this.toRevision());
                 }
-            } else {
+            }
+
+            if (!pathInfo.isDeleted() && !pathInfo.isNew()  && !pathInfo.isReplaced()) {
                 graph.addChange(
                         path,
                         this.toRevision(),
