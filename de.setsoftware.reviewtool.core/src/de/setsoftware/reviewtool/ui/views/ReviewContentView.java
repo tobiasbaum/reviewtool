@@ -646,6 +646,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             double sumRatio = 0.0;
             int count = 0;
 
+            final Set<? extends IClassification> irrelevantCategories = tours.getIrrelevantCategories();
             for (final Stop f : tour.getStops()) {
                 if (statistics != null && statistics.isMarkedAsChecked(f)) {
                     maxRatio = 1.0;
@@ -657,7 +658,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 maxRatio = Math.max(maxRatio, viewRatio.getMaxRatio());
                 sumRatio += viewRatio.getAverageRatio();
                 count++;
-                allIrrelevant &= f.isIrrelevantForReview(tours.getIrrelevantCategories());
+                allIrrelevant &= f.isIrrelevantForReview(irrelevantCategories);
             }
 
             if (count > 0 && allMarkedAsChecked) {
@@ -665,22 +666,29 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             }
             return Pair.create(
                     this.determineImage(
-                            allNotViewedAtAll, maxRatio, sumRatio / count, allIrrelevant, this.iconForTour(tour)),
+                            allNotViewedAtAll,
+                            maxRatio,
+                            sumRatio / count,
+                            allIrrelevant,
+                            this.iconForTour(tour, irrelevantCategories)),
                     allIrrelevant);
         }
 
-        private IconGrammar iconForTour(Tour tour) {
+        private IconGrammar iconForTour(Tour tour, Set<? extends IClassification> irrelevantCategories) {
             final Multiset<IconGrammar> childIcons = new Multiset<>();
+            final Multiset<IconGrammar> relevantChildIcons = new Multiset<>();
             for (final Stop s : tour.getStops()) {
-                childIcons.add(this.iconForStop(s));
-            }
-            IconGrammar mostCommon = null;
-            for (final IconGrammar g : childIcons.keySet()) {
-                if (mostCommon == null || childIcons.get(g) > childIcons.get(mostCommon)) {
-                    mostCommon = g;
+                final IconGrammar iconForStop = this.iconForStop(s);
+                childIcons.add(iconForStop);
+                if (!s.isIrrelevantForReview(irrelevantCategories)) {
+                    relevantChildIcons.add(iconForStop);
                 }
             }
-            return mostCommon;
+            if (relevantChildIcons.isEmpty()) {
+                return childIcons.getMostCommonItem();
+            } else {
+                return relevantChildIcons.getMostCommonItem();
+            }
         }
 
         private int classificationToShapeId(TourElement e) {

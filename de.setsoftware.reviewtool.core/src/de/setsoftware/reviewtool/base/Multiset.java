@@ -68,4 +68,25 @@ public class Multiset<T> {
         return this.items.keySet();
     }
 
+    /**
+     * Returns the item which occurs most often. Returns the first such if
+     * there are several with the same count.
+     */
+    public T getMostCommonItem() {
+        T mostCommon = null;
+        for (final T g : this.keySet()) {
+            if (mostCommon == null || this.get(g) > this.get(mostCommon)) {
+                mostCommon = g;
+            }
+        }
+        return mostCommon;
+    }
+
+    /**
+     * Returns true iff there is no item in the set.
+     */
+    public boolean isEmpty() {
+        return this.items.isEmpty();
+    }
+
 }
