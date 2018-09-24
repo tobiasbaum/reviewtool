@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
@@ -9,12 +10,24 @@ import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
+import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
 
 /**
  * Interface to a remote Subversion repository.
  */
 interface ISvnRepo extends IRepository {
+
+    /**
+     * Represents a versioned file in a repository.
+     */
+    public interface File {
+
+        /**
+         * Returns the name of this file.
+         */
+        public abstract String getName();
+    }
 
     /**
      * Returns the URL of the repository.
@@ -45,6 +58,21 @@ interface ISvnRepo extends IRepository {
      * Returns the latest revision of this repository.
      */
     public abstract long getLatestRevision() throws SVNException;
+
+    /**
+     * Returns all files in a directory given its path and revision.
+     * If the path points to a file, only this file is returned.
+     * If the path points to a directory, this operation is applied to all of its children,
+     * concatenating the resulting lists.
+     * Returns an empty set if an error occurred.
+     * Note that the revision passed is used for both path lookup and tree entry lookup. It is not possible to specify
+     * a peg revision for path lookup and an operating revision for tree entry lookup.
+     *
+     * @param path The path to the tree entry (typically a directory) the children of which are to be returned.
+     * @param revision The revision at which to look up the tree entry and its children.
+     * @return A set of {@link File files} in no particular order.
+     */
+    public abstract Set<? extends File> getFiles(String path, IRepoRevision<?> revision);
 
     @Override
     public abstract IMutableFileHistoryGraph getFileHistoryGraph();

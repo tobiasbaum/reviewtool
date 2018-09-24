@@ -2,23 +2,34 @@ package de.setsoftware.reviewtool.changesources.svn;
 
 import java.io.InvalidObjectException;
 import java.io.ObjectStreamException;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Platform;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
+import org.tmatesoft.svn.core.SVNCommitInfo;
+import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
+import org.tmatesoft.svn.core.SVNPropertyValue;
 import org.tmatesoft.svn.core.SVNURL;
+import org.tmatesoft.svn.core.io.ISVNEditor;
+import org.tmatesoft.svn.core.io.ISVNReporter;
+import org.tmatesoft.svn.core.io.ISVNReporterBaton;
 import org.tmatesoft.svn.core.io.SVNRepository;
+import org.tmatesoft.svn.core.io.diff.SVNDiffWindow;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
@@ -32,6 +43,28 @@ import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
  * as well as a cache of requested file contents.
  */
 final class SvnRepo extends AbstractRepository implements ISvnRepo {
+
+    /**
+     * Represents a versioned file in a Subversion repository.
+     * Symbolic links are treated like files (even if they point to directories).
+     */
+    private static final class File implements ISvnRepo.File {
+        private final String path;
+
+        private File(final String path) {
+            this.path = path;
+        }
+
+        @Override
+        public String getName() {
+            return this.path;
+        }
+
+        @Override
+        public String toString() {
+            return this.path;
+        }
+    }
 
     /**
      * References a SVN repository by its remote URL.
@@ -122,6 +155,123 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
         } catch (final NumberFormatException e) {
             return null;
         }
+    }
+
+    @Override
+    public Set<File> getFiles(final String path, final IRepoRevision<?> revision) {
+        final Set<File> result = new LinkedHashSet<>();
+        final long revisionNumber = ComparableWrapper.<Long> unwrap(revision.getId()).longValue();
+
+        final ISVNReporterBaton reporter = new ISVNReporterBaton() {
+            @Override
+            public void report(final ISVNReporter reporter) throws SVNException {
+                // simulate an empty working copy, such that ISVNEditor is called with all entries in the given commit
+                reporter.setPath("", null, revisionNumber, SVNDepth.INFINITY, true);
+                reporter.finishReport();
+            }
+        };
+
+        final ISVNEditor editor = new ISVNEditor() {
+
+            @Override
+            public void abortEdit() {
+            }
+
+            @Override
+            public void absentDir(final String path) {
+            }
+
+            @Override
+            public void absentFile(final String path) {
+            }
+
+            @Override
+            public void addFile(final String filePath, final String copyFromPath, final long copyFromRevision) {
+                result.add(new File(path.isEmpty() ? filePath : path + "/" + filePath));
+            }
+
+            @Override
+            public SVNCommitInfo closeEdit() {
+                return null;
+            }
+
+            @Override
+            public void closeFile(final String path, final String textChecksum) {
+            }
+
+            @Override
+            public void deleteEntry(final String path, final long revision) {
+            }
+
+            @Override
+            public void openFile(final String path, final long revision) {
+            }
+
+            @Override
+            public void targetRevision(final long revision) {
+            }
+
+            @Override
+            public void applyTextDelta(final String path, final String baseChecksum) {
+            }
+
+            @Override
+            public OutputStream textDeltaChunk(final String path, final SVNDiffWindow diffWindow) {
+                return null;
+            }
+
+            @Override
+            public void textDeltaEnd(final String path) {
+            }
+
+            @Override
+            public void addDir(final String path, final String copyFromPath, final long copyFromRevision) {
+            }
+
+            @Override
+            public void changeDirProperty(final String name, final SVNPropertyValue value) {
+            }
+
+            @Override
+            public void changeFileProperty(
+                    final String path,
+                    final String propertyName,
+                    final SVNPropertyValue propertyValue) {
+            }
+
+            @Override
+            public void closeDir() {
+            }
+
+            @Override
+            public void openDir(final String path, final long revision) {
+            }
+
+            @Override
+            public void openRoot(final long revision) {
+            }
+        };
+
+        try {
+            //
+            // We have to use a temporary repository here for two reasons:
+            // (1) The subversion protocol requires that the target path passed to the status() call below consist of
+            //     at most one path component. (Note that an empty target path (or {@code null}, equivalently) is also
+            //     allowed.) Paths with multiple components are not allowed and lead to server errors as follows:
+            //       Provider encountered an error while streaming a REPORT response.  [404, #0]
+            //       A failure occurred while driving the update report editor  [404, #160013]
+            //       File not found: revision 43975, path '/pango/pango.modules'  [404, #160013]
+            //     See the discussion of the topic "ra_dav and mod_dav_svn target problem" at the URL
+            //     https://svn.haxx.se/dev/archive-2003-08/0184.shtml for details.
+            // (2) While we process a commit in an ISVNLogEntryHandler, we are not allowed to call back the server
+            //     using the same repository object as SVNRepository methods are not reentrant.
+            //
+            final SVNRepository repo = SvnRepositoryManager.getInstance().getTemporaryRepo(this.remoteUrl, path);
+            repo.status(revisionNumber, null, SVNDepth.INFINITY, reporter, editor);
+        } catch (final SVNException e) {
+            Logger.warn("Error while collecting files for directory " + path + "@" + revisionNumber, e);
+        }
+        return result;
     }
 
     @Override

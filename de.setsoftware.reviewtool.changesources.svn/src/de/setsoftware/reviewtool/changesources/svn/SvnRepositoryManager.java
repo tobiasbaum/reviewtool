@@ -132,6 +132,17 @@ final class SvnRepositoryManager {
     }
 
     /**
+     * Returns a reusable {@link SVNRepository} referring to a path in a remote repository.
+     * @param remoteRootUrl The root URL of the remote repository.
+     * @param path The path at the remote repository.
+     * @return A {@link SVNRepository} that refers to the specified path in the remote repository.
+     * @throws SVNException if an error occurs.
+     */
+    synchronized SVNRepository getTemporaryRepo(final SVNURL remoteRootUrl, final String path) throws SVNException {
+        return this.mgr.createRepository(remoteRootUrl.appendPath(path, false), true);
+    }
+
+    /**
      * Calls the given handler for all recent log entries of the given {@link SvnRepo}.
      * If there are revisions in the remote repository that have not been processed yet, they are loaded and processed
      * before being filtered.
