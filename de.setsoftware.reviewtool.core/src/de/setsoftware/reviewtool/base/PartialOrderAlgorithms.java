@@ -51,9 +51,9 @@ public final class PartialOrderAlgorithms {
     }
 
     /**
-     * Returns all minimal elements of a partially ordered set.
-     * If the collection of revisions passed is empty, an empty list is returned.
-     * @param elements A partially ordered collection of elements where to find all minimal elements.
+     * Returns all minimal elements of a partially ordered collection.
+     * If the collection is empty, an empty list is returned.
+     * @param elements A partially ordered collection of elements.
      */
     public static <T extends IPartiallyComparable<T>, U extends T> List<U> getAllMinimalElements(
             final Collection<U> elements) {
@@ -77,9 +77,9 @@ public final class PartialOrderAlgorithms {
     }
 
     /**
-     * Returns all maximal elements of a partially ordered set.
-     * If the collection of revisions passed is empty, an empty list is returned.
-     * @param elements A partially ordered collection of elements where to find all maximal elements.
+     * Returns all maximal elements of a partially ordered collection.
+     * If the collection is empty, an empty list is returned.
+     * @param elements A partially ordered collection of elements.
      */
     public static <T extends IPartiallyComparable<T>, U extends T> List<U> getAllMaximalElements(
             final Collection<U> elements) {
