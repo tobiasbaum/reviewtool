@@ -54,43 +54,4 @@ public abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode i
      * {@link Type#UNCONFIRMED}.
      */
     abstract void makeConfirmed();
-
-    /**
-     * Returns a list of child {@link ProxyableFileHistoryNode}s.
-     */
-    abstract Set<ProxyableFileHistoryNode> getChildren();
-
-    /**
-     * Adds a child {@link ProxyableFileHistoryNode}.
-     */
-    abstract void addChild(final ProxyableFileHistoryNode child);
-
-    /**
-     * Returns {@code true} iff all children of this node are known to exist (as far as the history is known).
-     */
-    abstract boolean hasAllChildren();
-
-    /**
-     * Makes this node aware of the fact that all of its children (as far as the history is known) are known to exist.
-     * This is used as an optimization in order to prevent unnecessary graph traversals.
-     */
-    abstract void setHasAllChildren();
-
-    /**
-     * Returns the parent {@link ProxyableFileHistoryNode} or <code>null</code> if no parent has been set.
-     */
-    abstract ProxyableFileHistoryNode getParent();
-
-    /**
-     * Sets the parent {@link ProxyableFileHistoryNode}.
-     * This operation is called internally when this node becomes/stops being a child of some other
-     * {@link ProxyableFileHistoryNode}.
-     */
-    abstract void setParent(final ProxyableFileHistoryNode newParent);
-
-    /**
-     * Returns the path of this node relative to its parent.
-     * If this node does not have a parent, the node's path is returned unmodified.
-     */
-    abstract String getPathRelativeToParent();
 }

@@ -1,8 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -66,7 +63,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
 
         assert !ancestorRevisions.isEmpty();
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
-        final ProxyableFileHistoryNode node = this.getOrCreateChangeNode(file);
+        final ProxyableFileHistoryNode node = this.getOrCreateUnconnectedNode(file, IFileHistoryNode.Type.CHANGED);
         assert !node.getType().equals(IFileHistoryNode.Type.DELETED);
 
         if (node.isRoot()) {
@@ -90,13 +87,6 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
         final IRevisionedFile file = ChangestructureFactory.createFileInRevision(path, revision);
         final ProxyableFileHistoryNode node = this.getOrCreateConnectedNode(file, IFileHistoryNode.Type.CHANGED);
         node.makeDeleted();
-
-        this.createMissingChildren(node);
-        for (final ProxyableFileHistoryNode child : node.getChildren()) {
-            final IRevisionedFile childFile = child.getFile();
-            assert revision.equals(childFile.getRevision());
-            this.addDeletion(childFile.getPath(), revision);
-        }
     }
 
     @Override
@@ -115,8 +105,6 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
         if (toNode.getType().equals(IFileHistoryNode.Type.DELETED)) {
             toNode.makeReplaced();
         }
-
-        this.createMissingChildren(fromNode);
 
         /*
          * This can result in two copy edges (one of type COPY and one of type COPY_DELETED) between two nodes.
@@ -140,184 +128,6 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
          * but the terminating flow is redundant.
          */
         fromNode.addDescendant(toNode, IFileHistoryEdge.Type.COPY);
-        this.copyChildNodes(fromNode, toNode);
-    }
-
-    /**
-     * Copies child nodes.
-     *
-     * @param fromParent The node the children of which are to be copied.
-     * @param toParent The node where the children shall be copied to.
-     */
-    private void copyChildNodes(final ProxyableFileHistoryNode fromParent, final ProxyableFileHistoryNode toParent) {
-        final String fromParentPath = fromParent.getFile().getPath();
-        final IRevision fromRevision = fromParent.getFile().getRevision();
-        final String toParentPath = toParent.getFile().getPath();
-        final IRevision toRevision = toParent.getFile().getRevision();
-
-        for (final ProxyableFileHistoryNode child : fromParent.getChildren()) {
-            // don't copy deleted children
-            if (!child.getType().equals(IFileHistoryNode.Type.DELETED)) {
-                final String childPath = child.getFile().getPath();
-                this.addCopy(
-                        childPath,
-                        fromRevision,
-                        toParentPath.concat(childPath.substring(fromParentPath.length())),
-                        toRevision);
-            }
-        }
-    }
-
-    /**
-     * Adds a parent node to the node passed. Either an existing parent node is used or a new one is created.
-     * @param node The node which to find/create parent node for.
-     * @param inheritCopy If {@code true}, copy associations are inherited from parent node.
-     */
-    private void addParentNodes(final ProxyableFileHistoryNode node, final boolean inheritCopy) {
-        final IRevisionedFile file = node.getFile();
-        final String path = file.getPath();
-        if (path.contains("/")) {
-            final String parentPath = path.substring(0, path.lastIndexOf("/"));
-            if (!parentPath.isEmpty()) {
-                final IRevisionedFile fileRev = ChangestructureFactory.createFileInRevision(
-                        parentPath,
-                        file.getRevision());
-                final ProxyableFileHistoryNode parent = this.getOrCreateConnectedNode(
-                        fileRev,
-                        node.isConfirmed() ? IFileHistoryNode.Type.CHANGED : IFileHistoryNode.Type.UNCONFIRMED);
-                if (parent.isConfirmed() && !node.isConfirmed()) {
-                    node.makeConfirmed();
-                }
-                parent.addChild(node);
-
-                if (inheritCopy && parent.isCopyTarget() && !node.getType().equals(IFileHistoryNode.Type.ADDED)) {
-                    final String name = path.substring(path.lastIndexOf("/") + 1);
-                    final Set<ProxyableFileHistoryNode> ancestors = new LinkedHashSet<>();
-                    for (final ProxyableFileHistoryEdge parentAncestorEdge : parent.getAncestors()) {
-                        final ProxyableFileHistoryNode parentAncestor = parentAncestorEdge.getAncestor();
-                        final IRevisionedFile parentAncestorRev = parentAncestor.getFile();
-                        final IRevisionedFile ancestorRev = ChangestructureFactory.createFileInRevision(
-                                parentAncestorRev.getPath() + "/" + name,
-                                parentAncestorRev.getRevision());
-                        final ProxyableFileHistoryNode ancestor =
-                                this.getOrCreateConnectedNode(ancestorRev, IFileHistoryNode.Type.UNCONFIRMED);
-                        ancestors.add(ancestor);
-                    }
-                    this.addNodeWithAncestors(node, ancestors, IFileHistoryEdge.Type.COPY);
-                }
-            }
-        }
-    }
-
-    /**
-     * Creates all missing children of passed node. The nodes are determined by recursively traversing the
-     * node's ancestors.
-     *
-     * @param target The node the children of which are to be created.
-     */
-    private void createMissingChildren(final ProxyableFileHistoryNode target) {
-        final Set<String> paths = new LinkedHashSet<>();
-        for (final ProxyableFileHistoryNode child : target.getChildren()) {
-            paths.add(child.getFile().getPath());
-        }
-        this.createMissingChildren(paths, target, target, new LinkedHashSet<ProxyableFileHistoryNode>());
-        target.setHasAllChildren();
-    }
-
-    /**
-     * Creates all missing children of passed node.
-     *
-     * @param paths The paths for which a child node has already been created.
-     * @param source The node the children of which are to be computed.
-     * @param target The node the children of which are to be created.
-     * @param visitedNodes The set of nodes that have already been visited. As the file hierarchy graph is not
-     *      necessarily a tree due to branching and merging, we need to mark nodes that have already been processed.
-     */
-    private void createMissingChildren(
-            final Set<String> paths,
-            final ProxyableFileHistoryNode source,
-            final ProxyableFileHistoryNode target,
-            final Set<ProxyableFileHistoryNode> visitedNodes) {
-
-        final Deque<ProxyableFileHistoryNode> moreAncestors = new ArrayDeque<>();
-
-        ProxyableFileHistoryNode node = source;
-        while (node != null) {
-            if (!visitedNodes.add(node)) {
-                return;
-            }
-
-            if (!node.equals(target)) {
-                this.createMissingTargetChildren(paths, node, target);
-            }
-
-            if (node.hasAllChildren()) {
-                break;
-            }
-
-            boolean firstAncestor = true;
-            for (final ProxyableFileHistoryEdge ancestorEdge : node.getAncestors()) {
-                final ProxyableFileHistoryNode ancestor = ancestorEdge.getAncestor();
-                if (ancestorEdge.getType().equals(IFileHistoryEdge.Type.NORMAL)) {
-                    if (firstAncestor) {
-                        node = ancestor;
-                        firstAncestor = false;
-                    } else {
-                        moreAncestors.push(ancestor);
-                    }
-                }
-            }
-        }
-
-        while (!moreAncestors.isEmpty()) {
-            final ProxyableFileHistoryNode ancestor = moreAncestors.pop();
-            this.createMissingChildren(paths, ancestor, target, visitedNodes);
-        }
-    }
-
-    /**
-     * Determines all missing child nodes of passed ancestor node and creates suitable descendant nodes as children of
-     * passed target node. A child node is missing if the target node does not have a child node with the same path.
-     *
-     * @param paths The paths for which a child node has already been created.
-     * @param ancestor The node the children of which are to be computed.
-     * @param target The node the children of which are to be created.
-     */
-    private void createMissingTargetChildren(
-            final Set<String> paths,
-            final ProxyableFileHistoryNode ancestor,
-            final ProxyableFileHistoryNode target) {
-
-        for (final ProxyableFileHistoryNode ancestorChild : ancestor.getChildren()) {
-            final String ancestorChildPath = ancestorChild.getFile().getPath();
-            if (paths.add(ancestorChildPath)) {
-                if (!ancestorChild.getType().equals(IFileHistoryNode.Type.DELETED)) {
-                    final String targetChildPath = target.getFile().getPath() + ancestorChild.getPathRelativeToParent();
-                    this.createTargetChild(target, ancestorChild, targetChildPath);
-                }
-            }
-        }
-    }
-
-    /**
-     * Creates a child node under a target node based on a child node of some ancestor of the target.
-     *
-     * @param target The node where the child node is to be created.
-     * @param ancestorChild The child of the ancestor node that is to be recreated as child of passed target node.
-     * @param targetChildPath The path of the new child node to be created.
-     */
-    private void createTargetChild(
-            final ProxyableFileHistoryNode target,
-            final ProxyableFileHistoryNode ancestorChild,
-            final String targetChildPath) {
-        final IRevisionedFile file =
-                ChangestructureFactory.createFileInRevision(targetChildPath, target.getFile().getRevision());
-        if (this.getNodeFor(file) == null) {
-            final ProxyableFileHistoryNode targetChild = this.getOrCreateUnconnectedNode(
-                    file,
-                    IFileHistoryNode.Type.CHANGED);
-            this.addNodeWithAncestors(targetChild, Collections.singleton(ancestorChild), IFileHistoryEdge.Type.NORMAL);
-        }
     }
 
     /**
@@ -330,7 +140,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     private ProxyableFileHistoryNode getOrCreateConnectedNode(
             final IRevisionedFile file,
             final IFileHistoryNode.Type nodeType) {
-        return this.getOrCreateFileHistoryNode(file, nodeType, true, true);
+        return this.getOrCreateFileHistoryNode(file, nodeType, true);
     }
 
     /**
@@ -343,19 +153,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     private ProxyableFileHistoryNode getOrCreateUnconnectedNode(
             final IRevisionedFile file,
             final IFileHistoryNode.Type nodeType) {
-        return this.getOrCreateFileHistoryNode(file, nodeType, false, false);
-    }
-
-    /**
-     * Returns or creates a {@link ProxyableFileHistoryNode} for a given {@link IRevisionedFile}
-     * which inherits copy associations from its parent node if possible.
-     * If a node for that {@link IRevisionedFile} already exists, it is returned.
-     * If a node for that {@link IRevisionedFile} does not exist, it is created as a node with type
-     * {@link IFileHistoryNode.Type#CHANGED}.
-     * No artificial ancestor is created for root nodes.
-     */
-    private ProxyableFileHistoryNode getOrCreateChangeNode(final IRevisionedFile file) {
-        return this.getOrCreateFileHistoryNode(file, IFileHistoryNode.Type.CHANGED, false, true);
+        return this.getOrCreateFileHistoryNode(file, nodeType, false);
     }
 
     /**
@@ -368,13 +166,11 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
      * @param file The revisioned file to get or create a {@link ProxyableFileHistoryNode} for.
      * @param nodeType The node type for a newly created node.
      * @param connected If {@code true}, an artificial ancestor node is created for a root node.
-     * @param inheritCopy If {@code true}, copy associations are inherited from parent node if possible.
      */
     private ProxyableFileHistoryNode getOrCreateFileHistoryNode(
             final IRevisionedFile file,
             final IFileHistoryNode.Type nodeType,
-            final boolean connected,
-            final boolean inheritCopy) {
+            final boolean connected) {
 
         // other types have to be set afterwards by using {@link ProxyableFileHistoryNode#makeDeleted()} or
         // {@link ProxyableFileHistoryNode#makeReplaced()}
@@ -386,8 +182,6 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
         if (node == null) {
             node = new FileHistoryNode(this, file, nodeType);
             this.index.put(file.getPath(), node);
-
-            this.addParentNodes(node, inheritCopy);
 
             if (node.isRoot() && connected) {
                 final Set<ProxyableFileHistoryNode> ancestors = node.getType().equals(IFileHistoryNode.Type.ADDED)

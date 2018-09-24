@@ -1,18 +1,23 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.api.IFileDiff;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionVisitor;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IUnknownRevision;
+import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 
 /**
  * A node in a {@link VirtualFileHistoryGraph}.
@@ -117,7 +122,57 @@ final class VirtualFileHistoryNode extends AbstractFileHistoryNode {
                         this.graph.getNodeFor(ancestorFile),
                         this.graph.getNodeFor(ancestorEdge.getDescendant().getFile()),
                         ancestorEdge.getType(),
-                        ancestorEdge.getDiff());
+                        new IFileDiff() {
+
+                            private static final long serialVersionUID = -4532395651797869193L;
+
+                            @Override
+                            public List<? extends IHunk> getHunks() {
+                                return ancestorEdge.getDiff().getHunks();
+                            }
+
+                            @Override
+                            public IRevisionedFile getFrom() {
+                                return ancestorEdge.getDiff().getFrom();
+                            }
+
+                            @Override
+                            public IRevisionedFile getTo() {
+                                return ancestorEdge.getDiff().getTo();
+                            }
+
+                            @Override
+                            public IFileDiff setTo(final IRevisionedFile newTo) {
+                                return ancestorEdge.getDiff().setTo(newTo);
+                            }
+
+                            @Override
+                            public IFragment traceFragment(final IFragment source) {
+                                return ancestorEdge.getDiff().traceFragment(source);
+                            }
+
+                            @Override
+                            public List<? extends IHunk> getHunksWithTargetChangesInOneOf(
+                                    final Collection<? extends IFragment> fragments) {
+                                return ancestorEdge.getDiff().getHunksWithTargetChangesInOneOf(fragments);
+                            }
+
+                            @Override
+                            public IFileDiff merge(final IHunk hunkToMerge) throws IncompatibleFragmentException {
+                                return ancestorEdge.getDiff().merge(hunkToMerge);
+                            }
+
+                            @Override
+                            public IFileDiff merge(final Collection<? extends IHunk> hunksToMerge)
+                                    throws IncompatibleFragmentException {
+                                return ancestorEdge.getDiff().merge(hunksToMerge);
+                            }
+
+                            @Override
+                            public IFileDiff merge(final IFileDiff diff) throws IncompatibleFragmentException {
+                                return ancestorEdge.getDiff().merge(diff);
+                            }
+                        });
 
                 ancestorFile.getRevision().accept(new IRevisionVisitor<Void>() {
 

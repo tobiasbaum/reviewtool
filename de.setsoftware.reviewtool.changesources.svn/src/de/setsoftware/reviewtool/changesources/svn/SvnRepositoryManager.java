@@ -107,18 +107,13 @@ final class SvnRepositoryManager {
     /**
      * Returns a {@link SvnRepo} for a remote repository URL.
      * @param remoteUrl The URL of the remote repository.
-     * @return A {@link SvnRepo} that always points at the root of the remote repository.
+     * @return A {@link SvnRepo} that points at the passed URL.
      */
     synchronized SvnRepo getRepo(final SVNURL remoteUrl) {
         SvnRepo c = this.repoPerRemoteUrl.get(remoteUrl);
         if (c == null) {
             try {
                 final SVNRepository svnRepo = this.mgr.createRepository(remoteUrl, false);
-                final SVNURL repositoryRoot = svnRepo.getRepositoryRoot(true);
-                if (!repositoryRoot.equals(remoteUrl)) {
-                    return this.getRepo(repositoryRoot);
-                }
-
                 c = new SvnRepo(svnRepo, remoteUrl);
             } catch (final SVNException e) {
                 Logger.error("Could not access repository " + remoteUrl, e);

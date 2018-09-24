@@ -35,6 +35,13 @@ interface ISvnRepo extends IRepository {
     public abstract SVNURL getRemoteUrl();
 
     /**
+     * Returns the relative path of the repository wrt. the root URL of the remote repository.
+     * For example, if the remote repository's URL is https://example.com/svn/repo/trunk and the root URL is
+     * https://example.com/svn/repo, then the relative path returned is "/trunk".
+     */
+    public abstract String getRelativePath();
+
+    /**
      * Returns a read-only view of all known log entries.
      */
     public abstract List<CachedLogEntry> getEntries();

@@ -20,11 +20,6 @@ final class PartiallyOrderedWorkingCopy extends AbstractWorkingCopy {
     }
 
     @Override
-    public String getRelativePath() {
-        return null;
-    }
-
-    @Override
     public File toAbsolutePathInWc(final String absolutePathInRepo) {
         return new File(absolutePathInRepo);
     }

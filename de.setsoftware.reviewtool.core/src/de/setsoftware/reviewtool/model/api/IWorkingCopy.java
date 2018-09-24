@@ -18,13 +18,6 @@ public interface IWorkingCopy {
     public abstract File getLocalRoot();
 
     /**
-     * Returns the relative path of the working copy root wrt. the URL of the remote repository.
-     * For example, if the remote repository's URL is https://example.com/svn/repo and the path "trunk/Workspace"
-     * is checked out, then the relative path returned is "trunk/Workspace".
-     */
-    public abstract String getRelativePath();
-
-    /**
      * Converts a path that is absolute in the repository to a path that is absolute in the file
      * system of the local working copy.
      * @param absolutePathInRepo The path to convert. It must begin with {@link #getRelativePath()}.

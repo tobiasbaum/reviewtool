@@ -29,11 +29,6 @@ final class TestWorkingCopy extends AbstractWorkingCopy {
     }
 
     @Override
-    public String getRelativePath() {
-        return "";
-    }
-
-    @Override
     public File toAbsolutePathInWc(final String absolutePathInRepo) {
         return new File(absolutePathInRepo);
     }
