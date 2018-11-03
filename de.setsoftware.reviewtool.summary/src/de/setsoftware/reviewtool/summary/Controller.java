@@ -16,7 +16,7 @@ public class Controller {
     public static final int REFDIFF_LENGTH = SUMMARY_LENGTH / 2;
     public static final int DELTADOC_LENGTH = SUMMARY_LENGTH / 2;
 
-    private ReviewContentSummaryView view;
+    private final ReviewContentSummaryView view;
     private List<SummaryTextPart> summary;
     private ChangePartsModel model;
 
@@ -34,37 +34,36 @@ public class Controller {
     public synchronized void processCommits(List<? extends ICommit> commits) {
         this.view.setText("Generating summary...");
         this.view.setHyperLinks(new ArrayList<>());
-        Runnable r = new Runnable() {
+        final Runnable r = new Runnable() {
             @Override
             public void run() {
-                processCommitsIntrnal(commits);
+                Controller.this.processCommitsIntrnal(commits);
             }
         };
-        Thread t = new Thread(r);
+        final Thread t = new Thread(r);
         t.start();
     }
 
     @SuppressWarnings("deprecation")
     private synchronized void processCommitsIntrnal(List<? extends ICommit> commits) {
         this.model = new ChangePartsModel();
-        int freeLength = SUMMARY_LENGTH;
         String refDiff = "";
-        StringBuilder deltaDoc = new StringBuilder();
-        for (ICommit commit : commits) {
+        final StringBuilder deltaDoc = new StringBuilder();
+        for (final ICommit commit : commits) {
             try {
-                CommitParser parser = new CommitParser(commit, this.model);
+                final CommitParser parser = new CommitParser(commit, this.model);
                 parser.processCommit();
                 refDiff = refDiff + RefDiffTechnique.process(parser.previousDir, parser.currentDir,
                         parser.previousDirFiles, parser.currentDirFiles, this.model);
 
-                Runnable r = new Runnable() {
+                final Runnable r = new Runnable() {
                     @Override
                     public void run() {
                         deltaDoc.append(DeltaDocTechnique.process(parser.previousDir, parser.currentDir,
                                 parser.previousDirFiles, parser.currentDirFiles, Controller.this.model));
                     }
                 };
-                Thread t = new Thread(r);
+                final Thread t = new Thread(r);
                 t.start();
                 int sleeps = 10;
                 while (t.isAlive() && sleeps > 0) {
@@ -74,57 +73,40 @@ public class Controller {
                 t.stop();
 
                 parser.clean();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 e.printStackTrace();
             }
         }
         this.model.sort();
-        this.summary = SummaryTextGenerator.generateSummary(this.model);
-        for (SummaryTextPart p : this.summary) {
-            p.maxLinesFolded = freeLength / this.summary.size() + 2;
-        }
+        this.summary = new ArrayList<>();
 
         if (!refDiff.equals("")) {
             refDiff = "Detected refactorings:\n" + refDiff;
-            SummaryTextPart part = new SummaryTextPart();
-            part.text = refDiff;
-            part.lines = refDiff.split("\n").length;
-            part.maxLinesFolded = REFDIFF_LENGTH;
-            part.linesFolded = Math.min(part.lines, part.maxLinesFolded);
-            freeLength = freeLength - part.linesFolded;
-            for (SummaryTextPart p : this.summary) {
-                p.maxLinesFolded = freeLength / this.summary.size() + 2;
-            }
+            final SummaryTextPart part = new SummaryTextPart(refDiff);
             this.summary.add(part);
         }
 
+        this.summary.addAll(SummaryTextGenerator.generateSummary(this.model));
+
         if (!deltaDoc.toString().equals("")) {
-            SummaryTextPart part = new SummaryTextPart();
-            part.text = deltaDoc.toString();
-            part.lines = deltaDoc.toString().split("\n").length;
-            part.maxLinesFolded = DELTADOC_LENGTH;
-            part.linesFolded = Math.min(part.lines, part.maxLinesFolded);
-            freeLength = freeLength - part.linesFolded;
-            for (SummaryTextPart p : this.summary) {
-                p.maxLinesFolded = freeLength / this.summary.size() + 2;
-            }
+            final SummaryTextPart part = new SummaryTextPart(deltaDoc.toString());
             this.summary.add(part);
         }
-        SummaryTextGenerator.addLinks(this.summary);
-        updateText();
+        SummaryTextGenerator.addLinks(this.summary, SUMMARY_LENGTH);
+        this.updateText();
     }
 
     /**
      * Start action triggered by clicking on given hyperlink region.
      */
     public synchronized void onClick(IRegion link) {
-        SummaryTextPart part = (SummaryTextPart) link;
-        part.folded = !part.folded;
-        updateText();
+        final SummaryTextPart part = (SummaryTextPart) link;
+        part.toggleFolded();
+        this.updateText();
     }
 
     private void updateText() {
-        String text = SummaryTextGenerator.getText(this.summary);
+        final String text = SummaryTextGenerator.getText(this.summary);
         this.view.setText(text);
         this.view.setHyperLinks(this.summary);
     }
