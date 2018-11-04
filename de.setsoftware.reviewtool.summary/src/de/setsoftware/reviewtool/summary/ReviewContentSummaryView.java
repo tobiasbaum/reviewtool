@@ -36,8 +36,8 @@ public class ReviewContentSummaryView extends ViewPart {
     public static final String ID = "de.setsoftware.reviewtool.summary.ReviewContentSummaryView";
     private TextViewer viewer;
     private CommitsInReviewListener commitsListener;
-    private Controller controller = new Controller(this);
-    private List<? extends IRegion> links = new ArrayList<>();
+    private final Controller controller = new Controller(this);
+    private List<SummaryTextPart> links = new ArrayList<>();
 
     @Override
     public void createPartControl(Composite parent) {
@@ -45,14 +45,14 @@ public class ReviewContentSummaryView extends ViewPart {
         this.viewer.setDocument(new Document());
         this.viewer.setEditable(false);
 
-        IHyperlinkDetector linkDetector = new IHyperlinkDetector() {
+        final IHyperlinkDetector linkDetector = new IHyperlinkDetector() {
             @Override
             public IHyperlink[] detectHyperlinks(ITextViewer textViewer, IRegion region,
                     boolean canShowMultipleHyperlinks) {
-                for (IRegion link : ReviewContentSummaryView.this.links) {
+                for (final IRegion link : ReviewContentSummaryView.this.links) {
                     if (region.getOffset() >= link.getOffset()
                             && region.getOffset() <= link.getOffset() + link.getLength()) {
-                        IHyperlink hyperlink = new IHyperlink() {
+                        final IHyperlink hyperlink = new IHyperlink() {
 
                             @Override
                             public IRegion getHyperlinkRegion() {
@@ -82,11 +82,11 @@ public class ReviewContentSummaryView extends ViewPart {
         };
         this.viewer.setHyperlinkDetectors(new IHyperlinkDetector[] { linkDetector }, 0);
 
-        Display display = Display.getCurrent();
-        Color color = display.getSystemColor(SWT.COLOR_BLUE);
+        final Display display = Display.getCurrent();
+        final Color color = display.getSystemColor(SWT.COLOR_BLUE);
         this.viewer.setHyperlinkPresenter(new DefaultHyperlinkPresenter(color));
 
-        hookContextMenu();
+        this.hookContextMenu();
 
         this.commitsListener = new CommitsInReviewListener() {
 
@@ -114,11 +114,11 @@ public class ReviewContentSummaryView extends ViewPart {
     }
 
     private void hookContextMenu() {
-        MenuManager menuMgr = new MenuManager();
+        final MenuManager menuMgr = new MenuManager();
         menuMgr.setRemoveAllWhenShown(true);
-        Menu menu = menuMgr.createContextMenu(this.viewer.getControl());
+        final Menu menu = menuMgr.createContextMenu(this.viewer.getControl());
         this.viewer.getControl().setMenu(menu);
-        getSite().registerContextMenu(menuMgr, this.viewer);
+        this.getSite().registerContextMenu(menuMgr, this.viewer);
     }
 
     @Override
@@ -133,7 +133,7 @@ public class ReviewContentSummaryView extends ViewPart {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                int i = ReviewContentSummaryView.this.viewer.getTopIndex();
+                final int i = ReviewContentSummaryView.this.viewer.getTopIndex();
                 ReviewContentSummaryView.this.viewer.getDocument().set(text);
                 ReviewContentSummaryView.this.viewer.setTopIndex(i);
             }
@@ -143,31 +143,27 @@ public class ReviewContentSummaryView extends ViewPart {
     /**
      * Set and mark up hyperlinks regions.
      */
-    public void setHyperLinks(List<? extends IRegion> links) {
+    public void setHyperLinks(List<SummaryTextPart> parts) {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                setHyperLinksInternal(links);
+                ReviewContentSummaryView.this.setHyperLinksInternal(parts);
             }
         });
     }
 
-    private void setHyperLinksInternal(List<? extends IRegion> links) {
-        this.links = links;
+    private void setHyperLinksInternal(List<SummaryTextPart> parts) {
+        this.links = parts;
 
-        StyledText text = this.viewer.getTextWidget();
+        final StyledText text = this.viewer.getTextWidget();
         if (text == null || text.isDisposed()) {
             return;
         }
 
-        Display display = Display.getCurrent();
-        Color color = display.getSystemColor(SWT.COLOR_BLUE);
-
-        for (IRegion link : links) {
-            StyleRange styleRange = new StyleRange(link.getOffset(), link.getLength(), color, null);
-            styleRange.underlineStyle = SWT.UNDERLINE_LINK;
-            styleRange.underline = true;
-            text.setStyleRange(styleRange);
+        for (final SummaryTextPart part : parts) {
+            for (final StyleRange styleRange : part.getStyleRanges()) {
+                text.setStyleRange(styleRange);
+            }
         }
     }
 }

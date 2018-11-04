@@ -199,7 +199,7 @@ public class CommitParser {
             return this.getParent(parent.getDeclaringClass()) + MEMBER_SEPARATOR + parent.getSuperclass().getName()
                     + ANONYMOUS_SUFFIX;
         }
-        return parent.getPackage().getName() + MEMBER_SEPARATOR + parent.getName();
+        return parent.getName() + " (" + parent.getPackage().getName() + ")";
     }
 
     private String getParent(ITypeBinding type) {

@@ -44,7 +44,7 @@ public class SummaryTextGenerator {
         int offset = 0;
         for (final SummaryTextPart part : summary) {
             offset += part.getVisibleTextLength();
-            part.updateLinkOffset(offset);
+            part.updateOffsets(offset);
         }
     }
 
@@ -69,70 +69,70 @@ public class SummaryTextGenerator {
 
     private static SummaryTextPart getNewTypes(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("New types:");
+        part.addLine(TextWithStyles.italic("New types:"));
         addChangeParts(part, model.newParts.types);
         return part;
     }
 
     private static SummaryTextPart getChangedTypes(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("Changed types:");
+        part.addLine(TextWithStyles.italic("Changed types:"));
         addChangeParts(part, model.changedParts.types);
         return part;
     }
 
     private static SummaryTextPart getDeletedTypes(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("Deleted types:");
+        part.addLine(TextWithStyles.italic("Deleted types:"));
         addChangeParts(part, model.deletedParts.types);
         return part;
     }
 
     private static SummaryTextPart getNewMethods(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("New methods:");
+        part.addLine(TextWithStyles.italic("New methods:"));
         addChangeParts(part, model.newParts.methods);
         return part;
     }
 
     private static SummaryTextPart getChangedMethods(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("Changed methods:");
+        part.addLine(TextWithStyles.italic("Changed methods:"));
         addChangeParts(part, model.changedParts.methods);
         return part;
     }
 
     private static SummaryTextPart getDeletedMethods(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("Deleted methods:");
+        part.addLine(TextWithStyles.italic("Deleted methods:"));
         addChangeParts(part, model.deletedParts.methods);
         return part;
     }
 
     private static SummaryTextPart getNewFiles(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("New non source files:");
+        part.addLine(TextWithStyles.italic("New non source files:"));
         addChangeParts(part, model.newParts.files);
         return part;
     }
 
     private static SummaryTextPart getChangedFiles(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("Changed non source files:");
+        part.addLine(TextWithStyles.italic("Changed non source files:"));
         addChangeParts(part, model.changedParts.files);
         return part;
     }
 
     private static SummaryTextPart getDeletedFiles(ChangePartsModel model) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine("Deleted non source files:");
+        part.addLine(TextWithStyles.italic("Deleted non source files:"));
         addChangeParts(part, model.deletedParts.files);
         return part;
     }
 
     private static void addChangeParts(SummaryTextPart part, List<ChangePart> changes) {
         for (final ChangePart change : changes) {
-            part.addLine(change.toString());
+            part.addLine(change.toStyledText());
         }
     }
 }

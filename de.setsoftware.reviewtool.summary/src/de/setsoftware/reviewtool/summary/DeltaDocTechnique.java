@@ -26,23 +26,23 @@ public class DeltaDocTechnique {
     /**
      * Generate DeltaDoc summary for changed types.
      */
-    public static String process(Path previousDir, Path currentDir, Set<Path> previousDirFiles,
+    public static TextWithStyles process(Path previousDir, Path currentDir, Set<Path> previousDirFiles,
             Set<Path> currentDirFiles, ChangePartsModel model) {
 
-        ArrayList<String> filesBefore = new ArrayList<>();
-        ArrayList<String> filesCurrent = new ArrayList<>();
+        final ArrayList<String> filesBefore = new ArrayList<>();
+        final ArrayList<String> filesCurrent = new ArrayList<>();
 
-        for (Path file : previousDirFiles) {
+        for (final Path file : previousDirFiles) {
             filesBefore.add(previousDir.relativize(file).toString());
         }
 
-        for (Path file : currentDirFiles) {
+        for (final Path file : currentDirFiles) {
             filesCurrent.add(currentDir.relativize(file).toString());
         }
 
-        StringBuilder text = new StringBuilder("");
+        final TextWithStyles text = new TextWithStyles();
 
-        for (ChangePart type : model.changedParts.types) {
+        for (final ChangePart type : model.changedParts.types) {
             // Path fileFrom = previousDir.resolve(type.getParent().replaceAll("\\.",
             // File.separator))
             // .resolve(type.getName() + ".java");
@@ -50,46 +50,46 @@ public class DeltaDocTechnique {
             // File.separator))
             // .resolve(type.getName() + ".java");
 
-            String parentPath = type.getParent().replaceAll("\\.", Matcher.quoteReplacement(File.separator));
-            String relFilePath = parentPath + File.separator + type.getName() + ".java";
+            final String parentPath = type.getParent().replaceAll("\\.", Matcher.quoteReplacement(File.separator));
+            final String relFilePath = parentPath + File.separator + type.getName() + ".java";
 
             File f1 = null;
             File f2 = null;
-            for (String file : filesBefore) {
+            for (final String file : filesBefore) {
                 if (file.contains(relFilePath)) {
                     f1 = new File(previousDir.toFile(), file);
                 }
             }
-            for (String file : filesCurrent) {
+            for (final String file : filesCurrent) {
                 if (file.contains(relFilePath)) {
                     f2 = new File(currentDir.toFile(), file);
                 }
             }
 
             if (f1 != null && f2 != null) {
-                DocPrinter print = new DocToPlainText();
+                final DocPrinter print = new DocToPlainText();
                 try {
                     // *** read in files ***
-                    String source1 = FileReader.readFile(f1);
-                    String source2 = FileReader.readFile(f2);
+                    final String source1 = FileReader.readFile(f1);
+                    final String source2 = FileReader.readFile(f2);
 
                     // *** parse them, create CFGs ***
-                    EclipseCFGParser parser = new EclipseCFGParser();
-                    List<ClassDeclaration> classes1 = parser.parse(source1);
-                    List<ClassDeclaration> classes2 = parser.parse(source2);
+                    final EclipseCFGParser parser = new EclipseCFGParser();
+                    final List<ClassDeclaration> classes1 = parser.parse(source1);
+                    final List<ClassDeclaration> classes2 = parser.parse(source2);
 
                     // *** enumerate paths, do symbolic execution, make change records ***
-                    PreProcess pp = new PreProcess();
-                    RevisionRecord r1 = pp.process(classes1);
-                    RevisionRecord r2 = pp.process(classes2);
+                    final PreProcess pp = new PreProcess();
+                    final RevisionRecord r1 = pp.process(classes1);
+                    final RevisionRecord r2 = pp.process(classes2);
 
                     // *** Discover what changed and needs to be documented ***
-                    DeltaDoc doc = DeltaDoc.computeDelta(r1, r2);
+                    final DeltaDoc doc = DeltaDoc.computeDelta(r1, r2);
 
                     // *** format / distill hierarchical documentation ***
-                    DocNode output = HierarchicalDoc.makeDoc(doc);
-                    CombinePredicates.process(output);      
-                    
+                    final DocNode output = HierarchicalDoc.makeDoc(doc);
+                    CombinePredicates.process(output);
+
                     // *** print it ***
                     String out = print.print(output);
                     if (!out.contains("No Appreciable Change")) {
@@ -97,17 +97,17 @@ public class DeltaDocTechnique {
                         out = out.replaceAll(".*added method :.*\n", "");
                         out = out.replaceAll(".*removed method :.*\n", "");
                         if (!out.isEmpty()) {
-                            text.append("DeltaDoc for " + type.toString() + "\n");
-                            text.append(out + "\n");
+                            text.addItalic("DeltaDoc").addNormal(" for ").add(type.toStyledText()).addNormal("\n");
+                            text.addNormal(out + "\n");
                         }
                     }
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     e.printStackTrace();
                 }
 
             }
         }
 
-        return text.toString();
+        return text;
     }
 }

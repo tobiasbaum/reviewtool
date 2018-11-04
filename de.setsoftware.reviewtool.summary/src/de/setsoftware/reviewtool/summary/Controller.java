@@ -48,7 +48,7 @@ public class Controller {
     private synchronized void processCommitsIntrnal(List<? extends ICommit> commits) {
         this.model = new ChangePartsModel();
         String refDiff = "";
-        final StringBuilder deltaDoc = new StringBuilder();
+        final TextWithStyles deltaDoc = new TextWithStyles();
         for (final ICommit commit : commits) {
             try {
                 final CommitParser parser = new CommitParser(commit, this.model);
@@ -59,8 +59,10 @@ public class Controller {
                 final Runnable r = new Runnable() {
                     @Override
                     public void run() {
-                        deltaDoc.append(DeltaDocTechnique.process(parser.previousDir, parser.currentDir,
-                                parser.previousDirFiles, parser.currentDirFiles, Controller.this.model));
+                        synchronized (deltaDoc) {
+                            deltaDoc.add(DeltaDocTechnique.process(parser.previousDir, parser.currentDir,
+                                    parser.previousDirFiles, parser.currentDirFiles, Controller.this.model));
+                        }
                     }
                 };
                 final Thread t = new Thread(r);
@@ -81,15 +83,15 @@ public class Controller {
         this.summary = new ArrayList<>();
 
         if (!refDiff.equals("")) {
-            refDiff = "Detected refactorings:\n" + refDiff;
-            final SummaryTextPart part = new SummaryTextPart(refDiff);
+            final SummaryTextPart part = new SummaryTextPart(
+                    TextWithStyles.italic("Detected refactorings:").addNormal("\n" + refDiff));
             this.summary.add(part);
         }
 
         this.summary.addAll(SummaryTextGenerator.generateSummary(this.model));
 
         if (!deltaDoc.toString().equals("")) {
-            final SummaryTextPart part = new SummaryTextPart(deltaDoc.toString());
+            final SummaryTextPart part = new SummaryTextPart(deltaDoc);
             this.summary.add(part);
         }
         SummaryTextGenerator.addLinks(this.summary, SUMMARY_LENGTH);

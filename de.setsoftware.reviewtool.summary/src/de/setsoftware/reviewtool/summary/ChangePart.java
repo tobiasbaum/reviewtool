@@ -11,9 +11,9 @@ class ChangePart {
         TYPE, ATTRIBUTE, METHOD, NON_SOURCE_FILE;
     }
 
-    private String name;
-    private String parent;
-    private Kind type;
+    private final String name;
+    private final String parent;
+    private final Kind type;
 
     public int relevance = 0;
 
@@ -62,10 +62,10 @@ class ChangePart {
         if (obj == null) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
+        if (this.getClass() != obj.getClass()) {
             return false;
         }
-        ChangePart other = (ChangePart) obj;
+        final ChangePart other = (ChangePart) obj;
         if (this.name == null) {
             if (other.name != null) {
                 return false;
@@ -84,5 +84,13 @@ class ChangePart {
             return false;
         }
         return true;
+    }
+
+    public TextWithStyles toStyledText() {
+        if (this.type == Kind.NON_SOURCE_FILE) {
+            return new TextWithStyles().addNormal(this.name);
+        } else {
+            return new TextWithStyles().addNormal(this.name).addGray(" in " + this.parent);
+        }
     }
 }
