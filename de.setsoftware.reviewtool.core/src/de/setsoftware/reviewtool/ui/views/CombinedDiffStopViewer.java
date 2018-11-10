@@ -6,6 +6,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,7 +22,10 @@ import org.eclipse.jface.text.TextPresentation;
 import org.eclipse.jface.text.source.SourceViewer;
 import org.eclipse.jface.viewers.ContentViewer;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.LineBackgroundEvent;
+import org.eclipse.swt.custom.LineBackgroundListener;
 import org.eclipse.swt.custom.StyleRange;
+import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.graphics.Color;
@@ -97,9 +101,9 @@ public class CombinedDiffStopViewer implements IStopViewer {
     /**
      * Highlights a range by choosing a different background colour.
      */
-    private static final class BackgroundHighlighter implements ITextPresentationListener {
+    private static final class BackgroundHighlighter implements LineBackgroundListener {
 
-        private final List<Position> ranges;
+        private final BitSet coloredLines;
         private final String colorKey;
         private final RGB defaultColor;
         private Color hunkColor;
@@ -109,18 +113,22 @@ public class CombinedDiffStopViewer implements IStopViewer {
          *
          * @param ranges The ranges to highlight.
          */
-        BackgroundHighlighter(final List<Position> ranges, final String colorKey, final RGB defaultColor) {
-            this.ranges = ranges;
+        BackgroundHighlighter(final List<Pair<Integer, Integer>> ranges, final String colorKey, final RGB defaultColor) {
+            this.coloredLines = new BitSet();
+            for (final Pair<Integer, Integer> range : ranges) {
+                if (range.getSecond() > 0) {
+                    this.coloredLines.set(range.getFirst(), range.getFirst() + range.getSecond());
+                }
+            }
             this.colorKey = colorKey;
             this.defaultColor = defaultColor;
         }
 
         @Override
-        public void applyTextPresentation(final TextPresentation textPresentation) {
-            final Color bgColor = this.getTextColor();
-            for (final Position r : this.ranges) {
-                final StyleRange range = new StyleRange(r.getOffset(), r.getLength(), null, bgColor);
-                textPresentation.mergeStyleRange(range);
+        public void lineGetBackground(LineBackgroundEvent event) {
+            final int lineNumber = ((StyledText) event.widget).getLineAtOffset(event.lineOffset);
+            if (this.coloredLines.get(lineNumber)) {
+                event.lineBackground = this.getTextColor();
             }
         }
 
@@ -136,6 +144,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
             }
             return this.hunkColor;
         }
+
     }
 
     /**
@@ -329,23 +338,21 @@ public class CombinedDiffStopViewer implements IStopViewer {
         private final ChangeHighlighter rangeHighlights;
         private final BackgroundHighlighter lineHighlights;
 
-        public Highlights(final List<Position> ranges, final List<Position> lineRanges, final String backgroundColorKey,
+        public Highlights(final List<Position> ranges,
+                final List<Pair<Integer, Integer>> lineRanges,
+                final String backgroundColorKey,
                 final RGB defaultBackgroundColor) {
             this.rangeHighlights = new ChangeHighlighter(ranges);
             this.lineHighlights = new BackgroundHighlighter(lineRanges, backgroundColorKey, defaultBackgroundColor);
         }
 
         public void remove(final SourceViewer viewer) {
-            if (this.rangeHighlights != null) {
-                viewer.removeTextPresentationListener(this.rangeHighlights);
-            }
-            if (this.lineHighlights != null) {
-                viewer.removeTextPresentationListener(this.lineHighlights);
-            }
+            viewer.removeTextPresentationListener(this.rangeHighlights);
+            viewer.getTextWidget().removeLineBackgroundListener(this.lineHighlights);
         }
 
         public void apply(final SourceViewer viewer) {
-            viewer.addTextPresentationListener(this.lineHighlights);
+            viewer.getTextWidget().addLineBackgroundListener(this.lineHighlights);
             viewer.addTextPresentationListener(this.rangeHighlights);
             viewer.invalidateTextPresentation();
         }
@@ -466,8 +473,8 @@ public class CombinedDiffStopViewer implements IStopViewer {
 
         final List<Position> oldPositions = new ArrayList<>();
         final List<Position> newPositions = new ArrayList<>();
-        final List<Position> oldLineRanges = new ArrayList<>();
-        final List<Position> newLineRanges = new ArrayList<>();
+        final List<Pair<Integer, Integer>> oldLineRanges = new ArrayList<>();
+        final List<Pair<Integer, Integer>> newLineRanges = new ArrayList<>();
 
         for (final Pair<IFragment, IFragment> hunk : relevantHunks) {
             final IFragment sourceFragment = hunk.getFirst();
@@ -559,15 +566,12 @@ public class CombinedDiffStopViewer implements IStopViewer {
         return new Position(startOffset, endOffset - startOffset);
     }
 
-    private static Position fragmentToLineRange(final LineSequence contents, final IFragment fragment) {
-        final int startOffset = contents.getStartPositionOfLine(fragment.getFrom().getLine() - 1);
-        final int endOffset;
-        if (fragment.getTo().getColumn() <= 1) {
-            endOffset = contents.getStartPositionOfLine(fragment.getTo().getLine() - 1);
+    private static Pair<Integer, Integer> fragmentToLineRange(final LineSequence contents, final IFragment fragment) {
+        if (fragment.getTo().getColumn() > 1) {
+            return Pair.create(fragment.getFrom().getLine() - 1, fragment.getNumberOfLines() + 1);
         } else {
-            endOffset = contents.getStartPositionOfLine(fragment.getTo().getLine());
+            return Pair.create(fragment.getFrom().getLine() - 1, fragment.getNumberOfLines());
         }
-        return new Position(startOffset, endOffset - startOffset);
     }
 
     private FileContent loadFile(final IRevisionedFile revision) throws Exception {
@@ -587,7 +591,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
             final SourceViewer viewer,
             final Highlights oldHighlights,
             final List<Position> ranges,
-            final List<Position> lineRanges,
+            final List<Pair<Integer, Integer>> lineRanges,
             final String backgroundColorKey,
             final RGB defaultBackgroundColor) {
         if (viewer == null) {
