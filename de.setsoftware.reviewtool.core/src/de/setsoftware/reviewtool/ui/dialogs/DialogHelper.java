@@ -4,11 +4,20 @@ import java.awt.Desktop;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.preference.PreferenceConverter;
 import org.eclipse.jface.window.Window;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Device;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.preferences.ScopedPreferenceStore;
 
 import de.setsoftware.reviewtool.base.Logger;
 
@@ -20,6 +29,8 @@ public class DialogHelper {
     private static final String PREFIX = "dialogSizes_";
 
     private static IPersistentPreferenceStore preferenceStore;
+
+    private static final Map<Object, Color> colorCache = new HashMap<>();
 
     public static void setPreferenceStore(IPersistentPreferenceStore ps) {
         preferenceStore = ps;
@@ -113,6 +124,33 @@ public class DialogHelper {
         } catch (IOException | URISyntaxException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    /**
+     * Returns the color for the given preference key. If the preference is not set, returns the
+     * given default.
+     */
+    public static Color getColor(Device device, String preferenceKey, RGB defaultValue) {
+        if (colorCache.containsKey(preferenceKey)) {
+            return colorCache.get(preferenceKey);
+        }
+
+        final IPreferenceStore editorPreferences =
+                new ScopedPreferenceStore(InstanceScope.INSTANCE, "org.eclipse.ui.editors");
+
+        RGB rgb;
+        if (editorPreferences.contains(preferenceKey)) {
+            rgb = PreferenceConverter.getColor(editorPreferences, preferenceKey);
+        } else {
+            rgb = defaultValue;
+        }
+        Color cached = colorCache.get(rgb);
+        if (cached == null) {
+            cached = new Color(device, rgb);
+            colorCache.put(rgb, cached);
+            colorCache.put(preferenceKey, cached);
+        }
+        return cached;
     }
 
 }

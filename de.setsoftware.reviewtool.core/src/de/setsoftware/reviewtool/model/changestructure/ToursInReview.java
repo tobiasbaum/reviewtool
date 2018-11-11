@@ -536,8 +536,8 @@ public class ToursInReview {
      * Sets the given tour as the active tour, if it is not already active.
      * Recreates markers accordingly.
      */
-    public void ensureTourActive(final Tour t, final IStopMarkerFactory markerFactory) {
-        this.ensureTourActive(t, markerFactory, true);
+    public void ensureTourActive(final Tour topmostTour, final IStopMarkerFactory markerFactory) {
+        this.ensureTourActive(topmostTour, markerFactory, true);
     }
 
     /**
@@ -578,7 +578,7 @@ public class ToursInReview {
     }
 
     /**
-     * Returns the currently active tour or null if there is none (which should only
+     * Returns the currently active top-level tour or null if there is none (which should only
      * occur when there are no tours).
      */
     public Tour getActiveTour() {
@@ -596,11 +596,7 @@ public class ToursInReview {
     public List<Stop> getStopsFor(final File absolutePath) {
         final List<Stop> ret = new ArrayList<>();
         for (final Tour t : this.topmostTours) {
-            for (final Stop s : t.getStops()) {
-                if (absolutePath.equals(s.getAbsoluteFile())) {
-                    ret.add(s);
-                }
-            }
+            ret.addAll(t.getStopsFor(absolutePath));
         }
         return ret;
     }

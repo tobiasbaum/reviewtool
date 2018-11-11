@@ -239,7 +239,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     private void jumpToStopForItem(final ToursInReview tours, final TreeItem item, TreeViewer tv) {
         if (item.getData() instanceof Stop) {
             final Stop stop = (Stop) item.getData();
-            final Tour tour = (Tour) item.getParentItem().getData();
+            final Tour tour = this.determineTopmostTour(item);
             jumpTo(tours, tour, stop, "tree");
         } else {
             tv.expandToLevel(item.getData(), 1);
@@ -249,13 +249,21 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         }
     }
 
+    private Tour determineTopmostTour(TreeItem item) {
+        if (item.getParentItem() == null) {
+            return (Tour) item.getData();
+        } else {
+            return this.determineTopmostTour(item.getParentItem());
+        }
+    }
+
     /**
      * Jumps to the given fragment. Ensures that the corresponding tour is active.
      */
-    public static void jumpTo(ToursInReview tours, Tour tour, Stop stop, String typeForTelemetry) {
+    public static void jumpTo(ToursInReview tours, Tour topmostTour, Stop stop, String typeForTelemetry) {
         CurrentStop.setCurrentStop(stop);
         try {
-            tours.ensureTourActive(tour, new RealMarkerFactory());
+            tours.ensureTourActive(topmostTour, new RealMarkerFactory());
             Telemetry.event("jumpedTo")
                 .param("resource", stop.getMostRecentFile().getPath())
                 .param("line", stop.getMostRecentFragment() == null
@@ -267,15 +275,17 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
+        //TEST
+        FullLineHighlighter.registerHighlighters();
     }
 
     /**
      * Jumps to the given fragment and opens it in a text editor. Ensures that the corresponding tour is active.
      */
-    public static void openInTextEditor(ToursInReview tours, Tour tour, Stop stop) {
+    public static void openInTextEditor(ToursInReview tours, Tour topmostTour, Stop stop) {
         CurrentStop.setCurrentStop(stop);
         try {
-            tours.ensureTourActive(tour, new RealMarkerFactory());
+            tours.ensureTourActive(topmostTour, new RealMarkerFactory());
             Telemetry.event("openTextEditor")
                 .param("resource", stop.getMostRecentFile().getPath())
                 .param("line", stop.getMostRecentFragment() == null

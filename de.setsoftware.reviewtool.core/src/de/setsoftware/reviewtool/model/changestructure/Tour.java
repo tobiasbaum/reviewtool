@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -224,6 +225,19 @@ public class Tour extends TourElement {
             }
         }
         return ret.toArray(new IClassification[ret.size()]);
+    }
+
+    /**
+     * Returns all stops from this tour that refer to the given file.
+     */
+    public List<Stop> getStopsFor(File absolutePath) {
+        final List<Stop> ret = new ArrayList<>();
+        for (final Stop s : this.getStops()) {
+            if (absolutePath.equals(s.getAbsoluteFile())) {
+                ret.add(s);
+            }
+        }
+        return ret;
     }
 
 }

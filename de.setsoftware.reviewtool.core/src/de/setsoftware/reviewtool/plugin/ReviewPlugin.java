@@ -103,6 +103,7 @@ import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtension;
 import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndConfigurator;
 import de.setsoftware.reviewtool.ui.views.CombinedDiffStopViewer;
 import de.setsoftware.reviewtool.ui.views.CurrentStop;
+import de.setsoftware.reviewtool.ui.views.FullLineHighlighter;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
 import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.ui.views.StopViewConfigurator;
@@ -505,6 +506,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private void startReviewTail() {
         if (this.mode == Mode.REVIEWING) {
             this.switchToReviewPerspective();
+            FullLineHighlighter.registerHighlighters();
 
             Telemetry.event("reviewStarted")
                     .param("round", this.persistence.getCurrentRound())
