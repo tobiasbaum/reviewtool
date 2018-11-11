@@ -601,7 +601,8 @@ public class CombinedDiffStopViewer implements IStopViewer {
         if (oldHighlights != null) {
             oldHighlights.remove(viewer);
         }
-        final Highlights newHighlights = new Highlights(ranges, lineRanges, backgroundColorKey, defaultBackgroundColor);
+        final Highlights newHighlights =
+                new Highlights(ranges, lineRanges, backgroundColorKey, defaultBackgroundColor);
         newHighlights.apply(viewer);
         return newHighlights;
     }
