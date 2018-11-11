@@ -271,11 +271,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 .param("type", typeForTelemetry)
                 .param("irrelevant", stop.isIrrelevantForReview(tours.getIrrelevantCategories()))
                 .log();
-            openEditorFor(tours, stop, false);
+            openEditorFor(tours, topmostTour, stop, false);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
-        //TEST
         FullLineHighlighter.registerHighlighters();
     }
 
@@ -291,7 +290,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 .param("line", stop.getMostRecentFragment() == null
                     ? -1 : stop.getMostRecentFragment().getFrom().getLine())
                 .log();
-            openEditorFor(tours, stop, true);
+            openEditorFor(tours, topmostTour, stop, true);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -302,8 +301,9 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         tv.expandToLevel(activeTour, TreeViewer.ALL_LEVELS);
     }
 
-    private static void openEditorFor(final ToursInReview tours, final Stop stop, boolean forceTextEditor)
-            throws CoreException, IOException {
+    private static void openEditorFor(
+            final ToursInReview tours, Tour topmostTour, final Stop stop, boolean forceTextEditor)
+        throws CoreException, IOException {
 
         final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
 
@@ -325,7 +325,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             jumpTarget = stop;
         }
 
-        final IMarker marker = tours.createMarkerFor(new RealMarkerFactory(), jumpTarget);
+        final IMarker marker = tours.createMarkerFor(new RealMarkerFactory(), topmostTour, jumpTarget);
         if (marker != null) {
             if (forceTextEditor) {
                 marker.setAttribute(IDE.EDITOR_ID_ATTR, getTextEditorId());
@@ -817,31 +817,18 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         public String getToolTipText(Object element) {
             if (element instanceof Tour) {
                 final Tour t = (Tour) element;
-                return this.formatClassification(t)
+                return t.getClassificationFormatted()
                     + t.getDescription().replace(" + ", "\n + ");
             } else if (element instanceof Stop) {
                 final Stop f = (Stop) element;
                 if (f.getMostRecentFragment() != null) {
-                    return this.formatClassification(f) + f.getMostRecentFragment().toString();
+                    return f.getClassificationFormatted() + f.getMostRecentFragment().toString();
                 } else {
-                    return this.formatClassification(f) + f.getMostRecentFile().toString();
+                    return f.getClassificationFormatted() + f.getMostRecentFile().toString();
                 }
             } else {
                 return element.toString() + "(" + element.getClass() + ")";
             }
-        }
-
-        private String formatClassification(TourElement e) {
-            final IClassification[] cl = e.getClassification();
-            if (cl.length == 0) {
-                return "";
-            }
-            final StringBuilder ret = new StringBuilder(cl[0].getName());
-            for (int i = 1; i < cl.length; i++) {
-                ret.append(", ").append(cl[i].getName());
-            }
-            ret.append("\n");
-            return ret.toString();
         }
 
         @Override

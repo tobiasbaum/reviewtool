@@ -13,4 +13,20 @@ public abstract class TourElement {
 
     public abstract IClassification[] getClassification();
 
+    /**
+     * Returns a string with the classifications of this element.
+     * Adds a line break to the end when there are classifications.
+     */
+    public final String getClassificationFormatted() {
+        final IClassification[] cl = this.getClassification();
+        if (cl.length == 0) {
+            return "";
+        }
+        final StringBuilder ret = new StringBuilder(cl[0].getName());
+        for (int i = 1; i < cl.length; i++) {
+            ret.append(", ").append(cl[i].getName());
+        }
+        ret.append('\n');
+        return ret.toString();
+    }
 }
