@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.resources.IProject;
@@ -33,6 +35,8 @@ import de.setsoftware.reviewtool.telemetry.Telemetry;
  */
 public final class ChangeManager {
 
+    private static final long PROCESSING_DELAY = 1000L * 10;
+
     /**
      * Singleton scheduling rule preventing two update jobs to run concurrently.
      */
@@ -55,6 +59,22 @@ public final class ChangeManager {
         @Override
         public boolean contains(final ISchedulingRule rule) {
             return rule == this;
+        }
+    }
+
+    /**
+     * Wraps the input for asynchronous processing of local changes.
+     */
+    private static final class LocalChangeWorkItem {
+        private final List<File> projectsAdded;
+        private final List<File> projectsRemoved;
+        private final List<File> filesChanged;
+
+        public LocalChangeWorkItem(
+                List<File> projectsAdded, List<File> projectsRemoved, List<File> filesChanged) {
+            this.projectsAdded = projectsAdded;
+            this.projectsRemoved = projectsRemoved;
+            this.filesChanged = filesChanged;
         }
     }
 
@@ -84,16 +104,18 @@ public final class ChangeManager {
             }
 
             if (!projectsAdded.isEmpty() || !projectsRemoved.isEmpty() || !filesChanged.isEmpty()) {
+                ChangeManager.this.lastChangeTime.set(System.currentTimeMillis());
+                ChangeManager.this.workQueue.add(new LocalChangeWorkItem(projectsAdded, projectsRemoved, filesChanged));
                 final Job job = Job.create("Processing local changes",
                         new IJobFunction() {
                             @Override
                             public IStatus run(final IProgressMonitor monitor) {
-                                ChangeManager.this.processLocalChanges(projectsAdded, projectsRemoved, filesChanged);
+                                ChangeManager.this.processLocalChanges();
                                 return Status.OK_STATUS;
                             }
                         });
                 job.setRule(MutexRule.getInstance());
-                job.schedule();
+                job.schedule(PROCESSING_DELAY);
             }
         }
 
@@ -142,6 +164,8 @@ public final class ChangeManager {
     private final Set<File> projectDirs;
     private final AtomicReference<IChangeSource> changeSourceRef;
     private final WeakListeners<IChangeManagerListener> changeManagerListeners = new WeakListeners<>();
+    private final AtomicLong lastChangeTime = new AtomicLong();
+    private final ConcurrentLinkedQueue<LocalChangeWorkItem> workQueue = new ConcurrentLinkedQueue<>();
 
     /**
      * Constructor.
@@ -246,32 +270,34 @@ public final class ChangeManager {
 
     /**
      * Updates an existing {@link IChangeSource} after local changes have been detected.
-     * @param projectsAdded Projects added in the meantime.
-     * @param projectsRemoved Projects removed in the meantime.
-     * @param filesChanged Files changed in the meantime.
      */
-    private synchronized void processLocalChanges(
-            final List<File> projectsAdded,
-            final List<File> projectsRemoved,
-            final List<File> filesChanged) {
+    private synchronized void processLocalChanges() {
+        if (this.lastChangeTime.get() + PROCESSING_DELAY > System.currentTimeMillis()) {
+            //wait further when there was a change recently
+            //  otherwise determining the local changes often conflicts with Subversion updates
+            return;
+        }
 
-        final IChangeSource changeSource = this.changeSourceRef.get();
-        if (changeSource != null) {
-            try {
-                for (final File project : projectsAdded) {
-                    this.projectDirs.add(project);
-                    changeSource.addProject(project);
-                    Logger.info("Adding project " + project);
+        LocalChangeWorkItem workItem;
+        while ((workItem = this.workQueue.poll()) != null) {
+            final IChangeSource changeSource = this.changeSourceRef.get();
+            if (changeSource != null) {
+                try {
+                    for (final File project : workItem.projectsAdded) {
+                        this.projectDirs.add(project);
+                        changeSource.addProject(project);
+                        Logger.info("Adding project " + project);
+                    }
+                    for (final File project : workItem.projectsRemoved) {
+                        this.projectDirs.remove(project);
+                        changeSource.removeProject(project);
+                        Logger.info("Removing project " + project);
+                    }
+                    this.analyzeLocalChanges(changeSource, workItem.filesChanged);
+                } catch (final ChangeSourceException e) {
+                    //if there is a problem while determining local changes, ignore them
+                    Logger.warn("Problem while processing local changes incrementally", e);
                 }
-                for (final File project : projectsRemoved) {
-                    this.projectDirs.remove(project);
-                    changeSource.removeProject(project);
-                    Logger.info("Removing project " + project);
-                }
-                this.analyzeLocalChanges(changeSource, filesChanged);
-            } catch (final ChangeSourceException e) {
-                //if there is a problem while determining local changes, ignore them
-                Logger.warn("Problem while processing local changes incrementally", e);
             }
         }
     }
