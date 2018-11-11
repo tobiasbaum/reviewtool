@@ -113,7 +113,8 @@ public class CombinedDiffStopViewer implements IStopViewer {
          *
          * @param ranges The ranges to highlight.
          */
-        BackgroundHighlighter(final List<Pair<Integer, Integer>> ranges, final String colorKey, final RGB defaultColor) {
+        BackgroundHighlighter(
+                final List<Pair<Integer, Integer>> ranges, final String colorKey, final RGB defaultColor) {
             this.coloredLines = new BitSet();
             for (final Pair<Integer, Integer> range : ranges) {
                 if (range.getSecond() > 0) {
