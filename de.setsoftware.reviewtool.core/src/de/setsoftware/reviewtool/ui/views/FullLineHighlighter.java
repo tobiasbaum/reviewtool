@@ -10,6 +10,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.jface.text.ITextOperationTarget;
+import org.eclipse.jface.text.ITextViewer;
+import org.eclipse.jface.text.ITextViewerExtension5;
 import org.eclipse.swt.custom.LineBackgroundEvent;
 import org.eclipse.swt.custom.LineBackgroundListener;
 import org.eclipse.swt.custom.StyledText;
@@ -84,9 +87,11 @@ public class FullLineHighlighter {
      * marker annotations automatically change position when editing.
      */
     private static final class MarkerBasedLineHighlighter extends StopLineHighlighter {
+        private final PositionConverter positionConverter;
         private final IFile file;
 
-        public MarkerBasedLineHighlighter(IFile file) {
+        public MarkerBasedLineHighlighter(PositionConverter positionConverter, IFile file) {
+            this.positionConverter = positionConverter;
             this.file = file;
         }
 
@@ -103,7 +108,8 @@ public class FullLineHighlighter {
         private boolean lineBelongsToMarker(LineBackgroundEvent event, String markerId) {
             try {
                 final IMarker[] markers = this.file.findMarkers(markerId, true, IResource.DEPTH_INFINITE);
-                final int lineEndOffset = this.getLineEndOffset(event);
+                final int lineEndOffset =
+                        this.positionConverter.widgetOffset2ModelOffset(this.getLineEndOffset(event));
                 for (final IMarker marker : markers) {
                     if (this.isInsideMarker(marker, lineEndOffset)) {
                         return true;
@@ -142,9 +148,11 @@ public class FullLineHighlighter {
      * resources in the Eclipse workspace.
      */
     private static final class StopBasedLineHighlighter extends StopLineHighlighter {
+        private final PositionConverter positionConverter;
         private final File file;
 
-        public StopBasedLineHighlighter(File file) {
+        public StopBasedLineHighlighter(PositionConverter positionConverter, File file) {
+            this.positionConverter = positionConverter;
             this.file = file.getAbsoluteFile();
         }
 
@@ -176,12 +184,64 @@ public class FullLineHighlighter {
         }
 
         private boolean lineBelongsToStop(LineBackgroundEvent event, Stop s) {
-            final int lineNumber = ((StyledText) event.widget).getLineAtOffset(event.lineOffset) + 1;
+            final int lineNumber = this.positionConverter.widgetLine2ModelLine(
+                    ((StyledText) event.widget).getLineAtOffset(event.lineOffset)) + 1;
             final IFragment fragment = s.getMostRecentFragment();
             return lineNumber >= fragment.getFrom().getLine()
                 && (lineNumber < fragment.getTo().getLine()
                     || (lineNumber == fragment.getTo().getLine() && fragment.getTo().getColumn() > 1));
         }
+    }
+
+    /**
+     * Allows the conversion of widget positions to model positions. This is relevant
+     * when the editor allows the folding of portions of the code.
+     */
+    private static interface PositionConverter {
+
+        public abstract int widgetLine2ModelLine(int line);
+
+        public abstract int widgetOffset2ModelOffset(int offset);
+
+    }
+
+    /**
+     * Conversion using the respective interface from Eclipse.
+     */
+    private static final class FoldingAwarePositionConverter implements PositionConverter {
+        private final ITextViewerExtension5 textViewer;
+
+        public FoldingAwarePositionConverter(ITextViewerExtension5 viewer) {
+            this.textViewer = viewer;
+        }
+
+        @Override
+        public int widgetLine2ModelLine(int line) {
+            return this.textViewer.widgetLine2ModelLine(line);
+        }
+
+        @Override
+        public int widgetOffset2ModelOffset(int offset) {
+            return this.textViewer.widgetOffset2ModelOffset(offset);
+        }
+
+    }
+
+    /**
+     * No conversion.
+     */
+    private static final class DummyPositionConverter implements PositionConverter {
+
+        @Override
+        public int widgetLine2ModelLine(int line) {
+            return line;
+        }
+
+        @Override
+        public int widgetOffset2ModelOffset(int offset) {
+            return offset;
+        }
+
     }
 
     private static final List<WeakReference<StyledText>> alreadyRegistered = new ArrayList<>();
@@ -218,12 +278,21 @@ public class FullLineHighlighter {
             if (isAlreadyRegistered(text)) {
                 continue;
             }
+            final ITextViewer viewer = (ITextViewer) editor.getAdapter(ITextOperationTarget.class);
+            PositionConverter positionConverter;
+            if (viewer instanceof ITextViewerExtension5) {
+                positionConverter = new FoldingAwarePositionConverter((ITextViewerExtension5) viewer);
+            } else {
+                positionConverter = new DummyPositionConverter();
+            }
             final IEditorInput input = editor.getEditorInput();
             if (input instanceof FileEditorInput) {
                 text.addLineBackgroundListener(new MarkerBasedLineHighlighter(
+                        positionConverter,
                         ((FileEditorInput) input).getFile()));
             } else if (input instanceof FileStoreEditorInput) {
                 text.addLineBackgroundListener(new StopBasedLineHighlighter(
+                        positionConverter,
                         new File(((FileStoreEditorInput) input).getURI())));
             }
             alreadyRegistered.add(new WeakReference<>(text));
