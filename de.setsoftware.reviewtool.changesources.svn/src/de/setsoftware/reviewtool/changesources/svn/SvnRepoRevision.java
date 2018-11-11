@@ -76,8 +76,9 @@ final class SvnRepoRevision extends AbstractSvnRevision {
             sb.append(" ");
         }
         sb.append(String.format(
-                "(Rev. %s, %s)",
+                "(Rev. %s, %tF %<tR, %s)",
                 this.getRevisionString(),
+                this.getDate(),
                 this.getAuthor()));
         return sb.toString();
     }
