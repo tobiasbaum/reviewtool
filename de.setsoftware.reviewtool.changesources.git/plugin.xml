@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="de.setsoftware.reviewtool.changesources.git"
+         point="de.setsoftware.reviewtool.configurator">
+         <configurator
+               class="de.setsoftware.reviewtool.changesources.git.GitChangesourceConfigurator"/>
+   </extension>
+
+</plugin>
