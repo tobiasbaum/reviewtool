@@ -6,13 +6,7 @@ import java.util.List;
 /**
  * Interface for strategies to determine the changes for a ticket, separated into commits.
  */
-public interface IChangeSource extends IRepositoryProvider {
-
-    /**
-     * Returns the ID of this change source.
-     * Implementation note: To make the ID unique, use the package name.
-     */
-    public abstract String getId();
+public interface IChangeSource {
 
     /**
      * Returns all repository changes (that are relevant for the review tool) for the ticket with the given key.

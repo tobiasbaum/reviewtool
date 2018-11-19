@@ -11,12 +11,10 @@ import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
 
-import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.changestructure.AbstractRepository;
-import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 
 /**
@@ -37,11 +35,6 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     @Override
     public String getId() {
         return "stub";
-    }
-
-    @Override
-    public IRepoRevision<?> toRevision(final String revisionId) {
-        return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revisionId), this);
     }
 
     @Override
