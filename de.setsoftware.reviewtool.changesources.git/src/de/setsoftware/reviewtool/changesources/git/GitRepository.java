@@ -48,7 +48,7 @@ final class GitRepository extends AbstractRepository {
     @Override
     public byte[] getFileContents(final String path, final IRepoRevision revision) throws Exception {
         // TODO implement getFileContents()
-    	// See http://www.vogella.com/tutorials/JGit/article.html
+        // See http://www.vogella.com/tutorials/JGit/article.html
         return null;
     }
 
