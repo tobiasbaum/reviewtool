@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 
@@ -15,11 +14,6 @@ public final class StubRepo extends AbstractRepository {
     @Override
     public String getId() {
         return "stub";
-    }
-
-    @Override
-    public IRepoRevision<ComparableWrapper<Integer>> toRevision(final String revisionId) {
-        return ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(Integer.parseInt(revisionId)), this);
     }
 
     @Override

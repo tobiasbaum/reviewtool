@@ -95,26 +95,6 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public String getId() {
-        return this.getClass().getName();
-    }
-
-    @Override
-    public Collection<SvnRepo> getRepositories() {
-        return Collections.unmodifiableCollection(SvnRepositoryManager.getInstance().getRepositories());
-    }
-
-    @Override
-    public SvnRepo getRepositoryById(final String id) {
-        for (final SvnRepo repo : SvnRepositoryManager.getInstance().getRepositories()) {
-            if (repo.getId().equals(id)) {
-                return repo;
-            }
-        }
-        return null;
-    }
-
-    @Override
     public IChangeData getRepositoryChanges(final String key, final IChangeSourceUi ui) throws ChangeSourceException {
         try {
             ui.subTask("Determining relevant commits...");
@@ -363,7 +343,7 @@ final class SvnChangeSource implements IChangeSource {
                 node.getFile());
     }
 
-    private FileChangeType mapChangeType(Type type) {
+    private FileChangeType mapChangeType(final Type type) {
         switch (type) {
         case ADDED:
             return FileChangeType.ADDED;

@@ -14,11 +14,6 @@ final class PartiallyOrderedRepo extends AbstractRepository {
     }
 
     @Override
-    public IRepoRevision<PartiallyOrderedID> toRevision(final String revisionId) {
-        return ChangestructureFactory.createRepoRevision(new PartiallyOrderedID(revisionId), this);
-    }
-
-    @Override
     public byte[] getFileContents(final String path, final IRepoRevision<?> revision) {
         return new byte[0];
     }
