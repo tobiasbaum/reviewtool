@@ -505,7 +505,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     private void startReviewTail() {
         if (this.mode == Mode.REVIEWING) {
-            this.switchToReviewPerspective();
+            this.switchToPerspective("de.setsoftware.reviewtool.ui.perspective.reviewPerspective");
             FullLineHighlighter.registerHighlighters();
 
             Telemetry.event("reviewStarted")
@@ -523,11 +523,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         return !this.persistence.getTicketsForFilter("", false).isEmpty();
     }
 
-    private void switchToReviewPerspective() {
+    private void switchToPerspective(final String perspectiveId) {
         final IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         try {
-            PlatformUI.getWorkbench().showPerspective(
-                    "de.setsoftware.reviewtool.ui.perspective.reviewPerspective", window);
+            PlatformUI.getWorkbench().showPerspective(perspectiveId, window);
         } catch (final WorkbenchException e) {
             Logger.error("could not switch perspective", e);
         }
@@ -562,6 +561,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     private void startFixingTail() {
         if (this.mode == Mode.FIXING) {
+            this.switchToPerspective("de.setsoftware.reviewtool.ui.perspective.fixingPerspective");
             Telemetry.event("fixingStarted")
                 .param("round", this.persistence.getCurrentRound())
                 .log();

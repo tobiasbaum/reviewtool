@@ -344,5 +344,10 @@
             name="Code Review"
             class="de.setsoftware.reviewtool.ui.perspective.ReviewPerspective">
       </perspective>
+      <perspective
+            id="de.setsoftware.reviewtool.ui.perspective.fixingPerspective"
+            name="Fixing Code Review Remarks"
+            class="de.setsoftware.reviewtool.ui.perspective.FixingPerspective">
+      </perspective>
 </extension>
 </plugin>
