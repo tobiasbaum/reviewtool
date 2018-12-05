@@ -40,5 +40,5 @@ public interface IChangeSource {
      * Returns dir itself if it already is the working copy root.
      * Returns null if dir is not contained in a working copy that can be handled by this change source.
      */
-    public abstract File determineWorkingCopyRoot(File dir);
+    public abstract File determineWorkingCopyRoot(File dir) throws ChangeSourceException;
 }

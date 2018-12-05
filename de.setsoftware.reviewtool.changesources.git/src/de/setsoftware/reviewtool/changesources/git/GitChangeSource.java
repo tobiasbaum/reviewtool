@@ -40,13 +40,13 @@ public class GitChangeSource implements IChangeSource {
         this.projectsPerWcMap = new LinkedHashMap<>();
         this.maxTextDiffThreshold = maxTextDiffThreshold;
         this.logMessagePattern = logMessagePattern;
-        
+
         // check that the pattern can be parsed
         this.createPatternForKey("TEST-123");
-        
+
         GitRepositoryManager.getInstance().init(logCacheMinSize);
     }
-    
+
     private Pattern createPatternForKey(final String key) {
         return Pattern.compile(
                 this.logMessagePattern.replace(KEY_PLACEHOLDER, Pattern.quote(key)),
@@ -66,7 +66,7 @@ public class GitChangeSource implements IChangeSource {
 
     @Override
     public void addProject(File projectRoot) throws ChangeSourceException {
-        
+
         final File wcRoot = this.determineWorkingCopyRoot(projectRoot);
         if (wcRoot != null) {
             boolean wcCreated = false;
@@ -83,7 +83,7 @@ public class GitChangeSource implements IChangeSource {
             if (wcCreated) {
                 GitWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
             }
-        }        
+        }
     }
 
     @Override
@@ -107,12 +107,13 @@ public class GitChangeSource implements IChangeSource {
             }
         }
     }
-    
-    private File determineWorkingCopyRoot(final File projectRoot) throws ChangeSourceException {
+
+    @Override
+    public File determineWorkingCopyRoot(final File projectRoot) throws ChangeSourceException {
         try {
             return new FileRepositoryBuilder().findGitDir(projectRoot).build().getDirectory();
-        } catch (IOException ex) {
+        } catch (final IOException ex) {
             throw new ChangeSourceException(this, ex);
-        }        
+        }
     }
 }

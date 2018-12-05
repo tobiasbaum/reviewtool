@@ -26,6 +26,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobFunction;
 import org.eclipse.core.runtime.jobs.Job;
 
+import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.remarks.FileLinePosition;
 import de.setsoftware.reviewtool.model.remarks.FilePosition;
@@ -248,9 +250,13 @@ public class PositionTransformer {
         final IChangeSource[] cs = changeSources;
         final File dir = location.toFile();
         for (final IChangeSource c : cs) {
-            final File root = c.determineWorkingCopyRoot(dir);
-            if (root != null) {
-                return Path.fromOSString(root.toString());
+            try {
+                final File root = c.determineWorkingCopyRoot(dir);
+                if (root != null) {
+                    return Path.fromOSString(root.toString());
+                }
+            } catch (final ChangeSourceException e) {
+                Logger.warn("exception from changesource", e);
             }
         }
         return location;
