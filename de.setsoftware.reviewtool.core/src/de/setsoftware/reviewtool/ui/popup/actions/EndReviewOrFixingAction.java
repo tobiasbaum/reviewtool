@@ -8,17 +8,17 @@ import org.eclipse.core.runtime.CoreException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 /**
- * Action to leave fixing mode.
+ * Action to leave review or fixing mode.
  */
-public class EndFixingAction extends AbstractHandler {
+public class EndReviewOrFixingAction extends AbstractHandler {
 
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
         try {
-            ReviewPlugin.getInstance().endFixing();
+            ReviewPlugin.getInstance().endReviewOrFixing();
         } catch (final CoreException e) {
             ReviewPlugin.getInstance().logException(e);
-            throw new ExecutionException("problem while ending fixing", e);
+            throw new ExecutionException("problem while ending review", e);
         }
         return null;
     }

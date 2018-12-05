@@ -34,13 +34,14 @@
 	               </with>
 	            </visibleWhen>
 		   </command>
-		   <command commandId="de.setsoftware.reviewtool.commands.endreview"
-		   		 label="End review ..." 
+		   <command commandId="de.setsoftware.reviewtool.commands.endrevieworfixing"
+		   		 label="End review / fixing ..." 
 		   		 style="push">
 		   		 <visibleWhen
 	                  checkEnabled="false">
 	               <with variable="de.setsoftware.reviewtool.mode">
 	                  <equals value="REVIEWING"/>
+	                  <equals value="FIXING"/>
 	               </with>
 	            </visibleWhen>
 		   </command>
@@ -51,16 +52,6 @@
 	                  checkEnabled="false">
 	               <with variable="de.setsoftware.reviewtool.mode">
 	                  <equals value="IDLE"/>
-	               </with>
-	            </visibleWhen>
-		   </command>
-		   <command commandId="de.setsoftware.reviewtool.commands.endfixing"
-		   		 label="End fixing ..." 
-		   		 style="push">
-		   		 <visibleWhen
-	                  checkEnabled="false">
-	               <with variable="de.setsoftware.reviewtool.mode">
-	                  <equals value="FIXING"/>
 	               </with>
 	            </visibleWhen>
 		   </command>
@@ -230,14 +221,11 @@
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction"
         id="de.setsoftware.reviewtool.commands.startreview" name="Start review">
      </command>
-     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EndReviewAction"
-        id="de.setsoftware.reviewtool.commands.endreview" name="End review">
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EndReviewOrFixingAction"
+        id="de.setsoftware.reviewtool.commands.endrevieworfixing" name="End review/fixing">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartFixingAction"
         id="de.setsoftware.reviewtool.commands.startfixing" name="Start fixing">
-     </command>
-     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EndFixingAction"
-        id="de.setsoftware.reviewtool.commands.endfixing" name="End fixing">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.RefreshReviewMarkersAction"
         id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh review markers">

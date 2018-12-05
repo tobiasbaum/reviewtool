@@ -679,6 +679,17 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     /**
+     * Ends review or fixing, depending on the current mode.
+     */
+    public void endReviewOrFixing() throws CoreException {
+        if (this.mode == Mode.FIXING) {
+            this.endFixing();
+        } else {
+            this.endReview();
+        }
+    }
+
+    /**
      * Ends the review, after asking the user for confirmation and the type of end
      * transition to use.
      */
