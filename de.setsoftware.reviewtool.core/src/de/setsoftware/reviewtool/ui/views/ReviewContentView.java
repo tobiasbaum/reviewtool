@@ -24,7 +24,6 @@ import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ISelection;
-import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.ITreeSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -45,18 +44,15 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Tree;
 import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorPart;
-import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.IShowInTarget;
-import org.eclipse.ui.part.MultiPageEditorPart;
 import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.IMultimap;
-import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multiset;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
@@ -88,7 +84,7 @@ import de.setsoftware.reviewtool.viewtracking.ViewStatDataForStop;
 import de.setsoftware.reviewtool.viewtracking.ViewStatistics;
 
 /**
- * A review to show the content (tours and stops) belonging to a review.
+ * A view to show the content (tours and stops) belonging to a review.
  */
 public class ReviewContentView extends ViewPart implements ReviewModeListener, IShowInTarget {
 
@@ -346,30 +342,13 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
                 final int posStart = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getFrom());
                 final int posEnd = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getTo());
-                setSelection(part, new TextSelection(posStart, posEnd - posStart));
+                ViewHelper.setSelection(part, new TextSelection(posStart, posEnd - posStart));
             }
         }
     }
 
     private static String getTextEditorId() {
         return "org.eclipse.ui.DefaultTextEditor";
-    }
-
-    private static void setSelection(IEditorPart part, TextSelection textSelection) {
-        if (part instanceof MultiPageEditorPart) {
-            final MultiPageEditorPart multiPage = (MultiPageEditorPart) part;
-            for (final IEditorPart subPart : multiPage.findEditors(multiPage.getEditorInput())) {
-                setSelection(subPart, textSelection);
-            }
-        } else {
-            final IEditorSite editorSite = part.getEditorSite();
-            final ISelectionProvider sp = editorSite == null ? null : editorSite.getSelectionProvider();
-            if (sp == null) {
-                Logger.debug("cannot select, selection provider is null");
-                return;
-            }
-            sp.setSelection(textSelection);
-        }
     }
 
     @Override

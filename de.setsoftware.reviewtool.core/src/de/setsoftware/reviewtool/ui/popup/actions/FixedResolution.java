@@ -35,7 +35,7 @@ public class FixedResolution extends WorkbenchMarkerResolution {
     @Override
     public void run(IMarker marker) {
         try {
-            final ReviewRemark review = ReviewRemark.getFor(new EclipseMarker(marker));
+            final ReviewRemark review = ReviewRemark.getFor(EclipseMarker.wrap(marker));
             review.setResolution(ResolutionType.FIXED);
             ReviewPlugin.getPersistence().saveRemark(review);
             Telemetry.event("resolutionFixed")

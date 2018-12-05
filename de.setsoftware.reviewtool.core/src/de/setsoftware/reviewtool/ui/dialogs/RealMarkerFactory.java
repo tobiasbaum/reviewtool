@@ -21,7 +21,7 @@ public class RealMarkerFactory implements IStopMarkerFactory, IMarkerFactory {
     @Override
     public IReviewMarker createMarker(Position pos) throws ReviewRemarkException {
         try {
-            return new EclipseMarker(PositionTransformer.toResource(pos).createMarker(Constants.REVIEWMARKER_ID));
+            return EclipseMarker.create(PositionTransformer.toResource(pos).createMarker(Constants.REVIEWMARKER_ID));
         } catch (final CoreException e) {
             throw new ReviewRemarkException(e);
         }

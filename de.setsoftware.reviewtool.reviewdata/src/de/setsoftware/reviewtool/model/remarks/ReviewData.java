@@ -125,4 +125,11 @@ public class ReviewData {
         }
     }
 
+    /**
+     * Returns the review rounds, starting with the oldest.
+     */
+    public List<ReviewRound> getReviewRounds() {
+        return this.rounds;
+    }
+
 }

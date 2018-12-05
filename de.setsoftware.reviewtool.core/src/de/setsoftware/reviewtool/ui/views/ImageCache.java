@@ -125,6 +125,36 @@ public class ImageCache {
     }
 
     /**
+     * Returns an icon that is based on the combination of two letters.
+     */
+    public static Image getLetterBasedIcon(char letter1, RGB color1, char letter2, RGB color2) {
+        final String key = "lb" + letter1 + color1 + letter2 + color2;
+        if (images.containsKey(key)) {
+            return images.get(key);
+        }
+
+        final Device dev = Display.getDefault();
+        final Image img = new Image(dev, TREE_IMAGE_SIZE);
+        final GC gc = new GC(img);
+        if (color1 != null) {
+            final Color c1 = new Color(dev, color1);
+            gc.setForeground(c1);
+            gc.drawText(Character.toString(letter1), 0, 0, true);
+            c1.dispose();
+        }
+        if (color2 != null) {
+            final Color c2 = new Color(dev, color2);
+            gc.setForeground(c2);
+            gc.drawText(Character.toString(letter2), 4, 4, true);
+            c2.dispose();
+        }
+        gc.dispose();
+
+        cache(key, img);
+        return img;
+    }
+
+    /**
      * Disposes all cached images and clears the cache.
      */
     public static void dispose() {

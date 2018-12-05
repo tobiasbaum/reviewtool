@@ -54,7 +54,7 @@ public class ReviewRemark {
         return getFor(marker);
     }
 
-    private String getPositionString() throws ReviewRemarkException {
+    public String getPositionString() throws ReviewRemarkException {
         return this.marker.getAttribute(REMARK_POSITION, new GlobalPosition().serialize());
     }
 
@@ -62,12 +62,12 @@ public class ReviewRemark {
         return new ReviewRemark(marker);
     }
 
-    private ResolutionType getResolution() throws ReviewRemarkException {
+    public ResolutionType getResolution() throws ReviewRemarkException {
         return ResolutionType.valueOf(
                 this.marker.getAttribute(REMARK_RESOLUTION, ResolutionType.OPEN.toString()));
     }
 
-    RemarkType getRemarkType() throws ReviewRemarkException {
+    public RemarkType getRemarkType() throws ReviewRemarkException {
         return RemarkType.valueOf(
                 this.marker.getAttribute(REMARK_TYPE, RemarkType.MUST_FIX.toString()));
     }
@@ -125,6 +125,14 @@ public class ReviewRemark {
             }
         }
         return ret;
+    }
+
+    /**
+     * Returns the comments on this review remark without the initial remark.
+     */
+    public List<ReviewRemarkComment> getFollowUpComments() throws ReviewRemarkException {
+        final List<ReviewRemarkComment> l = this.getComments();
+        return l.subList(1, l.size());
     }
 
     /**
@@ -203,6 +211,13 @@ public class ReviewRemark {
         }
 
         return p1.getLine() > p2.getLine();
+    }
+
+    /**
+     * Returns the text of the remark (i.e. the initial comment).
+     */
+    public String getText() {
+        return this.getComments().get(0).getText();
     }
 
 }

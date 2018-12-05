@@ -84,6 +84,16 @@
 	               </with>
 	            </visibleWhen>
 		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.nextopenremark"
+		   		 label="Jump to next open review remark" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="FIXING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
 		   <command commandId="de.setsoftware.reviewtool.commands.refreshmarkers"
 		   		 label="Reload review remarks" 
 		   		 style="push">
@@ -150,6 +160,56 @@
              </visibleWhen>
        </command>
 	 </menuContribution>
+	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.fixingtasksview?after=additions">
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkFixedNoComment"
+             label="Mark remark as fixed"
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkFixed"
+             label="Mark remark as fixed and add a comment ..."
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkWontfix"
+             label="Mark remark as rejected ..."
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkUnclear"
+             label="Mark remark as unclear ..."
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+	 </menuContribution>
    </extension>
    <extension point="org.eclipse.ui.commands">
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.AddRemarkAction"
@@ -157,6 +217,12 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextUnvisitedStopAction"
         id="de.setsoftware.reviewtool.commands.nextunvisitedstop" name="Jump to next review stop">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextOpenRemarkAction"
+        id="de.setsoftware.reviewtool.commands.nextopenremark" name="Jump to next open review remark">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextAction"
+        id="de.setsoftware.reviewtool.commands.genericnext" name="Jump to next review stop or open review remark">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.ShowInReviewContentAction"
         id="de.setsoftware.reviewtool.commands.showinreviewcontent" name="Show current position in Review content">
@@ -186,7 +252,19 @@
         id="de.setsoftware.reviewtool.commands.openDirectory" name="Open directory of selected stop">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.OpenInTextEditorAction"
-        id="de.setsoftware.reviewtool.commands.openInTextEditor" name="Open directory of selected stop">
+        id="de.setsoftware.reviewtool.commands.openInTextEditor" name="Open text editor for selected stop">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkFixedNoCommentAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkFixedNoComment" name="Mark the selected review remark as fixed">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkFixedAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkFixed" name="Mark the selected review remark as fixed and add a comment">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkWontfixAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkWontfix" name="Mark the selected review remark as rejected">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkUnclearAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkUnclear" name="Mark the selected review remark as unclear">
      </command>
    </extension>
 
@@ -227,7 +305,7 @@
           sequence="M3+4">
     </key>
     <key
-          commandId="de.setsoftware.reviewtool.commands.nextunvisitedstop"
+          commandId="de.setsoftware.reviewtool.commands.genericnext"
           contextId="org.eclipse.ui.contexts.window"
           schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
           sequence="M3+5">
@@ -333,6 +411,9 @@
         <view id="de.setsoftware.reviewtool.ui.views.reviewcontentview"
              name="Review content"
              class="de.setsoftware.reviewtool.ui.views.ReviewContentView"/>
+        <view id="de.setsoftware.reviewtool.ui.views.fixingtasksview"
+             name="Review fixing tasks"
+             class="de.setsoftware.reviewtool.ui.views.FixingTasksView"/>
         <view id="de.setsoftware.reviewtool.ui.views.fragmentinfoview"
              name="Review stop info"
              class="de.setsoftware.reviewtool.ui.views.StopInfoView"/>

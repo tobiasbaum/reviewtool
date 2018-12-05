@@ -14,13 +14,28 @@ public class EclipseMarker implements IReviewMarker {
 
     private final IMarker marker;
 
-    public EclipseMarker(IMarker marker) {
+    private EclipseMarker(IMarker marker) {
         this.marker = marker;
+    }
+
+    /**
+     * Creates an {@link EclipseMarker} for a new marker.
+     */
+    public static IReviewMarker create(IMarker m) {
+        final EclipseMarker ret = new EclipseMarker(m);
         try {
-            marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
+            ret.marker.setAttribute(IMarker.PRIORITY, IMarker.PRIORITY_HIGH);
         } catch (final CoreException e) {
             throw new ReviewtoolException(e);
         }
+        return ret;
+    }
+
+    /**
+     * Wraps the given marker as an {@link EclipseMarker} without changing it further.
+     */
+    public static IReviewMarker wrap(IMarker m) {
+        return new EclipseMarker(m);
     }
 
     @Override

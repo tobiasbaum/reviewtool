@@ -12,16 +12,21 @@ import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.text.ITextSelection;
+import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.part.FileEditorInput;
+import org.eclipse.ui.part.MultiPageEditorPart;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 
@@ -138,6 +143,26 @@ public class ViewHelper {
             return Pair.create(type.getUnderlyingResource(), line);
         } catch (final JavaModelException e) {
             throw new ExecutionException("Error while adding marker", e);
+        }
+    }
+
+    /**
+     * Sets the selection in an editor.
+     */
+    public static void setSelection(IEditorPart part, TextSelection textSelection) {
+        if (part instanceof MultiPageEditorPart) {
+            final MultiPageEditorPart multiPage = (MultiPageEditorPart) part;
+            for (final IEditorPart subPart : multiPage.findEditors(multiPage.getEditorInput())) {
+                setSelection(subPart, textSelection);
+            }
+        } else {
+            final IEditorSite editorSite = part.getEditorSite();
+            final ISelectionProvider sp = editorSite == null ? null : editorSite.getSelectionProvider();
+            if (sp == null) {
+                Logger.debug("cannot select, selection provider is null");
+                return;
+            }
+            sp.setSelection(textSelection);
         }
     }
 

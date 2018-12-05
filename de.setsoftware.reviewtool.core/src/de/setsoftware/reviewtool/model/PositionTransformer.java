@@ -390,24 +390,41 @@ public class PositionTransformer {
      * Returns the workspace root if no file resource could be found.
      */
     public static IResource toResource(String filename) {
+        final IPath path = toPath(filename);
         final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+        return path == null ? workspaceRoot : getResourceForPath(workspaceRoot, path);
+    }
+
+    /**
+     * Returns the resource for the file from the given position.
+     * Returns null if no file could be found.
+     */
+    public static IPath toPath(Position pos) {
+        return toPath(pos.getShortFileName());
+    }
+
+    /**
+     * Returns the path for the given short filename.
+     * Returns null if no file could be found.
+     */
+    public static IPath toPath(String filename) {
         if (filename == null) {
-            return workspaceRoot;
+            return null;
         }
         final String[] segments = filename.split("/");
         final String filenameWithoutExtension = stripExtension(segments[segments.length - 1]);
-        final List<IPath> paths = getCachedPathsForName(workspaceRoot.getWorkspace(), filenameWithoutExtension);
+        final List<IPath> paths = getCachedPathsForName(ResourcesPlugin.getWorkspace(), filenameWithoutExtension);
         if (paths == null) {
-            return workspaceRoot;
+            return null;
         }
         if (segments.length == 1 && paths.size() == 1) {
-            return getResourceForPath(workspaceRoot, paths.get(0));
+            return paths.get(0);
         }
         final IPath fittingPath = findFittingPath(segments, paths);
         if (fittingPath == null) {
-            return workspaceRoot;
+            return null;
         }
-        return getResourceForPath(workspaceRoot, fittingPath);
+        return fittingPath;
     }
 
     private static IPath findFittingPath(String[] segments, List<IPath> paths) {

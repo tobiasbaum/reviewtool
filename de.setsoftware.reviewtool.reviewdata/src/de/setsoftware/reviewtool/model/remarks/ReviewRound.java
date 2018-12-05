@@ -167,4 +167,11 @@ public class ReviewRound {
         return this.findSimilar(reviewRemark) >= 0;
     }
 
+    /**
+     * Returns the remarks.
+     */
+    public List<ReviewRemark> getRemarks() {
+        return this.remarks;
+    }
+
 }

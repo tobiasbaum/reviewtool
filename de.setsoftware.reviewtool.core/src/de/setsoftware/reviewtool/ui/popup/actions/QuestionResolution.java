@@ -30,7 +30,7 @@ public class QuestionResolution implements IMarkerResolution {
 
     @Override
     public void run(final IMarker marker) {
-        final ReviewRemark review = ReviewRemark.getFor(new EclipseMarker(marker));
+        final ReviewRemark review = ReviewRemark.getFor(EclipseMarker.wrap(marker));
         AddReplyDialog.get(review, new InputDialogCallback() {
             @Override
             public void execute(String text) {

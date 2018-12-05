@@ -25,9 +25,7 @@ public class FixingPerspective implements IPerspectiveFactory {
         left.addPlaceholder(IPageLayout.ID_BOOKMARKS);
 
         //right: review remarks / fixing content
-        //TODO
-        //layout.addView("de.setsoftware.reviewtool.ui.views.reviewcontentview", IPageLayout.RIGHT, 0.75f, editorArea);
-        //layout.addShowInPart("de.setsoftware.reviewtool.ui.views.reviewcontentview");
+        layout.addView("de.setsoftware.reviewtool.ui.views.fixingtasksview", IPageLayout.RIGHT, 0.75f, editorArea);
 
         //the standard Java actions shall be available
         layout.addActionSet("org.eclipse.jdt.ui.JavaActionSet");

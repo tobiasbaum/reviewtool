@@ -33,7 +33,7 @@ public class DeleteResolution extends WorkbenchMarkerResolution {
 
     @Override
     public void run(IMarker marker) {
-        final ReviewRemark review = ReviewRemark.getFor(new EclipseMarker(marker));
+        final ReviewRemark review = ReviewRemark.getFor(EclipseMarker.wrap(marker));
         try {
             ReviewPlugin.getPersistence().deleteRemark(review);
             Telemetry.event("resolutionDelete")

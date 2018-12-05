@@ -22,7 +22,7 @@ public class EclipseResource implements IReviewResource {
     @Override
     public IReviewMarker createReviewMarker() throws ReviewRemarkException {
         try {
-            return new EclipseMarker(this.resource.createMarker(Constants.REVIEWMARKER_ID));
+            return EclipseMarker.create(this.resource.createMarker(Constants.REVIEWMARKER_ID));
         } catch (final CoreException e) {
             throw new ReviewRemarkException(e);
         }
