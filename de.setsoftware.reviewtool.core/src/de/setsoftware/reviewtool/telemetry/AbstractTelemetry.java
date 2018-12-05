@@ -61,7 +61,7 @@ public abstract class AbstractTelemetry {
     protected static String obfuscate(String data) {
         try {
             final MessageDigest md = MessageDigest.getInstance("SHA-1");
-            md.update(data.getBytes("UTF-8"));
+            md.update(data == null ? new byte[0] : data.getBytes("UTF-8"));
             final byte[] mdbytes = md.digest();
             final StringBuilder sb = new StringBuilder();
             for (int i = 0; i < mdbytes.length; i++) {
