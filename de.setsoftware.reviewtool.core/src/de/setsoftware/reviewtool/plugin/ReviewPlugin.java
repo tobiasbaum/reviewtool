@@ -8,6 +8,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +70,7 @@ import de.setsoftware.reviewtool.model.ISyntaxFixer;
 import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
+import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -982,6 +984,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     @Override
     public void setChangeSource(final IChangeSource changeSource) {
         this.changeManager.setChangeSource(changeSource);
+        PositionTransformer.setChangeSources(Collections.singletonList(changeSource));
     }
 
     public ToursInReview getTours() {

@@ -21,10 +21,12 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobFunction;
 import org.eclipse.core.runtime.jobs.Job;
 
+import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.remarks.FileLinePosition;
 import de.setsoftware.reviewtool.model.remarks.FilePosition;
 import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
@@ -45,6 +47,7 @@ public class PositionTransformer {
     private static AtomicBoolean refreshRunning = new AtomicBoolean();
     private static volatile ConcurrentHashMap<String, PathChainNode> cache = null;
     private static volatile long cacheRefreshTime;
+    private static volatile IChangeSource[] changeSources = new IChangeSource[0];
 
     private static final IProgressMonitor NO_CANCEL_MONITOR = new IProgressMonitor() {
         @Override
@@ -227,11 +230,8 @@ public class PositionTransformer {
     private static Set<IPath> determineRootPaths(IProject[] projects) {
         final Set<IPath> ret = new LinkedHashSet<>();
         //paths that are not included as a project but part of the scm repo should be included, too
-        //  as a simple hack all parents of the project directories are added, which works when all projects
-        //  are checked out together and which scans too much (but hopefully is ok too) when the projects are
-        //  checked out one by one
         for (final IProject project : projects) {
-            ret.add(project.getLocation().removeLastSegments(1));
+            ret.add(getWorkingCopyRoot(project.getLocation()));
         }
         //with nested projects, the set now contains a parent as well as its children. remove the children
         final Set<IPath> childProjects = new HashSet<>();
@@ -242,6 +242,18 @@ public class PositionTransformer {
         }
         ret.removeAll(childProjects);
         return ret;
+    }
+
+    private static IPath getWorkingCopyRoot(IPath location) {
+        final IChangeSource[] cs = changeSources;
+        final File dir = location.toFile();
+        for (final IChangeSource c : cs) {
+            final File root = c.determineWorkingCopyRoot(dir);
+            if (root != null) {
+                return Path.fromOSString(root.toString());
+            }
+        }
+        return location;
     }
 
     private static void fillCacheIfEmpty(IWorkspace workspace, IProgressMonitor monitor)
@@ -445,6 +457,10 @@ public class PositionTransformer {
             return workspaceRoot;
         }
         return file;
+    }
+
+    public static void setChangeSources(List<IChangeSource> list) {
+        changeSources = list.toArray(new IChangeSource[list.size()]);
     }
 
 }

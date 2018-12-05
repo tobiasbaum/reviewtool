@@ -34,4 +34,11 @@ public interface IChangeSource {
      * @param projectRoot The root directory of the project.
      */
     public abstract void removeProject(final File projectRoot) throws ChangeSourceException;
+
+    /**
+     * Returns the working copy root for the given file or directory.
+     * Returns dir itself if it already is the working copy root.
+     * Returns null if dir is not contained in a working copy that can be handled by this change source.
+     */
+    public abstract File determineWorkingCopyRoot(File dir);
 }

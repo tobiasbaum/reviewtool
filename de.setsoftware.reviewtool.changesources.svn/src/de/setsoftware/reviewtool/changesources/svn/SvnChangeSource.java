@@ -66,7 +66,8 @@ final class SvnChangeSource implements IChangeSource {
         SvnWorkingCopyManager.getInstance().init(this.mgr);
     }
 
-    private File determineWorkingCopyRoot(final File projectRoot) {
+    @Override
+    public File determineWorkingCopyRoot(final File projectRoot) {
         File curPotentialRoot = projectRoot;
         while (!this.isPotentialRoot(curPotentialRoot)) {
             curPotentialRoot = curPotentialRoot.getParentFile();
