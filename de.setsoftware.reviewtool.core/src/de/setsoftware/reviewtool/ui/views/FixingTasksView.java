@@ -38,7 +38,6 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.Logger;
@@ -182,7 +181,7 @@ public class FixingTasksView extends ViewPart implements ReviewModeListener, IRe
             //markers automatically shift when the text is edited, so use markers if possible
             final IMarker marker = findMarkerFor(remark);
             if (marker != null) {
-                ViewHelper.openEditorForMaker(page, marker, false);
+                ViewHelper.openEditorForMarker(page, marker, false);
             } else {
                 jumpToPosition(page, Position.parse(remark.getPositionString()));
             }
@@ -229,7 +228,7 @@ public class FixingTasksView extends ViewPart implements ReviewModeListener, IRe
         }
 
         final IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
-        final IEditorPart part = IDE.openInternalEditorOnFileStore(page, fileStore);
+        final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, false);
         if (pos instanceof FileLinePosition && fileStore.fetchInfo().exists()) {
             final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
             final int posStart = lookup.getCharsSinceFileStart(ChangestructureFactory.createPositionInText(

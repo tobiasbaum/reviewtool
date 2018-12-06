@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.ui.views;
 import java.net.URI;
 
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.filesystem.IFileStore;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
@@ -27,6 +28,7 @@ import org.eclipse.ui.IEditorRegistry;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 import org.eclipse.ui.ide.IDE;
@@ -177,26 +179,49 @@ public class ViewHelper {
      * Opens an editor for the given marker.
      * Ensures that a decent editor is used.
      */
-    public static void openEditorForMaker(IWorkbenchPage page, IMarker marker, boolean forceTextEditor)
+    public static void openEditorForMarker(IWorkbenchPage page, IMarker marker, boolean forceTextEditor)
         throws CoreException {
 
-        if (forceTextEditor || defaultEditorIsUnsuitable(marker.getResource().getName())) {
-            marker.setAttribute(IDE.EDITOR_ID_ATTR, getTextEditorId());
-        }
+        final String editorId = findEditor(forceTextEditor, marker.getResource().getName());
+        marker.setAttribute(IDE.EDITOR_ID_ATTR, editorId);
         IDE.openEditor(page, marker);
     }
 
-    private static boolean defaultEditorIsUnsuitable(String filename) {
-        final IEditorRegistry editorReg = PlatformUI.getWorkbench().getEditorRegistry();
-        final IEditorDescriptor defaultEditor = editorReg.getDefaultEditor(filename);
-        if (defaultEditor == null) {
-            return false;
-        }
-        Logger.info("editor id for " + filename + ": " + defaultEditor.getId());
-        return defaultEditor.getId().equals("org.eclipse.ui.browser.editorSupport");
+    /**
+     * Opens an editor for the given file. Returns the opened editor.
+     * Ensures that a decent editor is used.
+     */
+    public static IEditorPart openEditorForFile(IWorkbenchPage page, IFileStore fileStore, boolean forceTextEditor)
+        throws PartInitException {
+
+        final String editorId = findEditor(forceTextEditor, fileStore.getName());
+        return page.openEditor(new FileStoreEditorInput(fileStore), editorId);
     }
 
-    public static String getTextEditorId() {
+    private static String findEditor(boolean forceTextEditor, String filename) {
+        if (forceTextEditor) {
+            return getTextEditorId();
+        }
+
+        final IEditorRegistry editorReg = PlatformUI.getWorkbench().getEditorRegistry();
+        final IEditorDescriptor defaultEditor = editorReg.getDefaultEditor(filename);
+        if (defaultEditor != null && !isUnsuitable(defaultEditor)) {
+            return defaultEditor.getId();
+        }
+        for (final IEditorDescriptor editor : editorReg.getEditors(filename)) {
+            if (!isUnsuitable(editor)) {
+                return editor.getId();
+            }
+        }
+        return getTextEditorId();
+    }
+
+    private static boolean isUnsuitable(IEditorDescriptor editor) {
+        return editor.isOpenExternal()
+            || editor.getId().equals("org.eclipse.ui.browser.editorSupport");
+    }
+
+    private static String getTextEditorId() {
         return "org.eclipse.ui.DefaultTextEditor";
     }
 

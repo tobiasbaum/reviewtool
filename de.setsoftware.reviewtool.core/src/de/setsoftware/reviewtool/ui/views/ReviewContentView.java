@@ -46,8 +46,6 @@ import org.eclipse.swt.widgets.TreeItem;
 import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.ide.FileStoreEditorInput;
-import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.IShowInTarget;
 import org.eclipse.ui.part.ShowInContext;
 import org.eclipse.ui.part.ViewPart;
@@ -323,17 +321,12 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         final IMarker marker = tours.createMarkerFor(new RealMarkerFactory(), topmostTour, jumpTarget);
         if (marker != null) {
-            ViewHelper.openEditorForMaker(page, marker, forceTextEditor);
+            ViewHelper.openEditorForMarker(page, marker, forceTextEditor);
             marker.delete();
         } else {
             final IFileStore fileStore =
                     EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()));
-            final IEditorPart part;
-            if (forceTextEditor) {
-                part = page.openEditor(new FileStoreEditorInput(fileStore), ViewHelper.getTextEditorId());
-            } else {
-                part = IDE.openInternalEditorOnFileStore(page, fileStore);
-            }
+            final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, forceTextEditor);
             //for files not in the workspace, we cannot create markers, but let's at least select the text
             if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {
                 final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
