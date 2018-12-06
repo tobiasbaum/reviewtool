@@ -4,7 +4,9 @@ import java.net.URI;
 
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.resources.IFile;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
@@ -19,10 +21,15 @@ import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.ui.IEditorDescriptor;
 import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.IEditorRegistry;
 import org.eclipse.ui.IEditorSite;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
+import org.eclipse.ui.ide.IDE;
 import org.eclipse.ui.part.FileEditorInput;
 import org.eclipse.ui.part.MultiPageEditorPart;
 
@@ -164,6 +171,33 @@ public class ViewHelper {
             }
             sp.setSelection(textSelection);
         }
+    }
+
+    /**
+     * Opens an editor for the given marker.
+     * Ensures that a decent editor is used.
+     */
+    public static void openEditorForMaker(IWorkbenchPage page, IMarker marker, boolean forceTextEditor)
+        throws CoreException {
+
+        if (forceTextEditor || defaultEditorIsUnsuitable(marker.getResource().getName())) {
+            marker.setAttribute(IDE.EDITOR_ID_ATTR, getTextEditorId());
+        }
+        IDE.openEditor(page, marker);
+    }
+
+    private static boolean defaultEditorIsUnsuitable(String filename) {
+        final IEditorRegistry editorReg = PlatformUI.getWorkbench().getEditorRegistry();
+        final IEditorDescriptor defaultEditor = editorReg.getDefaultEditor(filename);
+        if (defaultEditor == null) {
+            return false;
+        }
+        Logger.info("editor id for " + filename + ": " + defaultEditor.getId());
+        return defaultEditor.getId().equals("org.eclipse.ui.browser.editorSupport");
+    }
+
+    public static String getTextEditorId() {
+        return "org.eclipse.ui.DefaultTextEditor";
     }
 
 }

@@ -323,17 +323,14 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         final IMarker marker = tours.createMarkerFor(new RealMarkerFactory(), topmostTour, jumpTarget);
         if (marker != null) {
-            if (forceTextEditor) {
-                marker.setAttribute(IDE.EDITOR_ID_ATTR, getTextEditorId());
-            }
-            IDE.openEditor(page, marker);
+            ViewHelper.openEditorForMaker(page, marker, forceTextEditor);
             marker.delete();
         } else {
             final IFileStore fileStore =
                     EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()));
             final IEditorPart part;
             if (forceTextEditor) {
-                part = page.openEditor(new FileStoreEditorInput(fileStore), getTextEditorId());
+                part = page.openEditor(new FileStoreEditorInput(fileStore), ViewHelper.getTextEditorId());
             } else {
                 part = IDE.openInternalEditorOnFileStore(page, fileStore);
             }
@@ -345,10 +342,6 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
                 ViewHelper.setSelection(part, new TextSelection(posStart, posEnd - posStart));
             }
         }
-    }
-
-    private static String getTextEditorId() {
-        return "org.eclipse.ui.DefaultTextEditor";
     }
 
     @Override

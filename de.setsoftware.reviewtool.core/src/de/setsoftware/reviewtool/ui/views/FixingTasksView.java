@@ -182,7 +182,7 @@ public class FixingTasksView extends ViewPart implements ReviewModeListener, IRe
             //markers automatically shift when the text is edited, so use markers if possible
             final IMarker marker = findMarkerFor(remark);
             if (marker != null) {
-                IDE.openEditor(page, marker);
+                ViewHelper.openEditorForMaker(page, marker, false);
             } else {
                 jumpToPosition(page, Position.parse(remark.getPositionString()));
             }
