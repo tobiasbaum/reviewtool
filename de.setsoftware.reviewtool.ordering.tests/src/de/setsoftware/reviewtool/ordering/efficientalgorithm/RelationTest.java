@@ -19,8 +19,8 @@ public class RelationTest {
         return new MatchSet<>(new TreeSet<String>(Arrays.asList(s)));
     }
 
-    private static PositionRequest<String> pr(TargetPosition pos, String... s) {
-        return new PositionRequest<String>(ms(s), s[0], pos);
+    private static PositionRequest<String> pr(String... s) {
+        return new PositionRequest<String>(ms(s), s[0]);
     }
 
     @Test
@@ -37,7 +37,7 @@ public class RelationTest {
     @Test
     public void testSimplePositionCheck() {
         final List<MatchSet<String>> ms = Arrays.asList(ms("a", "b"));
-        final List<PositionRequest<String>> pr = Arrays.asList(pr(TargetPosition.FIRST, "a", "b"));
+        final List<PositionRequest<String>> pr = Arrays.asList(pr("a", "b"));
 
         assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("a", "b"), ms, pr));
         assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("b", "a"), ms, pr));
@@ -48,7 +48,7 @@ public class RelationTest {
     @Test
     public void testSpacedApart() {
         final List<MatchSet<String>> ms = Arrays.asList(ms("a", "b"));
-        final List<PositionRequest<String>> pr = Arrays.asList(pr(TargetPosition.FIRST, "a", "b"));
+        final List<PositionRequest<String>> pr = Arrays.asList(pr("a", "b"));
 
         assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b", "c"), Arrays.asList("a", "c", "b"), ms, pr));
         assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a", "c"), Arrays.asList("a", "c", "b"), ms, pr));

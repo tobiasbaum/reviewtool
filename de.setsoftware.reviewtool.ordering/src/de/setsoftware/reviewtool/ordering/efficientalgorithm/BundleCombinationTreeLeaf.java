@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -16,8 +17,8 @@ class BundleCombinationTreeLeaf<T> extends BundleCombinationTreeElement<T> {
 
     BundleCombinationTreeLeaf(T value) {
         this.value = value;
-        this.thisFull = new BundleResult<T>(ResultType.FULL, this);
-        this.thisNone = new BundleResult<T>(ResultType.NONE, this);
+        this.thisFull = new BundleResult<>(ResultType.FULL, this);
+        this.thisNone = new BundleResult<>(ResultType.NONE, this);
     }
 
     @Override
@@ -26,8 +27,8 @@ class BundleCombinationTreeLeaf<T> extends BundleCombinationTreeElement<T> {
     }
 
     @Override
-    protected void addItemsInOrder(List<T> buffer) {
-        buffer.add(this.value);
+    public List<T> getPossibleOrder(Comparator<T> tieBreakingComparator) {
+        return Collections.singletonList(this.value);
     }
 
     @Override
@@ -51,8 +52,8 @@ class BundleCombinationTreeLeaf<T> extends BundleCombinationTreeElement<T> {
     }
 
     @Override
-    public PositionTreeLeaf<T> toPositionTree() {
-        return new PositionTreeLeaf<T>(this.value);
+    protected BundleCombinationTreeElement<T> fixOrder(SimpleSet<T> center, SimpleSet<T> rest) {
+        return this;
     }
 
 }

@@ -134,8 +134,8 @@ public class Relation {
         for (final PositionRequest<String> cur : positionRequests) {
             final MatchSet<String> shrunkMs = shrink(cur.getMatchSet(), ms);
             if (shrunkMs.getChangeParts().size() > 1) {
-                ret.add(new PositionRequest<String>(
-                        shrunkMs, shrink(cur.getDistinguishedPart(), ms), cur.getTargetPosition()));
+                ret.add(new PositionRequest<>(
+                        shrunkMs, shrink(cur.getDistinguishedPart(), ms)));
             }
         }
         return new ArrayList<>(ret);
@@ -183,7 +183,7 @@ public class Relation {
         final Set<PositionRequest<String>> ret = new HashSet<>();
         for (final PositionRequest<String> p : positionRequests) {
             if (p.getMatchSet().equals(ms)) {
-                if (p.getTargetPosition().selectValue(matchOrder).equals(p.getDistinguishedPart())) {
+                if (matchOrder.get(0).equals(p.getDistinguishedPart())) {
                     ret.add(p);
                 }
             }

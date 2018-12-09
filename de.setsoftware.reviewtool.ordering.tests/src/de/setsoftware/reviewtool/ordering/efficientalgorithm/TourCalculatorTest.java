@@ -41,7 +41,7 @@ public class TourCalculatorTest {
         public TourCalculatorInput matchChained(String... parts) {
             assert parts.length >= 2;
             for (int i = 0; i < parts.length - 1; i++) {
-                this.match(parts[i], TargetPosition.FIRST, parts[i + 1]);
+                this.match(parts[i], parts[i + 1]);
             }
             return this;
         }
@@ -54,13 +54,13 @@ public class TourCalculatorTest {
             return this;
         }
 
-        public TourCalculatorInput match(String distinguishedElement, TargetPosition pos, String... others) {
+        public TourCalculatorInput match(String distinguishedElement, String... others) {
             final Set<String> set = new TreeSet<>();
             set.add(distinguishedElement);
             set.addAll(Arrays.asList(others));
             final MatchSet<String> ms = new MatchSet<>(set);
             this.matchSets.add(ms);
-            this.positionRequests.add(new PositionRequest<>(ms, distinguishedElement, pos));
+            this.positionRequests.add(new PositionRequest<>(ms, distinguishedElement));
             return this;
         }
 
@@ -93,7 +93,7 @@ public class TourCalculatorTest {
     public void testRelatedTogether() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("callee", "other", "caller")
-                .match("callee", TargetPosition.SECOND, "caller")
+                .match("caller", "callee")
                 .calculate();
 
         assertEquals(Arrays.asList("caller", "callee", "other"), actual.getTour());
@@ -103,7 +103,7 @@ public class TourCalculatorTest {
     public void testRelatedTogether2() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("callee", "other1", "caller", "other2")
-                .match("callee", TargetPosition.SECOND, "caller")
+                .match("caller", "callee")
                 .calculate();
 
         assertEquals(Arrays.asList("caller", "callee", "other1", "other2"), actual.getTour());
@@ -113,8 +113,8 @@ public class TourCalculatorTest {
     public void testDeclUseAndCallFlow() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("useAndCallee", "decl", "caller")
-                .match("decl", TargetPosition.FIRST, "useAndCallee")
-                .match("useAndCallee", TargetPosition.SECOND, "caller")
+                .match("decl", "useAndCallee")
+                .match("caller", "useAndCallee")
                 .calculate();
 
         assertEquals(Arrays.asList("decl", "useAndCallee", "caller"), actual.getTour());
@@ -124,14 +124,31 @@ public class TourCalculatorTest {
     public void testMatchingWithClustering() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("declA", "useA", "declB", "useB", "declC", "useC", "commonCallee", "other")
-                .match("declA", TargetPosition.FIRST, "useA")
-                .match("declB", TargetPosition.FIRST, "useB")
-                .match("declC", TargetPosition.FIRST, "useC")
-                .match("commonCallee", TargetPosition.SECOND, "useA", "useB", "useC")
+                .match("declA", "useA")
+                .match("declB", "useB")
+                .match("declC", "useC")
+                .match("commonCallee", "useA", "useB", "useC")
+                .comparator(naturalComparator())
                 .calculate();
 
         assertEquals(
-                Arrays.asList("declA", "useA", "commonCallee", "declC", "useC", "useB", "declB", "other"),
+                Arrays.asList("declC", "useC", "commonCallee", "declA", "useA", "useB", "declB", "other"),
+                actual.getTour());
+    }
+
+    @Test
+    public void testMatchingWithClusteringInverse() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("declA", "useA", "declB", "useB", "declC", "useC", "commonCallee", "other")
+                .match("declA", "useA")
+                .match("declB", "useB")
+                .match("declC", "useC")
+                .match("commonCallee", "useA", "useB", "useC")
+                .comparator(inverseNaturalComparator())
+                .calculate();
+
+        assertEquals(
+                Arrays.asList("other", "declC", "useC", "declA", "useA", "commonCallee", "useB", "declB"),
                 actual.getTour());
     }
 
@@ -165,9 +182,10 @@ public class TourCalculatorTest {
     public void testFurther() throws Exception {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("declA", "useA1", "useA2", "declB", "useB1", "useB2")
-                .match("declA", TargetPosition.FIRST, "useA1", "useA2")
-                .match("declB", TargetPosition.FIRST, "useB1", "useB2")
-                .match("useA1", TargetPosition.SECOND, "useB1", "useB2")
+                .match("declA", "useA1", "useA2")
+                .match("declB", "useB1", "useB2")
+                .match("useA1", "useB1", "useB2")
+                .comparator(naturalComparator())
                 .calculate();
 
         assertEquals(
@@ -180,26 +198,84 @@ public class TourCalculatorTest {
         final TourCalculator<String> actual = TourCalculatorInput
                 .tourCalculatorFor("Maus", "Birne", "Stern", "Homer", "Baum", "Strasse", "Buch")
                 //addRelationStar(g, TestRelationTypes.SAME_METHOD, "determineChange()", "Strasse", "Baum");
-                .match("Strasse", TargetPosition.FIRST, "Baum")
+                .match("Strasse", "Baum")
                 //addRelationStar(g, TestRelationTypes.SAME_METHOD, "<init>()", "Stern", "Birne");
-                .match("Stern", TargetPosition.FIRST, "Birne")
+                .match("Stern", "Birne")
                 //addRelationStar(g, TestRelationTypes.DECLARATION_USE, "att:maxTextDiffThreshold",
                 //     "Homer", "Strasse", "Baum", "Birne");
-                .match("Homer", TargetPosition.FIRST, "Strasse", "Baum", "Birne")
+                .match("Homer", "Strasse", "Baum", "Birne")
                 //addRelationStar(g, TestRelationTypes.DECLARATION_USE, "par:maxTextDiffThreshold", "Stern", "Birne");
-                .match("Stern", TargetPosition.FIRST, "Birne")
+                .match("Stern", "Birne")
                 //addRelationChain(g, TestRelationTypes.DATA_FLOW, "xml_param", "Buch", "Maus",
                 //     "Stern", "Birne", "Strasse", "Baum");
                 .matchChained("Buch", "Maus")
                 //addRelationStar(g, TestRelationTypes.CALL_FLOW, "SvnChangeSource()", "Maus", "Stern");
-                .match("Stern", TargetPosition.SECOND, "Maus")
+                .match("Maus", "Stern")
                 //addRelationSymmetric(g, TestRelationTypes.SIMILARITY, "foo", "Strasse", "Baum");
                 .matchSymmetric("Strasse", "Baum")
                 .calculate();
 
         assertEquals(
-                Arrays.asList("Buch", "Maus", "Stern", "Birne", "Strasse", "Baum", "Homer"),
+                Arrays.asList("Strasse", "Baum", "Homer", "Birne", "Stern", "Maus", "Buch"),
                 actual.getTour());
+    }
+
+    @Test
+    public void testFixPositionWithFold1() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F", "G")
+                .matchSymmetric("A", "B")
+                .matchSymmetric("C", "D", "E")
+                .matchSymmetric("F", "G")
+                .match("B", "C", "F")
+                .comparator(naturalComparator())
+                .calculate();
+
+        //the fold A, B is tried first, is successful and therefore ends up in the middle;
+        //  therefore the position request is not satisfiable any more
+        assertEquals(Arrays.asList("D", "E", "C", "A", "B", "F", "G"), actual.getTour());
+    }
+
+    @Test
+    public void testFixPositionWithFold2() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F", "G")
+                .matchSymmetric("A", "B")
+                .matchSymmetric("C", "D", "E")
+                .matchSymmetric("F", "G")
+                .match("F", "C", "B")
+                .comparator(naturalComparator())
+                .calculate();
+
+        assertEquals(Arrays.asList("G", "F", "A", "B", "C", "D", "E"), actual.getTour());
+    }
+
+    @Test
+    public void testFixPositionWithFold3() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F", "G")
+                .matchSymmetric("A", "B")
+                .matchSymmetric("C", "D", "E")
+                .matchSymmetric("F", "G")
+                .match("F", "C", "B")
+                .comparator(inverseNaturalComparator())
+                .calculate();
+
+        assertEquals(Arrays.asList("G", "F", "B", "A", "C", "E", "D"), actual.getTour());
+    }
+
+    @Test
+    public void testFixPositionWithFold4() throws Exception {
+        final TourCalculator<String> actual = TourCalculatorInput
+                .tourCalculatorFor("A", "B", "C", "D", "E", "F", "G")
+                .matchSymmetric("A", "B")
+                .matchSymmetric("C", "D", "E")
+                .matchSymmetric("F", "G")
+                .match("C", "F", "B")
+                .comparator(naturalComparator())
+                .calculate();
+
+        assertEquals(Arrays.asList("D", "E", "C", "A", "B", "F", "G"), actual.getTour());
     }
 
     private static Comparator<String> naturalComparator() {
@@ -353,21 +429,7 @@ public class TourCalculatorTest {
             Collections.shuffle(ints, r);
             final int setSize = 2 + r.nextInt(ints.size() - 2);
             final String[] set = ints.subList(0, setSize).toArray(new String[setSize]);
-            TargetPosition pos;
-            switch (r.nextInt(3)) {
-            case 0:
-                pos = TargetPosition.FIRST;
-                break;
-            case 1:
-                pos = TargetPosition.SECOND;
-                break;
-            case 2:
-                pos = TargetPosition.LAST;
-                break;
-            default:
-                throw new AssertionError();
-            }
-            b.match(set[0], pos, Arrays.copyOfRange(set, 1, set.length));
+            b.match(set[0], Arrays.copyOfRange(set, 1, set.length));
         }
         final TourCalculator<String> result = b.calculate();
         assertEquals(result.getTour().size(), ints.size());

@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -20,6 +21,6 @@ public interface BundleCombination<T> {
     /**
      * Returns a list that contains all of the items in an order that satisfies all bundlings.
      */
-    public abstract List<T> getPossibleOrder();
+    public abstract List<T> getPossibleOrder(Comparator<T> tieBreakingComparator);
 
 }

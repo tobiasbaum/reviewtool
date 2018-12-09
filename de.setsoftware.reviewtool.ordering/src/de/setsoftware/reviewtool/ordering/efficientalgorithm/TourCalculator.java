@@ -2,7 +2,9 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -12,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Contains the algorithm for efficiently grouping and reordering change parts/stops.
@@ -24,7 +25,6 @@ import java.util.TreeMap;
 public class TourCalculator<T> {
 
     private final Set<MatchSet<T>> successfulMatches = new LinkedHashSet<>();
-    private final Set<PositionRequest<T>> successfulPositionings = new LinkedHashSet<>();
     private List<T> resultingTour;
 
     /**
@@ -63,7 +63,7 @@ public class TourCalculator<T> {
                     while (iter.hasNext()) {
                         final Entry<MatchSet<S>, List<MatchSet<S>>> e = iter.next();
                         //to be able to satisfy the match, the candidate fold has to contain elements from the match
-                        if (!this.disjoint(e.getKey().getChangeParts(), toFold.getChangeParts())) {
+                        if (!disjoint(e.getKey().getChangeParts(), toFold.getChangeParts())) {
                             this.removeSubsets(e.getValue(), toFold);
                             e.getValue().add(toFold);
                             unsatisfiedMatchesThatCouldNowMatch.add(e.getKey());
@@ -81,25 +81,6 @@ public class TourCalculator<T> {
                             control);
                 }
             }
-        }
-
-        private boolean disjoint(Set<S> c1, Set<S> c2) {
-            Set<S> iterate;
-            Set<S> contains;
-            if (c1.size() > c2.size()) {
-                iterate = c2;
-                contains = c1;
-            } else {
-                iterate = c1;
-                contains = c2;
-            }
-
-            for (final S e : iterate) {
-                if (contains.contains(e)) {
-                    return false;
-                }
-            }
-            return true;
         }
 
         private void removeSubsets(List<MatchSet<S>> value, MatchSet<S> toFold) {
@@ -164,6 +145,25 @@ public class TourCalculator<T> {
 
     }
 
+    private static<S> boolean disjoint(Set<S> c1, Set<S> c2) {
+        Set<S> iterate;
+        Set<S> contains;
+        if (c1.size() > c2.size()) {
+            iterate = c2;
+            contains = c1;
+        } else {
+            iterate = c1;
+            contains = c2;
+        }
+
+        for (final S e : iterate) {
+            if (contains.contains(e)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Determine a reordering that satisfies as many of the given grouping and positioning requests as possible.
      * A resulting tour can be requested from the returned {@link TourCalculator} object.
@@ -186,6 +186,7 @@ public class TourCalculator<T> {
             return ret;
         }
 
+        //phase one: bundling without folding
         BundleCombinationTreeElement<S> bundler = BundleCombinationTreeElement.create(allChangeParts);
         final List<MatchSet<S>> unsatisfiedMatches = new ArrayList<>();
         for (final MatchSet<S> matchSet : matchSets) {
@@ -203,64 +204,64 @@ public class TourCalculator<T> {
         if (isCanceled.isFastModeNeeded()) {
             //if the calculation already took too much time here, just give up with
             //  the results we have so far
-            ret.resultingTour = bundler.getPossibleOrder();
+            ret.resultingTour = bundler.getPossibleOrder(tieBreakingComparator);
             return ret;
         }
 
-
+        //phase two: taking folds into account
         final FoldMatchingHelper<S> foldedBundler = new FoldMatchingHelper<>(bundler, unsatisfiedMatches);
         foldedBundler.addPotentialFolds(ret.successfulMatches, isCanceled);
         bundler = foldedBundler.getBundler();
 
-
-        PositionTreeNode<S> positioner = (PositionTreeNode<S>) bundler.toPositionTree();
-        final Map<Integer, List<PositionRequest<S>>> positionRequestsForFolds = new TreeMap<>();
-        for (final PositionRequest<S> pr : positionRequests) {
-            if (ret.successfulMatches.contains(pr.getMatchSet())) {
-                final PositionTreeNode<S> next = positioner.fixPosition(
-                        pr.getMatchSet().getChangeParts(),
-                        pr.getDistinguishedPart(),
-                        pr.getTargetPosition());
-                if (next != null) {
-                    positioner = next;
-                    ret.successfulPositionings.add(pr);
+        //phase three: try to put centers first for ordered match sets
+        //TODO get rid of position requests
+        final Map<MatchSet<S>, PositionRequest<S>> ordered = new HashMap<>();
+        for (final PositionRequest<S> r : positionRequests) {
+            ordered.put(r.getMatchSet(), r);
+        }
+        for (final MatchSet<S> matchSet : ret.successfulMatches) {
+            if (!ordered.containsKey(matchSet)) {
+                continue;
+            }
+            final PositionRequest<S> p = ordered.get(matchSet);
+            final Set<S> rest = new HashSet<>(matchSet.getChangeParts());
+            rest.remove(p.getDistinguishedPart());
+            final BundleCombinationTreeElement<S> next = bundler.bundleOrdered(
+                    new SimpleSetAdapter<>(Collections.singleton(p.getDistinguishedPart())),
+                    new SimpleSetAdapter<>(rest));
+            if (next != null) {
+                bundler = next;
+            }
+            checkInterruption(isCanceled);
+        }
+        for (final MatchSet<S> matchSet : foldedBundler.matchedWithFolds.keySet()) {
+            if (!ordered.containsKey(matchSet)) {
+                continue;
+            }
+            final Set<S> center = new HashSet<>();
+            center.add(ordered.get(matchSet).getDistinguishedPart());
+            final Set<S> rest = new HashSet<>(matchSet.getChangeParts());
+            for (final MatchSet<S> neededFold : foldedBundler.matchedWithFolds.get(matchSet)) {
+                if (disjoint(neededFold.getChangeParts(), center)) {
+                    rest.addAll(neededFold.getChangeParts());
+                } else {
+                    center.addAll(neededFold.getChangeParts());
                 }
-            } else if (foldedBundler.matchedWithFolds.containsKey(pr.getMatchSet())) {
-                final int foldCount = foldedBundler.matchedWithFolds.get(pr.getMatchSet()).size();
-                List<PositionRequest<S>> list = positionRequestsForFolds.get(foldCount);
-                if (list == null) {
-                    list = new ArrayList<>();
-                    positionRequestsForFolds.put(foldCount, list);
-                }
-                list.add(pr);
+            }
+            rest.removeAll(center);
+            if (rest.isEmpty()) {
+                continue;
+            }
+            final BundleCombinationTreeElement<S> next = bundler.bundleOrdered(
+                    new SimpleSetAdapter<>(center),
+                    new SimpleSetAdapter<>(rest));
+            if (next != null) {
+                bundler = next;
             }
             checkInterruption(isCanceled);
         }
 
-
-        //TODO positions in folded graphs are currently not implemented in accordance with the paper
-        for (final List<PositionRequest<S>> list : positionRequestsForFolds.values()) {
-            for (final PositionRequest<S> pr : list) {
-                final PositionTreeNode<S> next = positioner.fixPosition(
-                        join(pr.getMatchSet(), foldedBundler.matchedWithFolds.get(pr.getMatchSet())),
-                        pr.getDistinguishedPart(),
-                        pr.getTargetPosition());
-                if (next != null) {
-                    positioner = next;
-                    ret.successfulPositionings.add(pr);
-                }
-            }
-        }
-
-        ret.resultingTour = positioner.getPossibleOrder(tieBreakingComparator);
-        return ret;
-    }
-
-    private static<S> Set<S> join(MatchSet<S> main, List<MatchSet<S>> others) {
-        final Set<S> ret = new LinkedHashSet<>(main.getChangeParts());
-        for (final MatchSet<S> ms : others) {
-            ret.addAll(ms.getChangeParts());
-        }
+        ret.resultingTour = bundler.getPossibleOrder(tieBreakingComparator);
         return ret;
     }
 

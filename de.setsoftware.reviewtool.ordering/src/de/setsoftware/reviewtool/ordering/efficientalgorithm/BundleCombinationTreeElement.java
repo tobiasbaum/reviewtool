@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -154,40 +153,50 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
     public static<S> BundleCombinationTreeElement<S> create(Collection<S> asList) {
         assert asList.size() > 0;
         if (asList.size() == 1) {
-            return new BundleCombinationTreeLeaf<S>(asList.iterator().next());
+            return new BundleCombinationTreeLeaf<>(asList.iterator().next());
         } else {
             @SuppressWarnings("unchecked")
             final BundleCombinationTreeElement<S>[] items = new BundleCombinationTreeElement[asList.size()];
             final Iterator<S> iter = asList.iterator();
             int i = 0;
             while (iter.hasNext()) {
-                items[i] = new BundleCombinationTreeLeaf<S>(iter.next());
+                items[i] = new BundleCombinationTreeLeaf<>(iter.next());
                 i++;
             }
-            return new BundleCombinationTreeNode<S>(items, true);
+            return new BundleCombinationTreeNode<>(items, true, true);
         }
     }
 
     @Override
     public final BundleCombinationTreeElement<T> bundle(SimpleSet<T> bundle) {
-        final BundleResult<T> result = this.addBundle(bundle);
-        if (result.resultType == ResultType.CONFLICT) {
+        try {
+            final BundleResult<T> result = this.addBundle(bundle);
+            if (result.resultType == ResultType.CONFLICT) {
+                return null;
+            } else {
+                return result.newTree;
+            }
+        } catch (final ReverseImpossibleException e) {
             return null;
-        } else {
-            return result.newTree;
         }
     }
 
     protected abstract BundleResult<T> addBundle(SimpleSet<T> bundle);
 
-    @Override
-    public final List<T> getPossibleOrder() {
-        final List<T> ret = new ArrayList<>();
-        this.addItemsInOrder(ret);
-        return ret;
+    public BundleCombinationTreeElement<T> bundleOrdered(SimpleSet<T> center, SimpleSet<T> rest) {
+        //we assume here that the whole was already bundled
+        final BundleCombinationTreeElement<T> t1 = this.bundle(center);
+        if (t1 == null) {
+            return null;
+        }
+        final BundleCombinationTreeElement<T> t2 = t1.bundle(rest);
+        if (t2 == null) {
+            return null;
+        }
+        return t2.fixOrder(center, rest);
     }
 
-    protected abstract void addItemsInOrder(List<T> buffer);
+    protected abstract BundleCombinationTreeElement<T> fixOrder(SimpleSet<T> center, SimpleSet<T> rest);
 
     protected abstract List<? extends BundleCombinationTreeElement<T>> split(SimpleSet<T> bundle);
 
@@ -208,7 +217,5 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
     public final int hashCode() {
         return 42;
     }
-
-    public abstract PositionTreeElement<T> toPositionTree();
 
 }

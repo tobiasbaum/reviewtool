@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -17,11 +18,14 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
 
     private final BundleCombinationTreeElement<T>[] children;
     private final boolean reorderingAllowed;
+    private final boolean reverseAllowed;
 
-    BundleCombinationTreeNode(BundleCombinationTreeElement<T>[] children, boolean reorderingAllowed) {
+    BundleCombinationTreeNode(
+            BundleCombinationTreeElement<T>[] children, boolean reorderingAllowed, boolean reverseAllowed) {
         assert children.length >= 2;
         this.children = children;
         this.reorderingAllowed = reorderingAllowed;
+        this.reverseAllowed = reverseAllowed;
     }
 
     @Override
@@ -106,12 +110,14 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
             final BundleCombinationTreeElement<T> matchSubtree;
             if (needsNoSplit) {
                 matchSubtree = tf(
+                    this.reverseAllowed,
                     parts.get(ResultType.PARTIAL_BOTTOM),
                     parts.get(ResultType.FULL).isEmpty() ? this.empty() : li(ta(parts.get(ResultType.FULL))),
                     parts.get(ResultType.PARTIAL_TOP)
                 );
             } else {
                 matchSubtree = tf(
+                    this.reverseAllowed,
                     split(parts.get(ResultType.PARTIAL_BOTTOM), bundle),
                     parts.get(ResultType.FULL).isEmpty() ? this.empty() : li(ta(parts.get(ResultType.FULL))),
                     split(parts.get(ResultType.PARTIAL_TOP), bundle)
@@ -243,7 +249,7 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
                     resultType = ResultType.PARTIAL_MIDDLE;
                 }
             }
-            return result(resultType, tf(newChildren));
+            return result(resultType, tf(this.reverseAllowed, newChildren));
         }
     }
 
@@ -292,28 +298,30 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
         } else {
             @SuppressWarnings("unchecked")
             final BundleCombinationTreeElement<S>[] elements = new BundleCombinationTreeElement[children.size()];
-            return new BundleCombinationTreeNode<>(children.toArray(elements), true);
+            return new BundleCombinationTreeNode<>(children.toArray(elements), true, true);
         }
     }
 
     @SafeVarargs
     private static<S> BundleCombinationTreeElement<S> tf(
+            boolean reverseAllowed,
             List<? extends BundleCombinationTreeElement<S>>... childrenLists) {
         final List<BundleCombinationTreeElement<S>> combined = new ArrayList<>();
         for (final List<? extends BundleCombinationTreeElement<S>> list : childrenLists) {
             combined.addAll(list);
         }
-        return tf(combined);
+        return tf(reverseAllowed, combined);
     }
 
     private static<S> BundleCombinationTreeElement<S> tf(
+            boolean reverseAllowed,
             List<? extends BundleCombinationTreeElement<S>> children) {
         if (children.size() == 1) {
             return children.get(0);
         } else {
             @SuppressWarnings("unchecked")
             final BundleCombinationTreeElement<S>[] elements = new BundleCombinationTreeElement[children.size()];
-            return new BundleCombinationTreeNode<>(children.toArray(elements), false);
+            return new BundleCombinationTreeNode<>(children.toArray(elements), false, reverseAllowed);
         }
     }
 
@@ -322,10 +330,33 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
     }
 
     @Override
-    protected void addItemsInOrder(List<T> buffer) {
-        for (final BundleCombinationTreeElement<T> e : this.children) {
-            e.addItemsInOrder(buffer);
+    public List<T> getPossibleOrder(Comparator<T> tieBreakingComparator) {
+        final List<List<T>> subItems = new ArrayList<>();
+        for (final BundleCombinationTreeElement<T> child : this.children) {
+            subItems.add(child.getPossibleOrder(tieBreakingComparator));
         }
+        if (this.reverseAllowed) {
+            if (this.reorderingAllowed) {
+                Collections.sort(subItems, new Comparator<List<T>>() {
+                    @Override
+                    public int compare(List<T> o1, List<T> o2) {
+                        return tieBreakingComparator.compare(o1.get(0), o2.get(0));
+                    }
+                });
+            } else {
+                final int comparisonResult = tieBreakingComparator.compare(
+                        subItems.get(0).get(0),
+                        subItems.get(subItems.size() - 1).get(0));
+                if (comparisonResult > 0) {
+                    Collections.reverse(subItems);
+                }
+            }
+        }
+        final List<T> ret = new ArrayList<>();
+        for (final List<T> subList : subItems) {
+            ret.addAll(subList);
+        }
+        return ret;
     }
 
     @Override
@@ -407,26 +438,63 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
 
     @Override
     protected BundleCombinationTreeElement<T> reverse() {
+        return this.reverse(this.reverseAllowed);
+    }
+
+    private BundleCombinationTreeElement<T> reverse(boolean allowFurtherReversal) {
+        if (!this.reverseAllowed) {
+            throw new ReverseImpossibleException();
+        }
         @SuppressWarnings("unchecked")
         final BundleCombinationTreeElement<T>[] copy = new BundleCombinationTreeElement[this.children.length];
         final int lastIndex = copy.length - 1;
         for (int i = 0; i <= lastIndex; i++) {
             copy[i] = this.children[lastIndex - i].reverse();
         }
-        return new BundleCombinationTreeNode<>(copy, this.reorderingAllowed);
+        return new BundleCombinationTreeNode<>(copy, this.reorderingAllowed, allowFurtherReversal);
     }
 
     @Override
-    public PositionTreeNode<T> toPositionTree() {
-        @SuppressWarnings("unchecked")
-        final PositionTreeElement<T>[] positionChildren = new PositionTreeElement[this.children.length];
+    protected BundleCombinationTreeElement<T> fixOrder(SimpleSet<T> center, SimpleSet<T> rest) {
+        int minCenterIdx = Integer.MAX_VALUE;
+        int maxCenterIdx = -1;
+        int minRestIdx = Integer.MAX_VALUE;
+        int maxRestIdx = -1;
         for (int i = 0; i < this.children.length; i++) {
-            positionChildren[i] = this.children[i].toPositionTree();
+            final BundleCombinationTreeElement<T> child = this.children[i];
+            if (child.checkContainment(center) != ResultType.NONE) {
+                minCenterIdx = Math.min(minCenterIdx, i);
+                maxCenterIdx = Math.max(maxCenterIdx, i);
+            }
+            if (child.checkContainment(rest) != ResultType.NONE) {
+                minRestIdx = Math.min(minRestIdx, i);
+                maxRestIdx = Math.max(maxRestIdx, i);
+            }
         }
-        if (this.reorderingAllowed) {
-            return new PositionTreeNodeReorderable<>(positionChildren);
+
+        if (minCenterIdx == maxCenterIdx && minRestIdx == maxRestIdx && minCenterIdx == minRestIdx) {
+            final BundleCombinationTreeElement<T> newChild = this.children[minCenterIdx].fixOrder(center, rest);
+            if (newChild == null) {
+                return null;
+            } else {
+                final BundleCombinationTreeElement<T>[] newChildren = Arrays.copyOf(this.children, this.children.length);
+                newChildren[minCenterIdx] = newChild;
+                return new BundleCombinationTreeNode<>(newChildren, this.reorderingAllowed, this.reverseAllowed);
+            }
+        } else if (maxCenterIdx < minRestIdx) {
+            return new BundleCombinationTreeNode<>(this.children, this.reorderingAllowed, false);
+        } else if (minCenterIdx > maxRestIdx) {
+            if (this.reverseAllowed) {
+                try {
+                    return this.reverse(false);
+                } catch (final ReverseImpossibleException e) {
+                    return null;
+                }
+            } else {
+                return null;
+            }
         } else {
-            return new PositionTreeNodeFixedOrder<>(positionChildren);
+            return null;
         }
     }
 

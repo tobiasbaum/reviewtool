@@ -42,7 +42,7 @@ public class SubsettingSetTest {
         assertTrue(s.contains("f"));
         assertFalse(s.contains("g"));
         assertEquals(s.toSet(), new HashSet<>(Arrays.asList("a", "b", "c", "d", "e", "f")));
-        assertEquals(s.potentialRemovals(), Arrays.asList(0, 1));
+        assertEquals(s.potentialRemovals(), Arrays.asList(1, 0));
     }
 
     @Test
@@ -91,7 +91,7 @@ public class SubsettingSetTest {
         assertTrue(s.contains("f"));
         assertFalse(s.contains("g"));
         assertEquals(s.toSet(), new HashSet<>(Arrays.asList("a", "b", "c", "d", "e", "f")));
-        assertEquals(s.potentialRemovals(), Arrays.asList(0, 1));
+        assertEquals(s.potentialRemovals(), Arrays.asList(1, 0));
     }
 
     @Test

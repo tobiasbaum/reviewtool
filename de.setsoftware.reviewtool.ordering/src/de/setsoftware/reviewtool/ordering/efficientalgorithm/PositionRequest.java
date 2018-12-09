@@ -9,12 +9,10 @@ public class PositionRequest<T> {
 
     private final MatchSet<T> matchSet;
     private final T distinguishedPart;
-    private final TargetPosition targetPosition;
 
-    public PositionRequest(MatchSet<T> matchSet, T distinguishedPart, TargetPosition pos) {
+    public PositionRequest(MatchSet<T> matchSet, T distinguishedPart) {
         this.matchSet = matchSet;
         this.distinguishedPart = distinguishedPart;
-        this.targetPosition = pos;
     }
 
     public MatchSet<T> getMatchSet() {
@@ -23,10 +21,6 @@ public class PositionRequest<T> {
 
     public T getDistinguishedPart() {
         return this.distinguishedPart;
-    }
-
-    public TargetPosition getTargetPosition() {
-        return this.targetPosition;
     }
 
     @Override
@@ -41,8 +35,7 @@ public class PositionRequest<T> {
         }
         final PositionRequest<?> other = (PositionRequest<?>) o;
         return other.matchSet.equals(this.matchSet)
-            && other.distinguishedPart.equals(this.distinguishedPart)
-            && other.targetPosition == this.targetPosition;
+            && other.distinguishedPart.equals(this.distinguishedPart);
     }
 
 }

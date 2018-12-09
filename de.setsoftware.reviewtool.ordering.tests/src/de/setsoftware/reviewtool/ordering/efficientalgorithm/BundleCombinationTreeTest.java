@@ -9,6 +9,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -63,9 +64,9 @@ public class BundleCombinationTreeTest {
                         + " (history=" + this.historySuccess + ")",
                         addedAgain);
                 //the returned order contains the bundled set as direct neighbors
-                assertTrue("matched but not contained in order " + setInHistory + ", " + this.current.getPossibleOrder()
+                assertTrue("matched but not contained in order " + setInHistory + ", " + this.current.getPossibleOrder(noComparator())
                         + " of tree " + this.current + " (history=" + this.historySuccess + ")",
-                        this.containsAsNeighbours(this.current.getPossibleOrder(), setInHistory));
+                        this.containsAsNeighbours(this.current.getPossibleOrder(noComparator()), setInHistory));
             }
 
             for (final SimpleSet<Integer> setInHistory : this.historyConflict) {
@@ -76,8 +77,8 @@ public class BundleCombinationTreeTest {
                         addedAgain);
                 //the returned order does not contain the bundled set as direct neighbors
                 assertFalse("not matched but contained in order " + setInHistory + ", "
-                        + this.current.getPossibleOrder(),
-                        this.containsAsNeighbours(this.current.getPossibleOrder(), setInHistory));
+                        + this.current.getPossibleOrder(noComparator()),
+                        this.containsAsNeighbours(this.current.getPossibleOrder(noComparator()), setInHistory));
             }
         }
 
@@ -121,24 +122,37 @@ public class BundleCombinationTreeTest {
     }
 
 
+    private static List<Integer> getPossibleOrder(final BundleCombinationTestHelper b) {
+        return b.get().getPossibleOrder(noComparator());
+    }
+
+    private static Comparator<Integer> noComparator() {
+        return new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return 0;
+            }
+        };
+    }
+
     @Test
     public void testWithoutRestrictions() {
         final BundleCombinationTestHelper b = create(1, 2, 3);
-        assertEquals(Arrays.asList(1, 2, 3), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3), getPossibleOrder(b));
         assertEquals("{1, 2, 3}", b.get().toString());
     }
 
     @Test
     public void testSingleElement() {
         final BundleCombinationTestHelper b = create(5);
-        assertEquals(Arrays.asList(5), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(5), getPossibleOrder(b));
     }
 
     @Test
     public void testSimple1() {
         final BundleCombinationTestHelper b = create(1, 2, 3, 4, 5);
         b.addAndCheckInvariantsAndSuccess(1, 2);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5), getPossibleOrder(b));
         assertEquals("{{1, 2}, 3, 4, 5}", b.get().toString());
     }
 
@@ -147,7 +161,7 @@ public class BundleCombinationTreeTest {
         final BundleCombinationTestHelper b = create(1, 2, 3, 4);
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(1, 2);
-        assertEquals(Arrays.asList(1, 2, 3, 4), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4), getPossibleOrder(b));
         assertEquals("{{1, 2}, {3, 4}}", b.get().toString());
     }
 
@@ -156,7 +170,7 @@ public class BundleCombinationTreeTest {
         final BundleCombinationTestHelper b = create(1, 2, 3);
         b.addAndCheckInvariantsAndSuccess(1, 2);
         b.addAndCheckInvariantsAndSuccess(2, 3);
-        assertEquals(Arrays.asList(1, 2, 3), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3), getPossibleOrder(b));
         assertEquals("[1, 2, 3]", b.get().toString());
     }
 
@@ -166,7 +180,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2);
         b.addAndCheckInvariantsAndSuccess(2, 3);
         b.addAndCheckInvariantsAndConflict(1, 3);
-        assertEquals(Arrays.asList(1, 2, 3), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3), getPossibleOrder(b));
         assertEquals("[1, 2, 3]", b.get().toString());
     }
 
@@ -176,7 +190,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2);
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(1, 4);
-        assertEquals(Arrays.asList(3, 4, 1, 2), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(3, 4, 1, 2), getPossibleOrder(b));
         assertEquals("[3, 4, 1, 2]", b.get().toString());
     }
 
@@ -187,7 +201,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(5, 6);
         b.addAndCheckInvariantsAndConflict(2, 4, 6);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), getPossibleOrder(b));
         assertEquals("{{1, 2}, {3, 4}, {5, 6}}", b.get().toString());
     }
 
@@ -198,7 +212,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(5, 6);
         b.addAndCheckInvariantsAndConflict(1, 3, 5);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), getPossibleOrder(b));
         assertEquals("{{1, 2}, {3, 4}, {5, 6}}", b.get().toString());
     }
 
@@ -208,7 +222,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2);
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(1, 3);
-        assertEquals(Arrays.asList(4, 3, 1, 2), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(4, 3, 1, 2), getPossibleOrder(b));
         assertEquals("[4, 3, 1, 2]", b.get().toString());
     }
 
@@ -218,7 +232,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2);
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(2, 4);
-        assertEquals(Arrays.asList(3, 4, 2, 1), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(3, 4, 2, 1), getPossibleOrder(b));
         assertEquals("[3, 4, 2, 1]", b.get().toString());
     }
 
@@ -232,7 +246,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndConflict(1, 6);
         b.addAndCheckInvariantsAndConflict(1, 5);
         b.addAndCheckInvariantsAndConflict(2, 6);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), getPossibleOrder(b));
         assertEquals("[{1, 2}, 3, 4, {5, 6}]", b.get().toString());
     }
 
@@ -243,7 +257,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(5, 6, 7, 8);
         b.addAndCheckInvariantsAndSuccess(1, 2, 3);
         b.addAndCheckInvariantsAndSuccess(1, 2);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8), getPossibleOrder(b));
         assertEquals("[{{{1, 2}, 3}, 4}, {5, 6}, {7, 8}]", b.get().toString());
     }
 
@@ -254,7 +268,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(2, 3, 4, 5, 6);
         b.addAndCheckInvariantsAndSuccess(2, 3, 4, 5);
         b.addAndCheckInvariantsAndSuccess(2, 3);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), getPossibleOrder(b));
         assertEquals("[1, 2, 3, {4, 5}, 6]", b.get().toString());
     }
 
@@ -265,7 +279,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2, 3, 4);
         b.addAndCheckInvariantsAndSuccess(6, 7, 8);
         b.addAndCheckInvariantsAndSuccess(7, 8);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8), getPossibleOrder(b));
         assertEquals("[{1, 2}, {3, 4}, {5, {6, {7, 8}}}]", b.get().toString());
     }
 
@@ -276,7 +290,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(4, 5, 6);
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(1, 3, 4, 6);
-        assertEquals(Arrays.asList(2, 1, 3, 4, 6, 5), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(2, 1, 3, 4, 6, 5), getPossibleOrder(b));
         assertEquals("[2, 1, 3, 4, 6, 5]", b.get().toString());
     }
 
@@ -286,7 +300,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(2, 3, 4, 5);
         b.addAndCheckInvariantsAndSuccess(1, 2, 3);
         b.addAndCheckInvariantsAndSuccess(3, 4, 5, 6);
-        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 3, 4, 5, 6), getPossibleOrder(b));
         assertEquals("[1, 2, 3, {4, 5}, 6]", b.get().toString());
     }
 
@@ -296,7 +310,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2, 3);
         b.addAndCheckInvariantsAndSuccess(1, 2, 4, 5);
         b.addAndCheckInvariantsAndConflict(1, 3, 5);
-        assertEquals(Arrays.asList(4, 5, 1, 2, 3), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(4, 5, 1, 2, 3), getPossibleOrder(b));
         assertEquals("[{4, 5}, {1, 2}, 3]", b.get().toString());
     }
 
@@ -306,7 +320,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2, 3);
         b.addAndCheckInvariantsAndSuccess(1, 2, 4, 5);
         b.addAndCheckInvariantsAndSuccess(2, 3);
-        assertEquals(Arrays.asList(4, 5, 1, 2, 3), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(4, 5, 1, 2, 3), getPossibleOrder(b));
         assertEquals("[{4, 5}, 1, 2, 3]", b.get().toString());
     }
 
@@ -317,7 +331,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(2, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19);
         b.addAndCheckInvariantsAndSuccess(4, 11, 12, 17, 18);
         assertEquals(Arrays.asList(3, 1, 9, 15, 19, 11, 12, 17, 18, 4, 16, 14, 13, 10, 8, 7, 6, 5, 2),
-                b.get().getPossibleOrder());
+                getPossibleOrder(b));
         assertEquals("{3, [1, {9, 15, 19}, {11, 12, 17}, {18, 4}, {16, 14, 13, 10, 8, 7, 6, 5, 2}]}",
                 b.get().toString());
     }
@@ -328,7 +342,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2, 4, 5);
         b.addAndCheckInvariantsAndSuccess(3, 4, 5);
         b.addAndCheckInvariantsAndConflict(1, 3, 4);
-        assertEquals(Arrays.asList(1, 2, 4, 5, 3), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 4, 5, 3), getPossibleOrder(b));
         assertEquals("[{1, 2}, {4, 5}, 3]", b.get().toString());
     }
 
@@ -338,7 +352,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(2, 3, 5);
         b.addAndCheckInvariantsAndSuccess(1, 3);
         b.addAndCheckInvariantsAndSuccess(1, 2, 3, 4);
-        assertEquals(Arrays.asList(5, 2, 3, 1, 4), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(5, 2, 3, 1, 4), getPossibleOrder(b));
         assertEquals("[5, 2, 3, 1, 4]", b.get().toString());
     }
 
@@ -349,7 +363,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 5);
         b.addAndCheckInvariantsAndSuccess(2, 4);
         b.addAndCheckInvariantsAndSuccess(1, 2, 5);
-        assertEquals(Arrays.asList(3, 4, 2, 5, 1), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(3, 4, 2, 5, 1), getPossibleOrder(b));
         assertEquals("[3, 4, 2, 5, 1]", b.get().toString());
     }
 
@@ -359,7 +373,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2);
         b.addAndCheckInvariantsAndSuccess(1, 3, 4);
         b.addAndCheckInvariantsAndSuccess(4, 5);
-        assertEquals(Arrays.asList(5, 4, 3, 1, 2), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(5, 4, 3, 1, 2), getPossibleOrder(b));
         assertEquals("[5, 4, 3, 1, 2]", b.get().toString());
     }
 
@@ -371,7 +385,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(2, 3, 5);
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(2, 3, 4, 5);
-        assertEquals(Arrays.asList(1, 2, 5, 3, 4), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(1, 2, 5, 3, 4), getPossibleOrder(b));
         assertEquals("[1, 2, 5, 3, 4]", b.get().toString());
     }
 
@@ -383,7 +397,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(3, 4);
         b.addAndCheckInvariantsAndSuccess(1, 4);
         b.addAndCheckInvariantsAndSuccess(1, 4, 5);
-        assertEquals(Arrays.asList(2, 5, 1, 4, 3), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(2, 5, 1, 4, 3), getPossibleOrder(b));
         assertEquals("[2, 5, 1, 4, 3]", b.get().toString());
     }
 
@@ -394,7 +408,7 @@ public class BundleCombinationTreeTest {
         b.addAndCheckInvariantsAndSuccess(1, 2, 3, 4, 6);
         b.addAndCheckInvariantsAndSuccess(1, 2, 5, 6);
         b.addAndCheckInvariantsAndConflict(1, 2, 4, 5);
-        assertEquals(Arrays.asList(4, 3, 2, 1, 6, 5), b.get().getPossibleOrder());
+        assertEquals(Arrays.asList(4, 3, 2, 1, 6, 5), getPossibleOrder(b));
         assertEquals("[{4, 3}, 2, {1, 6}, 5]", b.get().toString());
     }
 
@@ -453,17 +467,17 @@ public class BundleCombinationTreeTest {
     }
 
     private static BundleCombinationTreeLeaf<Integer> tl(int i) {
-        return new BundleCombinationTreeLeaf<Integer>(i);
+        return new BundleCombinationTreeLeaf<>(i);
     }
 
     @SafeVarargs
     private static BundleCombinationTreeNode<Integer> ta(BundleCombinationTreeElement<Integer>... children) {
-        return new BundleCombinationTreeNode<Integer>(children, true);
+        return new BundleCombinationTreeNode<>(children, true, true);
     }
 
     @SafeVarargs
     private static BundleCombinationTreeNode<Integer> tf(BundleCombinationTreeElement<Integer>... children) {
-        return new BundleCombinationTreeNode<Integer>(children, false);
+        return new BundleCombinationTreeNode<>(children, false, true);
     }
 
     private static void doTestWithGeneratedData(Random r) {

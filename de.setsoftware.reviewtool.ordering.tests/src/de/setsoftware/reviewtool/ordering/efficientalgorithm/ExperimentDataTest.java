@@ -40,7 +40,7 @@ public class ExperimentDataTest {
         public TourCalculatorInput matchChained(String... parts) {
             assert parts.length >= 2;
             for (int i = 0; i < parts.length - 1; i++) {
-                this.match(parts[i], TargetPosition.FIRST, parts[i + 1]);
+                this.match(parts[i], parts[i + 1]);
             }
             return this;
         }
@@ -56,13 +56,13 @@ public class ExperimentDataTest {
             return this;
         }
 
-        public TourCalculatorInput match(String distinguishedElement, TargetPosition pos, String... others) {
+        public TourCalculatorInput match(String distinguishedElement, String... others) {
             final Set<String> set = new TreeSet<>();
             set.add(distinguishedElement);
             set.addAll(Arrays.asList(others));
             final MatchSet<String> ms = new MatchSet<>(set);
             this.matchSets.add(ms);
-            this.positionRequests.add(new PositionRequest<>(ms, distinguishedElement, pos));
+            this.positionRequests.add(new PositionRequest<>(ms, distinguishedElement));
             return this;
         }
 
@@ -116,20 +116,20 @@ public class ExperimentDataTest {
             .matchChained("b", "c") //token jaccard similarity > 0.7
 
             //declare & use
-            .match("l", TargetPosition.FIRST, "k", "m") //loadInfo attribute
-            .match("g", TargetPosition.FIRST, "f", "h", "j", "m") //path attribute
-            .match("g", TargetPosition.FIRST, "f", "m") //removed load info attribute in old code
+            .match("l", "k", "m") //loadInfo attribute
+            .match("g", "f", "h", "j", "m") //path attribute
+            .match("g", "f", "m") //removed load info attribute in old code
 
             //class hierarchy
             .matchSymmetric("h", "i", "j", "m") //overriding _run() (the abstract method itself is not contained)
 
             //call flow
-            .match("h", TargetPosition.SECOND, "a") //to DeleteBrowserTask constructor
-            .match("j", TargetPosition.SECOND, "b", "c") //to RenameBrowserTask constructor
-            .match("i", TargetPosition.SECOND, "d") //to MkDirBrowserTask constructor
-            .match("f", TargetPosition.SECOND, "h", "i", "j", "k") //to AbstractBrowserTask constructor
-            .match("f", TargetPosition.SECOND, "e") //to other AbstractBrowserTask constructor in old code
-            .match("o", TargetPosition.SECOND, "a", "b", "c", "d") //to BrowserIORequest constructor in old code
+            .match("h", "a") //to DeleteBrowserTask constructor
+            .match("j", "b", "c") //to RenameBrowserTask constructor
+            .match("i", "d") //to MkDirBrowserTask constructor
+            .match("f", "h", "i", "j", "k") //to AbstractBrowserTask constructor
+            .match("f", "e") //to other AbstractBrowserTask constructor in old code
+            .match("o", "a", "b", "c", "d") //to BrowserIORequest constructor in old code
 
             //data flow
             //        .matchChained("a", "h") //to DeleteBrowserTask constructor
@@ -224,20 +224,20 @@ public class ExperimentDataTest {
             .matchSymmetric("f", "g", "n") //setting of noWordSep in matcher
 
             //declare & use
-            .match("b", TargetPosition.FIRST, "c", "d")
-            .match("s", TargetPosition.FIRST, "m", "l", "j", "h") //wholeWord
-            .match("u", TargetPosition.FIRST, "r", "p", "o") //noWordSep
+            .match("b", "c", "d")
+            .match("s", "m", "l", "j", "h") //wholeWord
+            .match("u", "r", "p", "o") //noWordSep
 
             //class hierarchy
             .matchSymmetric("j", "m") //overriding nextMatch() (the abstract method itself is not contained in change)
 
             //call flow
-            .match("h", TargetPosition.SECOND, "e", "i") //PatternSearchMatcher constructor with flag
-            .match("l", TargetPosition.SECOND, "e", "k") //BoyerMooreSearchMatcher constructor with flag
-            .match("p", TargetPosition.SECOND, "c") //matcher.getNoWordSep()
-            .match("o", TargetPosition.SECOND, "d", "f", "g", "n") //matcher.setNoWordSep()
-            .match("q", TargetPosition.SECOND, "m") //isWholeWord()
-            .match("r", TargetPosition.SECOND, "q") //isEndWord()
+            .match("h", "e", "i") //PatternSearchMatcher constructor with flag
+            .match("l", "e", "k") //BoyerMooreSearchMatcher constructor with flag
+            .match("p", "c") //matcher.getNoWordSep()
+            .match("o", "d", "f", "g", "n") //matcher.setNoWordSep()
+            .match("q", "m") //isWholeWord()
+            .match("r", "q") //isEndWord()
 
             //order inside files
             .matchChained("b", "c", "d") //HyperSearchOperationNode

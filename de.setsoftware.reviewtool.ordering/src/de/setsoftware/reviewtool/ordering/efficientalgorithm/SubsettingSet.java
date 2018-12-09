@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,7 +25,12 @@ public class SubsettingSet<S> implements SimpleSet<S> {
 
     public SubsettingSet(MatchSet<S> toMatch, List<MatchSet<S>> potentialFolds) {
         this.potentialFolds = new ArrayList<>(potentialFolds);
-        this.remainingFoldIndices = new TreeSet<>();
+        this.remainingFoldIndices = new TreeSet<>(new Comparator<Integer>() {
+            @Override
+            public int compare(Integer o1, Integer o2) {
+                return o2 - o1;
+            }
+        });
         for (int i = 0; i < potentialFolds.size(); i++) {
             this.remainingFoldIndices.add(i);
         }
@@ -64,7 +70,8 @@ public class SubsettingSet<S> implements SimpleSet<S> {
     }
 
     /**
-     * Returns the removals that are still possible.
+     * Returns the removals that are still possible. The last index comes first in the collection,
+     * because it represents the least important fold.
      */
     public Collection<Integer> potentialRemovals() {
         assert this.currentCandidate == null;
