@@ -1,10 +1,9 @@
 package de.setsoftware.reviewtool.ordering;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.UnorderedMatchSet;
 
 /**
  * A simple implementation of {@link OrderingInfo} that does not have any position requests.
@@ -19,17 +18,12 @@ public class SimpleUnorderedMatch implements OrderingInfo {
             HierarchyExplicitness explicit, String description, Collection<ChangePart> changeParts) {
         this.explicit = explicit;
         this.description = description;
-        this.matchSet = new MatchSet<>(changeParts);
+        this.matchSet = new UnorderedMatchSet<>(changeParts);
     }
 
     @Override
     public MatchSet<ChangePart> getMatchSet() {
         return this.matchSet;
-    }
-
-    @Override
-    public Collection<? extends PositionRequest<ChangePart>> getPositionRequests() {
-        return Collections.emptyList();
     }
 
     @Override

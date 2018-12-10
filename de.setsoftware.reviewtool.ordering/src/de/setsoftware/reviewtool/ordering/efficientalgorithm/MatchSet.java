@@ -9,7 +9,7 @@ import java.util.Set;
  *
  * @param <T> Type of the stops.
  */
-public class MatchSet<T> {
+public abstract class MatchSet<T> {
 
     private final Set<T> parts;
 
@@ -29,15 +29,6 @@ public class MatchSet<T> {
     @Override
     public int hashCode() {
         return this.parts.hashCode();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (!(o instanceof MatchSet<?>)) {
-            return false;
-        }
-        final MatchSet<?> other = (MatchSet<?>) o;
-        return this.parts.equals(other.parts);
     }
 
 }

@@ -16,73 +16,67 @@ import org.junit.Test;
 public class RelationTest {
 
     private static MatchSet<String> ms(String... s) {
-        return new MatchSet<>(new TreeSet<String>(Arrays.asList(s)));
+        return new UnorderedMatchSet<>(new TreeSet<>(Arrays.asList(s)));
     }
 
-    private static PositionRequest<String> pr(String... s) {
-        return new PositionRequest<String>(ms(s), s[0]);
+    private static MatchSet<String> pr(String... s) {
+        return new StarMatchSet<>(s[0], new TreeSet<>(Arrays.asList(s)));
     }
 
     @Test
     public void testSimpleEquality() {
         final List<MatchSet<String>> ms = Collections.emptyList();
-        final List<PositionRequest<String>> pr = Collections.emptyList();
 
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("a", "b"), ms, pr));
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("b", "a"), ms, pr));
-        assertFalse(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("b", "a"), ms, pr));
-        assertFalse(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("a", "b"), ms, pr));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("a", "b"), ms));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("b", "a"), ms));
+        assertFalse(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("b", "a"), ms));
+        assertFalse(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("a", "b"), ms));
     }
 
     @Test
     public void testSimplePositionCheck() {
-        final List<MatchSet<String>> ms = Arrays.asList(ms("a", "b"));
-        final List<PositionRequest<String>> pr = Arrays.asList(pr("a", "b"));
+        final List<MatchSet<String>> ms = Arrays.asList(pr("a", "b"));
 
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("a", "b"), ms, pr));
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("b", "a"), ms, pr));
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("b", "a"), ms, pr));
-        assertFalse(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("a", "b"), ms, pr));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("a", "b"), ms));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("b", "a"), ms));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b"), Arrays.asList("b", "a"), ms));
+        assertFalse(Relation.isBetterThanOrEqual(Arrays.asList("b", "a"), Arrays.asList("a", "b"), ms));
     }
 
     @Test
     public void testSpacedApart() {
-        final List<MatchSet<String>> ms = Arrays.asList(ms("a", "b"));
-        final List<PositionRequest<String>> pr = Arrays.asList(pr("a", "b"));
+        final List<MatchSet<String>> ms = Arrays.asList(pr("a", "b"));
 
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b", "c"), Arrays.asList("a", "c", "b"), ms, pr));
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a", "c"), Arrays.asList("a", "c", "b"), ms, pr));
-        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b", "c"), Arrays.asList("b", "a", "c"), ms, pr));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b", "c"), Arrays.asList("a", "c", "b"), ms));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("b", "a", "c"), Arrays.asList("a", "c", "b"), ms));
+        assertTrue(Relation.isBetterThanOrEqual(Arrays.asList("a", "b", "c"), Arrays.asList("b", "a", "c"), ms));
     }
 
     @Test
     public void testMultipleIncomparable() {
         final List<MatchSet<String>> ms = Arrays.asList(ms("a", "b"), ms("c", "d"));
-        final List<PositionRequest<String>> pr = Collections.emptyList();
 
-        checkBetter(Arrays.asList("a", "b", "c", "d"), Arrays.asList("c", "a", "b", "d"), ms, pr);
-        checkBetter(Arrays.asList("a", "b", "c", "d"), Arrays.asList("a", "c", "d", "b"), ms, pr);
-        checkIncomparable(Arrays.asList("c", "a", "b", "d"), Arrays.asList("a", "c", "d", "b"), ms, pr);
-        checkBetter(Arrays.asList("c", "a", "b", "d"), Arrays.asList("c", "a", "d", "b"), ms, pr);
-        checkBetter(Arrays.asList("a", "c", "d", "b"), Arrays.asList("c", "a", "d", "b"), ms, pr);
+        checkBetter(Arrays.asList("a", "b", "c", "d"), Arrays.asList("c", "a", "b", "d"), ms);
+        checkBetter(Arrays.asList("a", "b", "c", "d"), Arrays.asList("a", "c", "d", "b"), ms);
+        checkIncomparable(Arrays.asList("c", "a", "b", "d"), Arrays.asList("a", "c", "d", "b"), ms);
+        checkBetter(Arrays.asList("c", "a", "b", "d"), Arrays.asList("c", "a", "d", "b"), ms);
+        checkBetter(Arrays.asList("a", "c", "d", "b"), Arrays.asList("c", "a", "d", "b"), ms);
     }
 
     private static void checkBetter(
             List<String> better,
             List<String> worse,
-            List<MatchSet<String>> ms,
-            List<PositionRequest<String>> pr) {
-        assertTrue(Relation.isBetterThanOrEqual(better, worse, ms, pr));
-        assertFalse(Relation.isBetterThanOrEqual(worse, better, ms, pr));
+            List<MatchSet<String>> ms) {
+        assertTrue(Relation.isBetterThanOrEqual(better, worse, ms));
+        assertFalse(Relation.isBetterThanOrEqual(worse, better, ms));
     }
 
     private static void checkIncomparable(
             List<String> o1,
             List<String> o2,
-            List<MatchSet<String>> ms,
-            List<PositionRequest<String>> pr) {
-        assertFalse(Relation.isBetterThanOrEqual(o1, o2, ms, pr));
-        assertFalse(Relation.isBetterThanOrEqual(o2, o1, ms, pr));
+            List<MatchSet<String>> ms) {
+        assertFalse(Relation.isBetterThanOrEqual(o1, o2, ms));
+        assertFalse(Relation.isBetterThanOrEqual(o2, o1, ms));
     }
 
 }

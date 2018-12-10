@@ -477,7 +477,8 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
             if (newChild == null) {
                 return null;
             } else {
-                final BundleCombinationTreeElement<T>[] newChildren = Arrays.copyOf(this.children, this.children.length);
+                final BundleCombinationTreeElement<T>[] newChildren =
+                        Arrays.copyOf(this.children, this.children.length);
                 newChildren[minCenterIdx] = newChild;
                 return new BundleCombinationTreeNode<>(newChildren, this.reorderingAllowed, this.reverseAllowed);
             }

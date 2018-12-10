@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -120,7 +119,7 @@ public class TourCalculator<T> {
 
             //change attributes according to match
             this.bundler = this.bundler.bundle(activeFolds);
-            this.todoQueue.add(new MatchSet<>(activeFolds.toSet()));
+            this.todoQueue.add(new UnorderedMatchSet<>(activeFolds.toSet()));
             this.matchedWithFolds.put(toMatch, this.selectActiveFolds(potentialFolds, activeFolds));
             this.unsatisfiedMatchesWithPotentiallyRelevantFolds.remove(toMatch);
         }
@@ -170,12 +169,10 @@ public class TourCalculator<T> {
      *
      * @param allChangeParts The change parts/stops to reorder.
      * @param matchSets The match sets to group. Order in list determines priority.
-     * @param positionRequests The position requests to satisfy. Order in list determines priority.
      */
     public static<S> TourCalculator<S> calculateFor(
             List<S> allChangeParts,
             List<MatchSet<S>> matchSets,
-            List<PositionRequest<S>> positionRequests,
             Comparator<S> tieBreakingComparator,
             TourCalculatorControl isCanceled) throws InterruptedException {
         assert new HashSet<>(allChangeParts).size() == allChangeParts.size() : "there are duplicate change parts";
@@ -214,20 +211,15 @@ public class TourCalculator<T> {
         bundler = foldedBundler.getBundler();
 
         //phase three: try to put centers first for ordered match sets
-        //TODO get rid of position requests
-        final Map<MatchSet<S>, PositionRequest<S>> ordered = new HashMap<>();
-        for (final PositionRequest<S> r : positionRequests) {
-            ordered.put(r.getMatchSet(), r);
-        }
         for (final MatchSet<S> matchSet : ret.successfulMatches) {
-            if (!ordered.containsKey(matchSet)) {
+            if (!(matchSet instanceof StarMatchSet)) {
                 continue;
             }
-            final PositionRequest<S> p = ordered.get(matchSet);
             final Set<S> rest = new HashSet<>(matchSet.getChangeParts());
-            rest.remove(p.getDistinguishedPart());
+            final S distinguishedPart = ((StarMatchSet<S>) matchSet).getDistinguishedPart();
+            rest.remove(distinguishedPart);
             final BundleCombinationTreeElement<S> next = bundler.bundleOrdered(
-                    new SimpleSetAdapter<>(Collections.singleton(p.getDistinguishedPart())),
+                    new SimpleSetAdapter<>(Collections.singleton(distinguishedPart)),
                     new SimpleSetAdapter<>(rest));
             if (next != null) {
                 bundler = next;
@@ -235,11 +227,11 @@ public class TourCalculator<T> {
             checkInterruption(isCanceled);
         }
         for (final MatchSet<S> matchSet : foldedBundler.matchedWithFolds.keySet()) {
-            if (!ordered.containsKey(matchSet)) {
+            if (!(matchSet instanceof StarMatchSet)) {
                 continue;
             }
             final Set<S> center = new HashSet<>();
-            center.add(ordered.get(matchSet).getDistinguishedPart());
+            center.add(((StarMatchSet<S>) matchSet).getDistinguishedPart());
             final Set<S> rest = new HashSet<>(matchSet.getChangeParts());
             for (final MatchSet<S> neededFold : foldedBundler.matchedWithFolds.get(matchSet)) {
                 if (disjoint(neededFold.getChangeParts(), center)) {

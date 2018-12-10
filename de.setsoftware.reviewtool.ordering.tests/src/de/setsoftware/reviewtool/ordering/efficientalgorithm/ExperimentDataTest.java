@@ -29,7 +29,6 @@ public class ExperimentDataTest {
     private static final class TourCalculatorInput {
         private final List<String> parts = new ArrayList<>();
         private final List<MatchSet<String>> matchSets = new ArrayList<>();
-        private final List<PositionRequest<String>> positionRequests = new ArrayList<>();
 
         public static TourCalculatorInput tourCalculatorFor(String... parts) {
             final TourCalculatorInput ret = new TourCalculatorInput();
@@ -51,7 +50,7 @@ public class ExperimentDataTest {
             }
             final Set<String> set = new TreeSet<>();
             set.addAll(Arrays.asList(parts));
-            final MatchSet<String> ms = new MatchSet<>(set);
+            final MatchSet<String> ms = new UnorderedMatchSet<>(set);
             this.matchSets.add(ms);
             return this;
         }
@@ -60,9 +59,8 @@ public class ExperimentDataTest {
             final Set<String> set = new TreeSet<>();
             set.add(distinguishedElement);
             set.addAll(Arrays.asList(others));
-            final MatchSet<String> ms = new MatchSet<>(set);
+            final MatchSet<String> ms = new StarMatchSet<>(distinguishedElement, set);
             this.matchSets.add(ms);
-            this.positionRequests.add(new PositionRequest<>(ms, distinguishedElement));
             return this;
         }
 
@@ -70,7 +68,6 @@ public class ExperimentDataTest {
             return TourCalculator.calculateFor(
                     this.parts,
                     this.matchSets,
-                    this.positionRequests,
                     new Comparator<String>() {
                         @Override
                         public int compare(String o1, String o2) {
@@ -429,25 +426,25 @@ public class ExperimentDataTest {
         final List<String> wnf = Arrays.asList(
                 "i", "n", "h", "g", "d", "e", "c", "k", "j", "l", "o", "a", "f", "b", "m");
 
-        assertTrue(Relation.isBetterThanOrEqual(onf, onf, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(onf, of, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(onf, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(onf, wnf, input.matchSets, input.positionRequests));
+        assertTrue(Relation.isBetterThanOrEqual(onf, onf, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(onf, of, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(onf, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(onf, wnf, input.matchSets));
 
-        assertFalse(Relation.isBetterThanOrEqual(of, onf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(of, of, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(of, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(of, wnf, input.matchSets, input.positionRequests));
+        assertFalse(Relation.isBetterThanOrEqual(of, onf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(of, of, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(of, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(of, wnf, input.matchSets));
 
-        assertFalse(Relation.isBetterThanOrEqual(wf, onf, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(wf, of, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(wf, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(wf, wnf, input.matchSets, input.positionRequests));
+        assertFalse(Relation.isBetterThanOrEqual(wf, onf, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(wf, of, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(wf, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(wf, wnf, input.matchSets));
 
-        assertFalse(Relation.isBetterThanOrEqual(wnf, onf, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(wnf, of, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(wnf, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(wnf, wnf, input.matchSets, input.positionRequests));
+        assertFalse(Relation.isBetterThanOrEqual(wnf, onf, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(wnf, of, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(wnf, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(wnf, wnf, input.matchSets));
     }
 
     @Test
@@ -472,25 +469,25 @@ public class ExperimentDataTest {
                 "r", "o", "q", "a", "d", "g", "p", "b", "h", "j", "k", "n", "s", "t",
                 "c", "f", "i", "m", "e", "l", "u");
 
-        assertTrue(Relation.isBetterThanOrEqual(onf, onf, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(onf, of, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(onf, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(onf, wnf, input.matchSets, input.positionRequests));
+        assertTrue(Relation.isBetterThanOrEqual(onf, onf, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(onf, of, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(onf, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(onf, wnf, input.matchSets));
 
-        assertFalse(Relation.isBetterThanOrEqual(of, onf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(of, of, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(of, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(of, wnf, input.matchSets, input.positionRequests));
+        assertFalse(Relation.isBetterThanOrEqual(of, onf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(of, of, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(of, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(of, wnf, input.matchSets));
 
-        assertFalse(Relation.isBetterThanOrEqual(wf, onf, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(wf, of, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(wf, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(wf, wnf, input.matchSets, input.positionRequests));
+        assertFalse(Relation.isBetterThanOrEqual(wf, onf, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(wf, of, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(wf, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(wf, wnf, input.matchSets));
 
-        assertFalse(Relation.isBetterThanOrEqual(wnf, onf, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(wnf, of, input.matchSets, input.positionRequests));
-        assertFalse(Relation.isBetterThanOrEqual(wnf, wf, input.matchSets, input.positionRequests));
-        assertTrue(Relation.isBetterThanOrEqual(wnf, wnf, input.matchSets, input.positionRequests));
+        assertFalse(Relation.isBetterThanOrEqual(wnf, onf, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(wnf, of, input.matchSets));
+        assertFalse(Relation.isBetterThanOrEqual(wnf, wf, input.matchSets));
+        assertTrue(Relation.isBetterThanOrEqual(wnf, wnf, input.matchSets));
     }
 
 }

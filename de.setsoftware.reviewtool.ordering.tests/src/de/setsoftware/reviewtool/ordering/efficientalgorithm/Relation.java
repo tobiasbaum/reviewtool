@@ -3,7 +3,6 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,10 +19,10 @@ public class Relation {
      */
     private static final class Matches {
 
-        private final Map<MatchSet<String>, Set<PositionRequest<String>>> matches = new HashMap<>();
+        private final Map<MatchSet<String>, Set<StarMatchSet<String>>> matches = new HashMap<>();
 
-        public void add(MatchSet<String> ms, Set<PositionRequest<String>> satisfiedPositions) {
-            final Set<PositionRequest<String>> set = this.matches.get(ms);
+        public void add(MatchSet<String> ms, Set<StarMatchSet<String>> satisfiedPositions) {
+            final Set<StarMatchSet<String>> set = this.matches.get(ms);
             if (set == null) {
                 this.matches.put(ms, satisfiedPositions);
             } else {
@@ -32,7 +31,7 @@ public class Relation {
         }
 
         public void add(Matches matches) {
-            for (final Entry<MatchSet<String>, Set<PositionRequest<String>>> e : matches.matches.entrySet()) {
+            for (final Entry<MatchSet<String>, Set<StarMatchSet<String>>> e : matches.matches.entrySet()) {
                 this.add(e.getKey(), e.getValue());
             }
         }
@@ -40,8 +39,8 @@ public class Relation {
         public boolean isBetterThanOrEqual(Matches other) {
             if (other.matches.keySet().equals(this.matches.keySet())) {
                 for (final MatchSet<String> cur : this.matches.keySet()) {
-                    final Set<PositionRequest<String>> pr1 = this.matches.get(cur);
-                    final Set<PositionRequest<String>> pr2 = other.matches.get(cur);
+                    final Set<StarMatchSet<String>> pr1 = this.matches.get(cur);
+                    final Set<StarMatchSet<String>> pr2 = other.matches.get(cur);
                     if (!pr1.containsAll(pr2)) {
                         return false;
                     }
@@ -60,9 +59,9 @@ public class Relation {
      * Returns true iff the first order is at least as good as the second in terms of the "is better than" relation.
      */
     public static boolean isBetterThanOrEqual(List<String> order1, List<String> order2,
-            List<MatchSet<String>> matchSets, List<PositionRequest<String>> positionRequests) {
-        final Matches m1 = determineMatches(order1, matchSets, positionRequests);
-        final Matches m2 = determineMatches(order2, matchSets, positionRequests);
+            List<MatchSet<String>> matchSets) {
+        final Matches m1 = determineMatches(order1, matchSets);
+        final Matches m2 = determineMatches(order2, matchSets);
         if (m1.isBetterThanOrEqual(m2)) {
             if (m2.isBetterThanOrEqual(m1)) {
                 return order1.equals(order2);
@@ -76,18 +75,16 @@ public class Relation {
 
     private static Matches determineMatches(
             List<String> order,
-            List<MatchSet<String>> matchSets,
-            List<PositionRequest<String>> positionRequests) {
+            List<MatchSet<String>> matchSets) {
 
         final Matches ret = new Matches();
         for (final MatchSet<String> ms : matchSets) {
             final List<String> matchOrder = matches(order, ms);
             if (matchOrder != null) {
-                ret.add(ms, getSatisfiedPositions(matchOrder, ms, positionRequests));
+                ret.add(ms, getSatisfiedPositions(matchOrder, ms));
                 ret.add(determineMatches(
                         shrink(order, ms),
-                        shrinkMs(matchSets, ms),
-                        shrinkPr(positionRequests, ms)));
+                        shrinkMs(matchSets, ms)));
             }
         }
         return ret;
@@ -109,12 +106,17 @@ public class Relation {
         }
     }
 
-    private static MatchSet<String> shrink(@SuppressWarnings("unused") MatchSet<String> toShrink, MatchSet<String> ms) {
+    private static MatchSet<String> shrink(MatchSet<String> toShrink, MatchSet<String> ms) {
         final LinkedHashSet<String> ret = new LinkedHashSet<>();
-        for (final String s : ms.getChangeParts()) {
+        for (final String s : toShrink.getChangeParts()) {
             ret.add(shrink(s, ms));
         }
-        return new MatchSet<>(ret);
+        if (toShrink instanceof StarMatchSet) {
+            final StarMatchSet<String> star = (StarMatchSet<String>) toShrink;
+            return new StarMatchSet<>(shrink(star.getDistinguishedPart(), ms), ret);
+        } else {
+            return new UnorderedMatchSet<>(ret);
+        }
     }
 
     private static List<MatchSet<String>> shrinkMs(List<MatchSet<String>> matchSets, MatchSet<String> ms) {
@@ -123,19 +125,6 @@ public class Relation {
             final MatchSet<String> shrunk = shrink(cur, ms);
             if (shrunk.getChangeParts().size() > 1) {
                 ret.add(shrunk);
-            }
-        }
-        return new ArrayList<>(ret);
-    }
-
-    private static List<PositionRequest<String>> shrinkPr(
-            List<PositionRequest<String>> positionRequests, MatchSet<String> ms) {
-        final LinkedHashSet<PositionRequest<String>> ret = new LinkedHashSet<>();
-        for (final PositionRequest<String> cur : positionRequests) {
-            final MatchSet<String> shrunkMs = shrink(cur.getMatchSet(), ms);
-            if (shrunkMs.getChangeParts().size() > 1) {
-                ret.add(new PositionRequest<>(
-                        shrunkMs, shrink(cur.getDistinguishedPart(), ms)));
             }
         }
         return new ArrayList<>(ret);
@@ -175,20 +164,17 @@ public class Relation {
         return matchInOrder;
     }
 
-    private static Set<PositionRequest<String>> getSatisfiedPositions(
+    private static Set<StarMatchSet<String>> getSatisfiedPositions(
             List<String> matchOrder,
-            MatchSet<String> ms,
-            List<PositionRequest<String>> positionRequests) {
+            MatchSet<String> ms) {
 
-        final Set<PositionRequest<String>> ret = new HashSet<>();
-        for (final PositionRequest<String> p : positionRequests) {
-            if (p.getMatchSet().equals(ms)) {
-                if (matchOrder.get(0).equals(p.getDistinguishedPart())) {
-                    ret.add(p);
-                }
+        if (ms instanceof StarMatchSet) {
+            final StarMatchSet<String> s = (StarMatchSet<String>) ms;
+            if (matchOrder.get(0).equals(s.getDistinguishedPart())) {
+                return Collections.singleton(s);
             }
         }
-        return ret;
+        return Collections.emptySet();
     }
 
 }

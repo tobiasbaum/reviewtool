@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -19,7 +18,7 @@ import de.setsoftware.reviewtool.model.changestructure.StubRepo;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.TourElement;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.UnorderedMatchSet;
 
 /**
  * Test cases for {@link TourHierarchyBuilder}.
@@ -75,12 +74,7 @@ public class TourHierarchyBuilderTest {
 
             @Override
             public MatchSet<ChangePart> getMatchSet() {
-                return new MatchSet<>(changeParts);
-            }
-
-            @Override
-            public Collection<? extends PositionRequest<ChangePart>> getPositionRequests() {
-                return Collections.emptyList();
+                return new UnorderedMatchSet<>(changeParts);
             }
 
             @Override

@@ -16,7 +16,7 @@ import org.junit.Test;
 public class SubsettingSetTest {
 
     private static MatchSet<String> ms(String... strings) {
-        return new MatchSet<>(Arrays.asList(strings));
+        return new UnorderedMatchSet<>(Arrays.asList(strings));
     }
 
     @Test

@@ -1,9 +1,6 @@
 package de.setsoftware.reviewtool.ordering;
 
-import java.util.Collection;
-
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.MatchSet;
-import de.setsoftware.reviewtool.ordering.efficientalgorithm.PositionRequest;
 
 /**
  * A match set and further data related to it that is needed to group and sort the stops
@@ -15,11 +12,6 @@ public interface OrderingInfo {
      * The match set to group.
      */
     public abstract MatchSet<ChangePart> getMatchSet();
-
-    /**
-     * The position requests for the match set. Can be empty when no positioning is required.
-     */
-    public abstract Collection<? extends PositionRequest<ChangePart>> getPositionRequests();
 
     /**
      * Returns the setting for determining whether this group shall be shown explicitly as a node in the tree view.

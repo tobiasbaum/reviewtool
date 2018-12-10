@@ -24,7 +24,6 @@ public class TourCalculatorTest {
     private static final class TourCalculatorInput {
         private final List<String> parts = new ArrayList<>();
         private final List<MatchSet<String>> matchSets = new ArrayList<>();
-        private final List<PositionRequest<String>> positionRequests = new ArrayList<>();
         private Comparator<String> comparator = new Comparator<String>() {
             @Override
             public int compare(String o1, String o2) {
@@ -49,7 +48,7 @@ public class TourCalculatorTest {
         public TourCalculatorInput matchSymmetric(String... parts) {
             final Set<String> set = new TreeSet<>();
             set.addAll(Arrays.asList(parts));
-            final MatchSet<String> ms = new MatchSet<>(set);
+            final MatchSet<String> ms = new UnorderedMatchSet<>(set);
             this.matchSets.add(ms);
             return this;
         }
@@ -58,9 +57,8 @@ public class TourCalculatorTest {
             final Set<String> set = new TreeSet<>();
             set.add(distinguishedElement);
             set.addAll(Arrays.asList(others));
-            final MatchSet<String> ms = new MatchSet<>(set);
+            final MatchSet<String> ms = new StarMatchSet<>(distinguishedElement, set);
             this.matchSets.add(ms);
-            this.positionRequests.add(new PositionRequest<>(ms, distinguishedElement));
             return this;
         }
 
@@ -73,7 +71,6 @@ public class TourCalculatorTest {
             return TourCalculator.calculateFor(
                     this.parts,
                     this.matchSets,
-                    this.positionRequests,
                     this.comparator,
                     new TourCalculatorControl() {
                         @Override

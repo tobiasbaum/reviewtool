@@ -183,6 +183,11 @@ public abstract class BundleCombinationTreeElement<T> implements BundleCombinati
 
     protected abstract BundleResult<T> addBundle(SimpleSet<T> bundle);
 
+    /**
+     * Tries to put all elements in center before all elements in rest.
+     * Returns null iff this was not possible and the new tree otherwise.
+     * Assumes that the union of center and rest was already successfully bundled.
+     */
     public BundleCombinationTreeElement<T> bundleOrdered(SimpleSet<T> center, SimpleSet<T> rest) {
         //we assume here that the whole was already bundled
         final BundleCombinationTreeElement<T> t1 = this.bundle(center);
