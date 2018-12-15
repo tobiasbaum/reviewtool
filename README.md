@@ -1,6 +1,6 @@
 # CoRT - Code Review Tool
 
-CoRT's aim is to spear-head a new generation of "cognitive support code review tools", that is review tools that are not simply tools to annotate portions of source code but that rather help the reviewer to understand the source code and to reduce the cognitive load. It is intended to be an industrial strength code review tool, as well as a platform for code review research.
+CoRT's goal is to spear-head a new generation of "cognitive support code review tools", that is review tools that are not simply tools to annotate portions of source code but that rather help the reviewer to understand the source code and to reduce the cognitive load. It is intended to be an industrial strength code review tool, as well as a platform for code review research.
 
 CoRT is built to support "change-based code review", which means that the portions of the code that have to be reviewed are extracted from changes in a source code repository. It currently supports Subversion, but is extensible in this regard.
 
