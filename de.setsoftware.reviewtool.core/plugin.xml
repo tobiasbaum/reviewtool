@@ -40,8 +40,10 @@
 		   		 <visibleWhen
 	                  checkEnabled="false">
 	               <with variable="de.setsoftware.reviewtool.mode">
-	                  <equals value="REVIEWING"/>
-	                  <equals value="FIXING"/>
+	               	  <or>
+	                    <equals value="REVIEWING"/>
+	                    <equals value="FIXING"/>
+	               	  </or>
 	               </with>
 	            </visibleWhen>
 		   </command>
