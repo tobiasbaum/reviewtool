@@ -13,13 +13,15 @@ class ChangePart {
 
     private final String name;
     private final String parent;
+    private final String sourceFolder;
     private final Kind type;
 
     public int relevance = 0;
 
-    public ChangePart(String name, String parent, Kind type) {
+    public ChangePart(String name, String parent, String sourceFolder, Kind type) {
         this.name = name;
         this.parent = parent;
+        this.sourceFolder = sourceFolder;
         this.type = type;
     }
 
@@ -92,5 +94,9 @@ class ChangePart {
         } else {
             return new TextWithStyles().addNormal(this.name).addGray(" in " + this.parent);
         }
+    }
+
+    public String getSourceFolder() {
+        return this.sourceFolder;
     }
 }

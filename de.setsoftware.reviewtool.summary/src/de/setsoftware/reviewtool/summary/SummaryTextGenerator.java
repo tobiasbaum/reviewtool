@@ -13,13 +13,15 @@ public class SummaryTextGenerator {
     public static List<SummaryTextPart> generateSummary(ChangePartsModel model) {
         final List<SummaryTextPart> summary = new ArrayList<>();
 
-        addPart(getNewTypes(model), summary);
-        addPart(getChangedTypes(model), summary);
-        addPart(getDeletedTypes(model), summary);
+        for (final String sourceFolder : model.getSourceFolders()) {
+            addPart(getNewTypes(model, sourceFolder), summary);
+            addPart(getChangedTypes(model, sourceFolder), summary);
+            addPart(getDeletedTypes(model, sourceFolder), summary);
 
-        addPart(getNewMethods(model), summary);
-        addPart(getChangedMethods(model), summary);
-        addPart(getDeletedMethods(model), summary);
+            addPart(getNewMethods(model, sourceFolder), summary);
+            addPart(getChangedMethods(model, sourceFolder), summary);
+            addPart(getDeletedMethods(model, sourceFolder), summary);
+        }
 
         addPart(getNewFiles(model), summary);
         addPart(getChangedFiles(model), summary);
@@ -67,45 +69,45 @@ public class SummaryTextGenerator {
         }
     }
 
-    private static SummaryTextPart getNewTypes(ChangePartsModel model) {
+    private static SummaryTextPart getNewTypes(ChangePartsModel model, String sourceFolder) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine(TextWithStyles.italic("New types:"));
-        addChangeParts(part, model.newParts.types);
+        part.addLine(TextWithStyles.italic("New types (" + sourceFolder + "):"));
+        addChangeParts(part, model.newParts.types.get(sourceFolder));
         return part;
     }
 
-    private static SummaryTextPart getChangedTypes(ChangePartsModel model) {
+    private static SummaryTextPart getChangedTypes(ChangePartsModel model, String sourceFolder) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine(TextWithStyles.italic("Changed types:"));
-        addChangeParts(part, model.changedParts.types);
+        part.addLine(TextWithStyles.italic("Changed types (" + sourceFolder + "):"));
+        addChangeParts(part, model.changedParts.types.get(sourceFolder));
         return part;
     }
 
-    private static SummaryTextPart getDeletedTypes(ChangePartsModel model) {
+    private static SummaryTextPart getDeletedTypes(ChangePartsModel model, String sourceFolder) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine(TextWithStyles.italic("Deleted types:"));
-        addChangeParts(part, model.deletedParts.types);
+        part.addLine(TextWithStyles.italic("Deleted types (" + sourceFolder + "):"));
+        addChangeParts(part, model.deletedParts.types.get(sourceFolder));
         return part;
     }
 
-    private static SummaryTextPart getNewMethods(ChangePartsModel model) {
+    private static SummaryTextPart getNewMethods(ChangePartsModel model, String sourceFolder) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine(TextWithStyles.italic("New methods:"));
-        addChangeParts(part, model.newParts.methods);
+        part.addLine(TextWithStyles.italic("New methods (" + sourceFolder + "):"));
+        addChangeParts(part, model.newParts.methods.get(sourceFolder));
         return part;
     }
 
-    private static SummaryTextPart getChangedMethods(ChangePartsModel model) {
+    private static SummaryTextPart getChangedMethods(ChangePartsModel model, String sourceFolder) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine(TextWithStyles.italic("Changed methods:"));
-        addChangeParts(part, model.changedParts.methods);
+        part.addLine(TextWithStyles.italic("Changed methods (" + sourceFolder + "):"));
+        addChangeParts(part, model.changedParts.methods.get(sourceFolder));
         return part;
     }
 
-    private static SummaryTextPart getDeletedMethods(ChangePartsModel model) {
+    private static SummaryTextPart getDeletedMethods(ChangePartsModel model, String sourceFolder) {
         final SummaryTextPart part = new SummaryTextPart();
-        part.addLine(TextWithStyles.italic("Deleted methods:"));
-        addChangeParts(part, model.deletedParts.methods);
+        part.addLine(TextWithStyles.italic("Deleted methods (" + sourceFolder + "):"));
+        addChangeParts(part, model.deletedParts.methods.get(sourceFolder));
         return part;
     }
 

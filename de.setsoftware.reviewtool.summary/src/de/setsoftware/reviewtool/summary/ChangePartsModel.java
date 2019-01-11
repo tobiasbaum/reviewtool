@@ -1,5 +1,8 @@
 package de.setsoftware.reviewtool.summary;
 
+import java.util.Set;
+import java.util.TreeSet;
+
 /**
  * Default representation of a commits that is used, if other summary techniques
  * failed or misses a change part. It consists of basic parts such a methods,
@@ -20,5 +23,20 @@ public class ChangePartsModel {
         this.newParts.sort();
         this.deletedParts.sort();
         this.changedParts.sort();
+    }
+
+    /**
+     * Returns all source folder values from the entries.
+     */
+    public Set<String> getSourceFolders() {
+        //luckily, src is before test in the alphabet
+        final TreeSet<String> sourceFolders = new TreeSet<>();
+        sourceFolders.addAll(this.newParts.types.keySet());
+        sourceFolders.addAll(this.newParts.methods.keySet());
+        sourceFolders.addAll(this.deletedParts.types.keySet());
+        sourceFolders.addAll(this.deletedParts.methods.keySet());
+        sourceFolders.addAll(this.changedParts.types.keySet());
+        sourceFolders.addAll(this.changedParts.methods.keySet());
+        return sourceFolders;
     }
 }

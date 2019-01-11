@@ -2,8 +2,6 @@ package de.setsoftware.reviewtool.summary;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.summary.ChangePart.Kind;
@@ -24,14 +22,14 @@ public class RefDiffTechnique {
      */
     public static String process(Path previousDir, Path currentDir, Set<Path> previousDirFiles,
             Set<Path> currentDirFiles, ChangePartsModel model) {
-        ArrayList<String> filesBefore = new ArrayList<>();
-        ArrayList<String> filesCurrent = new ArrayList<>();
+        final ArrayList<String> filesBefore = new ArrayList<>();
+        final ArrayList<String> filesCurrent = new ArrayList<>();
 
-        for (Path file : previousDirFiles) {
+        for (final Path file : previousDirFiles) {
             filesBefore.add(previousDir.relativize(file).toString());
         }
 
-        for (Path file : currentDirFiles) {
+        for (final Path file : currentDirFiles) {
             filesCurrent.add(currentDir.relativize(file).toString());
         }
 
@@ -61,57 +59,60 @@ public class RefDiffTechnique {
     }
 
     private static String processClassRefactoring(SDRefactoring ref, ChangePartsModel model) {
-        ChangePart before = getTypePart(ref.getEntityBefore());
-        ChangePart after = getTypePart(ref.getEntityAfter());
+        final ChangePart before = getTypePart(ref.getEntityBefore());
+        final ChangePart after = getTypePart(ref.getEntityAfter());
 
         model.deletedParts.removePart(before);
         model.newParts.removePart(after);
-        removeChildren(before, model.deletedParts.methods);
-        removeChildren(before, model.deletedParts.types);
-        removeChildren(after, model.newParts.methods);
-        removeChildren(after, model.newParts.types);
+        removeChildren(before, model.deletedParts);
+        removeChildren(after, model.newParts);
 
         return ref.getRefactoringType().getDisplayName() + ": " + before.toString() + " --> " + after.toString();
     }
 
     private static String processMethodRefactoring(SDRefactoring ref, ChangePartsModel model) {
-        ChangePart before = getMethodPart(ref.getEntityBefore());
-        ChangePart after = getMethodPart(ref.getEntityAfter());
+        final ChangePart before = getMethodPart(ref.getEntityBefore());
+        final ChangePart after = getMethodPart(ref.getEntityAfter());
 
         model.deletedParts.removePart(before);
         model.newParts.removePart(after);
-        removeChildren(before, model.deletedParts.methods);
-        removeChildren(before, model.deletedParts.types);
-        removeChildren(after, model.newParts.methods);
-        removeChildren(after, model.newParts.types);
+        removeChildren(before, model.deletedParts);
+        removeChildren(after, model.newParts);
 
         return ref.getRefactoringType().getDisplayName() + ": " + before.toString() + " --> " + after.toString();
     }
 
     private static ChangePart getTypePart(SDEntity entity) {
-        String name = entity.simpleName();
-        String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("\\.[^.]*$", "");
-        return new ChangePart(name, parent, Kind.TYPE);
+        final String name = entity.simpleName();
+        final String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("\\.[^.]*$", "");
+        return new ChangePart(name, parent, toSourceFolder(entity), Kind.TYPE);
     }
 
     private static ChangePart getMethodPart(SDEntity entity) {
-        String name = entity.simpleName();
-        String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("#[^#]*$", "");
-        return new ChangePart(name, parent, Kind.METHOD);
+        final String name = entity.simpleName();
+        final String parent = entity.key().toString().replaceAll(".*/", "").replaceFirst("#[^#]*$", "");
+        return new ChangePart(name, parent, toSourceFolder(entity), Kind.METHOD);
     }
 
-    private static void removeChildren(ChangePart parent, List<ChangePart> parts) {
-        Iterator<ChangePart> partsIterator = parts.iterator();
-        while (partsIterator.hasNext()) {
-            ChangePart part = partsIterator.next();
+    private static String toSourceFolder(SDEntity entity) {
+        return CommitParser.determineSourceFolder(entity.key().toString());
+    }
+
+    private static void removeChildren(ChangePart parent, ChangeParts parts) {
+        for (final ChangePart part : parts.getAllMethodParts()) {
             if (isChild(part, parent)) {
-                partsIterator.remove();
+                parts.removePart(part);
+            }
+        }
+        for (final ChangePart part : parts.getAllTypeParts()) {
+            if (isChild(part, parent)) {
+                parts.removePart(part);
             }
         }
     }
 
     private static boolean isChild(ChangePart part, ChangePart parent) {
-        String parentString = parent.getParent() + CommitParser.MEMBER_SEPARATOR + parent.getName();
+        final String parentString = parent.getParent() + CommitParser.MEMBER_SEPARATOR + parent.getName();
         return part.getParent().contains(parentString);
     }
 }

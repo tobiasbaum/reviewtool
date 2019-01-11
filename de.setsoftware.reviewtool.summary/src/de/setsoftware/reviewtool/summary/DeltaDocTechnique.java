@@ -42,7 +42,7 @@ public class DeltaDocTechnique {
 
         final TextWithStyles text = new TextWithStyles();
 
-        for (final ChangePart type : model.changedParts.types) {
+        for (final ChangePart type : model.changedParts.getAllTypeParts()) {
             // Path fileFrom = previousDir.resolve(type.getParent().replaceAll("\\.",
             // File.separator))
             // .resolve(type.getName() + ".java");

@@ -135,13 +135,13 @@ public class CommitParser {
     private void processNonSourceChange(IChange change) throws Exception {
         if (this.isNewFile(change)) {
             this.model.newParts.addPart(
-                    new ChangePart(this.getRelPathTo(change).toString(), "", Kind.NON_SOURCE_FILE));
+                    new ChangePart(this.getRelPathTo(change).toString(), "", "", Kind.NON_SOURCE_FILE));
         } else if (this.isDeletedFile(change)) {
             this.model.deletedParts.addPart(
-                    new ChangePart(this.getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
+                    new ChangePart(this.getRelPathFrom(change).toString(), "", "", Kind.NON_SOURCE_FILE));
         } else {
             this.model.changedParts.addPart(
-                    new ChangePart(this.getRelPathFrom(change).toString(), "", Kind.NON_SOURCE_FILE));
+                    new ChangePart(this.getRelPathFrom(change).toString(), "", "", Kind.NON_SOURCE_FILE));
         }
     }
 
@@ -215,13 +215,14 @@ public class CommitParser {
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+                final String sourceFolder = determineSourceFolder(sourceFilePath);
 
                 final ASTVisitor visitor = new ASTVisitor() {
                     @Override
                     public boolean visit(MethodDeclaration node) {
                         final String name = CommitParser.this.getName(node.resolveBinding());
                         final String parent = CommitParser.this.getParent(node.resolveBinding());
-                        final ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+                        final ChangePart part = new ChangePart(name, parent, sourceFolder, Kind.METHOD);
                         CommitParser.this.previousMethods.add(part);
                         CommitParser.this.previousMethodsCode.put(part, node.toString());
                         return true;
@@ -231,7 +232,7 @@ public class CommitParser {
                     public boolean visit(TypeDeclaration node) {
                         final String name = CommitParser.this.getName(node.resolveBinding());
                         final String parent = CommitParser.this.getParent(node.resolveBinding());
-                        final ChangePart part = new ChangePart(name, parent, Kind.TYPE);
+                        final ChangePart part = new ChangePart(name, parent, sourceFolder, Kind.TYPE);
                         CommitParser.this.previousTypes.add(part);
                         CommitParser.this.previousTypesCode.put(part, node.toString());
                         return true;
@@ -248,13 +249,14 @@ public class CommitParser {
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+                final String sourceFolder = determineSourceFolder(sourceFilePath);
 
                 final ASTVisitor visitor = new ASTVisitor() {
                     @Override
                     public boolean visit(MethodDeclaration node) {
                         final String name = CommitParser.this.getName(node.resolveBinding());
                         final String parent = CommitParser.this.getParent(node.resolveBinding());
-                        final ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+                        final ChangePart part = new ChangePart(name, parent, sourceFolder, Kind.METHOD);
                         CommitParser.this.currentMethods.add(part);
                         CommitParser.this.currentMethodsCode.put(part, node.toString());
                         return true;
@@ -264,7 +266,7 @@ public class CommitParser {
                     public boolean visit(TypeDeclaration node) {
                         final String name = CommitParser.this.getName(node.resolveBinding());
                         final String parent = CommitParser.this.getParent(node.resolveBinding());
-                        final ChangePart part = new ChangePart(name, parent, Kind.TYPE);
+                        final ChangePart part = new ChangePart(name, parent, sourceFolder, Kind.TYPE);
                         CommitParser.this.currentTypes.add(part);
                         CommitParser.this.currentTypesCode.put(part, node.toString());
                         return true;
@@ -274,6 +276,16 @@ public class CommitParser {
             }
         };
         parser.createASTs(this.currentDirFilesArray, null, new String[0], requestor, null);
+    }
+
+    static String determineSourceFolder(String path) {
+        if (path.contains("/src/") || path.contains("\\src\\")) {
+            return "src";
+        } else if (path.contains("/test/") || path.contains("\\test\\")) {
+            return "test";
+        } else {
+            return "other";
+        }
     }
 
     private ASTParser makeAstParser(String[] sourceFolders) {
@@ -297,15 +309,15 @@ public class CommitParser {
         for (final ChangePart part : this.previousMethods) {
             if (this.currentMethods.contains(part)) {
                 if (!this.previousMethodsCode.get(part).equals(this.currentMethodsCode.get(part))
-                        && !this.model.newParts.methods.contains(part)) {
+                        && !this.model.newParts.contains(part)) {
                     this.model.changedParts.addPart(part);
                 }
                 this.currentMethods.remove(part);
             } else {
-                if (!this.model.newParts.methods.contains(part)) {
+                if (!this.model.newParts.contains(part)) {
                     this.model.deletedParts.addPart(part);
                 } else {
-                    this.model.newParts.methods.remove(part);
+                    this.model.newParts.removePart(part);
                 }
             }
         }
@@ -318,15 +330,15 @@ public class CommitParser {
         for (final ChangePart part : this.previousTypes) {
             if (this.currentTypes.contains(part)) {
                 if (!this.previousTypesCode.get(part).equals(this.currentTypesCode.get(part))
-                        && !this.model.newParts.types.contains(part)) {
+                        && !this.model.newParts.contains(part)) {
                     this.model.changedParts.addPart(part);
                 }
                 this.currentTypes.remove(part);
             } else {
-                if (!this.model.newParts.types.contains(part)) {
+                if (!this.model.newParts.contains(part)) {
                     this.model.deletedParts.addPart(part);
                 } else {
-                    this.model.newParts.types.remove(part);
+                    this.model.newParts.removePart(part);
                 }
             }
         }
@@ -363,6 +375,7 @@ public class CommitParser {
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+                final String sourceFolder = determineSourceFolder(sourceFilePath);
 
                 final ASTVisitor visitor = new ASTVisitor() {
                     @Override
@@ -371,12 +384,9 @@ public class CommitParser {
                         if (method != null) {
                             final String name = CommitParser.this.getName(method);
                             final String parent = CommitParser.this.getParent(method);
-                            final ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+                            final ChangePart part = new ChangePart(name, parent, sourceFolder, Kind.METHOD);
 
-                            final int i = CommitParser.this.model.deletedParts.methods.indexOf(part);
-                            if (i != -1) {
-                                CommitParser.this.model.deletedParts.methods.get(i).relevance++;
-                            }
+                            CommitParser.this.model.deletedParts.increaseRelevance(part);
                         }
                         return true;
                     }
@@ -392,6 +402,7 @@ public class CommitParser {
         final FileASTRequestor requestor = new FileASTRequestor() {
             @Override
             public void acceptAST(String sourceFilePath, CompilationUnit compilationUnit) {
+                final String sourceFolder = determineSourceFolder(sourceFilePath);
 
                 final ASTVisitor visitor = new ASTVisitor() {
                     @Override
@@ -400,17 +411,10 @@ public class CommitParser {
                         if (method != null) {
                             final String name = CommitParser.this.getName(method);
                             final String parent = CommitParser.this.getParent(method);
-                            final ChangePart part = new ChangePart(name, parent, Kind.METHOD);
+                            final ChangePart part = new ChangePart(name, parent, sourceFolder, Kind.METHOD);
 
-                            final int i1 = CommitParser.this.model.changedParts.methods.indexOf(part);
-                            if (i1 != -1) {
-                                CommitParser.this.model.changedParts.methods.get(i1).relevance++;
-                            }
-
-                            final int i2 = CommitParser.this.model.newParts.methods.indexOf(part);
-                            if (i2 != -1) {
-                                CommitParser.this.model.newParts.methods.get(i2).relevance++;
-                            }
+                            CommitParser.this.model.changedParts.increaseRelevance(part);
+                            CommitParser.this.model.newParts.increaseRelevance(part);
                         }
                         return true;
                     }
@@ -422,15 +426,15 @@ public class CommitParser {
     }
 
     private void addCodeLengthToRelevance() {
-        for (final ChangePart part : this.model.deletedParts.methods) {
+        for (final ChangePart part : this.model.deletedParts.getAllMethodParts()) {
             part.relevance = (int) ((part.relevance
                     + getLengthIfExists(this.previousMethodsCode, part) * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
-        for (final ChangePart part : this.model.changedParts.methods) {
+        for (final ChangePart part : this.model.changedParts.getAllMethodParts()) {
             part.relevance = (int) ((part.relevance
                     + getLengthIfExists(this.currentMethodsCode, part) * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }
-        for (final ChangePart part : this.model.newParts.methods) {
+        for (final ChangePart part : this.model.newParts.getAllMethodParts()) {
             part.relevance = (int) ((part.relevance
                     + getLengthIfExists(this.currentMethodsCode, part) * CODE_LENGHT_RELEVANCE_FACTOR) / 2);
         }

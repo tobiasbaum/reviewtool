@@ -3,6 +3,7 @@ package de.setsoftware.reviewtool.base;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -116,6 +117,16 @@ public final class Multimap<K, V> implements Serializable, IMultimap<K, V> {
         }
     }
 
+    /**
+     * Sorts all value lists with the given comparator.
+     */
+    public void sortValues(Comparator<? super V> comparator) {
+        for (final Map.Entry<K, List<V>> e : this.map.entrySet()) {
+            final List<V> values = e.getValue();
+            Collections.sort(values, comparator);
+        }
+    }
+
     @Override
     public IMultimap<K, V> readOnlyView() {
         return new IMultimap<K, V>() {
@@ -176,4 +187,5 @@ public final class Multimap<K, V> implements Serializable, IMultimap<K, V> {
             }
         };
     }
+
 }
