@@ -7,6 +7,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.BitSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -338,21 +339,26 @@ public class CombinedDiffStopViewer implements IStopViewer {
     private static final class Highlights {
         private final ChangeHighlighter rangeHighlights;
         private final BackgroundHighlighter lineHighlights;
+        private final BackgroundHighlighter fillerHighlights;
 
         public Highlights(final List<Position> ranges,
                 final List<Pair<Integer, Integer>> lineRanges,
+                final List<Pair<Integer, Integer>> fillerLineRanges,
                 final String backgroundColorKey,
                 final RGB defaultBackgroundColor) {
             this.rangeHighlights = new ChangeHighlighter(ranges);
             this.lineHighlights = new BackgroundHighlighter(lineRanges, backgroundColorKey, defaultBackgroundColor);
+            this.fillerHighlights = new BackgroundHighlighter(fillerLineRanges, "diffFiller", new RGB(100, 100, 100));
         }
 
         public void remove(final SourceViewer viewer) {
             viewer.removeTextPresentationListener(this.rangeHighlights);
             viewer.getTextWidget().removeLineBackgroundListener(this.lineHighlights);
+            viewer.getTextWidget().removeLineBackgroundListener(this.fillerHighlights);
         }
 
         public void apply(final SourceViewer viewer) {
+            viewer.getTextWidget().addLineBackgroundListener(this.fillerHighlights);
             viewer.getTextWidget().addLineBackgroundListener(this.lineHighlights);
             viewer.addTextPresentationListener(this.rangeHighlights);
             viewer.invalidateTextPresentation();
@@ -487,17 +493,131 @@ public class CombinedDiffStopViewer implements IStopViewer {
             newLineRanges.add(fragmentToLineRange(newContents.lines, targetFragment));
         }
 
+        final StringBuilder textOldAligned = new StringBuilder();
+        final StringBuilder textNewAligned = new StringBuilder();
+        final List<Pair<Integer, Integer>> adjustedLineRangesOld = new ArrayList<>();
+        final List<Pair<Integer, Integer>> adjustedLineRangesNew = new ArrayList<>();
+        final List<Pair<Integer, Integer>> fillerLineRangesOld = new ArrayList<>();
+        final List<Pair<Integer, Integer>> fillerLineRangesNew = new ArrayList<>();
+        final List<Position> adjustedPositionsOld = new ArrayList<>();
+        final List<Position> adjustedPositionsNew = new ArrayList<>();
+        determineAlignedTexts(
+                oldContents.lines, oldLineRanges, oldPositions,
+                newContents.lines, newLineRanges, newPositions,
+                textOldAligned, adjustedLineRangesOld, fillerLineRangesOld, adjustedPositionsOld,
+                textNewAligned, adjustedLineRangesNew, fillerLineRangesNew, adjustedPositionsNew);
+
         this.viewer.setInput(new DiffNode(
-                this.createTextItem(leftRevision, oldContents.lines),
-                this.createTextItem(rightRevision, newContents.lines)));
+                this.createTextItem(leftRevision, textOldAligned.toString()),
+                this.createTextItem(rightRevision, textNewAligned.toString())));
         this.viewer.clearSelections();
 
         this.highlightsLeft = mark(
-                this.viewer.getLeft(), this.highlightsLeft, oldPositions, oldLineRanges,
-                Constants.DIFF_BACKGROUND_OLD, new RGB(232, 153, 153));
+                this.viewer.getLeft(), this.highlightsLeft, adjustedPositionsOld, adjustedLineRangesOld,
+                fillerLineRangesOld, Constants.DIFF_BACKGROUND_OLD, new RGB(232, 153, 153));
         this.highlightsRight = mark(
-                this.viewer.getRight(), this.highlightsRight, newPositions, newLineRanges,
-                Constants.DIFF_BACKGROUND_NEW, new RGB(148, 255, 157));
+                this.viewer.getRight(), this.highlightsRight, adjustedPositionsNew, adjustedLineRangesNew,
+                fillerLineRangesNew, Constants.DIFF_BACKGROUND_NEW, new RGB(148, 255, 157));
+    }
+
+    static void determineAlignedTexts(
+            LineSequence oldLines,
+            List<Pair<Integer, Integer>> oldLineRanges,
+            List<Position> oldPositions,
+            LineSequence newLines,
+            List<Pair<Integer, Integer>> newLineRanges,
+            List<Position> newPositions,
+            StringBuilder outputBufferOld,
+            List<Pair<Integer, Integer>> adjustedLineRangesOld,
+            List<Pair<Integer, Integer>> fillerRangesOld,
+            List<Position> adjustedPositionsOld,
+            StringBuilder outputBufferNew,
+            List<Pair<Integer, Integer>> adjustedLineRangesNew,
+            List<Pair<Integer, Integer>> fillerRangesNew,
+            List<Position> adjustedPositionsNew) {
+
+        assert oldLineRanges.size() == newLineRanges.size();
+        assert oldPositions.size() == newPositions.size();
+        assert oldPositions.size() == oldLineRanges.size();
+        final Iterator<Pair<Integer, Integer>> iterOld = oldLineRanges.iterator();
+        final Iterator<Pair<Integer, Integer>> iterNew = newLineRanges.iterator();
+        final Iterator<Position> iterPosOld = oldPositions.iterator();
+        final Iterator<Position> iterPosNew = newPositions.iterator();
+
+        int curLineOld = 0;
+        int curLineNew = 0;
+        int adjustmentSumOld = 0;
+        int adjustmentSumNew = 0;
+        int offsetAdjustmentOld = 0;
+        int offsetAdjustmentNew = 0;
+        while (iterOld.hasNext()) {
+            final Pair<Integer, Integer> curHunkOld = iterOld.next();
+            final Pair<Integer, Integer> curHunkNew = iterNew.next();
+            final Position curPosOld = iterPosOld.next();
+            final Position curPosNew = iterPosNew.next();
+
+            final int nextLineOld = curHunkOld.getFirst() + curHunkOld.getSecond();
+            outputBufferOld.append(oldLines.getLinesConcatenated(curLineOld, curHunkOld.getFirst()));
+            final String changedLinesOld = oldLines.getLinesConcatenated(curHunkOld.getFirst(), nextLineOld);
+            final String changedLinesOldWithMarkers = addChangeMarkers(changedLinesOld);
+            outputBufferOld.append(changedLinesOldWithMarkers);
+            final int nextLineNew = curHunkNew.getFirst() + curHunkNew.getSecond();
+            outputBufferNew.append(newLines.getLinesConcatenated(curLineNew, curHunkNew.getFirst()));
+            final String changedLinesNew = newLines.getLinesConcatenated(curHunkNew.getFirst(), nextLineNew);
+            final String changedLinesNewWithMarkers = addChangeMarkers(changedLinesNew);
+            outputBufferNew.append(changedLinesNewWithMarkers);
+
+            adjustedLineRangesOld.add(Pair.create(curHunkOld.getFirst() + adjustmentSumOld, curHunkOld.getSecond()));
+            adjustedLineRangesNew.add(Pair.create(curHunkNew.getFirst() + adjustmentSumNew, curHunkNew.getSecond()));
+
+            final int increaseOld = changedLinesOldWithMarkers.length() - changedLinesOld.length();
+            adjustedPositionsOld.add(new Position(
+                    curPosOld.getOffset() + offsetAdjustmentOld,
+                    curPosOld.getLength() + increaseOld - (curPosOld.getLength() < changedLinesOld.length() ? 1 : 0)));
+            final int increaseNew = changedLinesNewWithMarkers.length() - changedLinesNew.length();
+            adjustedPositionsNew.add(new Position(
+                    curPosNew.getOffset() + offsetAdjustmentNew,
+                    curPosNew.getLength() + increaseNew - (curPosNew.getLength() < changedLinesNew.length() ? 1 : 0)));
+
+            offsetAdjustmentOld += increaseOld;
+            offsetAdjustmentNew += increaseNew;
+
+            final int lenOld = curHunkOld.getSecond();
+            final int lenNew = curHunkNew.getSecond();
+
+            if (lenOld < lenNew) {
+                final int len = lenNew - lenOld;
+                addFillerLines(outputBufferOld, len);
+                fillerRangesOld.add(Pair.create(nextLineOld + adjustmentSumOld, len));
+                adjustmentSumOld += len;
+                offsetAdjustmentOld += 2 * len;
+            } else if (lenOld > lenNew) {
+                final int len = lenOld - lenNew;
+                addFillerLines(outputBufferNew, len);
+                fillerRangesNew.add(Pair.create(nextLineNew + adjustmentSumNew, len));
+                adjustmentSumNew += len;
+                offsetAdjustmentNew += 2 * len;
+            }
+
+            curLineOld = nextLineOld;
+            curLineNew = nextLineNew;
+        }
+        outputBufferOld.append(oldLines.getLinesConcatenated(curLineOld, oldLines.getNumberOfLines()));
+        outputBufferNew.append(newLines.getLinesConcatenated(curLineNew, newLines.getNumberOfLines()));
+    }
+
+    private static String addChangeMarkers(String lines) {
+        //The Eclipse diff editor does not allow the change of the diff algorithm. Therefore, its
+        //  results sometimes differ from our results. To force it to use the same alignment, the lines
+        //  that we consider changed are forced to be different from other lines outside the change by
+        //  adding invisible characters that (hopefully) don't occur in normal text.
+        return lines.replace("\n", "\u200B\n");
+    }
+
+    private static void addFillerLines(StringBuilder outputBuffer, int count) {
+        for (int i = 0; i < count; i++) {
+            outputBuffer.append((char) 0xA0).append('\n');
+        }
     }
 
     private void moveToLineForStop(
@@ -551,9 +671,9 @@ public class CombinedDiffStopViewer implements IStopViewer {
         }
     }
 
-    private TextItem createTextItem(final IRevisionedFile revision, final LineSequence contents) {
+    private TextItem createTextItem(final IRevisionedFile revision, String content) {
         return new TextItem(revision.getRevision().toString(),
-                contents.getLinesConcatenated(0, contents.getNumberOfLines()),
+                content,
                 System.currentTimeMillis());
     }
 
@@ -593,6 +713,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
             final Highlights oldHighlights,
             final List<Position> ranges,
             final List<Pair<Integer, Integer>> lineRanges,
+            final List<Pair<Integer, Integer>> fillerLineRanges,
             final String backgroundColorKey,
             final RGB defaultBackgroundColor) {
         if (viewer == null) {
@@ -603,7 +724,7 @@ public class CombinedDiffStopViewer implements IStopViewer {
             oldHighlights.remove(viewer);
         }
         final Highlights newHighlights =
-                new Highlights(ranges, lineRanges, backgroundColorKey, defaultBackgroundColor);
+                new Highlights(ranges, lineRanges, fillerLineRanges, backgroundColorKey, defaultBackgroundColor);
         newHighlights.apply(viewer);
         return newHighlights;
     }
