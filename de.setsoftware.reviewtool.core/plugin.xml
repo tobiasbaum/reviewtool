@@ -113,6 +113,14 @@
 	               </with>
 	            </visibleWhen>
 		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.clearcommitcache"
+		   		 label="Clear commit cache" 
+		   		 style="push">
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.stopchangetracking"
+		   		 label="Stop local change tracking" 
+		   		 style="push">
+		   </command>
 	   </menu>
 	 </menuContribution>
 	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.reviewcontentview?after=additions">
@@ -234,6 +242,12 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.WriteToTicketSystemAction"
         id="de.setsoftware.reviewtool.commands.writeremarks" name="Write remarks to ticket system">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.ClearCommitCacheAction"
+        id="de.setsoftware.reviewtool.commands.clearcommitcache" name="Clear commit cache">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StopChangeTrackingAction"
+        id="de.setsoftware.reviewtool.commands.stopchangetracking" name="Stop change tracking">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkAsCheckedAction"
         id="de.setsoftware.reviewtool.commands.markAsChecked" name="Mark selected stop as checked/unchecked">

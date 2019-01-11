@@ -340,4 +340,11 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
     private Object writeReplace() {
         return new SvnRepoRef(this.remoteUrl);
     }
+
+    @Override
+    public void clearCache() {
+        this.getCacheFilePath().toFile().delete();
+        this.setFileHistoryGraph(new FileHistoryGraph(DiffAlgorithmFactory.createDefault()));
+        this.entries.clear();
+    }
 }

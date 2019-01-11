@@ -1093,4 +1093,8 @@ public class ReviewPlugin implements IReviewConfigurable {
         return result.get();
     }
 
+    public ChangeManager getChangeManager() {
+        return this.changeManager;
+    }
+
 }

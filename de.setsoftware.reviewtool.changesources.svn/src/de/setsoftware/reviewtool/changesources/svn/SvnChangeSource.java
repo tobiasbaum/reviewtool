@@ -423,4 +423,11 @@ final class SvnChangeSource implements IChangeSource {
 
         return ret;
     }
+
+    @Override
+    public void clearCaches() {
+        for (final SvnWorkingCopy wc : SvnWorkingCopyManager.getInstance().getWorkingCopies()) {
+            wc.getRepository().clearCache();
+        }
+    }
 }

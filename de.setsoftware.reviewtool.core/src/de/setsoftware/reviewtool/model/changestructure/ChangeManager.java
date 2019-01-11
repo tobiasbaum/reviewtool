@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -86,6 +87,10 @@ public final class ChangeManager {
 
         @Override
         public void resourceChanged(final IResourceChangeEvent event) {
+            if (!ChangeManager.this.changeTrackingEnabled.get()) {
+                return;
+            }
+
             this.logged = false;
             final List<File> projectsAdded = new ArrayList<>();
             final List<File> projectsRemoved = new ArrayList<>();
@@ -166,6 +171,7 @@ public final class ChangeManager {
     private final WeakListeners<IChangeManagerListener> changeManagerListeners = new WeakListeners<>();
     private final AtomicLong lastChangeTime = new AtomicLong();
     private final ConcurrentLinkedQueue<LocalChangeWorkItem> workQueue = new ConcurrentLinkedQueue<>();
+    private final AtomicBoolean changeTrackingEnabled = new AtomicBoolean(true);
 
     /**
      * Constructor.
@@ -229,6 +235,18 @@ public final class ChangeManager {
     }
 
     /**
+     * Disables change tracking and clears the open work.
+     */
+    public void disableChangeTracking() {
+        this.changeTrackingEnabled.set(false);
+        this.workQueue.clear();
+    }
+
+    public boolean isTrackingEnabled() {
+        return this.changeTrackingEnabled.get();
+    }
+
+    /**
      * Adds a listener to be notified about updates.
      *
      * @param changeManagerListener The listener to add.
@@ -272,6 +290,9 @@ public final class ChangeManager {
      * Updates an existing {@link IChangeSource} after local changes have been detected.
      */
     private synchronized void processLocalChanges() {
+        if (!this.changeTrackingEnabled.get()) {
+            return;
+        }
         if (this.lastChangeTime.get() + PROCESSING_DELAY > System.currentTimeMillis()) {
             //wait further when there was a change recently
             //  otherwise determining the local changes often conflicts with Subversion updates
@@ -300,5 +321,10 @@ public final class ChangeManager {
                 }
             }
         }
+    }
+
+    public void clearChangeSourceCaches() {
+        final IChangeSource src = this.getChangeSource();
+        src.clearCaches();
     }
 }

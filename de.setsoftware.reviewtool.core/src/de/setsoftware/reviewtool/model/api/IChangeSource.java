@@ -41,4 +41,9 @@ public interface IChangeSource {
      * Returns null if dir is not contained in a working copy that can be handled by this change source.
      */
     public abstract File determineWorkingCopyRoot(File dir) throws ChangeSourceException;
+
+    /**
+     * Clears all caches of this change source.
+     */
+    public abstract void clearCaches();
 }

@@ -116,4 +116,10 @@ public class GitChangeSource implements IChangeSource {
             throw new ChangeSourceException(this, ex);
         }
     }
+
+    @Override
+    public void clearCaches() {
+        // TODO Auto-generated method stub
+
+    }
 }

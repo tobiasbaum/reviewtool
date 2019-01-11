@@ -91,4 +91,8 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     public Set<? extends File> getFiles(final String path, final IRepoRevision<?> revision) {
         return Collections.emptySet();
     }
+
+    @Override
+    public void clearCache() {
+    }
 }

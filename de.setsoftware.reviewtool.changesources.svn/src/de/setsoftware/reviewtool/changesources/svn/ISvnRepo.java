@@ -88,4 +88,9 @@ interface ISvnRepo extends IRepository {
      * Sets the underlying {@link SvnFileHistoryGraph}.
      */
     public abstract void setFileHistoryGraph(final IMutableFileHistoryGraph fileHistoryGraph);
+
+    /**
+     * Clears the cache, both on disk and in memory.
+     */
+    public abstract void clearCache();
 }
