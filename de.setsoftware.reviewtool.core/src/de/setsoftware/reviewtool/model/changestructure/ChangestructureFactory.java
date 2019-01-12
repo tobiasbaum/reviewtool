@@ -82,6 +82,11 @@ public class ChangestructureFactory {
         return new UnknownRevision(repo);
     }
 
+    /**
+     * Creates a position inside a text file.
+     * @param line One-based line number.
+     * @param column One-based column number.
+     */
     public static IPositionInText createPositionInText(final int line, final int column) {
         return new PositionInText(line, column);
     }

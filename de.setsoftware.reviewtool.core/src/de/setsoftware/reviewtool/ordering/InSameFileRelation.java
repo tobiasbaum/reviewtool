@@ -35,7 +35,7 @@ public class InSameFileRelation implements RelationMatcher {
         final List<OrderingInfo> ret = new ArrayList<>();
         for (final Entry<Pair<IWorkingCopy, IRevisionedFile>, List<ChangePart>> e : grouping.entrySet()) {
             final Pair<IWorkingCopy, IRevisionedFile> p = e.getKey();
-            ret.add(new SimpleUnorderedMatch(
+            ret.add(OrderingInfoImpl.unordered(
                     this.explicitness,
                     p.getSecond().toLocalPath(p.getFirst()).lastSegment(), e.getValue()));
         }

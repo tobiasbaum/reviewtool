@@ -11,6 +11,11 @@ public class StarMatchSet<T> extends MatchSet<T> {
 
     private final T distinguishedPart;
 
+    /**
+     * Creates a new {@link StarMatchSet}.
+     * @param distinguishedPart The center element.
+     * @param set All matched elements (including the center).
+     */
     public StarMatchSet(T distinguishedPart, Collection<T> set) {
         super(set);
         this.distinguishedPart = distinguishedPart;

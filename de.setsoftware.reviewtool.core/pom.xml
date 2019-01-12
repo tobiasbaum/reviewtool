@@ -16,6 +16,11 @@
       <artifactId>minimal-json</artifactId>
       <version>0.9.5</version>
     </dependency>
+    <dependency>
+      <groupId>com.github.javaparser</groupId>
+      <artifactId>javaparser-core</artifactId>
+      <version>3.9.1</version>
+    </dependency>
   </dependencies>
   <build>
     <plugins>

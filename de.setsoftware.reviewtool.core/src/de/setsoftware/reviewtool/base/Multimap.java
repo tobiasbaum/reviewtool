@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.base;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -48,6 +49,21 @@ public final class Multimap<K, V> implements Serializable, IMultimap<K, V> {
                 this.put(entry.getKey(), value);
             }
         }
+    }
+
+    /**
+     * Add all given values to the entry for the given key.
+     */
+    public void putAll(K key, Collection<V> values) {
+        if (values.isEmpty()) {
+            return;
+        }
+        List<V> list = this.map.get(key);
+        if (list == null) {
+            list = new ArrayList<>();
+            this.map.put(key, list);
+        }
+        list.addAll(values);
     }
 
     @Override

@@ -52,7 +52,7 @@ public class TokenSimilarityRelationTest {
     }
 
     private static OrderingInfo oi(final Stop s1, final Stop s2) {
-        return new SimpleUnorderedMatch(HierarchyExplicitness.NONE, null, Arrays.asList(wrap(s1), wrap(s2)));
+        return OrderingInfoImpl.unordered(HierarchyExplicitness.NONE, null, Arrays.asList(wrap(s1), wrap(s2)));
     }
 
     private static ChangePart wrap(final Stop s) {

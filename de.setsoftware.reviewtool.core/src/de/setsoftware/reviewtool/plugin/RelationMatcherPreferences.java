@@ -15,6 +15,7 @@ import de.setsoftware.reviewtool.ordering.HierarchyExplicitness;
 import de.setsoftware.reviewtool.ordering.InSameFileRelation;
 import de.setsoftware.reviewtool.ordering.InSameSourceFolderRelation;
 import de.setsoftware.reviewtool.ordering.InSameSystemTestRelation;
+import de.setsoftware.reviewtool.ordering.MethodOverrideRelation;
 import de.setsoftware.reviewtool.ordering.RelationMatcher;
 import de.setsoftware.reviewtool.ordering.TokenSimilarityRelation;
 
@@ -57,6 +58,12 @@ public class RelationMatcherPreferences {
             @Override
             public RelationMatcher create(HierarchyExplicitness explicitness) {
                 return new InSameSystemTestRelation(explicitness);
+            }
+        },
+        OVERRIDE("Method overriding", HierarchyExplicitness.ALWAYS, HierarchyExplicitness.ONLY_NONTRIVIAL, true) {
+            @Override
+            public RelationMatcher create(HierarchyExplicitness explicitness) {
+                return new MethodOverrideRelation(explicitness);
             }
         },
         SIMILARITY("Similar content", HierarchyExplicitness.NONE, HierarchyExplicitness.NONE, true) {

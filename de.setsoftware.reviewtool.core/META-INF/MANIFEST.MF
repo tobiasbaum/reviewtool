@@ -22,6 +22,7 @@ Require-Bundle: org.eclipse.ui;bundle-version="[3.106.0,4.0.0)",
  de.setsoftware.reviewtool.ordering;bundle-version="1.26.0" 
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: target/lib/minimal-json-0.9.5.jar,
+ target/lib/javaparser-core-3.9.1.jar,
  hackybuffer-1.0.jar,
  .
 Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator

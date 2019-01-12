@@ -39,7 +39,7 @@ public class InSameSystemTestRelation implements RelationMatcher {
 
         final List<OrderingInfo> ret = new ArrayList<>();
         for (final Entry<String, List<ChangePart>> e : grouping.entrySet()) {
-            ret.add(new SimpleUnorderedMatch(this.explicitness, e.getKey(), e.getValue()));
+            ret.add(OrderingInfoImpl.unordered(this.explicitness, e.getKey(), e.getValue()));
         }
         return ret;
     }

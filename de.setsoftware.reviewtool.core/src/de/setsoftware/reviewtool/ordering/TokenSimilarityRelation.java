@@ -42,14 +42,14 @@ public class TokenSimilarityRelation implements RelationMatcher {
 
         TourCalculator.checkInterruption(control);
 
-        final List<Pair<Double, SimpleUnorderedMatch>> similarities = new ArrayList<>();
+        final List<Pair<Double, OrderingInfo>> similarities = new ArrayList<>();
         for (int i = 0; i < tokenSets.size(); i++) {
             for (int j = i + 1; j < tokenSets.size(); j++) {
                 final double sim = this.jaccardSimilarity(
                         tokenSets.get(i).getSecond(),
                         tokenSets.get(j).getSecond());
                 if (sim > JACCARD_THRESHOLD) {
-                    similarities.add(Pair.create(sim, new SimpleUnorderedMatch(HierarchyExplicitness.NONE, null,
+                    similarities.add(Pair.create(sim, OrderingInfoImpl.unordered(HierarchyExplicitness.NONE, null,
                             Arrays.asList(tokenSets.get(i).getFirst(), tokenSets.get(j).getFirst()))));
                 }
             }
@@ -58,17 +58,17 @@ public class TokenSimilarityRelation implements RelationMatcher {
         TourCalculator.checkInterruption(control);
 
         //order by similarity so that the most similar will be grouped first
-        Collections.sort(similarities, new Comparator<Pair<Double, SimpleUnorderedMatch>>() {
+        Collections.sort(similarities, new Comparator<Pair<Double, OrderingInfo>>() {
             @Override
             public int compare(
-                    final Pair<Double, SimpleUnorderedMatch> o1,
-                    final Pair<Double, SimpleUnorderedMatch> o2) {
+                    final Pair<Double, OrderingInfo> o1,
+                    final Pair<Double, OrderingInfo> o2) {
                 return Double.compare(o2.getFirst(), o1.getFirst());
             }
         });
 
         final List<OrderingInfo> ret = new ArrayList<>();
-        for (final Pair<Double, SimpleUnorderedMatch> p : similarities) {
+        for (final Pair<Double, OrderingInfo> p : similarities) {
             ret.add(p.getSecond());
         }
         return ret;

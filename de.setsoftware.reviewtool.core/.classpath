@@ -4,6 +4,7 @@
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="target/lib/minimal-json-0.9.5.jar" sourcepath="target/sources/minimal-json-0.9.5-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="hackybuffer-1.0.jar"/>
-	<classpathentry kind="src" path="src/"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="target/lib/javaparser-core-3.9.1.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

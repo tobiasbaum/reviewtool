@@ -6,17 +6,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IPath;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
-import de.setsoftware.reviewtool.model.api.IRepository;
-import de.setsoftware.reviewtool.model.api.IRevision;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
-import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.StubRepo;
@@ -37,48 +32,7 @@ public class ChangePartTest {
 
     private static IRevisionedFile file(
             final String name, final int revision, final String content) {
-        return new IRevisionedFile() {
-
-            private static final long serialVersionUID = 1L;
-            private final IRevisionedFile file = ChangestructureFactory.createFileInRevision(
-                    name,
-                    ChangestructureFactory.createRepoRevision(ComparableWrapper.wrap(revision), StubRepo.INSTANCE));
-
-            @Override
-            public IPath toLocalPath(final IWorkingCopy wc) {
-                return this.file.toLocalPath(wc);
-            }
-
-            @Override
-            public IRevision getRevision() {
-                return this.file.getRevision();
-            }
-
-            @Override
-            public IRepository getRepository() {
-                return this.file.getRepository();
-            }
-
-            @Override
-            public String getPath() {
-                return this.file.getPath();
-            }
-
-            @Override
-            public byte[] getContents() throws Exception {
-                return content.getBytes("UTF-8");
-            }
-
-            @Override
-            public IResource determineResource() {
-                return this.file.determineResource();
-            }
-
-            @Override
-            public boolean le(final IRevisionedFile other) {
-                return this.file.le(other);
-            }
-        };
+        return new StubFile(name, revision, content);
     }
 
     private static Stop binaryStop(final String filename) {
