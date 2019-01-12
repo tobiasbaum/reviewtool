@@ -1,6 +1,7 @@
 package de.setsoftware.reviewtool.ordering;
 
 import com.github.javaparser.ast.body.MethodDeclaration;
+import com.github.javaparser.ast.expr.MethodCallExpr;
 
 /**
  * Key for a method, consisting of its name and its number of arguments.
@@ -13,6 +14,11 @@ class MethodKey {
     public MethodKey(MethodDeclaration m) {
         this.name = m.getNameAsString();
         this.argCount = m.getParameters().size();
+    }
+
+    public MethodKey(MethodCallExpr c) {
+        this.name = c.getNameAsString();
+        this.argCount = c.getArguments().size();
     }
 
     @Override

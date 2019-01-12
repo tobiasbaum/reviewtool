@@ -20,20 +20,20 @@ import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorContr
 
 public class MethodOverrideRelationTest {
 
-    private static final String CNG = "#CNG#";
+    static final String CNG = "#CNG#";
 
     private static IRevisionedFile file(final String name, final int revision, String content) {
         return new StubFile(name, revision, content);
     }
 
-    private static Stop binaryStop(final String filename) {
+    static Stop binaryStop(final String filename) {
         return new Stop(
                 ChangestructureFactory.createBinaryChange(
                         null, FileChangeType.OTHER, file(filename, 1, ""), file(filename, 3, "")),
                 file(filename, 4, ""));
     }
 
-    private static List<Stop> createInput(final String... files) {
+    static List<Stop> createInput(final String... files) {
         final List<Stop> ret = new ArrayList<>();
         for (int i = 0; i < files.length; i++) {
             final String filename = "File" + i + ".java";
