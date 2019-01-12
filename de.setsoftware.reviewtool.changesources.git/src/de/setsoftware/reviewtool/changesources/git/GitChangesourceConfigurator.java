@@ -11,7 +11,7 @@ import de.setsoftware.reviewtool.config.IReviewConfigurable;
 /**
  * Configurator for this package.
  */
-public class GitChangeSourceConfigurator implements IConfigurator {
+public class GitChangesourceConfigurator implements IConfigurator {
 
     @Override
     public Set<String> getRelevantElementNames() {
