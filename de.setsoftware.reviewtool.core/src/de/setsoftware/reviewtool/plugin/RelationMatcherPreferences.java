@@ -14,6 +14,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import de.setsoftware.reviewtool.ordering.HierarchyExplicitness;
 import de.setsoftware.reviewtool.ordering.InSameFileRelation;
 import de.setsoftware.reviewtool.ordering.InSameSourceFolderRelation;
+import de.setsoftware.reviewtool.ordering.InSameSystemTestRelation;
 import de.setsoftware.reviewtool.ordering.RelationMatcher;
 import de.setsoftware.reviewtool.ordering.TokenSimilarityRelation;
 
@@ -37,6 +38,7 @@ public class RelationMatcherPreferences {
 
     /**
      * Contains the known relation types and their properties.
+     * Order in the enum determines the default priority order.
      */
     private enum Types {
         SAME_FILE("In same file", HierarchyExplicitness.ALWAYS, HierarchyExplicitness.ONLY_NONTRIVIAL, true) {
@@ -49,6 +51,12 @@ public class RelationMatcherPreferences {
             @Override
             public RelationMatcher create(HierarchyExplicitness explicitness) {
                 return new InSameSourceFolderRelation(explicitness);
+            }
+        },
+        SYSTEMTEST("System test folder", HierarchyExplicitness.ALWAYS, HierarchyExplicitness.ALWAYS, true) {
+            @Override
+            public RelationMatcher create(HierarchyExplicitness explicitness) {
+                return new InSameSystemTestRelation(explicitness);
             }
         },
         SIMILARITY("Similar content", HierarchyExplicitness.NONE, HierarchyExplicitness.NONE, true) {
