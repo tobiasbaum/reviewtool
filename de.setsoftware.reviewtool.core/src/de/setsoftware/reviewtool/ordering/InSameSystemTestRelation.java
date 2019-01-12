@@ -8,6 +8,7 @@ import java.util.Map.Entry;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 
 /**
  * Group stops that belong to the same system test.
@@ -26,7 +27,8 @@ public class InSameSystemTestRelation implements RelationMatcher {
     }
 
     @Override
-    public Collection<? extends OrderingInfo> determineMatches(List<ChangePart> changeParts) {
+    public Collection<? extends OrderingInfo> determineMatches(
+            List<ChangePart> changeParts, TourCalculatorControl control) {
         final Multimap<String, ChangePart> grouping = new Multimap<>();
         for (final ChangePart c : changeParts) {
             final String systemTest = this.determineSystemTestFolder(c.getStops().get(0).getMostRecentFile());

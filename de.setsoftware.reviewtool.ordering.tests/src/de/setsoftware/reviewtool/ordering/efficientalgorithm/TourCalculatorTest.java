@@ -72,17 +72,7 @@ public class TourCalculatorTest {
                     this.parts,
                     this.matchSets,
                     this.comparator,
-                    new TourCalculatorControl() {
-                        @Override
-                        public boolean isCanceled() {
-                            return false;
-                        }
-
-                        @Override
-                        public boolean isFastModeNeeded() {
-                            return false;
-                        }
-                    });
+                    TourCalculatorControl.NO_CANCEL);
         }
     }
 

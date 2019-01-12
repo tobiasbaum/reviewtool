@@ -40,7 +40,10 @@ public class StopOrdering implements IStopOrdering {
 
         final List<OrderingInfo> orderingInfos = new ArrayList<>();
         for (final RelationMatcher m : this.relationTypes) {
-            orderingInfos.addAll(m.determineMatches(changeParts));
+            if (isCanceled.isFastModeNeeded()) {
+                break;
+            }
+            orderingInfos.addAll(m.determineMatches(changeParts, isCanceled));
             TourCalculator.checkInterruption(isCanceled);
         }
 

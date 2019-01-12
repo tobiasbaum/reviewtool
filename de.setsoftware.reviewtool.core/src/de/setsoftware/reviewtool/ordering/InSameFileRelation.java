@@ -10,6 +10,7 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 
 /**
  * Groups stops that belong to the same file.
@@ -23,7 +24,8 @@ public class InSameFileRelation implements RelationMatcher {
     }
 
     @Override
-    public Collection<? extends OrderingInfo> determineMatches(List<ChangePart> changeParts) {
+    public Collection<? extends OrderingInfo> determineMatches(
+            List<ChangePart> changeParts, TourCalculatorControl control) {
         final Multimap<Pair<IWorkingCopy, IRevisionedFile>, ChangePart> grouping = new Multimap<>();
         for (final ChangePart c : changeParts) {
             final Stop stop = c.getStops().get(0);

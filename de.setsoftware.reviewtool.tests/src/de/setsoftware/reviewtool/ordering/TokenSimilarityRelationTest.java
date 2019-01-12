@@ -18,6 +18,7 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.Fragment;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.StubRepo;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 
 /**
  * Test cases for {@link TokenSimilarityRelation}.
@@ -66,27 +67,27 @@ public class TokenSimilarityRelationTest {
         return ret;
     }
 
-    private static Collection<? extends OrderingInfo> determineRelations(final Stop... stops) {
-        return new TokenSimilarityRelation().determineMatches(wrap(stops));
+    private static Collection<? extends OrderingInfo> determineRelations(final Stop... stops) throws Exception {
+        return new TokenSimilarityRelation().determineMatches(wrap(stops), TourCalculatorControl.NO_CANCEL);
     }
 
     @Test
-    public void testEmptyInput() {
+    public void testEmptyInput() throws Exception {
         assertEquals(Collections.emptyList(), determineRelations());
     }
 
     @Test
-    public void testSingleInput() {
+    public void testSingleInput() throws Exception {
         assertEquals(Collections.emptyList(), determineRelations(stop("", "public", "private", " void foo() {")));
     }
 
     @Test
-    public void testBinaryStops() {
+    public void testBinaryStops() throws Exception {
         assertEquals(Collections.emptyList(), determineRelations(binaryStop("a"), binaryStop("b")));
     }
 
     @Test
-    public void testTwoEqualStops() {
+    public void testTwoEqualStops() throws Exception {
         final Stop s1 = stop("", "public", "private", " void foo() {");
         final Stop s2 = stop("", "public", "private", " void foo() {");
         assertEquals(
@@ -95,7 +96,7 @@ public class TokenSimilarityRelationTest {
     }
 
     @Test
-    public void testOnlyChangedPartIsRelevant() {
+    public void testOnlyChangedPartIsRelevant() throws Exception {
         final Stop s1 = stop("", "public", "private", " void foo() {");
         final Stop s2 = stop("", "public", "private", " int bar() {");
         assertEquals(
@@ -104,14 +105,14 @@ public class TokenSimilarityRelationTest {
     }
 
     @Test
-    public void testTwoDistinctStops() {
+    public void testTwoDistinctStops() throws Exception {
         assertEquals(Collections.emptyList(), determineRelations(
                 stop("", "public", "private", " void foo() {"),
                 stop("", "System.out.println(\"a\");", "messageHandler.println(\"b\");", "")));
     }
 
     @Test
-    public void testMoveIsRegardedAsSimilar() {
+    public void testMoveIsRegardedAsSimilar() throws Exception {
         final Stop s1 = stop("", "this is the code that is moved", "", "");
         final Stop s2 = stop("", "", "this is the code that is moved", "");
         final Stop s3 = stop("", "", "this is some other code that was inserted", "");
@@ -121,7 +122,7 @@ public class TokenSimilarityRelationTest {
     }
 
     @Test
-    public void testResultIsOrderedBySimilarity() {
+    public void testResultIsOrderedBySimilarity() throws Exception {
         final Stop s1 = stop("", "", "t0 t1 t2 t3 t4 t5 t6 t7 t8 t9", "");
         final Stop s2 = stop("", "", "t0 t1 t2 t3 t4 t5 t6 t7 t8", "");
         final Stop s3 = stop("", "", "t0 t1 t2 t3 t4 t5 t6 t7", "");

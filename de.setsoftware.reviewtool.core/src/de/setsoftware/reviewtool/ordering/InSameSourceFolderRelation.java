@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.IPath;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 
 /**
  * Groups stops that belong to the same source folder (and project).
@@ -24,7 +25,8 @@ public class InSameSourceFolderRelation implements RelationMatcher {
     }
 
     @Override
-    public Collection<? extends OrderingInfo> determineMatches(List<ChangePart> changeParts) {
+    public Collection<? extends OrderingInfo> determineMatches(
+            List<ChangePart> changeParts, TourCalculatorControl control) {
         final Multimap<String, ChangePart> grouping = new Multimap<>();
         for (final ChangePart c : changeParts) {
             final String sourceFolder = this.determineSourceFolder(c.getStops().get(0).getMostRecentFile());

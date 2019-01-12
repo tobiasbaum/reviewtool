@@ -74,17 +74,7 @@ public class ExperimentDataTest {
                             return 0;
                         }
                     },
-                    new TourCalculatorControl() {
-                        @Override
-                        public boolean isCanceled() {
-                            return false;
-                        }
-
-                        @Override
-                        public boolean isFastModeNeeded() {
-                            return false;
-                        }
-                    });
+                    TourCalculatorControl.NO_CANCEL);
         }
     }
 

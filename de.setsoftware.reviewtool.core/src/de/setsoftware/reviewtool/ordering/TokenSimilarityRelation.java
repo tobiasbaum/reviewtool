@@ -15,6 +15,8 @@ import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculator;
+import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 
 /**
  * Groups stops that are similar to each other. Similarity is defined based on the
@@ -25,7 +27,8 @@ public class TokenSimilarityRelation implements RelationMatcher {
     private static final double JACCARD_THRESHOLD = 0.7;
 
     @Override
-    public Collection<? extends OrderingInfo> determineMatches(final List<ChangePart> changeParts) {
+    public Collection<? extends OrderingInfo> determineMatches(
+            final List<ChangePart> changeParts, TourCalculatorControl control) throws InterruptedException {
         final List<Pair<ChangePart, Set<String>>> tokenSets = new ArrayList<>(changeParts.size());
         for (final ChangePart c : changeParts) {
             if (c.isFullyIrrelevantForReview()) {
@@ -36,6 +39,8 @@ public class TokenSimilarityRelation implements RelationMatcher {
                 tokenSets.add(Pair.create(c, tokens));
             }
         }
+
+        TourCalculator.checkInterruption(control);
 
         final List<Pair<Double, SimpleUnorderedMatch>> similarities = new ArrayList<>();
         for (int i = 0; i < tokenSets.size(); i++) {
@@ -49,6 +54,8 @@ public class TokenSimilarityRelation implements RelationMatcher {
                 }
             }
         }
+
+        TourCalculator.checkInterruption(control);
 
         //order by similarity so that the most similar will be grouped first
         Collections.sort(similarities, new Comparator<Pair<Double, SimpleUnorderedMatch>>() {

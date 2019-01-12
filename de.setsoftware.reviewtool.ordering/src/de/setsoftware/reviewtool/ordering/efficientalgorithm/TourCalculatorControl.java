@@ -5,6 +5,18 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
  */
 public interface TourCalculatorControl {
 
+    public static TourCalculatorControl NO_CANCEL = new TourCalculatorControl() {
+        @Override
+        public boolean isCanceled() {
+            return false;
+        }
+
+        @Override
+        public boolean isFastModeNeeded() {
+            return false;
+        }
+    };
+
     /**
      * Returns true if the operation shall be canceled.
      */
