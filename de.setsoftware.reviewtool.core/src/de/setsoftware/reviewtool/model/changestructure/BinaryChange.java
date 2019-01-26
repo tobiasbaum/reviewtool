@@ -51,4 +51,25 @@ public class BinaryChange extends Change implements IBinaryChange {
         return new BinaryChange(
                 this.getWorkingCopy(), this.getType(), this.from, this.to, this.concatClassification(cl));
     }
+
+    @Override
+    public int hashCode() {
+        return this.from.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof BinaryChange)) {
+            return false;
+        }
+        final BinaryChange t = (BinaryChange) o;
+        return this.from.equals(t.from)
+            && this.to.equals(t.to)
+            && super.equals(o);
+    }
+
+    @Override
+    public String toString() {
+        return this.from + "\n" + this.to;
+    }
 }

@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -52,6 +53,8 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
         final ProxyableFileHistoryNode node = this.getOrCreateConnectedNode(file, IFileHistoryNode.Type.ADDED);
         if (node.getType().equals(IFileHistoryNode.Type.DELETED)) {
             node.makeReplaced();
+        } else if (node.getType().equals(IFileHistoryNode.Type.UNCONFIRMED)) {
+            node.makeAdded();
         }
     }
 
@@ -66,6 +69,12 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
         final ProxyableFileHistoryNode node = this.getOrCreateUnconnectedNode(file, IFileHistoryNode.Type.CHANGED);
         assert !node.getType().equals(IFileHistoryNode.Type.DELETED);
 
+        if (this.hasOnlyDummyAncestor(node)) {
+            final List<ProxyableFileHistoryEdge> oldAncestors = new ArrayList<>(node.getAncestors());
+            for (final ProxyableFileHistoryEdge a : oldAncestors) {
+                node.removeAncestor(a);
+            }
+        }
         if (node.isRoot()) {
             // for each root file within the history graph, we need an ancestor node to record the changes
             for (final IRevision ancestorRevision : ancestorRevisions) {
@@ -77,6 +86,15 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
             }
         }
         //else: a change is being recorded for a node copied in the same commit, so passed ancestors can be ignored
+
+        if (node.getType().equals(IFileHistoryNode.Type.UNCONFIRMED)) {
+            node.makeConfirmed();
+        }
+    }
+
+    private boolean hasOnlyDummyAncestor(ProxyableFileHistoryNode node) {
+        return node.getAncestors().size() == 1
+            && node.getAncestors().iterator().next().getAncestor().getFile().getRevision() instanceof UnknownRevision;
     }
 
     @Override
@@ -104,6 +122,8 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
         final ProxyableFileHistoryNode toNode = this.getOrCreateUnconnectedNode(fileTo, IFileHistoryNode.Type.CHANGED);
         if (toNode.getType().equals(IFileHistoryNode.Type.DELETED)) {
             toNode.makeReplaced();
+        } else if (toNode.getType().equals(IFileHistoryNode.Type.UNCONFIRMED)) {
+            toNode.makeConfirmed();
         }
 
         /*

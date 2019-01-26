@@ -56,7 +56,7 @@ final class GitRepository extends AbstractRepository {
         try (ObjectReader reader = this.gitRepository.newObjectReader();
                 final RevWalk walk = new RevWalk(reader)) {
             // Get the commit object for that revision
-            final ObjectId commitId = this.gitRepository.resolve(revision.getId().toString());
+            final ObjectId commitId = this.gitRepository.resolve(((RevisionId) revision.getId()).getName());
             if (commitId == null) {
                 return new byte[0];
             }

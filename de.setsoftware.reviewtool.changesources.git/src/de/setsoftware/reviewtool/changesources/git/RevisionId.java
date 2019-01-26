@@ -43,6 +43,10 @@ class RevisionId implements IPartiallyComparable<RevisionId> {
 
     @Override
     public String toString() {
+        return this.id + " (" + this.time + ")";
+    }
+
+    public String getName() {
         return this.id;
     }
 

@@ -38,9 +38,15 @@ public abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode i
     abstract void addDescendant(final ProxyableFileHistoryNode descendant, final IFileHistoryEdge.Type type);
 
     /**
-     * Makes this node a deleted node. Requires that the node is a {@link Type#ADDED} or {@link Type#CHANGED} node.
+     * Makes this node a deleted node. Requires that the node is a {@link Type#ADDED}, {@link Type#CHANGED}
+     * or {@link Type#UNCONFIRMED} node.
      */
     abstract void makeDeleted();
+
+    /**
+     * Makes this node a deleted node. Requires that the node is a {@link Type#UNCONFIRMED} node.
+     */
+    abstract void makeAdded();
 
     /**
      * Makes this node a replaced node. Requires that the node is a {@link Type#DELETED} node.

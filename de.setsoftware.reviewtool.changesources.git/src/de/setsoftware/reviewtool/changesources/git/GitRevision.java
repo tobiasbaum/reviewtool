@@ -3,7 +3,9 @@ package de.setsoftware.reviewtool.changesources.git;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jgit.diff.DiffEntry;
@@ -14,6 +16,7 @@ import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.treewalk.CanonicalTreeParser;
+import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.util.io.NullOutputStream;
 
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
@@ -138,6 +141,11 @@ class GitRevision {
             parentId = this.commit;
         }
 
+        //TEST
+        if (this.commit.getName().equals("90013989c2cda6517a7ad0842406a01fc7e78bdc")) {
+            System.out.println("asdf");
+        }
+
         try (final ObjectReader objectReader = repository.newObjectReader();
                 final DiffFormatter diff = new DiffFormatter(NullOutputStream.INSTANCE)) {
 
@@ -148,13 +156,27 @@ class GitRevision {
 
             diff.setRepository(repository);
             diff.setDetectRenames(true);
+            Map<ObjectId, String> contentToPathMap = null;
             final IRevision iRev = this.toRevision();
             for (final DiffEntry entry : diff.scan(oldTreeIter, newTreeIter)) {
                 switch (entry.getChangeType()) {
                 case ADD:
-                    graph.addAddition(entry.getNewPath(), iRev);
+                    //copy detection is not that easy to get with JGit, seems that one needs to partly self code it.
+                    //  We only detect exact copies, because anything else is prohibitively expensive.
+                    if (contentToPathMap == null) {
+                        contentToPathMap = this.determineContentToPathMap(repository, parentTree);
+                    }
+                    final String copyFromPath = contentToPathMap.get(entry.getNewId().toObjectId());
+                    if (copyFromPath != null) {
+                        graph.addCopy(copyFromPath, this.toIRevision(parentId), entry.getNewPath(), iRev);
+                    } else {
+                        graph.addAddition(entry.getNewPath(), iRev);
+                    }
                     break;
                 case DELETE:
+                    //first register a change, because addDeletion does not allow the previous revision
+                    //  to be specified
+                    graph.addChange(entry.getOldPath(), iRev, Collections.singleton(this.toIRevision(parentId)));
                     graph.addDeletion(entry.getOldPath(), iRev);
                     break;
                 case COPY:
@@ -171,6 +193,18 @@ class GitRevision {
                     throw new AssertionError("unexpected: " + entry.getChangeType());
                 }
             }
+        }
+    }
+
+    private Map<ObjectId, String> determineContentToPathMap(Repository repo, ObjectId tree) throws IOException {
+        try (final TreeWalk treeWalk = new TreeWalk(repo)) {
+            treeWalk.addTree(tree);
+            treeWalk.setRecursive(true);
+            final Map<ObjectId, String> ret = new HashMap<>();
+            while (treeWalk.next()) {
+                ret.put(treeWalk.getObjectId(0), treeWalk.getPathString());
+            }
+            return ret;
         }
     }
 

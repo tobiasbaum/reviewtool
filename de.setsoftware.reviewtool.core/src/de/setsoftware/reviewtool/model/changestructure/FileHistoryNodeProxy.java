@@ -103,6 +103,11 @@ final class FileHistoryNodeProxy extends ProxyableFileHistoryNode {
     }
 
     @Override
+    void makeAdded() {
+        this.getTarget().makeAdded();
+    }
+
+    @Override
     void makeReplaced() {
         this.getTarget().makeReplaced();
     }

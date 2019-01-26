@@ -184,6 +184,12 @@ public class TestdataRepo {
         return this;
     }
 
+    public TestdataRepo copyFile(String oldFilename, String newFilename) throws IOException, GitAPIException {
+        Files.copy(this.resolvePath(oldFilename).toPath(), this.resolvePath(newFilename).toPath());
+        this.addFile(newFilename);
+        return this;
+    }
+
     public TestdataRepo deleteFile(String filename) throws IOException, GitAPIException {
         Files.delete(this.resolvePath(filename).toPath());
         return this;

@@ -145,7 +145,7 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
 
     @Override
     void makeDeleted() {
-        assert !this.type.equals(Type.UNCONFIRMED) && !this.type.equals(Type.DELETED);
+        assert !this.type.equals(Type.DELETED);
         this.type = Type.DELETED;
 
         final Iterator<ProxyableFileHistoryEdge> it = this.ancestors.iterator();
@@ -167,6 +167,12 @@ public final class FileHistoryNode extends ProxyableFileHistoryNode {
     void makeConfirmed() {
         assert this.type.equals(Type.UNCONFIRMED);
         this.type = Type.CHANGED;
+    }
+
+    @Override
+    void makeAdded() {
+        assert this.type.equals(Type.UNCONFIRMED);
+        this.type = Type.ADDED;
     }
 
     /**
