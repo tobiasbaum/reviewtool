@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.jgit.api.Git;
@@ -207,6 +208,15 @@ public class TestdataRepo {
 
     private void storeCommitId(RevCommit c) {
         this.commitMap.put(c.name(), "commit " + (this.commitCounter++));
+    }
+
+    public String mapToHash(String commitName) {
+        for (final Entry<String, String> e : this.commitMap.entrySet()) {
+            if (e.getValue().equals(commitName)) {
+                return e.getKey();
+            }
+        }
+        throw new AssertionError("unknown: " + commitName);
     }
 
     public long getUniqueTime() {
