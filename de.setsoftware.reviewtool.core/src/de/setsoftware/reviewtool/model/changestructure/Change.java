@@ -47,4 +47,20 @@ public abstract class Change implements IChange {
         return this.fileChangeType;
     }
 
+
+    @Override
+    public int hashCode() {
+        return this.wc.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Change)) {
+            return false;
+        }
+        final Change t = (Change) o;
+        return this.wc.equals(t.wc)
+            && this.fileChangeType.equals(t.fileChangeType)
+            && Arrays.equals(this.classification, t.classification);
+    }
 }

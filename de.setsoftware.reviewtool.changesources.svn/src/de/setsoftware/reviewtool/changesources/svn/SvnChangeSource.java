@@ -21,19 +21,14 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
-import de.setsoftware.reviewtool.model.api.AbstractChangeSource;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
-import de.setsoftware.reviewtool.model.api.FileChangeType;
-import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
-import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
-import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
-import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.changestructure.AbstractChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
@@ -279,61 +274,6 @@ final class SvnChangeSource extends AbstractChangeSource {
             }
         }
         return ret;
-    }
-
-    private IBinaryChange createBinaryChange(
-            final SvnWorkingCopy wc,
-            final IFileHistoryNode node,
-            final IFileHistoryNode ancestor) {
-
-        final IRevisionedFile oldFileInfo = ChangestructureFactory.createFileInRevision(
-                ancestor.getFile().getPath(),
-                ancestor.getFile().getRevision());
-
-        return ChangestructureFactory.createBinaryChange(
-                wc,
-                this.mapChangeType(node.getType()),
-                oldFileInfo,
-                node.getFile());
-    }
-
-    private FileChangeType mapChangeType(final Type type) {
-        switch (type) {
-        case ADDED:
-            return FileChangeType.ADDED;
-        case DELETED:
-            return FileChangeType.DELETED;
-        default:
-            return FileChangeType.OTHER;
-        }
-    }
-
-    private List<? extends IChange> determineChangesInFile(
-            final SvnWorkingCopy wc,
-            final IFileHistoryNode node) throws Exception {
-
-        final boolean newFileContentsUseTextualDiff = this.isUseTextualDiff(node.getFile());
-
-        final List<IChange> changes = new ArrayList<>();
-        for (final IFileHistoryEdge ancestorEdge : node.getAncestors()) {
-            final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
-
-            final boolean oldFileContentsUseTextualDiff = this.isUseTextualDiff(ancestor.getFile());
-
-            if (oldFileContentsUseTextualDiff && newFileContentsUseTextualDiff) {
-                final List<? extends IHunk> hunks = ancestorEdge.getDiff().getHunks();
-                for (final IHunk hunk : hunks) {
-                    changes.add(ChangestructureFactory.createTextualChangeHunk(
-                            wc,
-                            this.mapChangeType(node.getType()),
-                            hunk.getSource(),
-                            hunk.getTarget()));
-                }
-            } else {
-                changes.add(this.createBinaryChange(wc, node, ancestor));
-            }
-        }
-        return changes;
     }
 
     private Set<String> determineCopySources(

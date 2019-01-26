@@ -13,8 +13,12 @@ class RevisionId implements IPartiallyComparable<RevisionId> {
     private final String id;
 
     public RevisionId(RevCommit commit) {
-        this.time = commit.getCommitTime();
-        this.id = commit.name();
+        this(commit.name(), commit.getCommitTime());
+    }
+
+    public RevisionId(String id, int time) {
+        this.id = id;
+        this.time = time;
     }
 
     @Override
@@ -35,6 +39,11 @@ class RevisionId implements IPartiallyComparable<RevisionId> {
         }
         final RevisionId r = (RevisionId) o;
         return this.time == r.time && this.id.equals(r.id);
+    }
+
+    @Override
+    public String toString() {
+        return this.id;
     }
 
 }

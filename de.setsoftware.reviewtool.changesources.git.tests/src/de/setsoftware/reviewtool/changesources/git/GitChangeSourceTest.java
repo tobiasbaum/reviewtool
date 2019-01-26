@@ -13,9 +13,17 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
+import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.IPositionInText;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.ITextualChange;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
  * Tests for {@link GitChangeSource}.
@@ -101,6 +109,14 @@ public class GitChangeSourceTest {
     @Before
     public void setUp() {
         GitWorkingCopyManager.reset();
+        Logger.setLogger(new Logger() {
+            @Override
+            protected void log(int status, String message, Throwable exception) {
+            }
+            @Override
+            protected void log(int status, String message) {
+            }
+        });
     }
 
     @Test
@@ -119,7 +135,10 @@ public class GitChangeSourceTest {
         final TestdataRepo repo = new TestdataRepo();
         try {
             repo.addFile("A", 10).commit("TIC-1: Initial commit");
-            repo.change("A", 3, "new line content").commit("TIC-2: Another commit");
+            repo.change("A", 3, "new line content")
+                .change("A", 4, "new line content")
+                .commit("TIC-2: Another commit");
+            final long commitTime = 17000;
 
             final GitChangeSource src = createCs(repo);
             final IChangeSourceUi ui = createUi();
@@ -127,8 +146,15 @@ public class GitChangeSourceTest {
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
             assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
-            assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, a44d0deef1209b71fea2879865e5fc847686a354)", commits.get(0).getMessage());
-            assertEquals(new Date(17000), commits.get(0).getTime());
+            assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, 61c3bff929ddb5f707be87ad066f6e40431b28e8)", commits.get(0).getMessage());
+            assertEquals(new Date(commitTime), commits.get(0).getTime());
+            final List<? extends IChange> changes = commits.get(0).getChanges();
+            assertEquals(
+                    textualChange(commits.get(0).getWorkingCopy(),
+                            "2792782d05508291c0b91d22d6c40ea4756ab6fe", 15,
+                            "61c3bff929ddb5f707be87ad066f6e40431b28e8", 18,
+                            "A", 4, 6),
+                    changes.get(0));
             assertEquals(1, commits.size());
 
             final IChangeData actual2 = src.getRepositoryChanges("TIC-3", ui);
@@ -137,6 +163,24 @@ public class GitChangeSourceTest {
         } finally {
             repo.clean();
         }
+    }
+
+    private static ITextualChange textualChange(IWorkingCopy wc,
+            String oldRevision, int oldRevisionTime,
+            String newRevision, int newRevisionTime,
+            String path, int lineFrom, int lineTo) {
+
+        final IRevisionedFile oldFile = ChangestructureFactory.createFileInRevision(path,
+                ChangestructureFactory.createRepoRevision(
+                        new RevisionId(oldRevision, oldRevisionTime), wc.getRepository()));
+        final IRevisionedFile newFile = ChangestructureFactory.createFileInRevision(path,
+                ChangestructureFactory.createRepoRevision(
+                        new RevisionId(newRevision, newRevisionTime), wc.getRepository()));
+        final IPositionInText from = ChangestructureFactory.createPositionInText(lineFrom, 1);
+        final IPositionInText to = ChangestructureFactory.createPositionInText(lineTo, 1);
+        return ChangestructureFactory.createTextualChangeHunk(wc, FileChangeType.OTHER,
+                ChangestructureFactory.createFragment(oldFile, from, to),
+                ChangestructureFactory.createFragment(newFile, from, to));
     }
 
 }

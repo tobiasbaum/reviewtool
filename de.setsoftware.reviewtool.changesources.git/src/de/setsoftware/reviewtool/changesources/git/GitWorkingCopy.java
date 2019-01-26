@@ -9,12 +9,12 @@ import de.setsoftware.reviewtool.model.changestructure.AbstractWorkingCopy;
  * Represents a local Git working copy.
  */
 final class GitWorkingCopy extends AbstractWorkingCopy {
-    
+
     private final GitRepository repository;
     private final File workingCopyRoot;
-    
+
     /**
-     * Constructor. 
+     * Constructor.
      */
     GitWorkingCopy(final File workingCopyRoot) {
         this.workingCopyRoot = workingCopyRoot;
@@ -45,7 +45,6 @@ final class GitWorkingCopy extends AbstractWorkingCopy {
 
     @Override
     public IFileHistoryGraph getFileHistoryGraph() {
-        // TODO implement getFileHistoryGraph()
-        return null;
+        return this.repository.getFileHistoryGraph();
     }
 }

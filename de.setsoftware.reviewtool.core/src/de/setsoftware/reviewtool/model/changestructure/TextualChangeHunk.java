@@ -62,4 +62,25 @@ public class TextualChangeHunk extends Change implements ITextualChange {
     public IRevisionedFile getTo() {
         return this.getToFragment().getFile();
     }
+
+    @Override
+    public String toString() {
+        return this.from + "\n" + this.to;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.from.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof TextualChangeHunk)) {
+            return false;
+        }
+        final TextualChangeHunk t = (TextualChangeHunk) o;
+        return this.from.equals(t.from)
+            && this.to.equals(t.to)
+            && super.equals(o);
+    }
 }

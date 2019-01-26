@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
@@ -14,12 +15,15 @@ import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-import de.setsoftware.reviewtool.model.api.AbstractChangeSource;
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.changestructure.AbstractChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 
 /**
@@ -59,17 +63,21 @@ public class GitChangeSource extends AbstractChangeSource {
             final IChangeSourceUi ui) throws GitAPIException, IOException {
 
         final Pattern pattern = this.createPatternForKey(key);
+        final HistoryFiller historyFiller = new HistoryFiller();
         final Predicate<GitRevision> handler = (final GitRevision logEntry) -> {
+            historyFiller.register(logEntry);
             final String message = logEntry.getMessage();
             return message != null && pattern.matcher(message).matches();
         };
 
-        return GitWorkingCopyManager.getInstance().traverseEntries(handler, ui);
+        final List<GitRevision> matchingEntries = GitWorkingCopyManager.getInstance().traverseEntries(handler, ui);
+        historyFiller.populate(matchingEntries);
+        return matchingEntries;
     }
 
     private List<ICommit> convertRepoRevisionsToChanges(
             final List<GitRevision> revisions,
-            final IProgressMonitor ui) {
+            final IProgressMonitor ui) throws IOException {
         final List<ICommit> ret = new ArrayList<>();
         for (final GitRevision e : revisions) {
             if (ui.isCanceled()) {
@@ -83,9 +91,8 @@ public class GitChangeSource extends AbstractChangeSource {
     private void convertToCommitIfPossible(
             final GitRevision e,
             final Collection<? super ICommit> result,
-            final IProgressMonitor ui) {
-        //        final List<? extends IChange> changes = this.determineChangesInCommit(wc, e, ui);
-        final List<? extends IChange> changes = Collections.singletonList(null);
+            final IProgressMonitor ui) throws IOException {
+        final List<? extends IChange> changes = this.determineChangesInCommit(e, ui);
         if (!changes.isEmpty()) {
             result.add(ChangestructureFactory.createCommit(
                     e.getWorkingCopy(),
@@ -94,6 +101,32 @@ public class GitChangeSource extends AbstractChangeSource {
                     e.toRevision(),
                     e.getDate()));
         }
+    }
+
+    private List<? extends IChange> determineChangesInCommit(
+            final GitRevision e,
+            final IProgressMonitor ui) throws IOException {
+
+        final List<IChange> ret = new ArrayList<>();
+        final Set<String> changedPaths = e.getChangedPaths();
+        final List<String> sortedPaths = new ArrayList<>(changedPaths);
+        Collections.sort(sortedPaths);
+        for (final String path : sortedPaths) {
+            if (ui.isCanceled()) {
+                throw new OperationCanceledException();
+            }
+
+            final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(path, e.toRevision());
+            final IFileHistoryNode node = e.getWorkingCopy().getFileHistoryGraph().getNodeFor(fileInfo);
+            if (node != null) {
+                try {
+                    ret.addAll(this.determineChangesInFile(e.getWorkingCopy(), node));
+                } catch (final Exception ex) {
+                    Logger.error("An error occurred while computing changes for " + fileInfo.toString(), ex);
+                }
+            }
+        }
+        return ret;
     }
 
     @Override

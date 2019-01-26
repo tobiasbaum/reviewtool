@@ -1,11 +1,25 @@
-package de.setsoftware.reviewtool.model.api;
+package de.setsoftware.reviewtool.model.changestructure;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+
+import de.setsoftware.reviewtool.model.api.ChangeSourceException;
+import de.setsoftware.reviewtool.model.api.FileChangeType;
+import de.setsoftware.reviewtool.model.api.IBinaryChange;
+import de.setsoftware.reviewtool.model.api.IChange;
+import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IHunk;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IWorkingCopy;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
 
 /**
  * Superclass with common behavior for usual change sources.
@@ -81,6 +95,61 @@ public abstract class AbstractChangeSource implements IChangeSource {
     }
 
     protected abstract void workingCopyRemoved(File wcRoot);
+
+    protected List<? extends IChange> determineChangesInFile(
+            final IWorkingCopy wc,
+            final IFileHistoryNode node) throws Exception {
+
+        final boolean newFileContentsUseTextualDiff = this.isUseTextualDiff(node.getFile());
+
+        final List<IChange> changes = new ArrayList<>();
+        for (final IFileHistoryEdge ancestorEdge : node.getAncestors()) {
+            final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
+
+            final boolean oldFileContentsUseTextualDiff = this.isUseTextualDiff(ancestor.getFile());
+
+            if (oldFileContentsUseTextualDiff && newFileContentsUseTextualDiff) {
+                final List<? extends IHunk> hunks = ancestorEdge.getDiff().getHunks();
+                for (final IHunk hunk : hunks) {
+                    changes.add(ChangestructureFactory.createTextualChangeHunk(
+                            wc,
+                            this.mapChangeType(node.getType()),
+                            hunk.getSource(),
+                            hunk.getTarget()));
+                }
+            } else {
+                changes.add(this.createBinaryChange(wc, node, ancestor));
+            }
+        }
+        return changes;
+    }
+
+    private IBinaryChange createBinaryChange(
+            final IWorkingCopy wc,
+            final IFileHistoryNode node,
+            final IFileHistoryNode ancestor) {
+
+        final IRevisionedFile oldFileInfo = ChangestructureFactory.createFileInRevision(
+                ancestor.getFile().getPath(),
+                ancestor.getFile().getRevision());
+
+        return ChangestructureFactory.createBinaryChange(
+                wc,
+                this.mapChangeType(node.getType()),
+                oldFileInfo,
+                node.getFile());
+    }
+
+    private FileChangeType mapChangeType(final Type type) {
+        switch (type) {
+        case ADDED:
+            return FileChangeType.ADDED;
+        case DELETED:
+            return FileChangeType.DELETED;
+        default:
+            return FileChangeType.OTHER;
+        }
+    }
 
     protected final boolean isUseTextualDiff(final IRevisionedFile file) throws Exception {
         final byte[] newFileContent = file.getContents();
