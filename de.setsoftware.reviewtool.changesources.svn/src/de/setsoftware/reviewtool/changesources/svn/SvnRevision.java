@@ -8,7 +8,7 @@ import de.setsoftware.reviewtool.model.api.IRevision;
 /**
  * Represents a Subversion revision which can be a repository revision or a working copy revision.
  */
-public interface SvnRevision {
+interface SvnRevision {
 
     /**
      * Returns the associated repository.

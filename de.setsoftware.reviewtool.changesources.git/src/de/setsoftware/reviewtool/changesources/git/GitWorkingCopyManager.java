@@ -1,12 +1,20 @@
 package de.setsoftware.reviewtool.changesources.git;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
-import de.setsoftware.reviewtool.changesources.git.GitWorkingCopy;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+
+import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 
 /**
  * Manages all known local working copies.
@@ -14,7 +22,7 @@ import de.setsoftware.reviewtool.changesources.git.GitWorkingCopy;
 final class GitWorkingCopyManager {
 
     private static final GitWorkingCopyManager INSTANCE = new GitWorkingCopyManager();
-    
+
     private final Map<String, GitWorkingCopy> wcPerRootDirectory;
 
     /**
@@ -23,19 +31,28 @@ final class GitWorkingCopyManager {
     private GitWorkingCopyManager() {
         this.wcPerRootDirectory = new LinkedHashMap<>();
     }
-    
+
     /**
      * Returns the singleton instance of this class.
      */
     static GitWorkingCopyManager getInstance() {
         return INSTANCE;
     }
-    
+
     /**
-     * Returns a read-only view of all known Git working copies.
+     * Resets the singleton instance (for tests).
+     */
+    static void reset() {
+        synchronized (INSTANCE) {
+            INSTANCE.wcPerRootDirectory.clear();
+        }
+    }
+
+    /**
+     * Returns a copied view of all known Git working copies.
      */
     synchronized Collection<GitWorkingCopy> getWorkingCopies() {
-        return Collections.unmodifiableCollection(this.wcPerRootDirectory.values());
+        return new ArrayList<>(this.wcPerRootDirectory.values());
     }
 
     /**
@@ -51,12 +68,32 @@ final class GitWorkingCopyManager {
         }
         return wc;
     }
-    
+
     /**
      * Removes a working copy.
      * @param workingCopyRoot The root directory of the working copy.
      */
     synchronized void removeWorkingCopy(final File workingCopyRoot) {
         this.wcPerRootDirectory.remove(workingCopyRoot.toString());
+    }
+
+    List<GitRevision> traverseEntries(Predicate<GitRevision> handler, IChangeSourceUi ui)
+        throws GitAPIException, IOException {
+
+        final List<GitRevision> ret = new ArrayList<>();
+        for (final GitWorkingCopy wc : this.getWorkingCopies()) {
+            final Repository repository = wc.getRepository().getRepository();
+
+            try (Git git = new Git(repository)) {
+                final Iterable<RevCommit> commits = git.log().all().call();
+                for (final RevCommit commit : commits) {
+                    final GitRevision r = new GitRevision(wc, commit);
+                    if (handler.test(r)) {
+                        ret.add(r);
+                    }
+                }
+            }
+        }
+        return ret;
     }
 }

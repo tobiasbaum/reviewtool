@@ -2,15 +2,20 @@ package de.setsoftware.reviewtool.changesources.git;
 
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
+import java.util.Date;
+import java.util.List;
 
+import org.junit.Before;
 import org.junit.Test;
 
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.ICommit;
 
 /**
  * Tests for {@link GitChangeSource}.
@@ -83,12 +88,23 @@ public class GitChangeSourceTest {
         return new GitChangeSource(".*${key}[^0-9].*", 1000000, 5);
     }
 
+    private static GitChangeSource createCs(TestdataRepo repo) throws Exception {
+        final GitChangeSource src = createCs();
+        src.addProject(repo.getGitBaseDir());
+        return src;
+    }
+
     private static ChangeSourceUiStub createUi() {
         return new ChangeSourceUiStub();
     }
 
+    @Before
+    public void setUp() {
+        GitWorkingCopyManager.reset();
+    }
+
     @Test
-    public void testNoProjects() {
+    public void testNoProjects() throws Exception {
         final GitChangeSource src = createCs();
         final IChangeSourceUi ui = createUi();
 
@@ -96,6 +112,31 @@ public class GitChangeSourceTest {
         assertSame(actual.getSource(), src);
         assertThat(actual.getRepositories(), is(equalTo(Collections.emptySet())));
         assertThat(actual.getMatchedCommits(), is(equalTo(Collections.emptyList())));
+    }
+
+    @Test
+    public void testSimpleChange() throws Exception {
+        final TestdataRepo repo = new TestdataRepo();
+        try {
+            repo.addFile("A", 10).commit("TIC-1: Initial commit");
+            repo.change("A", 3, "new line content").commit("TIC-2: Another commit");
+
+            final GitChangeSource src = createCs(repo);
+            final IChangeSourceUi ui = createUi();
+
+            final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
+            assertSame(actual1.getSource(), src);
+            final List<? extends ICommit> commits = actual1.getMatchedCommits();
+            assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, a44d0deef1209b71fea2879865e5fc847686a354)", commits.get(0).getMessage());
+            assertEquals(new Date(17000), commits.get(0).getTime());
+            assertEquals(1, commits.size());
+
+            final IChangeData actual2 = src.getRepositoryChanges("TIC-3", ui);
+            assertSame(actual2.getSource(), src);
+            assertThat(actual2.getMatchedCommits(), is(equalTo(Collections.emptyList())));
+        } finally {
+            repo.clean();
+        }
     }
 
 }

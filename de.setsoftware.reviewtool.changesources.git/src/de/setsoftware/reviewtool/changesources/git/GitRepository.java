@@ -57,4 +57,8 @@ final class GitRepository extends AbstractRepository {
         // TODO implement getFileHistoryGraph()
         return null;
     }
+
+    public Repository getRepository() {
+        return this.gitRepository;
+    }
 }
