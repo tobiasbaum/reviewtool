@@ -9,6 +9,7 @@
 
   <properties>
     <tycho.version>1.2.0</tycho.version>
+    <tycho.testArgLine>-Duser.timezone=Europe/Berlin</tycho.testArgLine>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
@@ -69,7 +70,7 @@
           </environments>
         </configuration>
       </plugin>
-    </plugins>
+     </plugins>
 
     <pluginManagement>
       <plugins>

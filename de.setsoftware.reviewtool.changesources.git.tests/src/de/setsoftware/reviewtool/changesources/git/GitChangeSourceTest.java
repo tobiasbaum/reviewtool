@@ -8,7 +8,6 @@ import static org.junit.Assert.assertThat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.TimeZone;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -165,7 +164,6 @@ public class GitChangeSourceTest {
             protected void log(int status, String message) {
             }
         });
-        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Berlin"));
     }
 
     @Test

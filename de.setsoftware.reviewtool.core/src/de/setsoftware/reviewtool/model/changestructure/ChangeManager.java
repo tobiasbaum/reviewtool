@@ -322,6 +322,9 @@ public final class ChangeManager {
         }
     }
 
+    /**
+     * Clears the caches of all configured changes sources.
+     */
     public void clearChangeSourceCaches() {
         for (final IChangeSource src : this.changeSourceRef) {
             src.clearCaches();
