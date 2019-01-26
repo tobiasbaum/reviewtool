@@ -21,12 +21,12 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.AbstractChangeSource;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
-import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
@@ -39,14 +39,9 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 /**
  * A simple change source that loads the changes from subversion.
  */
-final class SvnChangeSource implements IChangeSource {
+final class SvnChangeSource extends AbstractChangeSource {
 
-    private static final String KEY_PLACEHOLDER = "${key}";
-
-    private final Map<File, Set<File>> projectsPerWcMap;
-    private final String logMessagePattern;
     private final SVNClientManager mgr = SVNClientManager.newInstance();
-    private final long maxTextDiffThreshold;
 
     SvnChangeSource(
             final String logMessagePattern,
@@ -54,14 +49,11 @@ final class SvnChangeSource implements IChangeSource {
             final String pwd,
             final long maxTextDiffThreshold,
             final int logCacheMinSize) {
+        super(logMessagePattern, maxTextDiffThreshold);
+
         this.mgr.setAuthenticationManager(new DefaultSVNAuthenticationManager(
                 null, false, user, pwd.toCharArray(), null, null));
 
-        this.projectsPerWcMap = new LinkedHashMap<>();
-        this.logMessagePattern = logMessagePattern;
-        //check that the pattern can be parsed
-        this.createPatternForKey("TEST-123");
-        this.maxTextDiffThreshold = maxTextDiffThreshold;
         SvnRepositoryManager.getInstance().init(this.mgr, logCacheMinSize);
         SvnWorkingCopyManager.getInstance().init(this.mgr);
     }
@@ -87,12 +79,6 @@ final class SvnChangeSource implements IChangeSource {
     private boolean isPotentialRoot(final File next) {
         final File dotsvn = new File(next, ".svn");
         return dotsvn.isDirectory();
-    }
-
-    private Pattern createPatternForKey(final String key) {
-        return Pattern.compile(
-                this.logMessagePattern.replace(KEY_PLACEHOLDER, Pattern.quote(key)),
-                Pattern.DOTALL);
     }
 
     @Override
@@ -121,46 +107,13 @@ final class SvnChangeSource implements IChangeSource {
     }
 
     @Override
-    public void addProject(final File projectRoot) {
-        final File wcRoot = this.determineWorkingCopyRoot(projectRoot);
-        if (wcRoot != null) {
-            boolean wcCreated = false;
-            synchronized (this.projectsPerWcMap) {
-                Set<File> projects = this.projectsPerWcMap.get(wcRoot);
-                if (projects == null) {
-                    projects = new LinkedHashSet<>();
-                    this.projectsPerWcMap.put(wcRoot, projects);
-                    wcCreated = true;
-                }
-                projects.add(projectRoot);
-            }
-
-            if (wcCreated) {
-                SvnWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
-            }
-        }
+    protected void workingCopyAdded(File wcRoot) {
+        SvnWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
     }
 
     @Override
-    public void removeProject(final File projectRoot) {
-        final File wcRoot = this.determineWorkingCopyRoot(projectRoot);
-        if (wcRoot != null) {
-            boolean wcHasProjects = true;
-            synchronized (this.projectsPerWcMap) {
-                final Set<File> projects = this.projectsPerWcMap.get(wcRoot);
-                if (projects != null) {
-                    projects.remove(projectRoot);
-                    if (projects.isEmpty()) {
-                        this.projectsPerWcMap.remove(wcRoot);
-                        wcHasProjects = false;
-                    }
-                }
-            }
-
-            if (!wcHasProjects) {
-                SvnWorkingCopyManager.getInstance().removeWorkingCopy(wcRoot);
-            }
-        }
+    protected void workingCopyRemoved(File wcRoot) {
+        SvnWorkingCopyManager.getInstance().removeWorkingCopy(wcRoot);
     }
 
     /**
@@ -359,15 +312,13 @@ final class SvnChangeSource implements IChangeSource {
             final SvnWorkingCopy wc,
             final IFileHistoryNode node) throws Exception {
 
-        final byte[] newFileContents = node.getFile().getContents();
-        final boolean newFileContentsUseTextualDiff = this.isUseTextualDiff(newFileContents);
+        final boolean newFileContentsUseTextualDiff = this.isUseTextualDiff(node.getFile());
 
         final List<IChange> changes = new ArrayList<>();
         for (final IFileHistoryEdge ancestorEdge : node.getAncestors()) {
             final IFileHistoryNode ancestor = ancestorEdge.getAncestor();
 
-            final byte[] oldFileContents = ancestor.getFile().getContents();
-            final boolean oldFileContentsUseTextualDiff = this.isUseTextualDiff(oldFileContents);
+            final boolean oldFileContentsUseTextualDiff = this.isUseTextualDiff(ancestor.getFile());
 
             if (oldFileContentsUseTextualDiff && newFileContentsUseTextualDiff) {
                 final List<? extends IHunk> hunks = ancestorEdge.getDiff().getHunks();
@@ -383,29 +334,6 @@ final class SvnChangeSource implements IChangeSource {
             }
         }
         return changes;
-    }
-
-    private boolean isUseTextualDiff(final byte[] newFileContent) {
-        return !contentLooksBinary(newFileContent) && newFileContent.length <= this.maxTextDiffThreshold;
-    }
-
-    private static boolean contentLooksBinary(final byte[] fileContent) {
-        if (fileContent.length == 0) {
-            return false;
-        }
-        final int max = Math.min(128, fileContent.length);
-        for (int i = 0; i < max; i++) {
-            if (isStrangeChar(fileContent[i])) {
-                //we only count ASCII control chars as "strange" (to be UTF-8 agnostic), so
-                //  a single strange char should suffice to declare a file non-text
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean isStrangeChar(final byte b) {
-        return b != '\n' && b != '\r' && b != '\t' && b < 0x20 && b >= 0;
     }
 
     private Set<String> determineCopySources(

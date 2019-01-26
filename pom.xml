@@ -173,6 +173,7 @@
     <module>de.setsoftware.reviewtool.core</module>
     <module>de.setsoftware.reviewtool.tests</module>
     <module>de.setsoftware.reviewtool.changesources.git</module>
+    <module>de.setsoftware.reviewtool.changesources.git.tests</module>
     <module>de.setsoftware.reviewtool.changesources.svn</module>
     <module>de.setsoftware.reviewtool.changesources.svn.tests</module>
     <module>de.setsoftware.reviewtool.reminder</module>
