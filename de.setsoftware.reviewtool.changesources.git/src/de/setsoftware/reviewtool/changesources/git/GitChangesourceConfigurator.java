@@ -23,11 +23,9 @@ public class GitChangesourceConfigurator implements IConfigurator {
 
         final String pattern = xml.getAttribute("pattern");
         final String maxTextDiffThreshold = xml.getAttribute("maxTextDiffFileSizeThreshold");
-        final String minLogCacheSize = xml.getAttribute("minLogCacheSize");
 
         configurable.setChangeSource(new GitChangeSource(
                 pattern,
-                Long.parseLong(maxTextDiffThreshold),
-                minLogCacheSize.isEmpty() ? 1000 : Integer.parseInt(minLogCacheSize)));
+                Long.parseLong(maxTextDiffThreshold)));
     }
 }

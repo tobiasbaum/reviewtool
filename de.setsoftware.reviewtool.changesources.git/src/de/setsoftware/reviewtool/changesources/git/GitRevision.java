@@ -141,11 +141,6 @@ class GitRevision {
             parentId = this.commit;
         }
 
-        //TEST
-        if (this.commit.getName().equals("90013989c2cda6517a7ad0842406a01fc7e78bdc")) {
-            System.out.println("asdf");
-        }
-
         try (final ObjectReader objectReader = repository.newObjectReader();
                 final DiffFormatter diff = new DiffFormatter(NullOutputStream.INSTANCE)) {
 

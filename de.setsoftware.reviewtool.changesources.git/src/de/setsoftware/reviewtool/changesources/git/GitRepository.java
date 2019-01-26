@@ -34,7 +34,7 @@ final class GitRepository extends AbstractRepository {
      */
     GitRepository(final File workingCopyRoot) {
         try {
-            this.gitRepository = FileRepositoryBuilder.create(workingCopyRoot);
+            this.gitRepository = new FileRepositoryBuilder().findGitDir(workingCopyRoot).build();
         } catch (final IOException e) {
             throw new ReviewtoolException(e);
         }

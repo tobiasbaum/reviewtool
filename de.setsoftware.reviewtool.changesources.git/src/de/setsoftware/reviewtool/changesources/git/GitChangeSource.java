@@ -36,11 +36,8 @@ public class GitChangeSource extends AbstractChangeSource {
      */
     GitChangeSource(
             final String logMessagePattern,
-            final long maxTextDiffThreshold,
-            final int logCacheMinSize) {
+            final long maxTextDiffThreshold) {
         super(logMessagePattern, maxTextDiffThreshold);
-
-        GitRepositoryManager.getInstance().init(logCacheMinSize);
     }
 
     @Override
@@ -131,13 +128,17 @@ public class GitChangeSource extends AbstractChangeSource {
 
     @Override
     public void analyzeLocalChanges(List<File> relevantPaths) throws ChangeSourceException {
-        // TODO implement analyzeLocalChanges()
+        try {
+            GitWorkingCopyManager.getInstance().collectWorkingCopyChanges(relevantPaths);
+        } catch (final IOException | GitAPIException e) {
+            throw new ChangeSourceException(this, e);
+        }
     }
 
     @Override
     public File determineWorkingCopyRoot(final File projectRoot) throws ChangeSourceException {
         try {
-            return new FileRepositoryBuilder().findGitDir(projectRoot).build().getDirectory();
+            return new FileRepositoryBuilder().findGitDir(projectRoot).build().getDirectory().getParentFile();
         } catch (final IOException ex) {
             throw new ChangeSourceException(this, ex);
         }

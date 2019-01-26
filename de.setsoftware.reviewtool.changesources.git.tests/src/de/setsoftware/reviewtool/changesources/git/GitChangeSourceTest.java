@@ -9,6 +9,7 @@ import static org.junit.Assert.assertThat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -95,7 +96,7 @@ public class GitChangeSourceTest {
     }
 
     private static GitChangeSource createCs() {
-        return new GitChangeSource(".*${key}[^0-9].*", 1000000, 5);
+        return new GitChangeSource(".*${key}[^0-9].*", 1000000);
     }
 
     private static GitChangeSource createCs(TestdataRepo repo) throws Exception {
@@ -164,6 +165,7 @@ public class GitChangeSourceTest {
             protected void log(int status, String message) {
             }
         });
+        TimeZone.setDefault(TimeZone.getTimeZone("Europe/Berlin"));
     }
 
     @Test
@@ -443,4 +445,45 @@ public class GitChangeSourceTest {
         }
     }
 
+    @Test
+    public void testDetermineLocalChanges() throws Exception {
+        final TestdataRepo repo = new TestdataRepo();
+        try {
+            repo.addFile("A", 10).commit("TIC-1: Initial commit");
+            repo.change("A", 3, "new line content")
+                .change("A", 4, "new line content");
+
+            final GitChangeSource src = createCs(repo);
+            src.analyzeLocalChanges(null);
+
+            final GitWorkingCopy workingCopy =
+                    GitWorkingCopyManager.getInstance().getWorkingCopy(repo.getGitBaseDir());
+
+            final List<IRevisionedFile> latestFiles = workingCopy.getFileHistoryGraph().getLatestFiles(
+                    ChangestructureFactory.createFileInRevision("A",
+                            ChangestructureFactory.createRepoRevision(
+                                    new RevisionId("2792782d05508291c0b91d22d6c40ea4756ab6fe", 15),
+                                    workingCopy.getRepository())),
+                    false);
+
+            assertEquals("A", latestFiles.get(0).getPath());
+            assertEquals(ChangestructureFactory.createLocalRevision(workingCopy), latestFiles.get(0).getRevision());
+            assertEquals(
+                    "line 0\n" +
+                    "line 1\n" +
+                    "line 2\n" +
+                    "new line content\n" +
+                    "new line content\n" +
+                    "line 5\n" +
+                    "line 6\n" +
+                    "line 7\n" +
+                    "line 8\n" +
+                    "line 9\n",
+                    new String(latestFiles.get(0).getContents(), "UTF-8"));
+            assertEquals(1, latestFiles.size());
+
+        } finally {
+            repo.clean();
+        }
+    }
 }
