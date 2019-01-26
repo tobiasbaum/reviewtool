@@ -4,9 +4,24 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 
+import org.junit.Before;
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.base.Logger;
+
 public class GitWorkingCopyTest {
+
+    @Before
+    public void setUp() {
+        Logger.setLogger(new Logger() {
+            @Override
+            protected void log(int status, String message, Throwable exception) {
+            }
+            @Override
+            protected void log(int status, String message) {
+            }
+        });
+    }
 
     @Test
     public void testConvertPath() throws Exception {

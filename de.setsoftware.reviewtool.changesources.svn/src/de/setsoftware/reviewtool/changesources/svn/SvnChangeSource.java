@@ -86,7 +86,7 @@ final class SvnChangeSource extends AbstractChangeSource {
             this.checkWorkingCopiesUpToDate(neededRevisionPerRepo, ui);
             ui.subTask("Analyzing commits...");
             final List<ICommit> commits = this.convertRepoRevisionsToChanges(revisions, ui);
-            return ChangestructureFactory.createChangeData(this, commits);
+            return ChangestructureFactory.createChangeData(commits);
         } catch (final SVNException e) {
             throw new ChangeSourceException(this, e);
         }

@@ -3,7 +3,6 @@ package de.setsoftware.reviewtool.changesources.git;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 
 import java.util.Collections;
@@ -102,6 +101,7 @@ public class GitChangeSourceTest {
     private static GitChangeSource createCs(TestdataRepo repo) throws Exception {
         final GitChangeSource src = createCs();
         src.addProject(repo.getGitBaseDir());
+        src.clearCaches();
         return src;
     }
 
@@ -174,7 +174,6 @@ public class GitChangeSourceTest {
         final IChangeSourceUi ui = createUi();
 
         final IChangeData actual = src.getRepositoryChanges("TIC-123", ui);
-        assertSame(actual.getSource(), src);
         assertThat(actual.getRepositories(), is(equalTo(Collections.emptySet())));
         assertThat(actual.getMatchedCommits(), is(equalTo(Collections.emptyList())));
     }
@@ -193,7 +192,6 @@ public class GitChangeSourceTest {
             final IChangeSourceUi ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
-            assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, 61c3bff929ddb5f707be87ad066f6e40431b28e8)", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
@@ -208,7 +206,6 @@ public class GitChangeSourceTest {
             assertEquals(1, commits.size());
 
             final IChangeData actual2 = src.getRepositoryChanges("TIC-3", ui);
-            assertSame(actual2.getSource(), src);
             assertThat(actual2.getMatchedCommits(), is(equalTo(Collections.emptyList())));
         } finally {
             repo.clean();
@@ -228,7 +225,6 @@ public class GitChangeSourceTest {
             final IChangeSourceUi ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
-            assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, 3b6ecca787d448c2751af45cc09241ad8fb30350)", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
@@ -260,7 +256,6 @@ public class GitChangeSourceTest {
             final IChangeSourceUi ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
-            assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, 2de19661733caaf938e72c891aac6e504a9152a2)", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
@@ -292,7 +287,6 @@ public class GitChangeSourceTest {
             final IChangeSourceUi ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
-            assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, 10c97826165b3cfd2543d155f4cc58611ec7dd93)", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
@@ -324,7 +318,6 @@ public class GitChangeSourceTest {
             final IChangeSourceUi ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
-            assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, 1517599b382a629d4997d48233524cf289f60bd7)", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
@@ -356,7 +349,6 @@ public class GitChangeSourceTest {
             final IChangeSourceUi ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
-            assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, 3fca5f263ed7a5dc4698915f8c817188a1a24660)", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
@@ -388,7 +380,6 @@ public class GitChangeSourceTest {
             final IChangeSourceUi ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-1", ui);
-            assertSame(actual1.getSource(), src);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
 
             assertEquals("TIC-1: Initial commit (1970-01-01 01:00, author, 38d01910a5cd338ec7ad86eb3ef4d90f65bb7340)", commits.get(0).getMessage());

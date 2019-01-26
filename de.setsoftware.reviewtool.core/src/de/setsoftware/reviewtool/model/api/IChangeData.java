@@ -9,11 +9,6 @@ import java.util.Set;
 public interface IChangeData {
 
     /**
-     * Returns the {@link IChangeSource} that created this object.
-     */
-    public abstract IChangeSource getSource();
-
-    /**
      * Returns all {@link ICommit}s matching the given ticket, sorted by commit date from oldest to newest.
      */
     public abstract List<? extends ICommit> getMatchedCommits();

@@ -8,7 +8,6 @@ import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
-import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IHunk;
@@ -91,9 +90,7 @@ public class ChangestructureFactory {
         return new PositionInText(line, column);
     }
 
-    public static IChangeData createChangeData(
-            final IChangeSource source,
-            final List<? extends ICommit> commits) {
-        return new ChangeData(source, commits);
+    public static IChangeData createChangeData(final List<? extends ICommit> commits) {
+        return new ChangeData(commits);
     }
 }

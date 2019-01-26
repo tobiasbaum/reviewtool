@@ -92,7 +92,7 @@ public class ConfigurationInterpreterTest {
         }
 
         @Override
-        public void setChangeSource(IChangeSource changeSource) {
+        public void addChangeSource(IChangeSource changeSource) {
         }
 
         @Override

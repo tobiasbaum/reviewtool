@@ -6,9 +6,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
@@ -167,7 +167,7 @@ public final class ChangeManager {
     }
 
     private final Set<File> projectDirs;
-    private final AtomicReference<IChangeSource> changeSourceRef;
+    private final CopyOnWriteArrayList<IChangeSource> changeSourceRef;
     private final WeakListeners<IChangeManagerListener> changeManagerListeners = new WeakListeners<>();
     private final AtomicLong lastChangeTime = new AtomicLong();
     private final ConcurrentLinkedQueue<LocalChangeWorkItem> workQueue = new ConcurrentLinkedQueue<>();
@@ -181,7 +181,7 @@ public final class ChangeManager {
      */
     public ChangeManager(final boolean workspaceRequired) {
         this.projectDirs = new LinkedHashSet<>();
-        this.changeSourceRef = new AtomicReference<>(null);
+        this.changeSourceRef = new CopyOnWriteArrayList<>();
 
         IWorkspace root = null;
         try {
@@ -208,10 +208,10 @@ public final class ChangeManager {
     }
 
     /**
-     * Returns the change source.
+     * Returns the change sources.
      */
-    public IChangeSource getChangeSource() {
-        return this.changeSourceRef.get();
+    public List<IChangeSource> getChangeSources() {
+        return this.changeSourceRef;
     }
 
     /**
@@ -219,10 +219,11 @@ public final class ChangeManager {
      * If the new change source is valid, projects are added to it and analysis of local changes is requested.
      * @param changeSource The change source to set.
      */
-    public void setChangeSource(final IChangeSource changeSource) {
-        this.changeSourceRef.set(changeSource);
+    public void setChangeSources(final List<? extends IChangeSource> changeSource) {
+        this.changeSourceRef.clear();
         if (changeSource != null) {
-            final Job job = Job.create("Initializing change source " + changeSource.getClass().getSimpleName(),
+            this.changeSourceRef.addAll(changeSource);
+            final Job job = Job.create("Initializing " + changeSource.size() + " change sources",
                     new IJobFunction() {
                         @Override
                         public IStatus run(final IProgressMonitor monitor) {
@@ -272,8 +273,7 @@ public final class ChangeManager {
      * Initializes a freshly set {@link IChangeSource} by adding projects and analyzing local changes.
      */
     private synchronized void addProjectsAndCollectLocalChanges() {
-        final IChangeSource changeSource = this.changeSourceRef.get();
-        if (changeSource != null) {
+        for (final IChangeSource changeSource : this.changeSourceRef) {
             try {
                 for (final File projectRoot : this.projectDirs) {
                     changeSource.addProject(projectRoot);
@@ -301,8 +301,7 @@ public final class ChangeManager {
 
         LocalChangeWorkItem workItem;
         while ((workItem = this.workQueue.poll()) != null) {
-            final IChangeSource changeSource = this.changeSourceRef.get();
-            if (changeSource != null) {
+            for (final IChangeSource changeSource : this.changeSourceRef) {
                 try {
                     for (final File project : workItem.projectsAdded) {
                         this.projectDirs.add(project);
@@ -324,7 +323,12 @@ public final class ChangeManager {
     }
 
     public void clearChangeSourceCaches() {
-        final IChangeSource src = this.getChangeSource();
-        src.clearCaches();
+        for (final IChangeSource src : this.changeSourceRef) {
+            src.clearCaches();
+        }
+    }
+
+    public boolean isConfigured() {
+        return !this.changeSourceRef.isEmpty();
     }
 }

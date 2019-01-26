@@ -8,7 +8,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +78,7 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
+import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -340,6 +340,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     private final List<RelationMatcher> relationTypes = new ArrayList<>();
     private IStopViewer stopViewer = new CombinedDiffStopViewer();
     private final List<Runnable> postInitTasks = new ArrayList<>();
+    private final List<IChangeSource> changeSources = new ArrayList<>();
 
 
     private ReviewPlugin() {
@@ -395,7 +396,8 @@ public class ReviewPlugin implements IReviewConfigurable {
             return;
         }
 
-        this.changeManager.setChangeSource(null);
+        this.changeSources.clear();
+        this.changeManager.setChangeSources(null);
         this.endReviewExtensions.clear();
         this.preferredTransitionStrategies.clear();
         this.relevanceFilters.clear();
@@ -572,7 +574,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void checkConfigured() {
-        if (this.changeManager.getChangeSource() == null) {
+        if (!this.changeManager.isConfigured()) {
             MessageDialog.openInformation(null, "Not configured",
                     "CoRT is not configured. Go to the preferences dialog and select a config file.");
         }
@@ -914,7 +916,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             sourceUi.subTask("Determining relevant changes...");
             final IChangeData changes;
             try {
-                changes = this.changeManager.getChangeSource().getRepositoryChanges(ticketKey, sourceUi);
+                changes = this.getChanges(ticketKey, sourceUi);
                 if (changes.getMatchedCommits().isEmpty()) {
                     final boolean ok = ReviewPlugin.this.callUiFromBackgroundJob(
                             null,
@@ -965,6 +967,14 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
     }
 
+    private IChangeData getChanges(String ticketKey, IChangeSourceUi sourceUi) throws ChangeSourceException {
+        final List<ICommit> commits = new ArrayList<>();
+        for (final IChangeSource src : this.changeManager.getChangeSources()) {
+            commits.addAll(src.getRepositoryChanges(ticketKey, sourceUi).getMatchedCommits());
+        }
+        return ChangestructureFactory.createChangeData(commits);
+    }
+
     private List<ReviewRoundInfo> getReviewRounds(final ITicketData ticket) {
         final List<ReviewRoundInfo> ret = new ArrayList<>();
         for (int round = 1; round <= ticket.getCurrentRound(); round++) {
@@ -982,9 +992,10 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     @Override
-    public void setChangeSource(final IChangeSource changeSource) {
-        this.changeManager.setChangeSource(changeSource);
-        PositionTransformer.setChangeSources(Collections.singletonList(changeSource));
+    public void addChangeSource(final IChangeSource changeSource) {
+        this.changeSources.add(changeSource);
+        this.changeManager.setChangeSources(this.changeSources);
+        PositionTransformer.setChangeSources(this.changeSources);
     }
 
     public ToursInReview getTours() {

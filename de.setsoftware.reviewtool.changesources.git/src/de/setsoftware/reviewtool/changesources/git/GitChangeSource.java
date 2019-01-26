@@ -13,7 +13,6 @@ import java.util.regex.Pattern;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
@@ -49,7 +48,7 @@ public class GitChangeSource extends AbstractChangeSource {
             final List<GitRevision> revisions = this.determineRelevantRevisions(key, ui);
             ui.subTask("Analyzing commits...");
             final List<ICommit> commits = this.convertRepoRevisionsToChanges(revisions, ui);
-            return ChangestructureFactory.createChangeData(this, commits);
+            return ChangestructureFactory.createChangeData(commits);
         } catch (final IOException | GitAPIException e) {
             throw new ChangeSourceException(this, e);
         }
@@ -68,7 +67,7 @@ public class GitChangeSource extends AbstractChangeSource {
         };
 
         final List<GitRevision> matchingEntries = GitWorkingCopyManager.getInstance().traverseEntries(handler, ui);
-        historyFiller.populate(matchingEntries);
+        historyFiller.populate(matchingEntries, ui);
         return matchingEntries;
     }
 
@@ -137,11 +136,19 @@ public class GitChangeSource extends AbstractChangeSource {
 
     @Override
     public File determineWorkingCopyRoot(final File projectRoot) throws ChangeSourceException {
-        try {
-            return new FileRepositoryBuilder().findGitDir(projectRoot).build().getDirectory().getParentFile();
-        } catch (final IOException ex) {
-            throw new ChangeSourceException(this, ex);
-        }
+        File dir = projectRoot;
+        do {
+            if (this.containsDotGit(dir)) {
+                return dir;
+            }
+            dir = dir.getParentFile();
+        } while (dir != null);
+        return null;
+    }
+
+    private boolean containsDotGit(File dir) {
+        final File dotGit = new File(dir, ".git");
+        return dotGit.isDirectory();
     }
 
     @Override
@@ -156,8 +163,9 @@ public class GitChangeSource extends AbstractChangeSource {
 
     @Override
     public void clearCaches() {
-        // TODO Auto-generated method stub
-
+        for (final GitWorkingCopy wc : GitWorkingCopyManager.getInstance().getWorkingCopies()) {
+            wc.clearCache();
+        }
     }
 
 }

@@ -5,7 +5,6 @@ import java.nio.file.Path;
 
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
 import de.setsoftware.reviewtool.model.api.IFileHistoryGraph;
-import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.AbstractWorkingCopy;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.VirtualFileHistoryGraph;
@@ -17,14 +16,14 @@ final class GitWorkingCopy extends AbstractWorkingCopy {
 
     private final GitRepository repository;
     private final File workingCopyRoot;
-    private final VirtualFileHistoryGraph combinedFileHistoryGraph;
+    private VirtualFileHistoryGraph combinedFileHistoryGraph;
 
     /**
      * Constructor.
      */
     GitWorkingCopy(final File workingCopyRoot) {
         this.workingCopyRoot = workingCopyRoot;
-        this.repository = new GitRepository(workingCopyRoot);
+        this.repository = GitRepository.create(workingCopyRoot);
         this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(this.repository.getFileHistoryGraph());
         this.setLocalFileHistoryGraph(new FileHistoryGraph(DiffAlgorithmFactory.createDefault()));
     }
@@ -70,7 +69,14 @@ final class GitWorkingCopy extends AbstractWorkingCopy {
     /**
      * Replaces the local file history graph.
      */
-    void setLocalFileHistoryGraph(final IMutableFileHistoryGraph localFileHistoryGraph) {
+    void setLocalFileHistoryGraph(final IFileHistoryGraph localFileHistoryGraph) {
         this.combinedFileHistoryGraph.setLocalFileHistoryGraph(localFileHistoryGraph);
+    }
+
+    void clearCache() {
+        this.repository.clearCache();
+        final VirtualFileHistoryGraph oldGraph = this.combinedFileHistoryGraph;
+        this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(this.repository.getFileHistoryGraph());
+        this.setLocalFileHistoryGraph(oldGraph.getLocalFileHistoryGraph());
     }
 }

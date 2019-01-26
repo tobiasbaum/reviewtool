@@ -1,5 +1,7 @@
 package de.setsoftware.reviewtool.changesources.git;
 
+import java.io.Serializable;
+
 import org.eclipse.jgit.revwalk.RevCommit;
 
 import de.setsoftware.reviewtool.base.IPartiallyComparable;
@@ -7,7 +9,9 @@ import de.setsoftware.reviewtool.base.IPartiallyComparable;
 /**
  * An ID for a git commit/revision.
  */
-class RevisionId implements IPartiallyComparable<RevisionId> {
+class RevisionId implements IPartiallyComparable<RevisionId>, Serializable {
+
+    private static final long serialVersionUID = -8543239627001714924L;
 
     private final int time;
     private final String id;

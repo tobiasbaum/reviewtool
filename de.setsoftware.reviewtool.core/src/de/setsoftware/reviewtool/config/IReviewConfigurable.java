@@ -21,7 +21,7 @@ public interface IReviewConfigurable {
     /**
      * Adds a source for changes.
      */
-    public abstract void setChangeSource(IChangeSource changeSource);
+    public abstract void addChangeSource(IChangeSource changeSource);
 
     /**
      * Adds an extension for the end review dialog.

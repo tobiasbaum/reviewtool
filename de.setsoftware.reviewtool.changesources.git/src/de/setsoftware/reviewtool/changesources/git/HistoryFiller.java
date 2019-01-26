@@ -6,7 +6,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.core.runtime.OperationCanceledException;
+
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 
 /**
@@ -20,7 +23,7 @@ class HistoryFiller {
         this.logEntries .add(logEntry);
     }
 
-    public void populate(List<GitRevision> relevantRevisions) throws IOException {
+    public void populate(List<GitRevision> relevantRevisions, IChangeSourceUi ui) throws IOException {
         final Set<GitRepository> repos = new LinkedHashSet<>();
         long minTime = Long.MAX_VALUE;
         for (final GitRevision r : relevantRevisions) {
@@ -37,11 +40,27 @@ class HistoryFiller {
             }
         }
 
-        for (final GitRepository repo : revisionsToAnalyze.keySet()) {
-            final IMutableFileHistoryGraph graph = repo.getFileHistoryGraph();
-            for (final GitRevision r : revisionsToAnalyze.get(repo)) {
-                r.analyzeRevision(graph);
+        ui.increaseTaskNestingLevel();
+        try {
+            for (final GitRepository repo : revisionsToAnalyze.keySet()) {
+                final IMutableFileHistoryGraph graph = repo.getFileHistoryGraph();
+                for (final GitRevision r : revisionsToAnalyze.get(repo)) {
+                    if (ui.isCanceled()) {
+                        throw new OperationCanceledException();
+                    }
+
+                    if (repo.wasAlreadyAnalyzed(r.getRevisionString())) {
+                        continue;
+                    }
+
+                    ui.subTask("Processing revision " + r);
+                    r.analyzeRevision(graph);
+                    repo.markAsAnalyzed(r.getRevisionString());
+                }
+                repo.saveCache();
             }
+        } finally {
+            ui.decreaseTaskNestingLevel();
         }
     }
 

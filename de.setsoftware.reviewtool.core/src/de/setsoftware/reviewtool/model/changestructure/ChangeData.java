@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.model.api.IChangeData;
-import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.IRepository;
 
@@ -16,12 +15,10 @@ import de.setsoftware.reviewtool.model.api.IRepository;
  */
 public final class ChangeData implements IChangeData {
 
-    private final IChangeSource source;
     private final List<? extends ICommit> commits;
     private final Set<IRepository> repositories;
 
-    ChangeData(final IChangeSource source, final List<? extends ICommit> commits) {
-        this.source = source;
+    ChangeData(final List<? extends ICommit> commits) {
         this.commits = commits;
 
         this.commits.sort(new Comparator<ICommit>() {
@@ -35,11 +32,6 @@ public final class ChangeData implements IChangeData {
         for (final ICommit commit : this.commits) {
             this.repositories.add(commit.getRevision().getRepository());
         }
-    }
-
-    @Override
-    public IChangeSource getSource() {
-        return this.source;
     }
 
     @Override
