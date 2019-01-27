@@ -206,11 +206,26 @@ public class TestdataRepo {
         }
     }
 
+    public void createAndSwitchBranch(String commitId, String branchName) throws GitAPIException, IOException {
+        try (Git git = Git.open(this.baseDir)) {
+            git.branchCreate()
+                .setName(branchName)
+                .setStartPoint(commitId)
+                .call();
+            git.checkout()
+                .setName(branchName)
+                .call();
+        }
+    }
+
     private void storeCommitId(RevCommit c) {
         this.commitMap.put(c.name(), "commit " + (this.commitCounter++));
     }
 
     public String mapToHash(String commitName) {
+        if (commitName == null) {
+            return null;
+        }
         for (final Entry<String, String> e : this.commitMap.entrySet()) {
             if (e.getValue().equals(commitName)) {
                 return e.getKey();

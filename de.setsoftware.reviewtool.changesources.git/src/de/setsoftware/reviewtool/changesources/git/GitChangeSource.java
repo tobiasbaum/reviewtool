@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -45,16 +48,42 @@ public class GitChangeSource extends AbstractChangeSource {
 
         try {
             ui.subTask("Determining relevant commits...");
-            final List<GitRevision> revisions = this.determineRelevantRevisions(key, ui);
+            final Map<GitRevision, String> revisions = this.determineRelevantRevisions(key, ui);
+            final List<GitRevision> selectedRevisions = this.checkBranches(revisions, ui);
             ui.subTask("Analyzing commits...");
-            final List<ICommit> commits = this.convertRepoRevisionsToChanges(revisions, ui);
+            final List<ICommit> commits = this.convertRepoRevisionsToChanges(selectedRevisions, ui);
             return ChangestructureFactory.createChangeData(commits);
         } catch (final IOException | GitAPIException e) {
             throw new ChangeSourceException(this, e);
         }
     }
 
-    private List<GitRevision> determineRelevantRevisions(
+    private List<GitRevision> checkBranches(Map<GitRevision, String> revisions, IChangeSourceUi ui) {
+        final List<GitRevision> ret = new ArrayList<>();
+        final List<GitRevision> nonHeadRevisions = new ArrayList<>();
+        final Set<String> refs = new LinkedHashSet<>();
+        for (final Entry<GitRevision, String> e : revisions.entrySet()) {
+            if (e.getValue().equals("HEAD")) {
+                ret.add(e.getKey());
+            } else {
+                nonHeadRevisions.add(e.getKey());
+                refs.add(e.getValue());
+            }
+        }
+        if (!nonHeadRevisions.isEmpty()) {
+            final Boolean answer = ui.handleLocalWorkingIncomplete(
+                    "The current HEAD does not contain all commits for the ticket (other refs: " + refs
+                    + "). Restrict review to current HEAD?");
+            if (answer == null) {
+                throw new OperationCanceledException();
+            } else if (!answer) {
+                ret.addAll(nonHeadRevisions);
+            }
+        }
+        return ret;
+    }
+
+    private Map<GitRevision, String> determineRelevantRevisions(
             final String key,
             final IChangeSourceUi ui) throws GitAPIException, IOException {
 
@@ -66,8 +95,9 @@ public class GitChangeSource extends AbstractChangeSource {
             return message != null && pattern.matcher(message).matches();
         };
 
-        final List<GitRevision> matchingEntries = GitWorkingCopyManager.getInstance().traverseEntries(handler, ui);
-        historyFiller.populate(matchingEntries, ui);
+        final Map<GitRevision, String> matchingEntries =
+                GitWorkingCopyManager.getInstance().traverseEntries(handler, ui);
+        historyFiller.populate(matchingEntries.keySet(), ui);
         return matchingEntries;
     }
 

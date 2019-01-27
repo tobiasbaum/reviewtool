@@ -4,11 +4,13 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,6 +37,11 @@ public class GitChangeSourceTest {
 
         private final StringBuilder log = new StringBuilder();
         private boolean canceled;
+        private final Boolean questionResult;
+
+        public ChangeSourceUiStub(Boolean b) {
+            this.questionResult = b;
+        }
 
         @Override
         public void beginTask(String name, int totalWork) {
@@ -77,8 +84,9 @@ public class GitChangeSourceTest {
         }
 
         @Override
-        public Boolean handleLocalWorkingCopyOutOfDate(String detailInfo) {
-            return Boolean.FALSE;
+        public Boolean handleLocalWorkingIncomplete(String detailInfo) {
+            this.log.append("asking ").append(detailInfo).append('\n');
+            return this.questionResult;
         }
 
         @Override
@@ -89,6 +97,10 @@ public class GitChangeSourceTest {
         @Override
         public void decreaseTaskNestingLevel() {
             this.log.append("decreaseTaskNestingLevel\n");
+        }
+
+        public String getLog() {
+            return this.log.toString();
         }
 
     }
@@ -105,7 +117,11 @@ public class GitChangeSourceTest {
     }
 
     private static ChangeSourceUiStub createUi() {
-        return new ChangeSourceUiStub();
+        return new ChangeSourceUiStub(null);
+    }
+
+    private static ChangeSourceUiStub createUi(Boolean questionResult) {
+        return new ChangeSourceUiStub(questionResult);
     }
 
     private static ITextualChange textualChange(IWorkingCopy wc,
@@ -187,7 +203,7 @@ public class GitChangeSourceTest {
             final long commitTime = 17000;
 
             final GitChangeSource src = createCs(repo);
-            final IChangeSourceUi ui = createUi();
+            final ChangeSourceUiStub ui = createUi();
 
             final IChangeData actual1 = src.getRepositoryChanges("TIC-2", ui);
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
@@ -205,6 +221,18 @@ public class GitChangeSourceTest {
 
             final IChangeData actual2 = src.getRepositoryChanges("TIC-3", ui);
             assertThat(actual2.getMatchedCommits(), is(equalTo(Collections.emptyList())));
+
+            assertEquals(
+                    "subTask Determining relevant commits...\n" +
+                    "increaseTaskNestingLevel\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 2") + "\n" +
+                    "decreaseTaskNestingLevel\n" +
+                    "subTask Analyzing commits...\n" +
+                    "subTask Determining relevant commits...\n" +
+                    "increaseTaskNestingLevel\n" +
+                    "decreaseTaskNestingLevel\n" +
+                    "subTask Analyzing commits...\n",
+                    ui.getLog());
         } finally {
             repo.clean();
         }
@@ -226,15 +254,7 @@ public class GitChangeSourceTest {
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, " + repo.mapToHash("commit 2") + ")", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
-            final List<? extends IChange> changes = commits.get(0).getChanges();
-            assertEquals(
-                    binaryChange(commits.get(0).getWorkingCopy(),
-                            FileChangeType.OTHER,
-                            repo.mapToHash("commit 1"), 15,
-                            repo.mapToHash("commit 2"), 18,
-                            "B"),
-                    changes.get(0));
-            assertEquals(1, changes.size());
+            checkContainsOneBinaryChange(repo, commits.get(0), "commit 1", 15, "commit 2", 18, FileChangeType.OTHER, "B");
             assertEquals(1, commits.size());
         } finally {
             repo.clean();
@@ -257,15 +277,7 @@ public class GitChangeSourceTest {
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, " + repo.mapToHash("commit 2") + ")", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
-            final List<? extends IChange> changes = commits.get(0).getChanges();
-            assertEquals(
-                    binaryChange(commits.get(0).getWorkingCopy(),
-                            FileChangeType.ADDED,
-                            null, 15,
-                            repo.mapToHash("commit 2"), 18,
-                            "C"),
-                    changes.get(0));
-            assertEquals(1, changes.size());
+            checkContainsOneBinaryChange(repo, commits.get(0), null, 15, "commit 2", 18, FileChangeType.ADDED, "C");
             assertEquals(1, commits.size());
         } finally {
             repo.clean();
@@ -288,15 +300,7 @@ public class GitChangeSourceTest {
             final List<? extends ICommit> commits = actual1.getMatchedCommits();
             assertEquals("TIC-2: Another commit (1970-01-01 01:00, author, " + repo.mapToHash("commit 2") + ")", commits.get(0).getMessage());
             assertEquals(new Date(commitTime), commits.get(0).getTime());
-            final List<? extends IChange> changes = commits.get(0).getChanges();
-            assertEquals(
-                    binaryChange(commits.get(0).getWorkingCopy(),
-                            FileChangeType.DELETED,
-                            repo.mapToHash("commit 1"), 15,
-                            repo.mapToHash("commit 2"), 18,
-                            "B"),
-                    changes.get(0));
-            assertEquals(1, changes.size());
+            checkContainsOneBinaryChange(repo, commits.get(0), "commit 1", 15, "commit 2", 18, FileChangeType.DELETED, "B");
             assertEquals(1, commits.size());
         } finally {
             repo.clean();
@@ -382,56 +386,38 @@ public class GitChangeSourceTest {
 
             assertEquals("TIC-1: Initial commit (1970-01-01 01:00, author, " + repo.mapToHash("commit 1") + ")", commits.get(0).getMessage());
             assertEquals(new Date(14000), commits.get(0).getTime());
-            final List<? extends IChange> changes1 = commits.get(0).getChanges();
-            assertEquals(
-                    binaryChange(commits.get(0).getWorkingCopy(),
-                            FileChangeType.ADDED,
-                            null, 11,
-                            repo.mapToHash("commit 1"), 15,
-                            "B"),
-                    changes1.get(0));
-            assertEquals(1, changes1.size());
+            checkContainsOneBinaryChange(repo, commits.get(0), null, 11, "commit 1", 15, FileChangeType.ADDED, "B");
 
             assertEquals("TIC-1: Commit 2 (1970-01-01 01:00, author, " + repo.mapToHash("commit 2") + ")", commits.get(1).getMessage());
             assertEquals(new Date(17000), commits.get(1).getTime());
-            final List<? extends IChange> changes2 = commits.get(1).getChanges();
-            assertEquals(
-                    binaryChange(commits.get(1).getWorkingCopy(),
-                            FileChangeType.OTHER,
-                            repo.mapToHash("commit 1"), 15,
-                            repo.mapToHash("commit 2"), 18,
-                            "B"),
-                    changes2.get(0));
-            assertEquals(1, changes2.size());
+            checkContainsOneBinaryChange(repo, commits.get(1), "commit 1", 15, "commit 2", 18, FileChangeType.OTHER, "B");
 
             assertEquals("TIC-1: Commit 3 (1970-01-01 01:00, author, " + repo.mapToHash("commit 3") + ")", commits.get(2).getMessage());
             assertEquals(new Date(20000), commits.get(2).getTime());
-            final List<? extends IChange> changes3 = commits.get(2).getChanges();
-            assertEquals(
-                    binaryChange(commits.get(2).getWorkingCopy(),
-                            FileChangeType.OTHER,
-                            repo.mapToHash("commit 2"), 18,
-                            repo.mapToHash("commit 3"), 21,
-                            "B"),
-                    changes3.get(0));
-            assertEquals(1, changes3.size());
+            checkContainsOneBinaryChange(repo, commits.get(2), "commit 2", 18, "commit 3", 21, FileChangeType.OTHER, "B");
 
             assertEquals("TIC-1: Commit 4 (1970-01-01 01:00, author, " + repo.mapToHash("commit 4") + ")", commits.get(3).getMessage());
             assertEquals(new Date(23000), commits.get(3).getTime());
-            final List<? extends IChange> changes4 = commits.get(3).getChanges();
-            assertEquals(
-                    binaryChange(commits.get(3).getWorkingCopy(),
-                            FileChangeType.OTHER,
-                            repo.mapToHash("commit 3"), 21,
-                            repo.mapToHash("commit 4"), 24,
-                            "B"),
-                    changes4.get(0));
-            assertEquals(1, changes4.size());
+            checkContainsOneBinaryChange(repo, commits.get(3), "commit 3", 21, "commit 4", 24, FileChangeType.OTHER, "B");
 
             assertEquals(4, commits.size());
         } finally {
             repo.clean();
         }
+    }
+
+    private static void checkContainsOneBinaryChange(final TestdataRepo repo, ICommit commit,
+            String fromCommit, int fromTime, String toCommit, int toTime,
+            FileChangeType other, String filename) {
+        final List<? extends IChange> changes2 = commit.getChanges();
+        assertEquals(
+                binaryChange(commit.getWorkingCopy(),
+                        other,
+                        repo.mapToHash(fromCommit), fromTime,
+                        repo.mapToHash(toCommit), toTime,
+                        filename),
+                changes2.get(0));
+        assertEquals(1, changes2.size());
     }
 
     @Test
@@ -475,4 +461,81 @@ public class GitChangeSourceTest {
             repo.clean();
         }
     }
+
+
+    @Test
+    public void testMultipleBranches() throws Exception {
+        final TestdataRepo repo = new TestdataRepo();
+        try {
+            repo.addBinaryFile("A").commit("TIC-1: Initial commit");
+            repo.addBinaryFile("B").commit("TIC-2: Commit in another ticket");
+            repo.changeBinaryFile("A").commit("TIC-1: commit 3");
+            repo.changeBinaryFile("A").commit("TIC-1: commit 4");
+            repo.createAndSwitchBranch(repo.mapToHash("commit 2"), "myBranch");
+            repo.changeBinaryFile("A").commit("TIC-1: commit 5 (in another branch)");
+
+            final GitChangeSource src = createCs(repo);
+
+            //user chooses to include all commits
+            final ChangeSourceUiStub uiWithAll = createUi(Boolean.FALSE);
+            final IChangeData actualWithAll = src.getRepositoryChanges("TIC-1", uiWithAll);
+            final List<? extends ICommit> commitsWithAll = actualWithAll.getMatchedCommits();
+            assertEquals("TIC-1: Initial commit (1970-01-01 01:00, author, " + repo.mapToHash("commit 1") + ")", commitsWithAll.get(0).getMessage());
+            assertEquals(new Date(14000), commitsWithAll.get(0).getTime());
+            checkContainsOneBinaryChange(repo, commitsWithAll.get(0), null, 11, "commit 1", 15, FileChangeType.ADDED, "A");
+            assertEquals("TIC-1: commit 3 (1970-01-01 01:00, author, " + repo.mapToHash("commit 3") + ")", commitsWithAll.get(1).getMessage());
+            assertEquals(new Date(20000), commitsWithAll.get(1).getTime());
+            checkContainsOneBinaryChange(repo, commitsWithAll.get(1), "commit 2", 18, "commit 3", 21, FileChangeType.OTHER, "A");
+            assertEquals("TIC-1: commit 4 (1970-01-01 01:00, author, " + repo.mapToHash("commit 4") + ")", commitsWithAll.get(2).getMessage());
+            assertEquals(new Date(23000), commitsWithAll.get(2).getTime());
+            checkContainsOneBinaryChange(repo, commitsWithAll.get(2), "commit 3", 21, "commit 4", 24, FileChangeType.OTHER, "A");
+            assertEquals("TIC-1: commit 5 (in another branch) (1970-01-01 01:00, author, " + repo.mapToHash("commit 5") + ")", commitsWithAll.get(3).getMessage());
+            assertEquals(new Date(28000), commitsWithAll.get(3).getTime());
+            checkContainsOneBinaryChange(repo, commitsWithAll.get(3), "commit 2", 18, "commit 5", 29, FileChangeType.OTHER, "A");
+            assertEquals(4, commitsWithAll.size());
+            assertEquals(
+                    "subTask Determining relevant commits...\n" +
+                    "increaseTaskNestingLevel\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 5") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 2") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 1") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 4") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 3") + "\n" +
+                    "decreaseTaskNestingLevel\n" +
+                    "asking The current HEAD does not contain all commits for the ticket (other refs: [refs/heads/master]). Restrict review to current HEAD?\n" +
+                    "subTask Analyzing commits...\n",
+                    uiWithAll.getLog());
+
+            //user chooses to include only the current branch
+            final ChangeSourceUiStub uiOnlyHead = createUi(Boolean.TRUE);
+            final IChangeData actualOnlyHead = src.getRepositoryChanges("TIC-1", uiOnlyHead);
+            final List<? extends ICommit> commitsOnlyHead = actualOnlyHead.getMatchedCommits();
+            assertEquals("TIC-1: Initial commit (1970-01-01 01:00, author, " + repo.mapToHash("commit 1") + ")", commitsOnlyHead.get(0).getMessage());
+            assertEquals(new Date(14000), commitsOnlyHead.get(0).getTime());
+            checkContainsOneBinaryChange(repo, commitsOnlyHead.get(0), null, 11, "commit 1", 15, FileChangeType.ADDED, "A");
+            assertEquals("TIC-1: commit 5 (in another branch) (1970-01-01 01:00, author, " + repo.mapToHash("commit 5") + ")", commitsOnlyHead.get(1).getMessage());
+            assertEquals(new Date(28000), commitsOnlyHead.get(1).getTime());
+            checkContainsOneBinaryChange(repo, commitsOnlyHead.get(1), "commit 2", 18, "commit 5", 29, FileChangeType.OTHER, "A");
+            assertEquals(2, commitsOnlyHead.size());
+            assertEquals(
+                    "subTask Determining relevant commits...\n" +
+                    "increaseTaskNestingLevel\n" +
+                    "decreaseTaskNestingLevel\n" +
+                    "asking The current HEAD does not contain all commits for the ticket (other refs: [refs/heads/master]). Restrict review to current HEAD?\n" +
+                    "subTask Analyzing commits...\n",
+                    uiOnlyHead.getLog());
+
+
+            //user chooses to cancel
+            final ChangeSourceUiStub uiCancel = createUi(null);
+            try {
+                src.getRepositoryChanges("TIC-1", uiCancel);
+                fail("expected exception");
+            } catch (final OperationCanceledException e) {
+            }
+        } finally {
+            repo.clean();
+        }
+    }
+
 }

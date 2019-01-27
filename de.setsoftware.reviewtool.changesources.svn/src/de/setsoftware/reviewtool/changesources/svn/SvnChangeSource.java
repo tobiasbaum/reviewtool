@@ -130,7 +130,8 @@ final class SvnChangeSource extends AbstractChangeSource {
                 final File wcRoot = wc.getLocalRoot();
                 final long wcRev = this.mgr.getStatusClient().doStatus(wcRoot, false).getRevision().getNumber();
                 if (wcRev < remoteRev) {
-                    final Boolean doUpdate = ui.handleLocalWorkingCopyOutOfDate(wc.toString());
+                    final Boolean doUpdate = ui.handleLocalWorkingIncomplete("The working copy (" + wc.toString()
+                            + ") does not contain all relevant changes. Perform an update?");
                     if (doUpdate == null) {
                         throw new OperationCanceledException();
                     }

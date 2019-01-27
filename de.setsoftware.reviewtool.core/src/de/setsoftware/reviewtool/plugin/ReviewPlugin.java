@@ -180,7 +180,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         @Override
-        public Boolean handleLocalWorkingCopyOutOfDate(final String detailInfo) {
+        public Boolean handleLocalWorkingIncomplete(final String detailInfo) {
             return ReviewPlugin.this.callUiFromBackgroundJob(
                     null,
                     this.display,
@@ -189,10 +189,9 @@ public class ReviewPlugin implements IReviewConfigurable {
                         public Boolean run(final Void unused) {
                             final MessageDialog dg = new MessageDialog(
                                     null,
-                                    "Working copy out of date",
+                                    "Working copy incomplete",
                                     null,
-                                    "The working copy (" + detailInfo
-                                    + ") does not contain all relevant changes. Perform an update?",
+                                    detailInfo,
                                     MessageDialog.QUESTION_WITH_CANCEL,
                                     new String[]{
                                         IDialogConstants.YES_LABEL,

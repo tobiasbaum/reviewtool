@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Predicate;
 
 import org.eclipse.jgit.api.Git;
@@ -16,6 +18,7 @@ import org.eclipse.jgit.api.StatusCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
@@ -88,19 +91,43 @@ final class GitWorkingCopyManager {
         this.wcPerRootDirectory.remove(workingCopyRoot.toString());
     }
 
-    List<GitRevision> traverseEntries(Predicate<GitRevision> handler, IChangeSourceUi ui)
+    Map<GitRevision, String> traverseEntries(Predicate<GitRevision> handler, IChangeSourceUi ui)
         throws GitAPIException, IOException {
 
-        final List<GitRevision> ret = new ArrayList<>();
+        final Map<GitRevision, String> ret = new LinkedHashMap<>();
         for (final GitWorkingCopy wc : this.getWorkingCopies()) {
             final Repository repository = wc.getRepository().getRepository();
 
-            try (Git git = new Git(repository)) {
-                final Iterable<RevCommit> commits = git.log().all().call();
-                for (final RevCommit commit : commits) {
-                    final GitRevision r = new GitRevision(wc, commit);
-                    if (handler.test(r)) {
-                        ret.add(r);
+            final List<Ref> allRefs = new ArrayList<>(repository.getRefDatabase().getRefs());
+            Collections.sort(allRefs, (Ref r1, Ref r2) -> {
+                //HEAD is always first, otherwise make deterministic by sorting
+                final String n1 = r1.getName();
+                final String n2 = r2.getName();
+                if (n1.equals("HEAD")) {
+                    return n2.equals("HEAD") ? 0 : -1;
+                } else if (n2.equals("HEAD")) {
+                    return 1;
+                } else {
+                    return n1.compareTo(n2);
+                }
+            });
+
+            final Set<ObjectId> visited = new HashSet<>();
+            for (final Ref ref : allRefs) {
+                try (RevWalk revWalk = new RevWalk(repository)) {
+                    if (visited.contains(ref.getObjectId())) {
+                        break;
+                    }
+                    revWalk.markStart(revWalk.parseCommit(ref.getObjectId()));
+                    for (final RevCommit commit : revWalk) {
+                        if (visited.contains(commit.getId())) {
+                            break;
+                        }
+                        visited.add(commit.getId());
+                        final GitRevision r = new GitRevision(wc, commit);
+                        if (handler.test(r)) {
+                            ret.put(r, ref.getName());
+                        }
                     }
                 }
             }

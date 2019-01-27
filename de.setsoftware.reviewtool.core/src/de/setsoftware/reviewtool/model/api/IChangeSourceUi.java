@@ -14,7 +14,7 @@ public interface IChangeSourceUi extends IProgressMonitor {
      * If false is returned, the change source shall go on without performing an update.
      * If null is returned the user chose to cancel.
      */
-    public abstract Boolean handleLocalWorkingCopyOutOfDate(String detailInfo);
+    public abstract Boolean handleLocalWorkingIncomplete(String detailInfo);
 
     /**
      * Increases the task nesting level.

@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.changesources.git;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,7 +24,7 @@ class HistoryFiller {
         this.logEntries .add(logEntry);
     }
 
-    public void populate(List<GitRevision> relevantRevisions, IChangeSourceUi ui) throws IOException {
+    public void populate(Collection<? extends GitRevision> relevantRevisions, IChangeSourceUi ui) throws IOException {
         final Set<GitRepository> repos = new LinkedHashSet<>();
         long minTime = Long.MAX_VALUE;
         for (final GitRevision r : relevantRevisions) {
@@ -53,7 +54,7 @@ class HistoryFiller {
                         continue;
                     }
 
-                    ui.subTask("Processing revision " + r);
+                    ui.subTask("Processing revision " + r.getRevisionString());
                     r.analyzeRevision(graph);
                     repo.markAsAnalyzed(r.getRevisionString());
                 }
