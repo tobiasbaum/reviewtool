@@ -38,7 +38,7 @@ public final class RepoRevision<RevIdT extends IPartiallyComparable<RevIdT>> imp
 
     @Override
     public int hashCode() {
-        return this.repo.hashCode() ^ this.id.hashCode();
+        return this.id.hashCode();
     }
 
     @Override
@@ -47,7 +47,7 @@ public final class RepoRevision<RevIdT extends IPartiallyComparable<RevIdT>> imp
             return false;
         }
         final RepoRevision<?> r = (RepoRevision<?>) o;
-        return this.repo.equals(r.repo) && this.id.equals(r.id);
+        return this.repo == r.repo && this.id.equals(r.id);
     }
 
     @Override

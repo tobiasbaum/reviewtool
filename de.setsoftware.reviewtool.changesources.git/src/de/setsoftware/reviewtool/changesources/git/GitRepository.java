@@ -101,11 +101,9 @@ final class GitRepository extends AbstractRepository {
 
     @Override
     public String getId() {
-        // Git repositories do not have a unique id.... So we just return the URL of the
-        // origin server - which is quite unique, too. If no remote origin is set, we just
-        // return the local path of the reposiory.... this is at least locally unique...
-        final String remoteUrl = this.getRepository().getConfig().getString("remote", "origin", "url");
-        return remoteUrl != null ? remoteUrl : this.getRepository().getDirectory().getAbsolutePath();
+        // as each working copy is also a repository, and there is nothing like a central repository
+        //  in git, just use the local path as ID
+        return this.workingCopyRoot.getAbsolutePath();
     }
 
     @Override
