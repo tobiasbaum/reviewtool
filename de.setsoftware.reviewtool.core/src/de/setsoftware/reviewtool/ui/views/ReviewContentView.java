@@ -731,6 +731,11 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         private Image determineImage(boolean notViewedAtAll, double maxRatio, double averageRatio,
                 boolean irrelevantForReview, IconGrammar icon) {
+            if (icon == null) {
+                return ImageCache.getColoredRectangle(
+                        NOT_VIEWED_COLOR,
+                        NOT_VIEWED_COLOR);
+            }
             if (notViewedAtAll) {
                 if (irrelevantForReview) {
                     return ImageCache.getGrammarBasedIcon(
