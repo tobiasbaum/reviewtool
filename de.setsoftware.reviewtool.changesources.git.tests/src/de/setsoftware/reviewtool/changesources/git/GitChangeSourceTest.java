@@ -538,4 +538,117 @@ public class GitChangeSourceTest {
         }
     }
 
+    @Test
+    public void testBranchAndMerge() throws Exception {
+        final TestdataRepo repo = new TestdataRepo();
+        try {
+            repo.addBinaryFile("A")
+                .addBinaryFile("B")
+                .addBinaryFile("C")
+                .commit("TIC-1: Initial commit");
+            repo.changeBinaryFile("A").commit("TIC-2: commit 2");
+            repo.changeBinaryFile("B").commit("TIC-2: commit 3");
+            repo.createAndSwitchBranch(repo.mapToHash("commit 2"), "myBranch");
+            repo.changeBinaryFile("C").commit("TIC-2: commit 4 (in another branch)");
+            repo.merge("myBranch", "master");
+            repo.changeBinaryFile("A").commit("TIC-2: commit 6");
+
+            final GitChangeSource src = createCs(repo);
+            final ChangeSourceUiStub ui = createUi();
+
+            final IChangeData actual = src.getRepositoryChanges("TIC-2", ui);
+            final List<? extends ICommit> commits = actual.getMatchedCommits();
+
+            assertEquals("TIC-2: commit 2 (1970-01-01 01:00, author, " + repo.mapToHash("commit 2") + ")", commits.get(0).getMessage());
+            assertEquals(new Date(17000), commits.get(0).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(0), "commit 1", 15, "commit 2", 18, FileChangeType.OTHER, "A");
+
+            assertEquals("TIC-2: commit 3 (1970-01-01 01:00, author, " + repo.mapToHash("commit 3") + ")", commits.get(1).getMessage());
+            assertEquals(new Date(20000), commits.get(1).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(1), "commit 2", 18, "commit 3", 21, FileChangeType.OTHER, "B");
+
+            assertEquals("TIC-2: commit 4 (in another branch) (1970-01-01 01:00, author, " + repo.mapToHash("commit 4") + ")", commits.get(2).getMessage());
+            assertEquals(new Date(25000), commits.get(2).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(2), "commit 2", 18, "commit 4", 26, FileChangeType.OTHER, "C");
+
+            assertEquals("TIC-2: commit 6 (1970-01-01 01:00, author, " + repo.mapToHash("commit 6") + ")", commits.get(3).getMessage());
+            assertEquals(new Date(32000), commits.get(3).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(3), "commit 5", 30, "commit 6", 33, FileChangeType.OTHER, "A");
+
+            assertEquals(4, commits.size());
+            assertEquals(
+                    "subTask Determining relevant commits...\n" +
+                    "increaseTaskNestingLevel\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 6") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 5") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 4") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 3") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 2") + "\n" +
+                    "decreaseTaskNestingLevel\n" +
+                    "subTask Analyzing commits...\n",
+                    ui.getLog());
+
+        } finally {
+            repo.clean();
+        }
+    }
+
+    @Test
+    public void testBranchAndMerge2() throws Exception {
+        final TestdataRepo repo = new TestdataRepo();
+        try {
+            repo.addBinaryFile("A").commit("TIC-1: Initial commit");
+            repo.addBinaryFile("B").commit("TIC-2: commit 2");
+            repo.createAndSwitchBranch(repo.mapToHash("commit 1"), "myBranch");
+            repo.addBinaryFile("C").commit("TIC-2: commit 3 (in another branch)");
+            repo.merge("myBranch", "master");
+            repo.changeBinaryFile("A").commit("TIC-2: commit 5");
+            repo.changeBinaryFile("B").commit("TIC-2: commit 6");
+            repo.changeBinaryFile("C").commit("TIC-2: commit 7");
+
+            final GitChangeSource src = createCs(repo);
+            final ChangeSourceUiStub ui = createUi();
+
+            final IChangeData actual = src.getRepositoryChanges("TIC-2", ui);
+            final List<? extends ICommit> commits = actual.getMatchedCommits();
+
+            assertEquals("TIC-2: commit 2 (1970-01-01 01:00, author, " + repo.mapToHash("commit 2") + ")", commits.get(0).getMessage());
+            assertEquals(new Date(17000), commits.get(0).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(0), null, 15, "commit 2", 18, FileChangeType.ADDED, "B");
+
+            assertEquals("TIC-2: commit 3 (in another branch) (1970-01-01 01:00, author, " + repo.mapToHash("commit 3") + ")", commits.get(1).getMessage());
+            assertEquals(new Date(22000), commits.get(1).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(1), null, 15, "commit 3", 23, FileChangeType.ADDED, "C");
+
+            assertEquals("TIC-2: commit 5 (1970-01-01 01:00, author, " + repo.mapToHash("commit 5") + ")", commits.get(2).getMessage());
+            assertEquals(new Date(29000), commits.get(2).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(2), "commit 4", 27, "commit 5", 30, FileChangeType.OTHER, "A");
+
+            assertEquals("TIC-2: commit 6 (1970-01-01 01:00, author, " + repo.mapToHash("commit 6") + ")", commits.get(3).getMessage());
+            assertEquals(new Date(32000), commits.get(3).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(3), "commit 5", 30, "commit 6", 33, FileChangeType.OTHER, "B");
+
+            assertEquals("TIC-2: commit 7 (1970-01-01 01:00, author, " + repo.mapToHash("commit 7") + ")", commits.get(4).getMessage());
+            assertEquals(new Date(35000), commits.get(4).getTime());
+            checkContainsOneBinaryChange(repo, commits.get(4), "commit 6", 33, "commit 7", 36, FileChangeType.OTHER, "C");
+
+            assertEquals(5, commits.size());
+            assertEquals(
+                    "subTask Determining relevant commits...\n" +
+                    "increaseTaskNestingLevel\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 7") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 6") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 5") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 4") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 3") + "\n" +
+                    "subTask Processing revision " + repo.mapToHash("commit 2") + "\n" +
+                    "decreaseTaskNestingLevel\n" +
+                    "subTask Analyzing commits...\n",
+                    ui.getLog());
+
+        } finally {
+            repo.clean();
+        }
+    }
+
 }

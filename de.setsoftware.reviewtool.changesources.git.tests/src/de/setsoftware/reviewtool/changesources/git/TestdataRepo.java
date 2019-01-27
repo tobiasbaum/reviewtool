@@ -14,6 +14,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.MergeCommand.FastForwardMode;
+import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.MergeResult.MergeStatus;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.NoFilepatternException;
 import org.eclipse.jgit.lib.Config;
@@ -215,6 +218,24 @@ public class TestdataRepo {
             git.checkout()
                 .setName(branchName)
                 .call();
+        }
+    }
+
+    public void merge(String fromBranch, String toBranch) throws IOException, GitAPIException {
+        try (Git git = Git.open(this.baseDir)) {
+            git.checkout()
+                .setName(toBranch)
+                .call();
+            final MergeResult mrg = git.merge()
+                .include(git.getRepository().resolve(fromBranch))
+                .setFastForward(FastForwardMode.NO_FF)
+                .setSquash(false)
+                .setCommit(false)
+                .call();
+            if (mrg.getMergeStatus() == MergeStatus.CONFLICTING) {
+                throw new AssertionError("conflict while merging " + mrg);
+            }
+            this.commit("merge " + fromBranch + " into " + toBranch);
         }
     }
 
