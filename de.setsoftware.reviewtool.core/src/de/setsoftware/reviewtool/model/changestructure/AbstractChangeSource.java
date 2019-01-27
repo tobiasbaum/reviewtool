@@ -156,6 +156,10 @@ public abstract class AbstractChangeSource implements IChangeSource {
     }
 
     protected final boolean isUseTextualDiff(final IRevisionedFile file) throws Exception {
+        if (file.getPath().endsWith(".pdf")) {
+            //binary detection does not work well for PDFs, so force them to binary
+            return false;
+        }
         final byte[] newFileContent = file.getContents();
         return !contentLooksBinary(newFileContent) && newFileContent.length <= this.maxTextDiffThreshold;
     }
