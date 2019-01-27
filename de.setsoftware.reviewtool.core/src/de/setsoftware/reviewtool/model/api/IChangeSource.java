@@ -23,10 +23,11 @@ public interface IChangeSource {
 
     /**
      * Notifies the change source that a project has been added.
+     * Returns true if the project belongs to a working copy that is handled by this change source.
      *
      * @param projectRoot The root directory of the project.
      */
-    public abstract void addProject(final File projectRoot) throws ChangeSourceException;
+    public abstract boolean addProject(final File projectRoot) throws ChangeSourceException;
 
     /**
      * Notifies the change source that a project has been removed.

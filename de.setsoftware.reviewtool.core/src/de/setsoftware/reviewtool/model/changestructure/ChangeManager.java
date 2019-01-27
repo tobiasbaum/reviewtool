@@ -273,11 +273,21 @@ public final class ChangeManager {
      * Initializes a freshly set {@link IChangeSource} by adding projects and analyzing local changes.
      */
     private synchronized void addProjectsAndCollectLocalChanges() {
+        for (final File projectRoot : this.projectDirs) {
+            for (final IChangeSource changeSource : this.changeSourceRef) {
+                try {
+                    final boolean handled = changeSource.addProject(projectRoot);
+                    if (handled) {
+                        //when a project is suitable for multiple change sources, prefer the first
+                        break;
+                    }
+                } catch (final ChangeSourceException e) {
+                    Logger.warn("Problem while adding project to change source", e);
+                }
+            }
+        }
         for (final IChangeSource changeSource : this.changeSourceRef) {
             try {
-                for (final File projectRoot : this.projectDirs) {
-                    changeSource.addProject(projectRoot);
-                }
                 this.analyzeLocalChanges(changeSource, null);
             } catch (final ChangeSourceException e) {
                 //if there is a problem while determining local changes, ignore them
@@ -301,23 +311,31 @@ public final class ChangeManager {
 
         LocalChangeWorkItem workItem;
         while ((workItem = this.workQueue.poll()) != null) {
-            for (final IChangeSource changeSource : this.changeSourceRef) {
-                try {
-                    for (final File project : workItem.projectsAdded) {
+            try {
+                for (final File project : workItem.projectsAdded) {
+                    for (final IChangeSource changeSource : this.changeSourceRef) {
                         this.projectDirs.add(project);
-                        changeSource.addProject(project);
+                        final boolean handled = changeSource.addProject(project);
                         Logger.info("Adding project " + project);
+                        if (handled) {
+                            //when a project is suitable for multiple change sources, prefer the first
+                            break;
+                        }
                     }
-                    for (final File project : workItem.projectsRemoved) {
+                }
+                for (final File project : workItem.projectsRemoved) {
+                    for (final IChangeSource changeSource : this.changeSourceRef) {
                         this.projectDirs.remove(project);
                         changeSource.removeProject(project);
                         Logger.info("Removing project " + project);
                     }
-                    this.analyzeLocalChanges(changeSource, workItem.filesChanged);
-                } catch (final ChangeSourceException e) {
-                    //if there is a problem while determining local changes, ignore them
-                    Logger.warn("Problem while processing local changes incrementally", e);
                 }
+                for (final IChangeSource changeSource : this.changeSourceRef) {
+                    this.analyzeLocalChanges(changeSource, workItem.filesChanged);
+                }
+            } catch (final ChangeSourceException e) {
+                //if there is a problem while determining local changes, ignore them
+                Logger.warn("Problem while processing local changes incrementally", e);
             }
         }
     }

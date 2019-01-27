@@ -16,10 +16,10 @@ import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IFileHistoryEdge;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
+import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
 import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
-import de.setsoftware.reviewtool.model.api.IFileHistoryNode.Type;
 
 /**
  * Superclass with common behavior for usual change sources.
@@ -50,24 +50,28 @@ public abstract class AbstractChangeSource implements IChangeSource {
     }
 
     @Override
-    public void addProject(final File projectRoot) throws ChangeSourceException {
+    public boolean addProject(final File projectRoot) throws ChangeSourceException {
         final File wcRoot = this.determineWorkingCopyRoot(projectRoot);
-        if (wcRoot != null) {
-            boolean wcCreated = false;
-            synchronized (this.projectsPerWcMap) {
-                Set<File> projects = this.projectsPerWcMap.get(wcRoot);
-                if (projects == null) {
-                    projects = new LinkedHashSet<>();
-                    this.projectsPerWcMap.put(wcRoot, projects);
-                    wcCreated = true;
-                }
-                projects.add(projectRoot);
-            }
-
-            if (wcCreated) {
-                this.workingCopyAdded(wcRoot);
-            }
+        if (wcRoot == null) {
+            return false;
         }
+
+        boolean wcCreated = false;
+        synchronized (this.projectsPerWcMap) {
+            Set<File> projects = this.projectsPerWcMap.get(wcRoot);
+            if (projects == null) {
+                projects = new LinkedHashSet<>();
+                this.projectsPerWcMap.put(wcRoot, projects);
+                wcCreated = true;
+            }
+            projects.add(projectRoot);
+        }
+
+        if (wcCreated) {
+            this.workingCopyAdded(wcRoot);
+        }
+
+        return true;
     }
 
     protected abstract void workingCopyAdded(File wcRoot);
