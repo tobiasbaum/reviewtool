@@ -20,7 +20,7 @@ public final class StubUi implements IUserInteraction, ITicketChooser, ISyntaxFi
     }
 
     @Override
-    public String choose(IReviewPersistence persistence, String ticketKeyDefault, boolean forReview) {
+    public String choose(ITicketConnector persistence, String ticketKeyDefault, boolean forReview) {
         return this.ticketId;
     }
 

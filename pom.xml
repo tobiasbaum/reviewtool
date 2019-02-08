@@ -178,6 +178,7 @@
     <module>de.setsoftware.reviewtool.changesources.svn</module>
     <module>de.setsoftware.reviewtool.changesources.svn.tests</module>
     <module>de.setsoftware.reviewtool.ticketconnectors.file</module>
+    <module>de.setsoftware.reviewtool.ticketconnectors.jira</module>
     <module>de.setsoftware.reviewtool.reminder</module>
     <module>de.setsoftware.reviewtool.feature</module>
     <module>de.setsoftware.reviewtool.updatesite</module>

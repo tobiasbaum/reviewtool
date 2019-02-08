@@ -29,7 +29,7 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.Util;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.EndTransition.Type;
-import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
 import de.setsoftware.reviewtool.model.TicketLinkSettings;
@@ -37,7 +37,7 @@ import de.setsoftware.reviewtool.model.TicketLinkSettings;
 /**
  * Persists review comments in a special field of JIRA tickets.
  */
-public class JiraPersistence implements IReviewPersistence {
+public class JiraPersistence implements ITicketConnector {
 
     /**
      * Wrapper for the JSON data of a JIRA ticket.

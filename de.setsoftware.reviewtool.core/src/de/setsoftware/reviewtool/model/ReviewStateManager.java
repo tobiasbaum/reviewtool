@@ -17,7 +17,7 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 public class ReviewStateManager {
 
     private final IReviewDataCache localReviewData;
-    private IReviewPersistence persistence;
+    private ITicketConnector persistence;
     private final IUserInteraction userInteraction;
 
     private String ticketKey;
@@ -26,7 +26,7 @@ public class ReviewStateManager {
 
     public ReviewStateManager(
             IReviewDataCache localReviewData,
-            IReviewPersistence persistence,
+            ITicketConnector persistence,
             IUserInteraction userInteraction) {
         this.localReviewData = localReviewData;
         this.persistence = persistence;
@@ -147,7 +147,7 @@ public class ReviewStateManager {
         return this.ticketKey;
     }
 
-    public void setPersistence(IReviewPersistence newPersistence) {
+    public void setPersistence(ITicketConnector newPersistence) {
         this.persistence = newPersistence;
     }
 

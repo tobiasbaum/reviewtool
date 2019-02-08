@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import de.setsoftware.reviewtool.model.EndTransition;
-import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
 import de.setsoftware.reviewtool.model.TicketLinkSettings;
@@ -13,7 +13,7 @@ import de.setsoftware.reviewtool.model.TicketLinkSettings;
 /**
  * Dummy ticket connector to be used when none is configured.
  */
-public class DummyPersistence implements IReviewPersistence {
+public class DummyPersistence implements ITicketConnector {
 
     @Override
     public Set<String> getFilterNamesForReview() {

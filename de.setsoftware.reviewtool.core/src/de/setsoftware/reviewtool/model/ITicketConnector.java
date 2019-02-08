@@ -6,7 +6,7 @@ import java.util.Set;
 /**
  * Abstraction of the different ways to get possible work and to save review information.
  */
-public interface IReviewPersistence {
+public interface ITicketConnector {
 
     /**
      * Returns the names of filters from which the user can choose when starting a review.

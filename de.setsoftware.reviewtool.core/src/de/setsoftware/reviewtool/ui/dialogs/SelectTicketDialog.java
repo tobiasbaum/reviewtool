@@ -25,7 +25,7 @@ import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.base.Util;
-import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.TicketInfo;
 import de.setsoftware.reviewtool.model.TicketLinkSettings;
 
@@ -44,11 +44,11 @@ public class SelectTicketDialog extends Dialog {
     private Text keyField;
 
     private final boolean review;
-    private final IReviewPersistence persistence;
+    private final ITicketConnector persistence;
     private final String oldValue;
     private String selectedKey;
 
-    protected SelectTicketDialog(Shell parentShell, String oldValue, IReviewPersistence p, boolean review) {
+    protected SelectTicketDialog(Shell parentShell, String oldValue, ITicketConnector p, boolean review) {
         super(parentShell);
         this.setShellStyle(this.getShellStyle() | SWT.RESIZE);
         this.persistence = p;
@@ -60,7 +60,7 @@ public class SelectTicketDialog extends Dialog {
      * Shows the dialog and lets the user select a ticket.
      * @return The ticket id, or null if none was selected.
      */
-    public static String get(IReviewPersistence p, String oldValue, boolean forReview) {
+    public static String get(ITicketConnector p, String oldValue, boolean forReview) {
         final Shell s = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
         final SelectTicketDialog dialog = new SelectTicketDialog(s, oldValue, p, forReview);
         final int ret = dialog.open();

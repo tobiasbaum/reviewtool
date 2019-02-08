@@ -59,7 +59,7 @@ import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.FileCountInCo
 import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.PathIrrelevanceFilterConfigurator;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.FileReviewDataCache;
-import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.ISyntaxFixer;
 import de.setsoftware.reviewtool.model.ITicketChooser;
@@ -133,7 +133,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
         @Override
         public String choose(
-                final IReviewPersistence persistence,
+                final ITicketConnector persistence,
                 final String ticketKeyDefault,
                 final boolean forReview) {
             return SelectTicketDialog.get(persistence, ticketKeyDefault, forReview);
@@ -980,7 +980,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     @Override
-    public void setPersistence(final IReviewPersistence newPersistence) {
+    public void setPersistence(final ITicketConnector newPersistence) {
         this.persistence.setPersistence(newPersistence);
     }
 

@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * An implementation of {@link IReviewPersistence} that does not persist anything.
+ * An implementation of {@link ITicketConnector} that does not persist anything.
  */
-public class PersistenceStub implements IReviewPersistence {
+public class PersistenceStub implements ITicketConnector {
 
     private String reviewData = "";
     private int roundNumber = 1;

@@ -46,6 +46,13 @@
          unpack="false"/>
 
    <plugin
+         id="de.setsoftware.reviewtool.ticketconnectors.jira"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
          id="de.setsoftware.reviewtool.reminder"
          download-size="0"
          install-size="0"

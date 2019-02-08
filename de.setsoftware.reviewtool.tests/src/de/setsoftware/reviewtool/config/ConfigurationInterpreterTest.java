@@ -26,7 +26,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
@@ -88,7 +88,7 @@ public class ConfigurationInterpreterTest {
     private static final class TestConfigurable implements IReviewConfigurable {
 
         @Override
-        public void setPersistence(IReviewPersistence persistence) {
+        public void setPersistence(ITicketConnector persistence) {
         }
 
         @Override

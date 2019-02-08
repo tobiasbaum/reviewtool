@@ -17,7 +17,7 @@ import java.util.Set;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.EndTransition;
-import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.TicketInfo;
 import de.setsoftware.reviewtool.model.TicketLinkSettings;
@@ -25,7 +25,7 @@ import de.setsoftware.reviewtool.model.TicketLinkSettings;
 /**
  * A simple review persistence layer based on a shared directory.
  */
-public class FilePersistence implements IReviewPersistence {
+public class FilePersistence implements ITicketConnector {
 
     private static final String REVIEW_DATA_TXT = "reviewData.txt";
     private static final String REVIEW_HISTORY_TXT = "reviewHistory.txt";

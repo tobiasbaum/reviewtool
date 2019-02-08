@@ -1,6 +1,6 @@
 package de.setsoftware.reviewtool.config;
 
-import de.setsoftware.reviewtool.model.IReviewPersistence;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
@@ -16,7 +16,7 @@ public interface IReviewConfigurable {
     /**
      * Sets the strategy used to load and store review data.
      */
-    public abstract void setPersistence(IReviewPersistence persistence);
+    public abstract void setPersistence(ITicketConnector persistence);
 
     /**
      * Adds a source for changes.
