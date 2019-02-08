@@ -51,7 +51,6 @@ import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
 import de.setsoftware.reviewtool.config.IConfigurator;
 import de.setsoftware.reviewtool.config.IReviewConfigurable;
-import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.BasicIrrelevanceFilterConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.BinaryFileFilterConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.FileDeletionFilterConfigurator;
@@ -346,7 +345,6 @@ public class ReviewPlugin implements IReviewConfigurable {
                 new RealUi());
 
         final Version bundleVersion = Activator.getDefault().getBundle().getVersion();
-        this.configInterpreter.addConfigurator(new JiraConnectorConfigurator());
         this.configInterpreter.addConfigurator(new TelemetryConfigurator(bundleVersion));
         this.configInterpreter.addConfigurator(new VersionChecker(bundleVersion));
         this.configInterpreter.addConfigurator(new SurveyAtEndConfigurator());

@@ -1,0 +1,11 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: de.setsoftware.reviewtool.ticketconnectors.jira;singleton:=true
+Bundle-Version: 1.28.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Bundle-ClassPath: .
+Bundle-Name: Ticketconnector-Jira
+Bundle-Vendor: Tobias Baum
+Require-Bundle: de.setsoftware.reviewtool.core
+Eclipse-RegisterBuddy: de.setsoftware.reviewtool.core
+Automatic-Module-Name: de.setsoftware.reviewtool.ticketconnectors.jira

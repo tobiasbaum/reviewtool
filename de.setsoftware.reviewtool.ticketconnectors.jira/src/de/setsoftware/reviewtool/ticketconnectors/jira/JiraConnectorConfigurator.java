@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.connectors.jira;
+package de.setsoftware.reviewtool.ticketconnectors.jira;
 
 import java.util.Collections;
 import java.util.Set;
