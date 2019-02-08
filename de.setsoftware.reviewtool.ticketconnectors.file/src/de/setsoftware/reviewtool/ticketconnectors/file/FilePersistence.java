@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.connectors.file;
+package de.setsoftware.reviewtool.ticketconnectors.file;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -261,7 +261,7 @@ public class FilePersistence implements IReviewPersistence {
 
     private void addUserToReviewHistory(String ticketKey, String user) {
         final TicketDir ticketDir = this.loadTicket(ticketKey);
-        final List<String> lines = new ArrayList<String>(ticketDir.readReviewHistory());
+        final List<String> lines = new ArrayList<>(ticketDir.readReviewHistory());
         lines.add(user);
         try {
             Files.write(ticketDir.getHistoryFile(), lines, Charset.forName("UTF-8"));

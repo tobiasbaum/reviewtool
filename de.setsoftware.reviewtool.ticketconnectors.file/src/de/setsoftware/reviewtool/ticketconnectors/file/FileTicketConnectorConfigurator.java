@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.connectors.file;
+package de.setsoftware.reviewtool.ticketconnectors.file;
 
 import java.io.File;
 import java.util.Collections;

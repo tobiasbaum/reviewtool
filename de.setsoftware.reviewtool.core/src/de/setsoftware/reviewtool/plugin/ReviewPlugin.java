@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.plugin;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -52,8 +51,6 @@ import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.config.ConfigurationInterpreter;
 import de.setsoftware.reviewtool.config.IConfigurator;
 import de.setsoftware.reviewtool.config.IReviewConfigurable;
-import de.setsoftware.reviewtool.connectors.file.FilePersistence;
-import de.setsoftware.reviewtool.connectors.file.FileTicketConnectorConfigurator;
 import de.setsoftware.reviewtool.connectors.jira.JiraConnectorConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.BasicIrrelevanceFilterConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.BinaryFileFilterConfigurator;
@@ -345,11 +342,10 @@ public class ReviewPlugin implements IReviewConfigurable {
     private ReviewPlugin() {
         this.persistence = new ReviewStateManager(
                 new FileReviewDataCache(Activator.getDefault().getStateLocation().toFile()),
-                new FilePersistence(new File("."), "please configure"),
+                new DummyPersistence(),
                 new RealUi());
 
         final Version bundleVersion = Activator.getDefault().getBundle().getVersion();
-        this.configInterpreter.addConfigurator(new FileTicketConnectorConfigurator());
         this.configInterpreter.addConfigurator(new JiraConnectorConfigurator());
         this.configInterpreter.addConfigurator(new TelemetryConfigurator(bundleVersion));
         this.configInterpreter.addConfigurator(new VersionChecker(bundleVersion));

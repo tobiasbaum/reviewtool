@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="de.setsoftware.reviewtool.ticketconnectors.file"
+         point="de.setsoftware.reviewtool.configurator">
+         <configurator
+               class="de.setsoftware.reviewtool.ticketconnectors.file.FileTicketConnectorConfigurator"/>
+   </extension>
+
+</plugin>
