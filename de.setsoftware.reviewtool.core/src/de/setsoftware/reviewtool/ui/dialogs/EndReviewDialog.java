@@ -18,8 +18,8 @@ import org.eclipse.ui.PlatformUI;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.remarks.ReviewData;
-import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtension;
-import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtensionData;
+import de.setsoftware.reviewtool.ui.api.EndReviewExtension;
+import de.setsoftware.reviewtool.ui.api.EndReviewExtensionData;
 
 /**
  * Dialog that is shown before the review is ended and that let's the user select

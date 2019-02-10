@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ui.api;
+package de.setsoftware.reviewtool.ui.facade;
 
 import java.lang.ref.WeakReference;
 import java.util.List;

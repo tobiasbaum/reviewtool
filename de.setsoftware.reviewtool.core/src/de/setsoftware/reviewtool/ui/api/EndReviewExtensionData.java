@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ui.dialogs.extensions;
+package de.setsoftware.reviewtool.ui.api;
 
 import de.setsoftware.reviewtool.model.EndTransition;
 

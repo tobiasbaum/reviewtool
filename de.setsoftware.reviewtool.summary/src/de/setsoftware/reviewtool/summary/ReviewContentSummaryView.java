@@ -22,7 +22,7 @@ import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.changestructure.CommitsInReview.CommitsInReviewListener;
-import de.setsoftware.reviewtool.ui.api.ReviewUi;
+import de.setsoftware.reviewtool.ui.facade.ReviewUi;
 
 /**
  * Basic text summary presentation with hyper-links to expand and shrink some

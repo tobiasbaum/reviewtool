@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.eclipse.swt.widgets.Composite;
 
-import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtension;
-import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtensionData;
+import de.setsoftware.reviewtool.ui.api.EndReviewExtension;
+import de.setsoftware.reviewtool.ui.api.EndReviewExtensionData;
 
 /**
  * An extension for the end review dialog that adds some questions.

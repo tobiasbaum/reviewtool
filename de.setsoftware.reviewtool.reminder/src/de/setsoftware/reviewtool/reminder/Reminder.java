@@ -9,7 +9,7 @@ import org.eclipse.swt.widgets.Display;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.TicketInfo;
-import de.setsoftware.reviewtool.ui.api.ReviewUi;
+import de.setsoftware.reviewtool.ui.facade.ReviewUi;
 
 /**
  * Checks if there are too many open reviews and shows a reminder.

@@ -1,11 +1,11 @@
 package de.setsoftware.reviewtool.config;
 
 import de.setsoftware.reviewtool.model.ITicketConnector;
-import de.setsoftware.reviewtool.model.IStopViewer;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
 import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
-import de.setsoftware.reviewtool.ui.dialogs.extensions.EndReviewExtension;
+import de.setsoftware.reviewtool.ui.api.EndReviewExtension;
+import de.setsoftware.reviewtool.ui.api.IStopViewer;
 
 /**
  * Interface to decouple the dynamically configurable review plugin from the
