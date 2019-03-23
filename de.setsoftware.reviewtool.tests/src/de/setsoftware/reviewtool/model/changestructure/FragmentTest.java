@@ -354,6 +354,13 @@ public class FragmentTest {
     }
 
     @Test
+    public void testGetContentFullLines5() {
+        final String content = "a\nb\nc\nd\ne\nf\n";
+        final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 2), pos(2, 2));
+        assertEquals("b\n", f1.getContentFullLines());
+    }
+
+    @Test
     public void testGetContent1() {
         final String content = "x\nabcdefgh\n";
         final IFragment f1 = new Fragment(fileWithContent(content), pos(2, 1), pos(3, 1));

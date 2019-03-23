@@ -157,7 +157,7 @@ public final class Fragment implements IFragment {
     }
 
     private String extractContent() {
-        if (this.isDeletion()) {
+        if (this.isDeletion() && this.to.getColumn() == 1) {
             return "";
         }
 
