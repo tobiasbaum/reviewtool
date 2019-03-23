@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.TourElement;
@@ -48,6 +49,7 @@ class TourHierarchyBuilder {
         for (final ChangePart c : sorted) {
             this.stops.addAll(c.getStops());
         }
+        Logger.info("stops in TourHierarchyBuilder: " + this.stops.size() + " (" + sorted.size() + " change parts)");
 
         this.indexMap = new HashMap<>();
         TreeNode cur = null;

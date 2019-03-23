@@ -224,12 +224,14 @@ public class ToursInReview {
                 filteredChanges.commitSubset,
                 new FragmentTracer(),
                 changeSourceUi);
+        Logger.info("initial tours=" + formatSizes(tours));
 
         final List<? extends Tour> userSelection = determinePossibleRestructurings(
                 tourRestructuringStrategies, tours, createUi, changeSourceUi, filteredChanges.toMakeIrrelevant);
         if (userSelection == null) {
             return null;
         }
+        Logger.info("userSelection tours=" + formatSizes(userSelection));
 
         changeSourceUi.subTask("Ordering stops...");
         final List<? extends Tour> toursToShow = groupAndSort(
@@ -249,8 +251,17 @@ public class ToursInReview {
                         return System.currentTimeMillis() - this.startTime > FAST_MODE_THRESHOLD;
                     }
                 });
+        Logger.info("after ordering tours=" + formatSizes(toursToShow));
 
         return new ToursInReview(changeManager, toursToShow, filteredChanges.toMakeIrrelevant);
+    }
+
+    private static String formatSizes(List<? extends Tour> tours) {
+        int stopCount = 0;
+        for (final Tour t : tours) {
+            stopCount += t.getStops().size();
+        }
+        return tours.size() + " tours, " + stopCount + " stops";
     }
 
     private static List<? extends Tour> groupAndSort(
@@ -264,9 +275,10 @@ public class ToursInReview {
             for (final Tour t : userSelection) {
                 ret.add(new Tour(
                         t.getDescription(),
-                        orderingAlgorithm.groupAndSort(t.getStops(),
-                        isCanceled,
-                        irrelevantCategories)));
+                        orderingAlgorithm.groupAndSort(
+                                t.getStops(),
+                                isCanceled,
+                                irrelevantCategories)));
             }
             return ret;
         } catch (final InterruptedException e) {

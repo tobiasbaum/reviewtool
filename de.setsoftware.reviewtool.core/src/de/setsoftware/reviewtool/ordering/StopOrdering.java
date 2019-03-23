@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.changestructure.IStopOrdering;
@@ -35,6 +36,7 @@ public class StopOrdering implements IStopOrdering {
         throws InterruptedException {
 
         final List<ChangePart> changeParts = ChangePart.groupToMinimumGranularity(stops, irrelevantCategories);
+        Logger.info("initial change parts: " + changeParts.size());
 
         TourCalculator.checkInterruption(isCanceled);
 
@@ -47,12 +49,14 @@ public class StopOrdering implements IStopOrdering {
             TourCalculator.checkInterruption(isCanceled);
         }
 
+        Logger.info("change parts before sorting: " + changeParts.size());
         final TourCalculator<ChangePart> calculator = TourCalculator.calculateFor(
                 changeParts,
                 getMatchSets(orderingInfos),
                 this.nameAndLineComparator(),
                 isCanceled);
         final List<ChangePart> sorted = calculator.getTour();
+        Logger.info("sorted change parts: " + sorted.size());
 
         final TourHierarchyBuilder hierarchyBuilder = new TourHierarchyBuilder(sorted);
         for (final OrderingInfo o : orderingInfos) {

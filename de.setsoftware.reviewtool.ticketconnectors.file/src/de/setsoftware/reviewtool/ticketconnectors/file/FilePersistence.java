@@ -291,8 +291,8 @@ public class FilePersistence implements ITicketConnector {
     public List<EndTransition> getPossibleTransitionsForReviewEnd(String ticketKey) {
         return Arrays.asList(
                 new EndTransition("OK", DONE, EndTransition.Type.OK),
-                new EndTransition("OK, aber Zweitreview nötig", READY_FOR_REVIEW, EndTransition.Type.OK),
-                new EndTransition("Rückläufer", REJECTED, EndTransition.Type.REJECTION));
+                new EndTransition("OK, but needs second review", READY_FOR_REVIEW, EndTransition.Type.OK),
+                new EndTransition("Rejected", REJECTED, EndTransition.Type.REJECTION));
     }
 
     @Override
