@@ -12,6 +12,8 @@ import java.util.Map;
  * An intermediate node in the bundling tree. It comes in two sub-flavors, either with reordering of
  * the children allowed or forbidden.
  *
+ * <p>Implementation of the Binder ADT.
+ *
  * @param <T> Type of the stops.
  */
 public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T> {
@@ -362,10 +364,11 @@ public class BundleCombinationTreeNode<T> extends BundleCombinationTreeElement<T
     @Override
     public String toString() {
         final String ts = Arrays.toString(this.children);
+        final String pref = this.reverseAllowed ? "" : "F";
         if (this.reorderingAllowed) {
-            return '{' + ts.substring(1, ts.length() - 1) + '}';
+            return pref + '{' + ts.substring(1, ts.length() - 1) + '}';
         } else {
-            return ts;
+            return pref + ts;
         }
     }
 

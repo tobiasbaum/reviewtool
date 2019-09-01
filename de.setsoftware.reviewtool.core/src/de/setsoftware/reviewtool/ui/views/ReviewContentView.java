@@ -38,6 +38,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
@@ -148,6 +150,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
     private FilterStateAction hideVisited;
     private FilterStateAction hideIrrelevant;
     private final Set<String> ticketIdHistory = new LinkedHashSet<>();
+    private ProgressChart progressChart;
 
     @Override
     public void createPartControl(Composite comp) {
@@ -199,7 +202,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
     private Composite createReviewContent(final ToursInReview tours) {
         final Composite panel = new Composite(this.comp, SWT.NULL);
-        panel.setLayout(new FillLayout());
+        panel.setLayout(new GridLayout(1, false));
 
         final TreeViewer tv = new TreeViewer(panel);
         ColumnViewerToolTipSupport.enableFor(tv);
@@ -209,6 +212,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         tv.setInput(tours);
 
         final Tree tree = tv.getTree();
+        tree.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
         tree.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetSelected(SelectionEvent e) {
@@ -226,6 +230,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
 
         ViewHelper.createContextMenu(this, tv.getControl(), tv);
         ensureActiveTourExpanded(tv, tours);
+
+        this.progressChart = new ProgressChart(panel, SWT.NULL);
+        this.progressChart.setLayoutData(new GridData(SWT.FILL, SWT.TOP, true, false));
+        this.updateProgressBar(tours);
 
         return panel;
     }
@@ -419,6 +427,39 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         if (this.currentContent != null) {
             this.currentContent.dispose();
         }
+        this.progressChart = null;
+    }
+
+    private void updateProgressBar(ToursInReview tours) {
+        if (this.progressChart == null) {
+            return;
+        }
+        int irrelevant = 0;
+        int visited = 0;
+        int partlyVisited = 0;
+        int unvisited = 0;
+        for (final Tour t : tours.getTopmostTours()) {
+            for (final Stop s : t.getStops()) {
+                final ViewStatistics statistics = TrackerManager.get().getStatistics();
+                if (statistics != null && statistics.isMarkedAsChecked(s)) {
+                    visited++;
+                } else {
+                    final ViewStatDataForStop viewRatio = TrackerManager.get().determineViewRatio(s);
+                    if (viewRatio.isNotViewedAtAll()) {
+                        if (s.isIrrelevantForReview(tours.getIrrelevantCategories())) {
+                            irrelevant++;
+                        } else {
+                            unvisited++;
+                        }
+                    } else if (viewRatio.isPartlyUnvisited()) {
+                        partlyVisited++;
+                    } else {
+                        visited++;
+                    }
+                }
+            }
+        }
+        this.progressChart.setCounts(irrelevant, visited, partlyVisited, unvisited);
     }
 
     /**
@@ -529,6 +570,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             for (final Tour t : toursToUpdate) {
                 this.viewer.update(t, null);
             }
+            ReviewContentView.this.updateProgressBar(this.tours);
         }
 
         private void addSelfAndParentsIfNotContained(Tour t, Set<Tour> buffer) {

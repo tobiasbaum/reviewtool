@@ -16,8 +16,7 @@ import java.util.Set;
 
 /**
  * Contains the algorithm for efficiently grouping and reordering change parts/stops.
- * Internally, it uses two types of trees, one for the grouping and one for re-ordering based on the results
- * of the grouping.
+ * Internally, it uses a binder tree for the grouping.
  *
  * @param <T> Type of the stops.
  */
