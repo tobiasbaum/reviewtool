@@ -1,6 +1,8 @@
 package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * A match set with a distinguished center element that shall be put before the others.
@@ -9,7 +11,17 @@ import java.util.Collection;
  */
 public class StarMatchSet<T> extends MatchSet<T> {
 
-    private final T distinguishedPart;
+    private final Set<T> distinguishedPart;
+
+    /**
+     * Creates a new {@link StarMatchSet}.
+     * @param distinguishedPart The center element(s).
+     * @param set All matched elements (including the center).
+     */
+    public StarMatchSet(Set<T> distinguishedPart, Collection<T> set) {
+        super(set);
+        this.distinguishedPart = distinguishedPart;
+    }
 
     /**
      * Creates a new {@link StarMatchSet}.
@@ -17,11 +29,10 @@ public class StarMatchSet<T> extends MatchSet<T> {
      * @param set All matched elements (including the center).
      */
     public StarMatchSet(T distinguishedPart, Collection<T> set) {
-        super(set);
-        this.distinguishedPart = distinguishedPart;
+        this(Collections.singleton(distinguishedPart), set);
     }
 
-    public T getDistinguishedPart() {
+    public Set<T> getDistinguishedPart() {
         return this.distinguishedPart;
     }
 

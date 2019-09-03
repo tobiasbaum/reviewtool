@@ -113,7 +113,9 @@ public class Relation {
         }
         if (toShrink instanceof StarMatchSet) {
             final StarMatchSet<String> star = (StarMatchSet<String>) toShrink;
-            return new StarMatchSet<>(shrink(star.getDistinguishedPart(), ms), ret);
+            assert star.getDistinguishedPart().size() == 1 : "multi-core stars not supported here at the moment";
+            final String center = star.getDistinguishedPart().iterator().next();
+            return new StarMatchSet<>(Collections.singleton(shrink(center, ms)), ret);
         } else {
             return new UnorderedMatchSet<>(ret);
         }
@@ -170,7 +172,8 @@ public class Relation {
 
         if (ms instanceof StarMatchSet) {
             final StarMatchSet<String> s = (StarMatchSet<String>) ms;
-            if (matchOrder.get(0).equals(s.getDistinguishedPart())) {
+            final Set<String> dp = s.getDistinguishedPart();
+            if (matchOrder.subList(0, dp.size()).containsAll(dp)) {
                 return Collections.singleton(s);
             }
         }

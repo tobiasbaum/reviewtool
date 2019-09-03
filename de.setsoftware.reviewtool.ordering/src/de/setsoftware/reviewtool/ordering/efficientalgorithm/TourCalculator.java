@@ -2,7 +2,6 @@ package de.setsoftware.reviewtool.ordering.efficientalgorithm;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -215,10 +214,10 @@ public class TourCalculator<T> {
                 continue;
             }
             final Set<S> rest = new HashSet<>(matchSet.getChangeParts());
-            final S distinguishedPart = ((StarMatchSet<S>) matchSet).getDistinguishedPart();
-            rest.remove(distinguishedPart);
+            final Set<S> distinguishedPart = ((StarMatchSet<S>) matchSet).getDistinguishedPart();
+            rest.removeAll(distinguishedPart);
             final BundleCombinationTreeElement<S> next = bundler.bundleOrdered(
-                    new SimpleSetAdapter<>(Collections.singleton(distinguishedPart)),
+                    new SimpleSetAdapter<>(distinguishedPart),
                     new SimpleSetAdapter<>(rest));
             if (next != null) {
                 bundler = next;
@@ -230,7 +229,7 @@ public class TourCalculator<T> {
                 continue;
             }
             final Set<S> center = new HashSet<>();
-            center.add(((StarMatchSet<S>) matchSet).getDistinguishedPart());
+            center.addAll(((StarMatchSet<S>) matchSet).getDistinguishedPart());
             final Set<S> rest = new HashSet<>(matchSet.getChangeParts());
             for (final MatchSet<S> neededFold : foldedBundler.matchedWithFolds.get(matchSet)) {
                 if (disjoint(neededFold.getChangeParts(), center)) {
