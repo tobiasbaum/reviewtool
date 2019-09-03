@@ -47,6 +47,20 @@ public class OrderingInfoImpl implements OrderingInfo {
         return new OrderingInfoImpl(explicit, description, new StarMatchSet<>(center, combined));
     }
 
+    /**
+     * Creates an {@link OrderingInfo} that puts the center of a star pattern first and
+     * in which the center can consist of multiple nodes.
+     */
+    public static OrderingInfo bigStar(
+            HierarchyExplicitness explicit,
+            String description,
+            Set<ChangePart> center,
+            Collection<ChangePart> otherChangeParts) {
+        final Set<ChangePart> combined = new HashSet<>(otherChangeParts);
+        combined.addAll(center);
+        return new OrderingInfoImpl(explicit, description, new StarMatchSet<>(center, combined));
+    }
+
     @Override
     public MatchSet<ChangePart> getMatchSet() {
         return this.matchSet;

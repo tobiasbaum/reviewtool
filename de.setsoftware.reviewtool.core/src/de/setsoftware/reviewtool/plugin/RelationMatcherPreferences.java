@@ -19,6 +19,7 @@ import de.setsoftware.reviewtool.ordering.MethodCallRelation;
 import de.setsoftware.reviewtool.ordering.MethodOverrideRelation;
 import de.setsoftware.reviewtool.ordering.RelationMatcher;
 import de.setsoftware.reviewtool.ordering.TokenSimilarityRelation;
+import de.setsoftware.reviewtool.ordering.XsdBeforeRestRelation;
 
 /**
  * Handles the preferences for relation matchers (activity, explicitness, order).
@@ -77,6 +78,12 @@ public class RelationMatcherPreferences {
             @Override
             public RelationMatcher create(HierarchyExplicitness explicitness) {
                 return new TokenSimilarityRelation();
+            }
+        },
+        XSD_FIRST("xsd files first", HierarchyExplicitness.NONE, HierarchyExplicitness.NONE, true) {
+            @Override
+            public RelationMatcher create(HierarchyExplicitness explicitness) {
+                return new XsdBeforeRestRelation(explicitness);
             }
         };
 
