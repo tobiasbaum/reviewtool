@@ -17,26 +17,26 @@ class ReviewDataParser {
     private static final String REMARK_PREFIX = "*# ";
     private static final String COMMENT_PREFIX = "*#* ";
 
-    private static final Pattern REVIEW_HEADER_PATTERN = Pattern.compile("Review +#?(\\d+):");
+    private static final Pattern REVIEW_HEADER_PATTERN =
+            Pattern.compile("[^a-zA-Z0-9]*review[^a-zA-Z0-9]+(\\d+)[^a-zA-Z0-9]*", Pattern.CASE_INSENSITIVE);
     private static final Pattern COMMENT_PATTERN = Pattern.compile("([^ ]+): (.+)", Pattern.DOTALL);
 
     /**
      * States for the parser's state machine.
      */
     private enum ParseState {
-        BEFORE_ROUND,
-        IN_ROUND,
+        BEFORE_REMARK,
         IN_REMARK,
         IN_COMMENT
     }
 
     private final IMarkerFactory markerFactory;
 
-    private ParseState state = ParseState.BEFORE_ROUND;
+    private ParseState state = ParseState.BEFORE_REMARK;
     private final Map<Integer, String> reviewersForRounds;
     private ReviewRound currentRound;
     private final List<ReviewRound> rounds = new ArrayList<>();
-    private RemarkType currentType;
+    private RemarkType currentType = RemarkType.CAN_FIX;
     private final StringBuilder currentText = new StringBuilder();
     private ReviewRemark currentRemark;
 
@@ -46,59 +46,72 @@ class ReviewDataParser {
     }
 
     public void handleNextLine(String trimmedLine) throws ReviewRemarkException {
-        if (this.state == ParseState.BEFORE_ROUND) {
-            if (trimmedLine.isEmpty()) {
-                //ist OK, nichts tun
-                return;
-            }
-            final Matcher m = REVIEW_HEADER_PATTERN.matcher(trimmedLine);
-            if (m.matches()) {
-                this.currentRound = new ReviewRound(Integer.parseInt(m.group(1)));
-                this.rounds.add(this.currentRound);
-                this.state = ParseState.IN_ROUND;
+        final Matcher roundStartMatcher = REVIEW_HEADER_PATTERN.matcher(trimmedLine);
+        if (roundStartMatcher.matches()) {
+            this.currentRound = this.getOrCreateRound(Integer.parseInt(roundStartMatcher.group(1)));
+            this.state = ParseState.BEFORE_REMARK;
+        } else if (trimmedLine.isEmpty()) {
+            this.endLastItem();
+            this.state = ParseState.BEFORE_REMARK;
+            this.currentRemark = null;
+            this.currentType = RemarkType.CAN_FIX;
+        } else if (trimmedLine.startsWith(TYPE_PREFIX)) {
+            this.endLastItem();
+            final RemarkType type = this.parseType(trimmedLine);
+            if (type != null) {
+                this.currentType = type;
+                this.state = ParseState.BEFORE_REMARK;
             } else {
-                throw new ReviewRemarkException("parse exception: " + trimmedLine);
-            }
-        } else {
-            if (trimmedLine.isEmpty()) {
-                this.endLastItem();
-                this.state = ParseState.BEFORE_ROUND;
-                this.currentRound = null;
-                this.currentRemark = null;
-                this.currentType = null;
-            } else if (trimmedLine.startsWith(TYPE_PREFIX)) {
-                this.endLastItem();
-                this.currentType = this.parseType(trimmedLine);
-                this.state = ParseState.IN_ROUND;
-            } else if (trimmedLine.startsWith(REMARK_PREFIX)) {
-                this.endLastItem();
-                this.parseRemarkStart(trimmedLine);
+                //invalid type name, treat it as a remark
+                this.parseRemarkOrCommentStart(trimmedLine);
                 this.state = ParseState.IN_REMARK;
-            } else if (trimmedLine.startsWith(COMMENT_PREFIX)) {
-                this.endLastItem();
-                this.parseCommentStart(trimmedLine);
-                this.state = ParseState.IN_COMMENT;
+            }
+        } else if (trimmedLine.startsWith(REMARK_PREFIX)) {
+            this.endLastItem();
+            this.parseRemarkOrCommentStart(trimmedLine);
+            this.state = ParseState.IN_REMARK;
+        } else if (trimmedLine.startsWith(COMMENT_PREFIX)) {
+            this.endLastItem();
+            this.parseRemarkOrCommentStart(trimmedLine);
+            this.state = ParseState.IN_COMMENT;
+        } else if (trimmedLine.startsWith("-") || trimmedLine.startsWith("#") || trimmedLine.startsWith("*")) {
+            this.endLastItem();
+            this.parseRemarkOrCommentStart(trimmedLine);
+            this.state = ParseState.IN_REMARK;
+        } else {
+            if (this.state == ParseState.IN_REMARK || this.state == ParseState.IN_COMMENT) {
+                this.currentText.append("\n");
             } else {
-                if (this.state == ParseState.IN_REMARK
-                        || this.state == ParseState.IN_COMMENT) {
-                    this.currentText .append("\n").append(trimmedLine);
-                } else {
-                    throw new ReviewRemarkException("parse exception: " + trimmedLine);
-                }
+                this.state = ParseState.IN_REMARK;
+            }
+            this.currentText.append(trimmedLine);
+        }
+    }
+
+    private ReviewRound getOrCreateRound(int number) {
+        for (final ReviewRound round : this.rounds) {
+            if (round.getNumber() == number) {
+                return round;
             }
         }
+        final ReviewRound newRound = new ReviewRound(number);
+        this.rounds.add(newRound);
+        return newRound;
     }
 
     private RemarkType parseType(String trimmedLine) {
         return ReviewRound.parseType(trimmedLine.substring(2));
     }
 
-    private void parseRemarkStart(String trimmedLine) {
-        this.currentText.append(trimmedLine.substring(REMARK_PREFIX.length()));
-    }
-
-    private void parseCommentStart(String trimmedLine) {
-        this.currentText.append(trimmedLine.substring(COMMENT_PREFIX.length()));
+    private void parseRemarkOrCommentStart(String trimmedLine) {
+        String remaining = trimmedLine;
+        while (remaining.startsWith("*")
+                || remaining.startsWith("#")
+                || remaining.startsWith("-")
+                || remaining.startsWith(" ")) {
+            remaining = remaining.substring(1);
+        }
+        this.currentText.append(remaining);
     }
 
     void endLastItem() throws ReviewRemarkException {
@@ -106,9 +119,6 @@ class ReviewDataParser {
         case IN_REMARK:
             final ResolutionType resoRemark = this.handleResolutionMarkers();
             final Position pos = this.parsePosition();
-            if (this.currentType == null) {
-                throw new ReviewRemarkException("missing remark type for: " + this.currentText);
-            }
             this.currentRemark = ReviewRemark.create(
                     this.markerFactory.createMarker(pos),
                     this.getReviewerForCurrentRound(),
@@ -118,7 +128,7 @@ class ReviewDataParser {
             if (resoRemark != null) {
                 this.currentRemark.setResolution(resoRemark);
             }
-            this.currentRound.add(this.currentRemark);
+            this.getCurrentRound().add(this.currentRemark);
             break;
         case IN_COMMENT:
             final ResolutionType resoComment = this.handleResolutionMarkers();
@@ -135,13 +145,16 @@ class ReviewDataParser {
                 throw new ReviewRemarkException("parse exception: " + this.currentText);
             }
             break;
-        case BEFORE_ROUND:
-        case IN_ROUND:
+        case BEFORE_REMARK:
             break;
         default:
             throw new AssertionError("unknown state " + this.state);
         }
         this.currentText.setLength(0);
+    }
+
+    private ReviewRound getCurrentRound() {
+        return this.currentRound != null ? this.currentRound : this.getOrCreateRound(1);
     }
 
     private Position parsePosition() {
@@ -201,7 +214,7 @@ class ReviewDataParser {
     }
 
     private String getReviewerForCurrentRound() {
-        final String r = this.reviewersForRounds.get(this.currentRound.getNumber());
+        final String r = this.reviewersForRounds.get(this.getCurrentRound().getNumber());
         return r != null ? r : "??";
     }
 

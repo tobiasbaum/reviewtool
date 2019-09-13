@@ -1,8 +1,6 @@
 package de.setsoftware.reviewtool.model.remarks;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.util.Collections;
 
@@ -121,18 +119,19 @@ public class RemarkTest {
     }
 
     @Test
-    public void testMissingTypeLeadsToParseException() {
+    public void testMissingTypeDefaultsToCan() {
         final String input =
                 "Review 1:\n"
                 + "*# Anm A\n"
                 + "*# Anm B\n";
 
-        try {
-            ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
-            fail("expected exception");
-        } catch (final ReviewRemarkException e) {
-            assertTrue(e.getMessage().contains("Anm A"));
-        }
+        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
+
+        assertEquals("Review 1:\n"
+                + "* kann\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n",
+                d.serialize());
     }
 
     @Test
@@ -160,6 +159,73 @@ public class RemarkTest {
                 + "*# (x/Z, 4) Anm G\n"
                 + "*# (x/Z, 10) Anm D\n"
                 + "*# (y/Y, 4) Anm E\n",
+                d.serialize());
+    }
+
+    @Test
+    public void testMissingHeaderDefaultsToRound1() {
+        final String input =
+                "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n";
+
+        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
+
+        assertEquals("Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n",
+                d.serialize());
+    }
+
+    @Test
+    public void testBestEffortForInvalidListMarkers() {
+        final String input =
+                "Review 1:\n"
+                + "* muss\n"
+                + "- Anm A\n"
+                + "* Anm B\n"
+                + "# Anm C\n";
+
+        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
+
+        assertEquals("Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n"
+                + "*# Anm C\n",
+                d.serialize());
+    }
+
+    @Test
+    public void testUnusualHeaderFormat() {
+        final String input =
+                "''review #1''\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n";
+
+        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
+
+        assertEquals("Review 1:\n"
+                + "* muss\n"
+                + "*# Anm A\n"
+                + "*# Anm B\n",
+                d.serialize());
+    }
+
+    @Test
+    public void testRudimentaryRemarks() {
+        final String input =
+                "- X\n"
+                + "- Y\n";
+
+        final ReviewData d = ReviewData.parse(Collections.<Integer, String>emptyMap(), DummyMarker.FACTORY, input);
+
+        assertEquals("Review 1:\n"
+                + "* kann\n"
+                + "*# X\n"
+                + "*# Y\n",
                 d.serialize());
     }
 

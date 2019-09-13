@@ -105,6 +105,7 @@ public class ReviewRound {
 
     /**
      * Parses the string representation of the remark type.
+     * Returns null if it could not be parsed to a valid type.
      */
     public static RemarkType parseType(String string) {
         if (Arrays.asList(ALREADY_FIXED_HEADER).contains(string)) {
@@ -120,7 +121,7 @@ public class ReviewRound {
         } else if (Arrays.asList(OTHER_REMARK_HEADER).contains(string)) {
             return RemarkType.OTHER;
         } else {
-            throw new ReviewRemarkException("parse exception: " + string);
+            return null;
         }
     }
 
