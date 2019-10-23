@@ -6,6 +6,19 @@ CoRT is built to support "change-based code review", which means that the portio
 
 Modern IDEs already provide a lot of support in understanding source code (linking between caller and callee, syntax highlighting, ...). Therefore CoRT is implemented as a plugin for the Eclipse IDE.
 
+## Installation
+
+Download the Eclipse update site zip from the "releases" page or build it yourself by calling "mvn install". Then install it to Eclipse in the usual way.
+
+## Configuration
+
+CoRT is usually configure for a whole team. Therefore, it has an XML configuration file that can be committed to version control and that is referenced from Eclipse's settings dialog.
+
+- The settings dialog can be found under "Window -> Preferences -> Reviewtool". You need to reference a configuration file there.
+- The configuration file can contain placeholders, for example for user names. These need to be configured in the settings dialog, too.
+- Two examples for configuration files can be found in the repository root ("testconfig1.xml" and "testconfig2.xml"). You need to adjust them for your specific situation.
+- There is not much documentation for the config format at the moment. If you want to get into the details, have a look at the various subclasses of de.setsoftware.reviewtool.config.IConfigurator from the ...core project.
+
 ## The research
 
 CoRT is built at the "Fachgebiet Software Engineering" of Leibniz University Hannover (http://se.uni-hannover.de). The principles behind CoRT were derived using sound research methodology, CoRT is evaluated in a research project, and is also used to provide data for code review research. Most of the research results can be found on the university homepage or at http://tobias-baum.de
