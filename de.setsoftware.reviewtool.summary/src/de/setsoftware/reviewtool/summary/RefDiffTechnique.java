@@ -51,7 +51,7 @@ public class RefDiffTechnique {
                 text.append(processMethodRefactoring(ref, model) + "\n");
             } else {
                 text.append(ref.getRefactoringType().getDisplayName() + ": " + ref.getEntityBefore().key() + " --> "
-                        + ref.getEntityAfter().key());
+                        + ref.getEntityAfter().key() + "\n");
             }
         }
 
