@@ -64,7 +64,7 @@ final class SvnWorkingCopyManager {
      * Returns a read-only view of all known Subversion working copies.
      */
     synchronized Collection<SvnWorkingCopy> getWorkingCopies() {
-        return Collections.unmodifiableCollection(this.wcPerRootDirectory.values());
+        return Collections.unmodifiableCollection(new ArrayList<>(this.wcPerRootDirectory.values()));
     }
 
     /**
