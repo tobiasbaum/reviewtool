@@ -28,6 +28,9 @@ public abstract class Logger {
         instance.log(IStatus.OK, message);
     }
 
+    /**
+     * Log the string returned by the given supplier iff verbose logging is active.
+     */
     public static void verboseDebug(Supplier<String> message) {
         if (verbose) {
             debug(message.get());

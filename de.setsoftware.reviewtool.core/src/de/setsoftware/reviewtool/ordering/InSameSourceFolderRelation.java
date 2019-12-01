@@ -30,7 +30,8 @@ public class InSameSourceFolderRelation implements RelationMatcher {
             List<ChangePart> changeParts, TourCalculatorControl control) {
         final Multimap<String, ChangePart> grouping = new Multimap<>();
         for (final ChangePart c : changeParts) {
-            Logger.verboseDebug(() -> "change part with " + c.getStops().size() + " stops, e.g. " + c.getStops().get(0));
+            Logger.verboseDebug(
+                    () -> "change part with " + c.getStops().size() + " stops, e.g. " + c.getStops().get(0));
             final IRevisionedFile mostRecentFile = c.getStops().get(0).getMostRecentFile();
             final String sourceFolder = this.determineSourceFolder(mostRecentFile);
             Logger.verboseDebug(() -> "source folder for " + mostRecentFile + " is " + sourceFolder);
