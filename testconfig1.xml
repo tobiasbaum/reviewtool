@@ -5,7 +5,7 @@
   <fileTicketStore defaultReviewer="${User-ID}" directory="C:\Temp\reviewData"/>
   <hackystatTelemetry dir="C:\Temp\hackybuffer" optOut="${Telemetrie OptOut}"/>
   <stopViewer type="combined"/>
-  <surveyAtReviewEnd>
+  <!--<surveyAtReviewEnd>
     <question id="helpOfOthers" text="Hast du während des Reviews Hilfe von anderen Personen (z.B. dem Autor) in Anspruch genommen?">
       <choice id="1" text="ja"/>
       <choice id="2" text="nein"/>
@@ -34,7 +34,7 @@
       <choice id="3" text="eher gut (zum Teil an der Planung beteiligt)"/>
       <choice id="4" text="sehr gut (umfassend an der Planung von Task und Story beteiligt)"/>
     </question>
-  </surveyAtReviewEnd>
+  </surveyAtReviewEnd>-->
   <reminder minCount="4" minDays="3"/>
   <basicIrrelevanceFilters />
   <pathIrrelevanceFilter number="4" pattern="**/*.bmp" description="BMP-Bitmaps" />
