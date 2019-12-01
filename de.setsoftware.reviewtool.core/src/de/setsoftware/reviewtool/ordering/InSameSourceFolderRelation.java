@@ -9,6 +9,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
@@ -29,7 +30,10 @@ public class InSameSourceFolderRelation implements RelationMatcher {
             List<ChangePart> changeParts, TourCalculatorControl control) {
         final Multimap<String, ChangePart> grouping = new Multimap<>();
         for (final ChangePart c : changeParts) {
-            final String sourceFolder = this.determineSourceFolder(c.getStops().get(0).getMostRecentFile());
+            Logger.verboseDebug(() -> "change part with " + c.getStops().size() + " stops, e.g. " + c.getStops().get(0));
+            final IRevisionedFile mostRecentFile = c.getStops().get(0).getMostRecentFile();
+            final String sourceFolder = this.determineSourceFolder(mostRecentFile);
+            Logger.verboseDebug(() -> "source folder for " + mostRecentFile + " is " + sourceFolder);
             if (sourceFolder != null) {
                 grouping.put(sourceFolder, c);
             }

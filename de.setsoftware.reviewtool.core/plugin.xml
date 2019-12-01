@@ -117,6 +117,10 @@
 		   		 label="Clear commit cache" 
 		   		 style="push">
 		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.enableverboselogging"
+		   		 label="Enable verbose logging" 
+		   		 style="push">
+		   </command>
 		   <command commandId="de.setsoftware.reviewtool.commands.stopchangetracking"
 		   		 label="Stop local change tracking" 
 		   		 style="push">
@@ -245,6 +249,9 @@
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.ClearCommitCacheAction"
         id="de.setsoftware.reviewtool.commands.clearcommitcache" name="Clear commit cache">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EnableVerboseLoggingAction"
+        id="de.setsoftware.reviewtool.commands.enableverboselogging" name="Enable verbose logging">
      </command>
      <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StopChangeTrackingAction"
         id="de.setsoftware.reviewtool.commands.stopchangetracking" name="Stop change tracking">
