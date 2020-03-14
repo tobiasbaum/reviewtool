@@ -145,9 +145,9 @@ public final class FileHistoryEdge extends ProxyableFileHistoryEdge {
     private boolean isValidUtf8(final byte[] content) {
         try {
             StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT)
-                .decode(ByteBuffer.wrap(content));
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(content));
             return true;
         } catch (final CharacterCodingException e) {
             return false;

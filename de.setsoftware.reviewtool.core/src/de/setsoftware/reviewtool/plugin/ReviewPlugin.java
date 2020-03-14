@@ -59,9 +59,9 @@ import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.FileCountInCo
 import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.PathIrrelevanceFilterConfigurator;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.FileReviewDataCache;
-import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ISyntaxFixer;
 import de.setsoftware.reviewtool.model.ITicketChooser;
+import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.PositionTransformer;
@@ -560,8 +560,8 @@ public class ReviewPlugin implements IReviewConfigurable {
         if (this.mode == Mode.FIXING) {
             this.switchToPerspective("de.setsoftware.reviewtool.ui.perspective.fixingPerspective");
             Telemetry.event("fixingStarted")
-                .param("round", this.persistence.getCurrentRound())
-                .log();
+                    .param("round", this.persistence.getCurrentRound())
+                    .log();
             this.registerGlobalTelemetryListeners();
         }
     }
@@ -781,8 +781,8 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         Telemetry.event("fixingEnded")
-            .param("round", this.persistence.getCurrentRound())
-            .log();
+                .param("round", this.persistence.getCurrentRound())
+                .log();
         this.persistence.changeStateToReadyForReview();
         this.leaveActiveMode();
     }
@@ -1010,9 +1010,9 @@ public class ReviewPlugin implements IReviewConfigurable {
                 try {
                     for (final ILaunch launch : launches) {
                         Telemetry.event("launch")
-                            .param("mode", launch.getLaunchMode())
-                            .param("config", launch.getLaunchConfiguration().getName())
-                            .log();
+                                .param("mode", launch.getLaunchMode())
+                                .param("config", launch.getLaunchConfiguration().getName())
+                                .log();
                     }
                 } catch (final Exception e) {
                     Logger.error("error while sending telemetry events", e);
@@ -1058,9 +1058,9 @@ public class ReviewPlugin implements IReviewConfigurable {
             final StringWriter w = new StringWriter();
             t.printStackTrace(new PrintWriter(w));
             Telemetry.event("exception")
-                .param("exceptionClass", t.getClass().toString())
-                .param("details", w.toString())
-                .log();
+                    .param("exceptionClass", t.getClass().toString())
+                    .param("details", w.toString())
+                    .log();
         } catch (final Throwable t2) {
             //swallow possible follow-up exceptions
         }

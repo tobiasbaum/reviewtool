@@ -39,9 +39,9 @@ public class QuestionResolution implements IMarkerResolution {
                     review.setResolution(ResolutionType.QUESTION);
                     ReviewPlugin.getPersistence().saveRemark(review);
                     Telemetry.event("resolutionQuestion")
-                        .param("resource", marker.getResource())
-                        .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
-                        .log();
+                            .param("resource", marker.getResource())
+                            .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
+                            .log();
                 } catch (final ReviewRemarkException e) {
                     throw new ReviewtoolException(e);
                 }

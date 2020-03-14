@@ -72,7 +72,7 @@ public abstract class MarkRemarkAction extends AbstractHandler {
         remark.setResolution(this.resolution);
         ReviewPlugin.getPersistence().saveRemark(remark);
         Telemetry.event(this.telemetryEvent)
-            .param("pos", remark.getPositionString())
-            .log();
+                .param("pos", remark.getPositionString())
+                .log();
     }
 }

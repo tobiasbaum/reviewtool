@@ -303,8 +303,8 @@ public class ToursInReview {
             final List<ReviewRoundInfo> reviewRounds) {
 
         Telemetry.event("originalChanges")
-            .param("count", countChanges(changes))
-            .log();
+                .param("count", countChanges(changes))
+                .log();
 
         for (final IChangeClassifier cl : changeClassificationStrategies) {
             cl.clearCaches();
@@ -331,9 +331,9 @@ public class ToursInReview {
 
         for (final IClassification classification : strategyResults.keySet()) {
             Telemetry.event("classificationResult")
-                .param("description", classification.getName())
-                .param("size", strategyResults.get(classification))
-                .log();
+                    .param("description", classification.getName())
+                    .param("size", strategyResults.get(classification))
+                    .log();
         }
 
         final UserSelectedReductions selected =
@@ -342,15 +342,15 @@ public class ToursInReview {
             return null;
         }
         Telemetry.event("selectedRelevanceFilter")
-            .param("descriptions", selected.toMakeIrrelevant)
-            .log();
+                .param("descriptions", selected.toMakeIrrelevant)
+                .log();
         final Set<String> selectedCommits = new LinkedHashSet<>();
         for (final ICommit commit : selected.commitSubset) {
             selectedCommits.add(commit.getRevision().toString());
         }
         Telemetry.event("selectedCommitSubset")
-            .param("commits", selectedCommits)
-            .log();
+                .param("commits", selectedCommits)
+                .log();
 
         CommitsInReview.setCommits(new ArrayList<>(selected.commitSubset));
 
@@ -411,9 +411,9 @@ public class ToursInReview {
                         restructuringStrategy.restructure(new ArrayList<>(originalTours));
 
                 Telemetry.event("possibleTourStructure")
-                    .param("strategy", restructuringStrategy.getClass())
-                    .params(Tour.determineSize(restructuredTour, irrelevantCategories))
-                    .log();
+                        .param("strategy", restructuringStrategy.getClass())
+                        .params(Tour.determineSize(restructuredTour, irrelevantCategories))
+                        .log();
 
                 if (restructuredTour != null) {
                     possibleRestructurings.add(Pair.<String, List<? extends Tour>>create(
@@ -579,8 +579,8 @@ public class ToursInReview {
                 this.listeners.notifyListeners(l -> l.activeTourChanged(oldActive, this.getActiveTour()));
             }
             Telemetry.event("tourActivated")
-                .param("tourIndex", index)
-                .log();
+                    .param("tourIndex", index)
+                    .log();
         }
     }
 

@@ -143,9 +143,9 @@ public final class ChangeManager {
             if (resource.getType() == IResource.FILE) {
                 if (!this.logged && (delta.getFlags() & IResourceDelta.CONTENT) != 0) {
                     Telemetry.event("fileChanged")
-                        .param("path", delta.getFullPath())
-                        .param("kind", delta.getKind())
-                        .log();
+                            .param("path", delta.getFullPath())
+                            .param("kind", delta.getKind())
+                            .log();
                     this.logged = true;
                 }
 

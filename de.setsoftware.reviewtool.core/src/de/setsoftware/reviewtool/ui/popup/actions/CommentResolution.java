@@ -39,9 +39,9 @@ public class CommentResolution implements IMarkerResolution {
                     review.setResolution(ResolutionType.OPEN);
                     ReviewPlugin.getPersistence().saveRemark(review);
                     Telemetry.event("resolutionComment")
-                        .param("resource", marker.getResource())
-                        .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
-                        .log();
+                            .param("resource", marker.getResource())
+                            .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
+                            .log();
                 } catch (final ReviewRemarkException e) {
                     ReviewPlugin.getInstance().logException(e);
                     throw new ReviewtoolException(e);

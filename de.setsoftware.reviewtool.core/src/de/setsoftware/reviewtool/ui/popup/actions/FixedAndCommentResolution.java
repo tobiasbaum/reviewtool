@@ -39,9 +39,9 @@ public class FixedAndCommentResolution implements IMarkerResolution {
                     review.setResolution(ResolutionType.FIXED);
                     ReviewPlugin.getPersistence().saveRemark(review);
                     Telemetry.event("resolutionFixedAndComment")
-                        .param("resource", marker.getResource())
-                        .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
-                        .log();
+                            .param("resource", marker.getResource())
+                            .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
+                            .log();
                 } catch (final ReviewRemarkException e) {
                     throw new ReviewtoolException(e);
                 }

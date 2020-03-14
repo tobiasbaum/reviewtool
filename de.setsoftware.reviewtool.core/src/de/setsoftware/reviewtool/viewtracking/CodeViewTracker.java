@@ -150,8 +150,8 @@ public class CodeViewTracker {
             if (timeWithoutChange > INACTIVITY_THRESHOLD && !this.sentInactivity) {
                 //no change long enough => send an event and move to inactivity
                 Telemetry.event("possibleInactivity")
-                    .param("sinceMs", timeWithoutChange)
-                    .log();
+                        .param("sinceMs", timeWithoutChange)
+                        .log();
                 this.sentInactivity = true;
             }
         } else {

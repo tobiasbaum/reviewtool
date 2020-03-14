@@ -699,9 +699,9 @@ public class CombinedDiffStopViewer implements IStopViewer {
         final byte[] data = revision.getContents();
         try {
             StandardCharsets.UTF_8.newDecoder()
-                .onMalformedInput(CodingErrorAction.REPORT)
-                .onUnmappableCharacter(CodingErrorAction.REPORT)
-                .decode(ByteBuffer.wrap(data));
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(data));
             return new FileContent(data, "UTF-8");
         } catch (final CharacterCodingException e) {
             return new FileContent(data, "ISO-8859-1");

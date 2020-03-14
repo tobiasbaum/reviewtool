@@ -267,12 +267,12 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         try {
             tours.ensureTourActive(topmostTour, new RealMarkerFactory());
             Telemetry.event("jumpedTo")
-                .param("resource", stop.getMostRecentFile().getPath())
-                .param("line", stop.getMostRecentFragment() == null
-                    ? -1 : stop.getMostRecentFragment().getFrom().getLine())
-                .param("type", typeForTelemetry)
-                .param("irrelevant", stop.isIrrelevantForReview(tours.getIrrelevantCategories()))
-                .log();
+                    .param("resource", stop.getMostRecentFile().getPath())
+                    .param("line", stop.getMostRecentFragment() == null
+                        ? -1 : stop.getMostRecentFragment().getFrom().getLine())
+                    .param("type", typeForTelemetry)
+                    .param("irrelevant", stop.isIrrelevantForReview(tours.getIrrelevantCategories()))
+                    .log();
             openEditorFor(tours, topmostTour, stop, false);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);
@@ -288,10 +288,10 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         try {
             tours.ensureTourActive(topmostTour, new RealMarkerFactory());
             Telemetry.event("openTextEditor")
-                .param("resource", stop.getMostRecentFile().getPath())
-                .param("line", stop.getMostRecentFragment() == null
-                    ? -1 : stop.getMostRecentFragment().getFrom().getLine())
-                .log();
+                    .param("resource", stop.getMostRecentFile().getPath())
+                    .param("line", stop.getMostRecentFragment() == null
+                        ? -1 : stop.getMostRecentFragment().getFrom().getLine())
+                    .log();
             openEditorFor(tours, topmostTour, stop, true);
         } catch (final CoreException | IOException e) {
             throw new ReviewtoolException(e);

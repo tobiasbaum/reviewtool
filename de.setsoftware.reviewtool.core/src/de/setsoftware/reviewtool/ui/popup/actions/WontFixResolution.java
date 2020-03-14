@@ -39,9 +39,9 @@ public class WontFixResolution implements IMarkerResolution {
                     review.setResolution(ResolutionType.WONT_FIX);
                     ReviewPlugin.getPersistence().saveRemark(review);
                     Telemetry.event("resolutionWontFix")
-                        .param("resource", marker.getResource())
-                        .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
-                        .log();
+                            .param("resource", marker.getResource())
+                            .param("line", marker.getAttribute(IMarker.LINE_NUMBER, -1))
+                            .log();
                 } catch (final ReviewRemarkException e) {
                     throw new ReviewtoolException(e);
                 }
