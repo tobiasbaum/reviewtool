@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.ticketconnectors.jira;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -8,6 +9,8 @@ import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,8 +18,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
@@ -129,6 +135,7 @@ public class JiraPersistence implements ITicketConnector {
 
     private String reviewFieldId;
     private final TicketLinkSettings linkSettings;
+    private final File cookiesFile;
 
     public JiraPersistence(
             String url,
@@ -139,11 +146,13 @@ public class JiraPersistence implements ITicketConnector {
             String rejectedState,
             String doneState,
             String user, String password,
-            TicketLinkSettings linkSettings) {
+            TicketLinkSettings linkSettings,
+            File cookiesFile) {
         this.url = url;
         this.reviewFieldName = reviewFieldName;
         this.user = user;
         this.password = password;
+        this.cookiesFile = cookiesFile;
         final JsonArray states = this.loadStates();
         this.reviewStateId = this.getStateId(states, reviewState);
         this.implementationStateId = this.getStateId(states, implementationState);
@@ -382,21 +391,27 @@ public class JiraPersistence implements ITicketConnector {
      * Performs an HTTP GET request and returns the resulting JSON data.
      */
     public JsonValue performGet(final String searchUrl) {
-        try (InputStream input = new URL(searchUrl).openStream()) {
-            final InputStreamReader reader = new InputStreamReader(input, "UTF-8"); //$NON-NLS-1$
-            final StringBuilder b = new StringBuilder();
-            int ch;
-            while ((ch = reader.read()) >= 0) {
-                b.append((char) ch);
-            }
-            final String data = b.toString();
-            try {
-                return Json.parse(data);
-            } catch (final ParseException e) {
-                throw new ReviewtoolException("exception parsing: " + data, e);
-            }
+        final StringBuilder b = new StringBuilder();
+        try {
+            this.communicate(searchUrl, "GET", null, (InputStream input) -> {
+                try {
+                    final InputStreamReader reader = new InputStreamReader(input, "UTF-8"); //$NON-NLS-1$
+                    int ch;
+                    while ((ch = reader.read()) >= 0) {
+                        b.append((char) ch);
+                    }
+                } catch (final IOException e) {
+                    throw new ReviewtoolException(e);
+                }
+            });
         } catch (final IOException e) {
             throw new ReviewtoolException(e);
+        }
+        final String data = b.toString();
+        try {
+            return Json.parse(data);
+        } catch (final ParseException e) {
+            throw new ReviewtoolException("exception parsing: " + data, e);
         }
     }
 
@@ -412,7 +427,7 @@ public class JiraPersistence implements ITicketConnector {
 
     private void performPut(final String putUrl, final JsonObject json) {
         try {
-            this.communicate(putUrl, "PUT", json.toString());
+            this.communicate(putUrl, "PUT", json.toString(), (InputStream s) -> {});
         } catch (final IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -420,7 +435,7 @@ public class JiraPersistence implements ITicketConnector {
 
     private void performPost(final String postUrl, final JsonObject json) {
         try {
-            this.communicate(postUrl, "POST", json.toString());
+            this.communicate(postUrl, "POST", json.toString(), (InputStream s) -> {});
         } catch (final IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -429,10 +444,15 @@ public class JiraPersistence implements ITicketConnector {
     /**
      * Sends and receives data.
      */
-    private void communicate(final String url, final String method, final String data) throws IOException {
+    private void communicate(final String url, final String method, final String data,
+            Consumer<InputStream> resultConsumer) throws IOException {
         final HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setRequestMethod(method);
         c.addRequestProperty("Content-Type", "application/json"); //$NON-NLS-1$ //$NON-NLS-2$
+        final String cookies = this.loadCookies();
+        if (!cookies.isEmpty()) {
+            c.setRequestProperty("Cookie", cookies);
+        }
         c.setDoOutput(data != null);
         c.connect();
         if (data != null) {
@@ -443,14 +463,64 @@ public class JiraPersistence implements ITicketConnector {
                 outputStream.close();
             }
         }
+        for (final Entry<String, List<String>> header : c.getHeaderFields().entrySet()) {
+            if ("Set-Cookie".equalsIgnoreCase(header.getKey())) {
+                this.setCookies(header.getValue());
+            }
+        }
         try {
-            c.getInputStream().close();
+            final InputStream s = c.getInputStream();
+            resultConsumer.accept(s);
+            s.close();
         } catch (final IOException e) {
             this.flushErrorStream(c);
             throw e;
         } finally {
             c.disconnect();
         }
+    }
+
+    private void setCookies(List<String> cookies) throws IOException {
+        if (this.cookiesFile == null) {
+            return;
+        }
+        final Map<String, String> map = new LinkedHashMap<>();
+        if (this.cookiesFile.exists()) {
+            Files.lines(this.cookiesFile.toPath(), Charset.forName("UTF-8")).forEach((String line) -> {
+                this.putSplitAtEqualsSign(map, line);
+            });
+        }
+        for (final String cookie : cookies) {
+            final int semiIndex = cookie.indexOf(';');
+            final String keyAndValue;
+            if (semiIndex >= 0) {
+                keyAndValue = cookie.substring(0, semiIndex);
+            } else {
+                keyAndValue = cookie;
+            }
+            this.putSplitAtEqualsSign(map, keyAndValue);
+        }
+        final StringBuilder content = new StringBuilder();
+        for (final Entry<String, String> e : map.entrySet()) {
+            content.append(e.getKey()).append('=').append(e.getValue()).append('\n');
+        }
+        Files.writeString(this.cookiesFile.toPath(), content.toString(), Charset.forName("UTF-8"));
+    }
+
+    private void putSplitAtEqualsSign(final Map<String, String> map, final String keyAndValue) {
+        if (keyAndValue.isEmpty()) {
+            return;
+        }
+        final int equalsIndex = keyAndValue.indexOf('=');
+        map.put(keyAndValue.substring(0, equalsIndex), keyAndValue.substring(equalsIndex + 1));
+    }
+
+    private String loadCookies() throws IOException {
+        if (this.cookiesFile == null || !this.cookiesFile.exists()) {
+            Logger.debug("using no cookies " + this.cookiesFile);
+            return "";
+        }
+        return Files.lines(this.cookiesFile.toPath(), Charset.forName("UTF-8")).collect(Collectors.joining("; "));
     }
 
     private void flushErrorStream(final HttpURLConnection c) throws IOException {

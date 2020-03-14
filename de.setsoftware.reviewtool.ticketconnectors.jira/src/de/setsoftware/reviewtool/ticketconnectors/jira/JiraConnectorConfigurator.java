@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.ticketconnectors.jira;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Set;
 
@@ -43,7 +44,8 @@ public class JiraConnectorConfigurator implements IConfigurator {
                 xml.getAttribute("doneState"),
                 xml.getAttribute("user"),
                 xml.getAttribute("password"),
-                linkSettings);
+                linkSettings,
+                this.toFile(xml.getAttribute("cookieFile")));
         final NodeList filters = xml.getElementsByTagName("filter");
         for (int i = 0; i < filters.getLength(); i++) {
             final Element filter = (Element) filters.item(i);
@@ -53,6 +55,13 @@ public class JiraConnectorConfigurator implements IConfigurator {
                     Boolean.parseBoolean(filter.getAttribute("forReview")));
         }
         configurable.setPersistence(p);
+    }
+
+    private File toFile(String attribute) {
+        if (attribute == null || attribute.isEmpty()) {
+            return null;
+        }
+        return new File(attribute);
     }
 
 }
