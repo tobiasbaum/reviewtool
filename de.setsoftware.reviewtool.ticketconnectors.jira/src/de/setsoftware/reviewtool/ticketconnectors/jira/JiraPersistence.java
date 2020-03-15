@@ -427,7 +427,7 @@ public class JiraPersistence implements ITicketConnector {
 
     private void performPut(final String putUrl, final JsonObject json) {
         try {
-            this.communicate(putUrl, "PUT", json.toString(), (InputStream s) -> {});
+            this.communicate(putUrl, "PUT", json.toString(), (InputStream s) -> { });
         } catch (final IOException e) {
             throw new ReviewtoolException(e);
         }
@@ -435,7 +435,7 @@ public class JiraPersistence implements ITicketConnector {
 
     private void performPost(final String postUrl, final JsonObject json) {
         try {
-            this.communicate(postUrl, "POST", json.toString(), (InputStream s) -> {});
+            this.communicate(postUrl, "POST", json.toString(), (InputStream s) -> { });
         } catch (final IOException e) {
             throw new ReviewtoolException(e);
         }
