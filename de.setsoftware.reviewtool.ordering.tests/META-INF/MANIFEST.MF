@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: de.setsoftware.reviewtool.ordering.tests
 Bundle-SymbolicName: de.setsoftware.reviewtool.ordering.tests
-Bundle-Version: 1.30.0.qualifier
+Bundle-Version: 1.31.0.qualifier
 Fragment-Host: de.setsoftware.reviewtool.ordering
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Require-Bundle: org.junit
