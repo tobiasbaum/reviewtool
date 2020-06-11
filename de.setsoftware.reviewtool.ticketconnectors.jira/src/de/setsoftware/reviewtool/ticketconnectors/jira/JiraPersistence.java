@@ -446,6 +446,7 @@ public class JiraPersistence implements ITicketConnector {
      */
     private void communicate(final String url, final String method, final String data,
             Consumer<InputStream> resultConsumer) throws IOException {
+        Logger.debug("communicate to JIRA: " + this.trimArgs(url));
         final HttpURLConnection c = (HttpURLConnection) new URL(url).openConnection();
         c.setRequestMethod(method);
         c.addRequestProperty("Content-Type", "application/json"); //$NON-NLS-1$ //$NON-NLS-2$
@@ -480,6 +481,11 @@ public class JiraPersistence implements ITicketConnector {
         }
     }
 
+    private String trimArgs(String url2) {
+        final int end = url2.indexOf('?');
+        return end < 0 ? url2 : url2.substring(0, end);
+    }
+
     private void setCookies(List<String> cookies) throws IOException {
         if (this.cookiesFile == null) {
             return;
@@ -504,7 +510,7 @@ public class JiraPersistence implements ITicketConnector {
         for (final Entry<String, String> e : map.entrySet()) {
             content.append(e.getKey()).append('=').append(e.getValue()).append('\n');
         }
-        Files.writeString(this.cookiesFile.toPath(), content.toString(), Charset.forName("UTF-8"));
+        Files.write(this.cookiesFile.toPath(), content.toString().getBytes("UTF-8"));
     }
 
     private void putSplitAtEqualsSign(final Map<String, String> map, final String keyAndValue) {

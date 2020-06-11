@@ -21,6 +21,7 @@ public class ReviewStateManager {
     private final IUserInteraction userInteraction;
 
     private String ticketKey;
+    private ITicketData cachedData;
 
     private final WeakListeners<IReviewDataSaveListener> saveListeners = new WeakListeners<>();
 
@@ -49,9 +50,16 @@ public class ReviewStateManager {
      * Notifies all listeners of the save.
      */
     public void saveCurrentReviewData(String newData) {
-        this.loadTicketDataAndCheckExistence(true);
+        this.ensureTicketKeyIsSet();
         this.localReviewData.saveLocalReviewData(this.ticketKey, newData);
+        this.cachedData = null;
         this.saveListeners.notifyListeners(l -> l.onSave(newData));
+    }
+
+    private void ensureTicketKeyIsSet() {
+        if (this.ticketKey == null) {
+            this.loadTicketDataAndCheckExistence(true);
+        }
     }
 
     /**
@@ -81,12 +89,12 @@ public class ReviewStateManager {
      * Returns the current review round number, including running reviews (i.e. returns 1 during the first review).
      */
     public int getCurrentRound() {
-        final ITicketData ticket = this.loadTicketDataAndCheckExistence(true);
+        final ITicketData ticket = this.getCurrentTicketData();
         return ticket.getCurrentRound();
     }
 
     public String getReviewerForRound(int number) {
-        final ITicketData ticket = this.loadTicketDataAndCheckExistence(true);
+        final ITicketData ticket = this.getCurrentTicketData();
         return ticket.getReviewerForRound(number);
     }
 
@@ -95,7 +103,11 @@ public class ReviewStateManager {
     }
 
     public ITicketData getCurrentTicketData() {
-        return this.loadTicketDataAndCheckExistence(true);
+        if (this.cachedData != null) {
+            return this.cachedData;
+        } else {
+            return this.loadTicketDataAndCheckExistence(true);
+        }
     }
 
     private ITicketData loadTicketDataAndCheckExistence(boolean forReview) {
@@ -108,7 +120,8 @@ public class ReviewStateManager {
                 }
                 data = this.persistence.loadTicket(this.ticketKey);
             } while (data == null);
-            return this.decorateIfNeeded(data);
+            this.cachedData = this.decorateIfNeeded(data);
+            return this.cachedData;
         } else {
             ITicketData data = this.persistence.loadTicket(this.ticketKey);
             while (data == null) {
@@ -119,7 +132,8 @@ public class ReviewStateManager {
                 }
                 data = this.persistence.loadTicket(this.ticketKey);
             }
-            return this.decorateIfNeeded(data);
+            this.cachedData = this.decorateIfNeeded(data);
+            return this.cachedData;
         }
     }
 
@@ -138,6 +152,7 @@ public class ReviewStateManager {
 
     public void resetKey() {
         this.ticketKey = null;
+        this.cachedData = null;
     }
 
     /**
