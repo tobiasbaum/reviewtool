@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-SymbolicName: de.setsoftware.reviewtool.ticketconnectors.jira;singleton:=true
-Bundle-Version: 1.31.0.qualifier
+Bundle-Version: 1.32.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: target/lib/minimal-json-0.9.5.jar,
  .
