@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.reminder;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -34,8 +35,14 @@ public class Reminder implements Runnable {
             Display.getCurrent().timerExec(CHECK_DELAY, this);
             return;
         }
-        final List<TicketInfo> tickets = ReviewUi.getReviewStateManager().getTicketsForFilter(
-                ReviewUi.getLastUsedReviewFilter(), true);
+        final List<TicketInfo> ticket;
+        try {
+            tickets = ReviewUi.getReviewStateManager().getTicketsForFilter(
+                    ReviewUi.getLastUsedReviewFilter(), true);
+        } catch (RuntimeException e) {
+            Logger.warn("problem while getting tickets for reminder", e);
+            tickets = Collections.emptyList();
+        }
         final int maxDaysWaiting = this.determineMaxDaysWaiting(tickets);
 
         final boolean review;
