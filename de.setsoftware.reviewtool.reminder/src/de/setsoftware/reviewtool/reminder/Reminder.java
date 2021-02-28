@@ -35,7 +35,7 @@ public class Reminder implements Runnable {
             Display.getCurrent().timerExec(CHECK_DELAY, this);
             return;
         }
-        final List<TicketInfo> tickets;
+        List<TicketInfo> tickets;
         try {
             tickets = ReviewUi.getReviewStateManager().getTicketsForFilter(
                     ReviewUi.getLastUsedReviewFilter(), true);
