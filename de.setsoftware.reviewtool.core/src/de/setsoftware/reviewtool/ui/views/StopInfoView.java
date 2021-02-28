@@ -42,7 +42,11 @@ public class StopInfoView extends ViewPart implements StopSelectionListener {
         if (stop == null) {
             this.currentContent = this.createIdleContent("No review tour stop selected");
         } else {
-            this.currentContent = this.createStopContent(stop);
+            try {
+                this.currentContent = this.createStopContent(stop);
+            } catch (RuntimeException e) {
+                this.currentContent = this.createIdleContent("Error while creating view " + e);                
+            }
         }
         this.comp.layout();
     }
