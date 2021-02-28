@@ -121,15 +121,47 @@ public class JiraPersistence implements ITicketConnector {
 
     }
 
+    private final class StateIds {
+        private final String reviewStateId;
+        private final String implementationStateId;
+        private final String readyForReviewStateId;
+        private final String rejectedStateId;
+        private final String doneStateId;
+
+        public StateIds() {
+            final JsonArray states = JiraPersistence.this.loadStates();
+            this.reviewStateId = this.getStateId(states, JiraPersistence.this.reviewStateName);
+            this.implementationStateId = this.getStateId(states, JiraPersistence.this.implementationStateName);
+            this.readyForReviewStateId = this.getStateId(states, JiraPersistence.this.readyForReviewStateName);
+            this.rejectedStateId = this.getStateId(states, JiraPersistence.this.rejectedStateName);
+            this.doneStateId = this.getStateId(states, JiraPersistence.this.doneStateName);
+        }
+
+        private String getStateId(JsonArray states, String stateName) {
+            final List<String> possibleNames = new ArrayList<>();
+            for (final JsonValue v : states) {
+                final String name = v.asObject().get("name").asString();
+                if (name.equals(stateName)) {
+                    return v.asObject().get("id").asString();
+                }
+                possibleNames.add(name);
+            }
+            throw new ReviewtoolException("Status " + stateName + " not found in JIRA."
+                    + " Possible values: " + possibleNames);
+        }
+
+    }
+
     private final String url;
     private final String reviewFieldName;
-    private final String reviewStateId;
-    private final String implementationStateId;
-    private final String readyForReviewStateId;
-    private final String rejectedStateId;
-    private final String doneStateId;
     private final String user;
     private final String password;
+    private final String reviewStateName;
+    private final String implementationStateName;
+    private final String readyForReviewStateName;
+    private final String rejectedStateName;
+    private final String doneStateName;
+    private StateIds stateIds;
     private final Map<String, String> filtersForReview;
     private final Map<String, String> filtersForFixing;
 
@@ -153,15 +185,26 @@ public class JiraPersistence implements ITicketConnector {
         this.user = user;
         this.password = password;
         this.cookiesFile = cookiesFile;
-        final JsonArray states = this.loadStates();
-        this.reviewStateId = this.getStateId(states, reviewState);
-        this.implementationStateId = this.getStateId(states, implementationState);
-        this.readyForReviewStateId = this.getStateId(states, readyForReviewState);
-        this.rejectedStateId = this.getStateId(states, rejectedState);
-        this.doneStateId = this.getStateId(states, doneState);
+        this.reviewStateName = reviewState;
+        this.implementationStateName = implementationState;
+        this.readyForReviewStateName = readyForReviewState;
+        this.rejectedStateName = rejectedState;
+        this.doneStateName = doneState;
         this.filtersForReview = new LinkedHashMap<>();
         this.filtersForFixing = new LinkedHashMap<>();
         this.linkSettings = linkSettings;
+    }
+
+    private StateIds sids() {
+        if (this.stateIds != null) {
+            return this.stateIds;
+        }
+        synchronized (this) {
+            if (this.stateIds == null) {
+                this.stateIds = new StateIds();
+            }
+            return this.stateIds;
+        }
     }
 
     private JsonArray loadStates() {
@@ -170,19 +213,6 @@ public class JiraPersistence implements ITicketConnector {
                 this.url,
                 this.getAuthParams());
         return this.performGet(getUrl).asArray();
-    }
-
-    private String getStateId(JsonArray states, String stateName) {
-        final List<String> possibleNames = new ArrayList<>();
-        for (final JsonValue v : states) {
-            final String name = v.asObject().get("name").asString();
-            if (name.equals(stateName)) {
-                return v.asObject().get("id").asString();
-            }
-            possibleNames.add(name);
-        }
-        throw new ReviewtoolException("Status " + stateName + " not found in JIRA."
-                + " Possible values: " + possibleNames);
     }
 
     @Override
@@ -201,7 +231,7 @@ public class JiraPersistence implements ITicketConnector {
         for (final JsonValue item : items) {
             final JsonObject io = item.asObject();
             if (io.get("field").asString().equals("status")
-                    && io.get("to").asString().equals(this.reviewStateId)) {
+                    && io.get("to").asString().equals(this.sids().reviewStateId)) {
                 return true;
             }
         }
@@ -540,17 +570,17 @@ public class JiraPersistence implements ITicketConnector {
 
     @Override
     public void startReviewing(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.reviewStateId);
+        this.performTransitionIfPossible(ticketKey, this.sids().reviewStateId);
     }
 
     @Override
     public void startFixing(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.implementationStateId);
+        this.performTransitionIfPossible(ticketKey, this.sids().implementationStateId);
     }
 
     @Override
     public void changeStateToReadyForReview(String ticketKey) {
-        this.performTransitionIfPossible(ticketKey, this.readyForReviewStateId);
+        this.performTransitionIfPossible(ticketKey, this.sids().readyForReviewStateId);
     }
 
     @Override
@@ -575,9 +605,9 @@ public class JiraPersistence implements ITicketConnector {
     }
 
     private Type determineTransitionType(String transitionTargetId) {
-        if (this.doneStateId.equals(transitionTargetId)) {
+        if (this.sids().doneStateId.equals(transitionTargetId)) {
             return Type.OK;
-        } else if (this.rejectedStateId.equals(transitionTargetId)) {
+        } else if (this.sids().rejectedStateId.equals(transitionTargetId)) {
             return Type.REJECTION;
         } else {
             return Type.UNKNOWN;
