@@ -8,7 +8,7 @@
     <version>1.33.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-  <artifactId>de.setsoftware.reviewtool.core</artifactId>
+  <artifactId>de.setsoftware.reviewtool.core.ui-eclipse</artifactId>
   <packaging>eclipse-plugin</packaging>
   <dependencies>
     <dependency>

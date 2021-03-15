@@ -18,7 +18,28 @@
    </license>
 
    <plugin
-         id="de.setsoftware.reviewtool.core"
+         id="de.setsoftware.reviewtool.core.glue-eclipse"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="de.setsoftware.reviewtool.core.ui-eclipse"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="de.setsoftware.reviewtool.core.cognitive"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="de.setsoftware.reviewtool.core.model"
          download-size="0"
          install-size="0"
          version="0.0.0"
