@@ -35,7 +35,7 @@ public class SurveyAtEndConfigurator implements IConfigurator {
                 q.addChoice(new Answer(choice.getAttribute("id"), choice.getAttribute("text")));
             }
         }
-        configurable.addEndReviewExtension(new SurveyAtEndExtension(mappedQuestions));
+        configurable.configureWith(new SurveyAtEndExtension(mappedQuestions));
     }
 
 }

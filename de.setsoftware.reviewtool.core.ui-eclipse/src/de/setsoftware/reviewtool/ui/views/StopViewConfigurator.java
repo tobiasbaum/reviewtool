@@ -22,7 +22,7 @@ public class StopViewConfigurator implements IConfigurator {
     public void configure(Element xml, IReviewConfigurable configurable) {
         final String type = xml.getAttribute("type");
         if (type.equals("combined")) {
-            configurable.setStopViewer(new CombinedDiffStopViewer());
+            configurable.configureWith(new CombinedDiffStopViewer());
         }
     }
 

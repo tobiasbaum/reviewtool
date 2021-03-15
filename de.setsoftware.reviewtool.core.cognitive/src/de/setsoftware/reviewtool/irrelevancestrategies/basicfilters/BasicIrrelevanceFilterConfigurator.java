@@ -20,9 +20,9 @@ public class BasicIrrelevanceFilterConfigurator implements IConfigurator {
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
-        configurable.addClassificationStrategy(new ImportChangeFilter(1));
-        configurable.addClassificationStrategy(new PackageDeclarationFilter(2));
-        configurable.addClassificationStrategy(new WhitespaceChangeFilter(3));
+        configurable.configureWith(new ImportChangeFilter(1));
+        configurable.configureWith(new PackageDeclarationFilter(2));
+        configurable.configureWith(new WhitespaceChangeFilter(3));
     }
 
 }

@@ -28,7 +28,7 @@ public class FileCountInCommitAndPathFilterConfigurator implements IConfigurator
                 Integer.parseInt(xml.getAttribute("number")),
                 xml.getAttribute("pattern"),
                 xml.getAttribute("description"));
-        configurable.addClassificationStrategy(new AndFilter(f1, f2));
+        configurable.configureWith(new AndFilter(f1, f2));
     }
 
 }

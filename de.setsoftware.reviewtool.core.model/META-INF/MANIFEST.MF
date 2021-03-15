@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Reviewtool
-Bundle-SymbolicName: de.setsoftware.reviewtool.core;singleton:=true
+Bundle-SymbolicName: de.setsoftware.reviewtool.core.model;singleton:=true
 Bundle-Version: 1.33.0.qualifier
 Bundle-Vendor: TB
 Require-Bundle: org.eclipse.ui;bundle-version="[3.106.0,4.0.0)",
@@ -28,14 +28,12 @@ Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator
 Bundle-ActivationPolicy: lazy
 Export-Package: de.setsoftware.reviewtool.base,
  de.setsoftware.reviewtool.base.tree,
- de.setsoftware.reviewtool.config,
- de.setsoftware.reviewtool.diffalgorithms,
  de.setsoftware.reviewtool.model,
  de.setsoftware.reviewtool.model.api,
  de.setsoftware.reviewtool.model.changestructure,
- de.setsoftware.reviewtool.preferredtransitions.api,
  de.setsoftware.reviewtool.telemetry,
- de.setsoftware.reviewtool.ui.api,
- de.setsoftware.reviewtool.ui.facade
+ de.setsoftware.reviewtool.config,
+ de.setsoftware.reviewtool.diffalgorithms,
+ de.setsoftware.reviewtool.lifecycle
 Eclipse-BuddyPolicy: registered
-Automatic-Module-Name: de.setsoftware.reviewtool.core
+Automatic-Module-Name: de.setsoftware.reviewtool.core.model
