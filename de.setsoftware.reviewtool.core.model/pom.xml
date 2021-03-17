@@ -11,11 +11,6 @@
   <artifactId>de.setsoftware.reviewtool.core.model</artifactId>
   <packaging>eclipse-plugin</packaging>
   <dependencies>
-    <dependency>
-      <groupId>com.github.javaparser</groupId>
-      <artifactId>javaparser-core</artifactId>
-      <version>3.9.1</version>
-    </dependency>
   </dependencies>
   <build>
     <plugins>
