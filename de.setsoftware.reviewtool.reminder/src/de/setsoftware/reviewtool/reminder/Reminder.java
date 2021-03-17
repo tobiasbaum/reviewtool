@@ -9,13 +9,14 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.lifecycle.IPostInitTask;
 import de.setsoftware.reviewtool.model.TicketInfo;
 import de.setsoftware.reviewtool.ui.facade.ReviewUi;
 
 /**
  * Checks if there are too many open reviews and shows a reminder.
  */
-public class Reminder implements Runnable {
+public class Reminder implements IPostInitTask {
 
     private static final int CHECK_DELAY = 23 * 60 * 60 * 1000;
 

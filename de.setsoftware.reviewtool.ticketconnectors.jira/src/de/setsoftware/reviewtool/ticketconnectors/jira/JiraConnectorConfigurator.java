@@ -54,7 +54,7 @@ public class JiraConnectorConfigurator implements IConfigurator {
                     filter.getAttribute("jql"),
                     Boolean.parseBoolean(filter.getAttribute("forReview")));
         }
-        configurable.setPersistence(p);
+        configurable.configureWith(p);
     }
 
     private File toFile(String attribute) {

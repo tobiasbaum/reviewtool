@@ -8,6 +8,6 @@
     <version>1.33.0-SNAPSHOT</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
-  <artifactId>de.setsoftware.reviewtool.tests</artifactId>
+  <artifactId>de.setsoftware.reviewtool.core.model.tests</artifactId>
   <packaging>eclipse-test-plugin</packaging>
 </project>

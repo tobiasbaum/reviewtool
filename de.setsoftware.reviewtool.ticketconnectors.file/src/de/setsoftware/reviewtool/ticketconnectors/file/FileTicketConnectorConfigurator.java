@@ -21,7 +21,7 @@ public class FileTicketConnectorConfigurator implements IConfigurator {
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
-        configurable.setPersistence(new FilePersistence(
+        configurable.configureWith(new FilePersistence(
                 new File(xml.getAttribute("directory")),
                 xml.getAttribute("defaultReviewer")));
     }

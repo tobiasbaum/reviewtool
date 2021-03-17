@@ -26,7 +26,7 @@ public class SvnChangesourceConfigurator implements IConfigurator {
         final String pattern = xml.getAttribute("pattern");
         final String maxTextDiffThreshold = xml.getAttribute("maxTextDiffFileSizeThreshold");
         final String minLogCacheSize = xml.getAttribute("minLogCacheSize");
-        configurable.addChangeSource(new SvnChangeSource(
+        configurable.configureWith(new SvnChangeSource(
                 pattern, user, pwd,
                 Long.parseLong(maxTextDiffThreshold),
                 minLogCacheSize.isEmpty() ? 1000 : Integer.parseInt(minLogCacheSize)));
