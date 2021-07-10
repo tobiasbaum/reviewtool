@@ -29,4 +29,4 @@ Quite obviously, CoRT stands for "Code Review Tool". But as it is fashionable to
 * CoRT sounds similar to Cord. Cord Broyhan was a famous beer brewer in Hannover in the middle ages: https://de.wikipedia.org/wiki/Cord_Broyhan
 * CoRT sounds similar to Kurt. Kurt Schwitters was an influential artist from Hannover: https://de.wikipedia.org/wiki/Kurt_Schwitters
 
-[![Build Status](https://travis-ci.org/tobiasbaum/reviewtool.svg?branch=master)](https://travis-ci.org/tobiasbaum/reviewtool)
+[![Build Status](https://travis-ci.com/tobiasbaum/reviewtool.svg?branch=master)](https://travis-ci.com/tobiasbaum/reviewtool)
