@@ -24,8 +24,8 @@ import org.eclipse.ui.part.MultiPageEditorPart;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.EclipsePathResource;
-import de.setsoftware.reviewtool.model.EclipseResource;
+import de.setsoftware.reviewtool.eclipse.model.EclipsePathResource;
+import de.setsoftware.reviewtool.eclipse.model.EclipseResource;
 import de.setsoftware.reviewtool.model.Mode;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
@@ -46,7 +46,7 @@ public class AddRemarkAction extends AbstractHandler {
 
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
-        PositionTransformer.initializeCacheInBackground();
+        EclipsePositionTransformer.initializeCacheInBackground();
         if (ReviewPlugin.getInstance().getMode() == Mode.IDLE) {
             ReviewPlugin.getInstance().startReview();
         }

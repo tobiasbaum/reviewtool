@@ -1,11 +1,9 @@
 package de.setsoftware.reviewtool.model.api;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-
 /**
  * UI-Callbacks for change sources.
  */
-public interface IChangeSourceUi extends IProgressMonitor {
+public interface IChangeSourceUi {
 
     /**
      * Is called when the current local working copy does not contain all needed
@@ -25,4 +23,10 @@ public interface IChangeSourceUi extends IProgressMonitor {
      * Decreases the task nesting level.
      */
     public abstract void decreaseTaskNestingLevel();
+
+    public abstract void subTask(String string);
+    
+    public abstract void throwIfCancelled();
+
+    public abstract boolean isCanceled();
 }

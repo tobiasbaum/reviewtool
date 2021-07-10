@@ -7,8 +7,7 @@ public interface IChangeManagerListener {
 
     /**
      * Called whenever information about local changes is updated.
-     * @param changeManager The event source.
      */
-    public abstract void localChangeInfoUpdated(ChangeManager changeManager);
+    public abstract void localChangeInfoUpdated();
 
 }

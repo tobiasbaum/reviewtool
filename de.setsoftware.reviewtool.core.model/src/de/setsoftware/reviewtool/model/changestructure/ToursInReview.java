@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model.changestructure;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -10,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BooleanSupplier;
 
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
@@ -36,12 +38,18 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.ICortPath;
+import de.setsoftware.reviewtool.model.api.ICortResource;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
+import de.setsoftware.reviewtool.model.api.IStopMarker;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.api.IWorkingCopy;
+import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
+import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
+import de.setsoftware.reviewtool.plugin.ChangeManager;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
@@ -157,36 +165,28 @@ public class ToursInReview {
         }
     }
 
-    private final ChangeManager changeManager;
+    private final IChangeManager changeManager;
     private final List<Tour> topmostTours;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
-    private final IChangeManagerListener mostRecentFragmentUpdater;
     private final Set<? extends IClassification> irrelevantCategories;
 
     private ToursInReview(
-            final ChangeManager changeManager,
+            final IChangeManager changeManager,
             final List<? extends Tour> topmostTours,
             final Set<? extends IClassification> irrelevantCategories) {
         this.changeManager = changeManager;
         this.topmostTours = new ArrayList<>(topmostTours);
         this.currentTourIndex = 0;
-        this.mostRecentFragmentUpdater = new IChangeManagerListener() {
-            @Override
-            public void localChangeInfoUpdated(final ChangeManager changeManager) {
-                ToursInReview.this.updateMostRecentFragmentsWithLocalChanges();
-            }
-        };
-        this.changeManager.addListener(this.mostRecentFragmentUpdater);
+        this.changeManager.addListener(() -> this.updateMostRecentFragmentsWithLocalChanges());
         this.irrelevantCategories = irrelevantCategories;
         this.updateMostRecentFragmentsWithLocalChanges();
     }
 
     private ToursInReview(final List<? extends Tour> topmostTours) {
-        this.changeManager = new ChangeManager(false);
+        this.changeManager = null;
         this.topmostTours = new ArrayList<>(topmostTours);
         this.currentTourIndex = 0;
-        this.mostRecentFragmentUpdater = null;
         this.irrelevantCategories = Collections.emptySet();
     }
 
@@ -203,7 +203,7 @@ public class ToursInReview {
      * null is returned.
      */
     public static ToursInReview create(
-            final ChangeManager changeManager,
+            final IChangeManager changeManager,
             final IChangeSourceUi changeSourceUi,
             final List<? extends IChangeClassifier> changeClassificationStrategies,
             final List<? extends ITourRestructuring> tourRestructuringStrategies,
@@ -214,7 +214,7 @@ public class ToursInReview {
         changeSourceUi.subTask("Filtering changes...");
         final UserSelectedReductions filteredChanges =
                 filterChanges(changeClassificationStrategies, changes.getMatchedCommits(),
-                        createUi, changeSourceUi, reviewRounds);
+                        createUi, changeSourceUi::throwIfCancelled, reviewRounds);
         if (filteredChanges == null) {
             return null;
         }
@@ -223,11 +223,15 @@ public class ToursInReview {
         final List<Tour> tours = toTours(
                 filteredChanges.commitSubset,
                 new FragmentTracer(),
-                changeSourceUi);
+                changeSourceUi::throwIfCancelled);
         Logger.info("initial tours=" + formatSizes(tours));
 
         final List<? extends Tour> userSelection = determinePossibleRestructurings(
-                tourRestructuringStrategies, tours, createUi, changeSourceUi, filteredChanges.toMakeIrrelevant);
+                tourRestructuringStrategies, 
+                tours,
+                createUi,
+                changeSourceUi::throwIfCancelled,
+                filteredChanges.toMakeIrrelevant);
         if (userSelection == null) {
             return null;
         }
@@ -299,7 +303,7 @@ public class ToursInReview {
             final List<? extends IChangeClassifier> changeClassificationStrategies,
             final List<? extends ICommit> changes,
             final ICreateToursUi createUi,
-            final IProgressMonitor progressMonitor,
+            final Runnable throwOnCancellation,
             final List<ReviewRoundInfo> reviewRounds) {
 
         Telemetry.event("originalChanges")
@@ -313,7 +317,7 @@ public class ToursInReview {
         final List<ICommit> changesWithClassifications = new ArrayList<>();
         for (final ICommit commit : changes) {
             changesWithClassifications.add(commit.transformChanges(
-                    (IChange c) -> addClassifications(commit, c, changeClassificationStrategies, progressMonitor)));
+                    (IChange c) -> addClassifications(commit, c, changeClassificationStrategies, throwOnCancellation)));
         }
 
         for (final IChangeClassifier cl : changeClassificationStrategies) {
@@ -361,12 +365,10 @@ public class ToursInReview {
             ICommit commit,
             IChange change,
             List<? extends IChangeClassifier> changeClassificationStrategies,
-            final IProgressMonitor progressMonitor) {
+            final Runnable throwOnCancellation) {
         IChange ret = change;
         for (final IChangeClassifier strategy : changeClassificationStrategies) {
-            if (progressMonitor.isCanceled()) {
-                throw new OperationCanceledException();
-            }
+            throwOnCancellation.run();
             try {
                 final IClassification cl = strategy.classify(commit, ret);
                 if (cl != null) {
@@ -391,7 +393,7 @@ public class ToursInReview {
             final List<? extends ITourRestructuring> tourRestructuringStrategies,
             final List<Tour> originalTours,
             final ICreateToursUi createUi,
-            final IProgressMonitor progressMonitor,
+            final Runnable throwOnCancellation,
             final Set<? extends IClassification> irrelevantCategories) {
 
         final List<Pair<String, List<? extends Tour>>> possibleRestructurings = new ArrayList<>();
@@ -402,9 +404,7 @@ public class ToursInReview {
                 .log();
 
         for (final ITourRestructuring restructuringStrategy : tourRestructuringStrategies) {
-            if (progressMonitor.isCanceled()) {
-                throw new OperationCanceledException();
-            }
+            throwOnCancellation.run();
 
             try {
                 final List<? extends Tour> restructuredTour =
@@ -429,12 +429,10 @@ public class ToursInReview {
     }
 
     private static List<Tour> toTours(final List<? extends ICommit> changes, final IFragmentTracer tracer,
-            final IProgressMonitor progressMonitor) {
+            final Runnable throwOnCancellation) {
         final List<Tour> ret = new ArrayList<>();
         for (final ICommit c : changes) {
-            if (progressMonitor.isCanceled()) {
-                throw new OperationCanceledException();
-            }
+            throwOnCancellation.run();
             ret.add(new Tour(
                     c.getMessage(),
                     toSliceFragments(c.getChanges(), tracer)));
@@ -484,49 +482,47 @@ public class ToursInReview {
     /**
      * Creates markers for the tour stops.
      */
-    public void createMarkers(final IStopMarkerFactory markerFactory, final IProgressMonitor progressMonitor) {
-        final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
+    public void createMarkers(final IStopMarkerFactory markerFactory, final Runnable throwOnCancellation) {
+        final Map<ICortResource, PositionLookupTable> lookupTables = new HashMap<>();
         for (int i = 0; i < this.topmostTours.size(); i++) {
             final Tour s = this.topmostTours.get(i);
             for (final Stop f : s.getStops()) {
-                if (progressMonitor.isCanceled()) {
-                    throw new OperationCanceledException();
-                }
+                throwOnCancellation.run();
                 this.createMarkerFor(markerFactory, lookupTables, s, f, i == this.currentTourIndex);
             }
         }
     }
 
-    private IMarker createMarkerFor(
+    private IStopMarker createMarkerFor(
             final IStopMarkerFactory markerFactory,
-            final Map<IResource, PositionLookupTable> lookupTables,
+            final Map<ICortResource, PositionLookupTable> lookupTables,
             final Tour topmostTour,
             final Stop f,
             final boolean tourActive) {
 
         try {
-            final IResource resource = f.getMostRecentFile().determineResource();
+            final ICortResource resource = f.getMostRecentFile().determineResource();
             if (resource == null) {
                 return null;
             }
-            final IMarker marker;
+            String message = f.getClassificationFormatted() + topmostTour.getDescription();
+            final IStopMarker marker;
             if (f.isDetailedFragmentKnown()) {
                 if (!lookupTables.containsKey(resource)) {
-                    lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
+                    try (Reader r = resource.open()) {
+                        lookupTables.put(resource, PositionLookupTable.create(r));
+                    }
                 }
                 final IFragment pos = f.getMostRecentFragment();
-                marker = markerFactory.createStopMarker(resource, tourActive);
-                marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
-                marker.setAttribute(IMarker.CHAR_START,
-                        lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()));
-                marker.setAttribute(IMarker.CHAR_END,
-                        lookupTables.get(resource).getCharsSinceFileStart(pos.getTo()));
+                int lineNumber = pos.getFrom().getLine();
+                int charStart = lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom());
+                int charEnd = lookupTables.get(resource).getCharsSinceFileStart(pos.getTo());
+                marker = markerFactory.createStopMarker(resource, tourActive, message, lineNumber, charStart, charEnd);
             } else {
-                marker = markerFactory.createStopMarker(resource, tourActive);
+                marker = markerFactory.createStopMarker(resource, tourActive, message);
             }
-            marker.setAttribute(IMarker.MESSAGE, f.getClassificationFormatted() + topmostTour.getDescription());
             return marker;
-        } catch (final CoreException | IOException e) {
+        } catch (final IOException e) {
             throw new ReviewtoolException(e);
         }
     }
@@ -537,12 +533,12 @@ public class ToursInReview {
      * If a marker could not be created (for example because the resource is not available in Eclipse), null
      * is returned.
      */
-    public IMarker createMarkerFor(
+    public IStopMarker createMarkerFor(
             final IStopMarkerFactory markerFactory,
             final Tour topmostTour,
             final Stop f) {
         return this.createMarkerFor(
-                markerFactory, new HashMap<IResource, PositionLookupTable>(), topmostTour, f, true);
+                markerFactory, new HashMap<ICortResource, PositionLookupTable>(), topmostTour, f, true);
     }
 
     public List<Tour> getTopmostTours() {
@@ -570,7 +566,7 @@ public class ToursInReview {
             new WorkspaceJob("Review marker update") {
                 @Override
                 public IStatus runInWorkspace(final IProgressMonitor progressMonitor) throws CoreException {
-                    ToursInReview.this.clearMarkers();
+                    ToursInReview.this.clearMarkers(markerFactory);
                     ToursInReview.this.createMarkers(markerFactory, progressMonitor);
                     return Status.OK_STATUS;
                 }
@@ -587,11 +583,8 @@ public class ToursInReview {
     /**
      * Clears all current tour stop markers.
      */
-    public void clearMarkers() throws CoreException {
-        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
-                Constants.STOPMARKER_ID, true, IResource.DEPTH_INFINITE);
-        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
-                Constants.INACTIVESTOPMARKER_ID, true, IResource.DEPTH_INFINITE);
+    public void clearMarkers(IStopMarkerFactory smf) {
+        smf.clearStopMarkers();
     }
 
     /**
@@ -638,7 +631,7 @@ public class ToursInReview {
      * The closeness measure is tweaked to (hopefully) capture the users intention as good as possible
      * for cases where he did not click directly on a stop.
      */
-    public Pair<Tour, Stop> findNearestStop(final IPath absoluteResourcePath, final int line) {
+    public Pair<Tour, Stop> findNearestStop(final ICortPath absoluteResourcePath, final int line) {
         if (this.topmostTours.isEmpty()) {
             return null;
         }
@@ -658,7 +651,7 @@ public class ToursInReview {
         return Pair.create(bestTour, bestStop);
     }
 
-    private int calculateDistance(final Stop stop, final IPath resource, final int line) {
+    private int calculateDistance(final Stop stop, final ICortPath resource, final int line) {
         if (!stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()).equals(resource)) {
             return Integer.MAX_VALUE;
         }

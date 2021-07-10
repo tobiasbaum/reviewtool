@@ -337,7 +337,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, forceTextEditor);
             //for files not in the workspace, we cannot create markers, but let's at least select the text
             if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {
-                final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
+                final PositionLookupTable lookup = EclipsePositionLookupTable.create(fileStore);
                 final int posStart = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getFrom());
                 final int posEnd = lookup.getCharsSinceFileStart(stop.getMostRecentFragment().getTo());
                 ViewHelper.setSelection(part, new TextSelection(posStart, posEnd - posStart));

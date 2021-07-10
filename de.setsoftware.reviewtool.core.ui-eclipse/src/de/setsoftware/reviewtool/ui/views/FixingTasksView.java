@@ -42,8 +42,8 @@ import org.eclipse.ui.part.ViewPart;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.eclipse.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.IReviewDataSaveListener;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
@@ -230,7 +230,7 @@ public class FixingTasksView extends ViewPart implements ReviewModeListener, IRe
         final IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
         final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, false);
         if (pos instanceof FileLinePosition && fileStore.fetchInfo().exists()) {
-            final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
+            final PositionLookupTable lookup = EclipsePositionLookupTable.create(fileStore);
             final int posStart = lookup.getCharsSinceFileStart(ChangestructureFactory.createPositionInText(
                     ((FileLinePosition) pos).getLine(), 1));
             ViewHelper.setSelection(part, new TextSelection(posStart, 0));

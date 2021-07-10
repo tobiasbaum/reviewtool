@@ -37,4 +37,5 @@ public interface IWorkingCopy {
      * This is a file history graph combining the one from the repository and the one from the local working copy.
      */
     public abstract IFileHistoryGraph getFileHistoryGraph();
+
 }

@@ -9,8 +9,8 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.eclipse.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;

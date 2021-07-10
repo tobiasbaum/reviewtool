@@ -11,24 +11,15 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspace;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
-import org.eclipse.core.runtime.jobs.Job;
+import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.api.ICortPath;
+import de.setsoftware.reviewtool.model.api.ICortResource;
 import de.setsoftware.reviewtool.model.remarks.FileLinePosition;
 import de.setsoftware.reviewtool.model.remarks.FilePosition;
 import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
@@ -50,46 +41,18 @@ public class PositionTransformer {
     private static volatile ConcurrentHashMap<String, PathChainNode> cache = null;
     private static volatile long cacheRefreshTime;
     private static volatile IChangeSource[] changeSources = new IChangeSource[0];
-
-    private static final IProgressMonitor NO_CANCEL_MONITOR = new IProgressMonitor() {
-        @Override
-        public void worked(int work) {
-        }
-
-        @Override
-        public void subTask(String name) {
-        }
-
-        @Override
-        public void setTaskName(String name) {
-        }
-
-        @Override
-        public void setCanceled(boolean value) {
-        }
-
-        @Override
-        public boolean isCanceled() {
-            return false;
-        }
-
-        @Override
-        public void internalWorked(double work) {
-        }
-
-        @Override
-        public void done() {
-        }
-
-        @Override
-        public void beginTask(String name, int totalWork) {
-        }
-    };
+    private static Supplier<ICortWorkspace> workspaceSupplier;
+    private static Consumer<ICortWorkspace> refreshAction;
+    
+    public static void init(Supplier<ICortWorkspace> ws, Consumer<ICortWorkspace> ra) {
+        workspaceSupplier = ws;
+        refreshAction = ra;
+    }
 
     /**
      * Creates a position identifying the given line in the given resource.
      */
-    public static Position toPosition(IPath path, int line, IWorkspace workspace) {
+    public static Position toPosition(ICortPath path, int line, ICortWorkspace workspace) {
         if (path.toFile().isDirectory()) {
             return new GlobalPosition();
         }
@@ -97,7 +60,7 @@ public class PositionTransformer {
         if (filename.isEmpty()) {
             return new GlobalPosition();
         }
-        final List<IPath> possiblePaths = getCachedPathsForName(workspace, filename);
+        final List<ICortPath> possiblePaths = getCachedPathsForName(workspace, filename);
         if (possiblePaths == null) {
             return new GlobalPosition();
         }
@@ -107,7 +70,7 @@ public class PositionTransformer {
         return createPos(getShortestUniqueName(path, possiblePaths), line);
     }
 
-    private static String getShortestUniqueName(IPath resourcePath, List<IPath> possiblePaths) {
+    private static String getShortestUniqueName(ICortPath resourcePath, List<ICortPath> possiblePaths) {
         final String[] segments = resourcePath.segments();
         int suffixLength = 1;
         while (suffixLength < segments.length) {
@@ -120,9 +83,9 @@ public class PositionTransformer {
         return implodePath(segments, suffixLength);
     }
 
-    private static int countWithSameSuffix(IPath resourcePath, List<IPath> possiblePaths, int suffixLength) {
+    private static int countWithSameSuffix(ICortPath resourcePath, List<ICortPath> possiblePaths, int suffixLength) {
         int count = 0;
-        for (final IPath path : possiblePaths) {
+        for (final ICortPath path : possiblePaths) {
             if (sameSuffix(resourcePath.segments(), path.segments(), suffixLength)) {
                 count++;
             }
@@ -155,12 +118,12 @@ public class PositionTransformer {
         return ret.toString();
     }
 
-    private static synchronized List<IPath> getCachedPathsForName(IWorkspace workspace, String filename) {
+    private static synchronized List<ICortPath> getCachedPathsForName(ICortWorkspace workspace, String filename) {
         while (cache == null) {
             //should normally have already been initialized, but it wasn't, so take
             //  the last chance to do so and do it synchronously
             try {
-                fillCache(workspace, NO_CANCEL_MONITOR);
+                fillCache(workspace, () -> false);
             } catch (final InterruptedException e) {
                 throw new AssertionError(e);
             }
@@ -174,19 +137,19 @@ public class PositionTransformer {
                 }
             }
         }
-        final List<IPath> cachedPaths = toList(cache.get(filename));
+        final List<ICortPath> cachedPaths = toList(cache.get(filename));
         if ((cachedPaths == null && cacheMightBeStale()) || cacheIsReallyOld()) {
             //Perhaps the resource exists but the cache was stale => trigger refresh
-            refreshCacheInBackground(workspace);
+            refreshAction.accept(workspace);
         }
         return cachedPaths;
     }
 
-    private static List<IPath> toList(PathChainNode startNode) {
+    private static List<ICortPath> toList(PathChainNode startNode) {
         if (startNode == null) {
             return null;
         }
-        final List<IPath> ret = new ArrayList<>();
+        final List<ICortPath> ret = new ArrayList<>();
         PathChainNode curNode = startNode;
         do {
             ret.add(curNode.path);
@@ -203,21 +166,21 @@ public class PositionTransformer {
         return System.currentTimeMillis() - cacheRefreshTime > REALLY_OLD_LIMIT_MS;
     }
 
-    private static void fillCache(IWorkspace workspace, IProgressMonitor monitor)
+    public static void fillCache(ICortWorkspace workspace, BooleanSupplier isCanceled)
             throws InterruptedException {
 
         if (refreshRunning.compareAndSet(false, true)) {
             final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
             final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
             final ConcurrentHashMap<String, PathChainNode> newCache = new ConcurrentHashMap<>();
-            for (final IPath path : determineRootPaths(workspace.getRoot().getProjects())) {
-                if (monitor.isCanceled()) {
+            for (final ICortPath path : determineRootPaths(workspace.getProjectPaths())) {
+                if (isCanceled.getAsBoolean()) {
                     throw new InterruptedException();
                 }
                 tasks.add(pool.submit(new FillCacheAction(path, newCache)));
             }
             for (final ForkJoinTask<Void> task : tasks) {
-                if (monitor.isCanceled()) {
+                if (isCanceled.getAsBoolean()) {
                     throw new InterruptedException();
                 }
                 task.join();
@@ -229,15 +192,15 @@ public class PositionTransformer {
         }
     }
 
-    private static Set<IPath> determineRootPaths(IProject[] projects) {
-        final Set<IPath> ret = new LinkedHashSet<>();
+    private static Set<ICortPath> determineRootPaths(List<? extends ICortPath> projects) {
+        final Set<ICortPath> ret = new LinkedHashSet<>();
         //paths that are not included as a project but part of the scm repo should be included, too
-        for (final IProject project : projects) {
-            ret.add(getWorkingCopyRoot(project.getLocation()));
+        for (final ICortPath project : projects) {
+            ret.add(getWorkingCopyRoot(project));
         }
         //with nested projects, the set now contains a parent as well as its children. remove the children
-        final Set<IPath> childProjects = new HashSet<>();
-        for (final IPath cur : ret) {
+        final Set<ICortPath> childProjects = new HashSet<>();
+        for (final ICortPath cur : ret) {
             if (ret.contains(cur.removeLastSegments(1))) {
                 childProjects.add(cur);
             }
@@ -246,14 +209,14 @@ public class PositionTransformer {
         return ret;
     }
 
-    private static IPath getWorkingCopyRoot(IPath location) {
+    private static ICortPath getWorkingCopyRoot(ICortPath location) {
         final IChangeSource[] cs = changeSources;
         final File dir = location.toFile();
         for (final IChangeSource c : cs) {
             try {
                 final File root = c.determineWorkingCopyRoot(dir);
                 if (root != null) {
-                    return Path.fromOSString(root.toString());
+                    return toPath(root);
                 }
             } catch (final ChangeSourceException e) {
                 Logger.warn("exception from changesource", e);
@@ -262,53 +225,13 @@ public class PositionTransformer {
         return location;
     }
 
-    private static void fillCacheIfEmpty(IWorkspace workspace, IProgressMonitor monitor)
+    public static void fillCacheIfEmpty(ICortWorkspace workspace, BooleanSupplier isCanceled)
             throws InterruptedException {
 
         if (cache != null) {
             return;
         }
-        fillCache(workspace, monitor);
-    }
-
-    /**
-     * Starts a new job that initializes the cache in the background.
-     * If the cache has already been initialized, it does nothing.
-     */
-    public static void initializeCacheInBackground() {
-        final IWorkspace root = ResourcesPlugin.getWorkspace();
-        final Job job = Job.create("Review resource cache init", new IJobFunction() {
-            @Override
-            public IStatus run(IProgressMonitor monitor) {
-                try {
-                    fillCacheIfEmpty(root, monitor);
-                    return Status.OK_STATUS;
-                } catch (final InterruptedException e) {
-                    return Status.CANCEL_STATUS;
-                }
-            }
-
-        });
-        job.schedule();
-    }
-
-    /**
-     * Starts a new job that refreshes the cache in the background.
-     */
-    public static void refreshCacheInBackground(final IWorkspace root) {
-        final Job job = Job.create("Review resource cache refresh", new IJobFunction() {
-            @Override
-            public IStatus run(IProgressMonitor monitor) {
-                try {
-                    fillCache(root, monitor);
-                    return Status.OK_STATUS;
-                } catch (final InterruptedException e) {
-                    return Status.CANCEL_STATUS;
-                }
-            }
-
-        });
-        job.schedule();
+        fillCache(workspace, isCanceled);
     }
 
     /**
@@ -316,9 +239,9 @@ public class PositionTransformer {
      */
     private static final class PathChainNode {
         private final PathChainNode next;
-        private final IPath path;
+        private final ICortPath path;
 
-        public PathChainNode(IPath path2, PathChainNode oldNode) {
+        public PathChainNode(ICortPath path2, PathChainNode oldNode) {
             this.next = oldNode;
             this.path = path2;
         }
@@ -333,10 +256,10 @@ public class PositionTransformer {
 
         private static final long serialVersionUID = -6349559047252339690L;
 
-        private final IPath path;
+        private final ICortPath path;
         private final ConcurrentHashMap<String, PathChainNode> sharedMap;
 
-        public FillCacheAction(IPath directory, ConcurrentHashMap<String, PathChainNode> sharedMap) {
+        public FillCacheAction(ICortPath directory, ConcurrentHashMap<String, PathChainNode> sharedMap) {
             this.path = directory;
             this.sharedMap = sharedMap;
         }
@@ -363,7 +286,7 @@ public class PositionTransformer {
             invokeAll(subActions);
         }
 
-        private void addToMap(String childNameWithoutExtension, IPath path) {
+        private void addToMap(String childNameWithoutExtension, ICortPath path) {
             boolean success;
             do {
                 final PathChainNode oldNode = this.sharedMap.get(childNameWithoutExtension);
@@ -399,7 +322,7 @@ public class PositionTransformer {
      * Returns the resource for the file from the given position.
      * Returns the workspace root if no file resource could be found.
      */
-    public static IResource toResource(Position pos) {
+    public static ICortResource toResource(Position pos) {
         return toResource(pos.getShortFileName());
     }
 
@@ -407,17 +330,17 @@ public class PositionTransformer {
      * Returns the resource for the given short filename.
      * Returns the workspace root if no file resource could be found.
      */
-    public static IResource toResource(String filename) {
-        final IPath path = toPath(filename);
-        final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-        return path == null ? workspaceRoot : getResourceForPath(workspaceRoot, path);
+    public static ICortResource toResource(String filename) {
+        final ICortPath path = toPath(filename);
+        final ICortWorkspace workspace = workspaceSupplier.get();
+        return path == null ? workspace.getRoot() : workspace.getResourceForPath(path);
     }
 
     /**
      * Returns the resource for the file from the given position.
      * Returns null if no file could be found.
      */
-    public static IPath toPath(Position pos) {
+    public static ICortPath toPath(Position pos) {
         return toPath(pos.getShortFileName());
     }
 
@@ -425,29 +348,36 @@ public class PositionTransformer {
      * Returns the path for the given short filename.
      * Returns null if no file could be found.
      */
-    public static IPath toPath(String filename) {
+    public static ICortPath toPath(String filename) {
         if (filename == null) {
             return null;
         }
         final String[] segments = filename.split("/");
         final String filenameWithoutExtension = stripExtension(segments[segments.length - 1]);
-        final List<IPath> paths = getCachedPathsForName(ResourcesPlugin.getWorkspace(), filenameWithoutExtension);
+        final List<ICortPath> paths = getCachedPathsForName(workspaceSupplier.get(), filenameWithoutExtension);
         if (paths == null) {
             return null;
         }
         if (segments.length == 1 && paths.size() == 1) {
             return paths.get(0);
         }
-        final IPath fittingPath = findFittingPath(segments, paths);
+        final ICortPath fittingPath = findFittingPath(segments, paths);
         if (fittingPath == null) {
             return null;
         }
         return fittingPath;
     }
 
-    private static IPath findFittingPath(String[] segments, List<IPath> paths) {
-        IPath result = null;
-        for (final IPath path : paths) {
+    /**
+     * Returns the path for the given file.
+     */
+    public static ICortPath toPath(File absolutePathInWc) {
+        return workspaceSupplier.get().createPath(absolutePathInWc);
+    }
+
+    private static ICortPath findFittingPath(String[] segments, List<ICortPath> paths) {
+        ICortPath result = null;
+        for (final ICortPath path : paths) {
             final String[] pathSegments = path.segments();
             if (sameSuffix(segments, pathSegments, segments.length)
                     && (result == null || pathSegments.length < result.segments().length)) {
@@ -455,14 +385,6 @@ public class PositionTransformer {
             }
         }
         return result;
-    }
-
-    private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, IPath fittingPath) {
-        final IFile file = workspaceRoot.getFileForLocation(fittingPath);
-        if (file == null || !file.exists()) {
-            return workspaceRoot;
-        }
-        return file;
     }
 
     public static void setChangeSources(List<IChangeSource> list) {

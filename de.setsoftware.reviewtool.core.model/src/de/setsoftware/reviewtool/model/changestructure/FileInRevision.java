@@ -10,15 +10,12 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
+import de.setsoftware.reviewtool.model.api.ICortPath;
+import de.setsoftware.reviewtool.model.api.ICortResource;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
@@ -64,7 +61,7 @@ public class FileInRevision implements IRevisionedFile {
 
             @Override
             public byte[] handleLocalRevision(final ILocalRevision revision) throws IOException {
-                final IPath localPath = FileInRevision.this.toLocalPath(revision.getWorkingCopy());
+                final ICortPath localPath = FileInRevision.this.toLocalPath(revision.getWorkingCopy());
                 final File file = localPath.toFile();
                 if (!file.exists()) {
                     return new byte[0];
@@ -97,14 +94,14 @@ public class FileInRevision implements IRevisionedFile {
      * Heuristically drops path prefixes (like "trunk", ...) until a resource can be found.
      */
     @Override
-    public IResource determineResource() {
+    public ICortResource determineResource() {
         String partOfPath = this.getPath();
         if (partOfPath.startsWith("/")) {
             partOfPath = partOfPath.substring(1);
         }
         while (true) {
-            final IResource resource = PositionTransformer.toResource(partOfPath);
-            if (!(resource instanceof IWorkspaceRoot)) {
+            final ICortResource resource = PositionTransformer.toResource(partOfPath);
+            if (!resource.isWorkspaceRoot()) {
                 //perhaps too much was dropped and a different file then the intended returned
                 //  therefore double check by using the inverse lookup
                 final String shortName = PositionTransformer.toPosition(
@@ -122,10 +119,10 @@ public class FileInRevision implements IRevisionedFile {
     }
 
     @Override
-    public IPath toLocalPath(final IWorkingCopy wc) {
+    public ICortPath toLocalPath(final IWorkingCopy wc) {
         final File absolutePathInWc = wc.toAbsolutePathInWc(this.path);
         if (absolutePathInWc != null) {
-            return new Path(absolutePathInWc.getPath());
+            return PositionTransformer.toPath(absolutePathInWc);
         } else {
             throw new ReviewtoolException("File " + this + " cannot be mapped to working copy at " + wc.getLocalRoot());
         }

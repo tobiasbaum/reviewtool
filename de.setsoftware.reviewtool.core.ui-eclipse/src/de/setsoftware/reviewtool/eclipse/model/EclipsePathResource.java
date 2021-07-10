@@ -1,8 +1,9 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.eclipse.model;
 
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.runtime.IPath;
 
+import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewResource;

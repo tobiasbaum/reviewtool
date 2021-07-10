@@ -25,7 +25,7 @@ public class StubFile implements IRevisionedFile {
     }
 
     @Override
-    public IPath toLocalPath(final IWorkingCopy wc) {
+    public ICortPath toLocalPath(final IWorkingCopy wc) {
         return this.file.toLocalPath(wc);
     }
 
@@ -50,7 +50,7 @@ public class StubFile implements IRevisionedFile {
     }
 
     @Override
-    public IResource determineResource() {
+    public ICortResource determineResource() {
         return this.file.determineResource();
     }
 

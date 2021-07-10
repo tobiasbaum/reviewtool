@@ -19,6 +19,7 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.debug.core.DebugPlugin;
@@ -74,7 +75,6 @@ import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
-import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
@@ -980,7 +980,11 @@ public class ReviewPlugin implements IReviewConfigurable {
             }
 
             sourceUi.subTask("Creating stop markers...");
-            this.toursInReview.createMarkers(new RealMarkerFactory(), sourceUi);
+            this.toursInReview.createMarkers(new RealMarkerFactory(), () -> {
+                if (sourceUi.isCanceled()) {
+                    throw new OperationCanceledException();
+                }
+            });
             return true;
         } finally {
             sourceUi.done();

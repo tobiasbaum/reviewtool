@@ -14,7 +14,7 @@ public class StartReviewAction extends AbstractHandler {
 
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
-        PositionTransformer.initializeCacheInBackground();
+        EclipsePositionTransformer.initializeCacheInBackground();
         ReviewPlugin.getInstance().startReview();
         return null;
     }

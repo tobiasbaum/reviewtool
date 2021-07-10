@@ -7,12 +7,6 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.core.filesystem.EFS;
-import org.eclipse.core.filesystem.IFileStore;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 
 /**
@@ -27,36 +21,13 @@ public class PositionLookupTable {
     }
 
     /**
-     * Creates a lookup table for the contents from the given file.
+     * Creates a lookup table for the contents from the given stream.
      */
-    public static PositionLookupTable create(IFile file)
-            throws IOException, CoreException {
-        if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
-            file.refreshLocal(IResource.DEPTH_ZERO, null);
-        }
-        final InputStream stream = file.getContents();
-        try {
-            final Reader r = new InputStreamReader(stream, file.getCharset());
-            return create(r);
-        } finally {
-            stream.close();
-        }
+    public static PositionLookupTable create(InputStream stream, String charset) throws IOException {
+        final Reader r = new InputStreamReader(stream, charset);
+        return create(r);
     }
-
-    /**
-     * Creates a lookup table for the contents from the given file.
-     */
-    public static PositionLookupTable create(IFileStore fileStore)
-            throws IOException, CoreException {
-        final InputStream stream = fileStore.openInputStream(EFS.NONE, null);
-        try {
-            final Reader r = new InputStreamReader(stream, "UTF-8");
-            return create(r);
-        } finally {
-            stream.close();
-        }
-    }
-
+    
     /**
      * Creates a lookup table for the contents from the given reader.
      */

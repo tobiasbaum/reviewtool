@@ -3,9 +3,6 @@ package de.setsoftware.reviewtool.model.api;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IPath;
-
 import de.setsoftware.reviewtool.base.IPartiallyComparable;
 
 /**
@@ -39,12 +36,12 @@ public interface IRevisionedFile extends IPartiallyComparable<IRevisionedFile>, 
      * Finds a resource corresponding to a path that is relative to the SCM repository root.
      * If none can be found, null is returned.
      */
-    public abstract IResource determineResource();
+    public abstract ICortResource determineResource();
 
     /**
      * Returns the absolute path of the file in some local working copy.
      * @param wc The working copy to use.
      */
-    public abstract IPath toLocalPath(final IWorkingCopy wc);
+    public abstract ICortPath toLocalPath(final IWorkingCopy wc);
 
 }

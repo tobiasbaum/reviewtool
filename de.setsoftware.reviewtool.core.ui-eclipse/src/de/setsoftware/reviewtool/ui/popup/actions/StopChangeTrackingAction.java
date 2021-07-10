@@ -5,7 +5,8 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.MessageDialog;
 
-import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
+import de.setsoftware.reviewtool.model.changestructure.IChangeManager;
+import de.setsoftware.reviewtool.plugin.ChangeManager;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 /**
@@ -16,7 +17,7 @@ public class StopChangeTrackingAction extends AbstractHandler {
 
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
-        final ChangeManager changeManager = ReviewPlugin.getInstance().getChangeManager();
+        final IChangeManager changeManager = ReviewPlugin.getInstance().getChangeManager();
         if (!changeManager.isTrackingEnabled()) {
             MessageDialog.openInformation(null, "Already disabled",
                     "Change tracking was already disabled. To enable again, restart Eclipse.");

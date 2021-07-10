@@ -1,8 +1,10 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.eclipse.model;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.model.Constants;
+import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewResource;
 import de.setsoftware.reviewtool.model.remarks.Position;

@@ -5,12 +5,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IPath;
-
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.model.api.ICortPath;
+import de.setsoftware.reviewtool.model.api.ICortResource;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorControl;
 
@@ -48,19 +46,19 @@ public class InSameSourceFolderRelation implements RelationMatcher {
     }
 
     private String determineSourceFolder(IRevisionedFile file) {
-        final IResource resource = file.determineResource();
+        final ICortResource resource = file.determineResource();
         if (resource == null) {
             return null;
         }
-        final IProject project = resource.getProject();
-        if (project == null) {
+        final String projectName = resource.getProjectName();
+        if (projectName == null) {
             return null;
         }
-        final IPath projectRelativePath = resource.getProjectRelativePath();
+        final ICortPath projectRelativePath = resource.getProjectRelativePath();
         if (projectRelativePath.isEmpty()) {
-            return project.getName();
+            return projectName;
         }
-        return project.getName() + "/" + projectRelativePath.segment(0);
+        return projectName + "/" + projectRelativePath.segment(0);
     }
 
 }

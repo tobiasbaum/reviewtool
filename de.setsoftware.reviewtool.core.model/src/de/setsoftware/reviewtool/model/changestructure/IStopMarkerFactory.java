@@ -1,14 +1,19 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
+import de.setsoftware.reviewtool.model.api.ICortResource;
+import de.setsoftware.reviewtool.model.api.IStopMarker;
 
 /**
  * Factory for {@link IMarker}s belonging to review stops.
  */
 public interface IStopMarkerFactory {
 
-    public abstract IMarker createStopMarker(IResource resource, boolean tourActive) throws CoreException;
+    public abstract IStopMarker createStopMarker(
+            ICortResource resource, boolean tourActive, String message);
+
+    public abstract IStopMarker createStopMarker(
+            ICortResource resource, boolean tourActive, String message, int line, int charStart, int charEnd);
+
+    public abstract void clearStopMarkers();
 
 }

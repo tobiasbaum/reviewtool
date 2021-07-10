@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.ui.IMarkerResolution;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.EclipseMarker;
+import de.setsoftware.reviewtool.eclipse.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.remarks.ResolutionType;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;

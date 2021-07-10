@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Map;
 
-import org.osgi.framework.Version;
-
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.unihannover.se.hackybuffer.Hackybuffer;
 import de.unihannover.se.hackybuffer.HackybufferException;
@@ -19,9 +17,9 @@ import de.unihannover.se.hackybuffer.HackybufferException;
 public class HackystatProtocolTelemetry extends AbstractTelemetry {
 
     private final Hackybuffer hacky;
-    private final Version version;
+    private final String version;
 
-    public HackystatProtocolTelemetry(String dir, Version pluginVersion) {
+    public HackystatProtocolTelemetry(String dir, String pluginVersion) {
         try {
             this.hacky = new Hackybuffer(new File(dir));
             this.version = pluginVersion;

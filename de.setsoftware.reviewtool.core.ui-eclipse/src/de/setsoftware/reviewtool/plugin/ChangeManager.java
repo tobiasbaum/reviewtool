@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.plugin;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -29,12 +29,14 @@ import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.changestructure.IChangeManager;
+import de.setsoftware.reviewtool.model.changestructure.IChangeManagerListener;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
  * Helps to manage changes used while reviewing or fixing code.
  */
-public final class ChangeManager {
+public final class ChangeManager implements IChangeManager {
 
     private static final long PROCESSING_DELAY = 1000L * 10;
 
@@ -266,7 +268,7 @@ public final class ChangeManager {
     private void analyzeLocalChanges(final IChangeSource changeSource, final List<File> filesToAnalyze)
             throws ChangeSourceException {
         changeSource.analyzeLocalChanges(filesToAnalyze);
-        this.changeManagerListeners.notifyListeners(listener -> listener.localChangeInfoUpdated(this));
+        this.changeManagerListeners.notifyListeners(listener -> listener.localChangeInfoUpdated());
     }
 
     /**
