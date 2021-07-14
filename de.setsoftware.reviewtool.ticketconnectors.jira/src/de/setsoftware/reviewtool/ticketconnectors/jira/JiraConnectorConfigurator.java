@@ -45,7 +45,11 @@ public class JiraConnectorConfigurator implements IConfigurator {
                 xml.getAttribute("user"),
                 xml.getAttribute("password"),
                 linkSettings,
-                this.toFile(xml.getAttribute("cookieFile")));
+                this.toFile(xml.getAttribute("cookieFile")),
+                xml.getAttribute("oauthIssuer"),
+                xml.getAttribute("oauthAudience"),
+                xml.getAttribute("oauthClientID"),
+                xml.getAttribute("oauthClientSecret"));
         final NodeList filters = xml.getElementsByTagName("filter");
         for (int i = 0; i < filters.getLength(); i++) {
             final Element filter = (Element) filters.item(i);

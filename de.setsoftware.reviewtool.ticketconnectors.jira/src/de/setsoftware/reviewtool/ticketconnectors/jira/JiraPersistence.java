@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
@@ -169,6 +170,11 @@ public class JiraPersistence implements ITicketConnector {
     private final TicketLinkSettings linkSettings;
     private final File cookiesFile;
 
+    private final String oauthIssuer;
+    private final String oauthAudience;
+    private final String oauthClientID;
+    private final String oauthClientSecret;
+
     public JiraPersistence(
             String url,
             String reviewFieldName,
@@ -177,9 +183,14 @@ public class JiraPersistence implements ITicketConnector {
             String readyForReviewState,
             String rejectedState,
             String doneState,
-            String user, String password,
+            String user,
+            String password,
             TicketLinkSettings linkSettings,
-            File cookiesFile) {
+            File cookiesFile,
+            String oauthIssuer,
+            String oauthAudience,
+            String oauthClientID,
+            String oauthClientSecret) {
         this.url = url;
         this.reviewFieldName = reviewFieldName;
         this.user = user;
@@ -193,6 +204,24 @@ public class JiraPersistence implements ITicketConnector {
         this.filtersForReview = new LinkedHashMap<>();
         this.filtersForFixing = new LinkedHashMap<>();
         this.linkSettings = linkSettings;
+
+        this.oauthAudience = oauthAudience;
+        this.oauthClientID = oauthClientID;
+        this.oauthClientSecret = oauthClientSecret;
+
+        if (!oauthAudience.isEmpty() && !oauthClientID.isEmpty() && !oauthClientSecret.isEmpty()) {
+            if (oauthIssuer.isEmpty()) {
+                this.oauthIssuer = this.ensureSlashAtEnd(url);
+            } else {
+                this.oauthIssuer = this.ensureSlashAtEnd(oauthIssuer);
+            }
+        } else {
+            this.oauthIssuer = null;
+        }
+    }
+
+    private String ensureSlashAtEnd(final String url) {
+        return url.endsWith("/") ? url : url + "/";
     }
 
     private StateIds sids() {
@@ -554,10 +583,31 @@ public class JiraPersistence implements ITicketConnector {
     private String loadCookies() throws IOException {
         if (this.cookiesFile == null || !this.cookiesFile.exists()) {
             Logger.debug("using no cookies " + this.cookiesFile);
+            return this.createBaererTokenCookie();
+        }
+
+        final Stream<String> cookies = Stream.concat(
+                Files.lines(this.cookiesFile.toPath(), Charset.forName("UTF-8")),
+                Stream.of(this.createBaererTokenCookie()));
+
+        return cookies.collect(Collectors.joining("; "));
+    }
+
+    private String createBaererTokenCookie() throws IOException {
+        if (this.oauthIssuer == null) {
+            Logger.debug("using no bearer token");
             return "";
         }
-        return Files.lines(this.cookiesFile.toPath(), Charset.forName("UTF-8")).collect(Collectors.joining("; "));
-    }
+
+        Logger.debug("using bearer token from issuer " + this.oauthIssuer);
+        final String bearerToken = BearerTokenProvider.createBearerToken(
+                this.oauthIssuer,
+                this.oauthAudience,
+                this.oauthClientID,
+                this.oauthClientSecret);
+
+        return "bearertoken=" + bearerToken;
+     }
 
     private void flushErrorStream(final HttpURLConnection c) throws IOException {
         try (final InputStream s = c.getErrorStream()) {
