@@ -167,11 +167,22 @@ public class ConfigurationInterpreter {
                 ret.append(parts.get(i));
             } else {
                 final String paramName = parts.get(i);
-                final String paramValue = paramValues.get(paramName);
-                if (paramValue == null) {
-                    throw new ReviewtoolException("Value for user specific parameter " + paramName + " missing.");
+                if (paramName.startsWith("env.")) {
+                    final String envVariableName = paramName.substring(4);
+                    final String paramValue = System.getenv(envVariableName);
+                    if (paramValue == null) {
+                        throw new ReviewtoolException(
+                                "Environment variable " + envVariableName
+                                + " is not set (reqired for parameter " + paramName + ")");
+                    }
+                    ret.append(paramValue);
+                } else {
+                    final String paramValue = paramValues.get(paramName);
+                    if (paramValue == null) {
+                        throw new ReviewtoolException("Value for user specific parameter " + paramName + " missing.");
+                    }
+                    ret.append(paramValue);
                 }
-                ret.append(paramValue);
             }
         }
         return ret.toString();

@@ -195,4 +195,38 @@ public class ConfigurationInterpreterTest {
         }
     }
 
+    @Test
+    public void testAttributeFromEnvironmentVariable() throws Exception {
+        final Document config = load(
+                "<reviewToolConfig>"
+                        + "  <someElement att2=\"${env.PATH}\" />"
+                        + "</reviewToolConfig>");
+
+        final Map<String, String> paramValues = new HashMap<>();
+
+        final ConfigurationInterpreter i = new ConfigurationInterpreter();
+        i.configure(config, paramValues, new TestConfigurable());
+
+        assertEquals(System.getenv().get("PATH"), paramValues.get("PATH"));
+    }
+
+    @Test
+    public void testAttributeFromMissingEnvironmentVariable() throws Exception {
+        final Document config = load(
+                "<reviewToolConfig>"
+                        + "  <someElement att2=\"${env.FOOBA}\" />"
+                        + "</reviewToolConfig>");
+
+        final Map<String, String> paramValues = new HashMap<>();
+
+        final ConfigurationInterpreter i = new ConfigurationInterpreter();
+
+        try {
+            i.configure(config, paramValues, new TestConfigurable());
+            fail("Exception expected because of unknown environment variable");
+        } catch (final ReviewtoolException e) {
+            assertTrue("wrong exception message: " + e.getMessage(), e.getMessage().contains("FOOBA"));
+        }
+
+    }
 }
