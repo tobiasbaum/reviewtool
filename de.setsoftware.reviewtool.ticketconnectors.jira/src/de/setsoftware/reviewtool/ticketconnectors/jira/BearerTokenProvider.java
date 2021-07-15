@@ -23,7 +23,7 @@ final class BearerTokenProvider {
     /**
      * Creates a bearer token.
      */
-    final static String createBearerToken(
+    static final String createBearerToken(
             final String oauthIssuer,
             final String oauthAudience,
             final String oauthClientID,
