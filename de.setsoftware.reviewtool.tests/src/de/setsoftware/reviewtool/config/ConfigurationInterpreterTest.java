@@ -7,11 +7,13 @@ import static org.junit.Assert.fail;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -184,11 +186,9 @@ public class ConfigurationInterpreterTest {
                         + "  <someElement att1=\"abc\" att2=\"${def}\" />"
                         + "</reviewToolConfig>");
 
-        final Map<String, String> paramValues = new HashMap<>();
-
         final ConfigurationInterpreter i = new ConfigurationInterpreter();
         try {
-            i.configure(config, paramValues, new TestConfigurable());
+            i.configure(config, Collections.emptyMap(), new TestConfigurable());
             fail("Exception expected because value for param def is missing");
         } catch (final ReviewtoolException e) {
             assertTrue("wrong exception message: " + e.getMessage(), e.getMessage().contains("def"));
@@ -197,17 +197,25 @@ public class ConfigurationInterpreterTest {
 
     @Test
     public void testAttributeFromEnvironmentVariable() throws Exception {
+        final Optional<String> envVar = System.getenv().keySet().stream().findFirst();
+        assert envVar.isPresent();
+
+        final String envVarName = envVar.get();
+        final String envVarValue = System.getenv().get(envVarName);
+
         final Document config = load(
                 "<reviewToolConfig>"
-                        + "  <someElement att2=\"${env.PATH}\" />"
+                        + "  <someElement att2=\"${env." + envVarName + "}\" />"
                         + "</reviewToolConfig>");
 
-        final Map<String, String> paramValues = new HashMap<>();
+        final TestConfigurator tc1 = new TestConfigurator("someElement");
 
         final ConfigurationInterpreter i = new ConfigurationInterpreter();
-        i.configure(config, paramValues, new TestConfigurable());
+        i.addConfigurator(tc1);
+        i.configure(config, Collections.emptyMap(), new TestConfigurable());
 
-        assertEquals(System.getenv().get("PATH"), paramValues.get("PATH"));
+        assertEquals(1, tc1.getResult().size());
+        assertEquals("someElement.att2=" + envVarValue, tc1.getResult().get(0));
     }
 
     @Test
@@ -217,16 +225,11 @@ public class ConfigurationInterpreterTest {
                         + "  <someElement att2=\"${env.FOOBA}\" />"
                         + "</reviewToolConfig>");
 
-        final Map<String, String> paramValues = new HashMap<>();
-
-        final ConfigurationInterpreter i = new ConfigurationInterpreter();
-
         try {
-            i.configure(config, paramValues, new TestConfigurable());
+            new ConfigurationInterpreter().configure(config, Collections.emptyMap(), new TestConfigurable());
             fail("Exception expected because of unknown environment variable");
         } catch (final ReviewtoolException e) {
             assertTrue("wrong exception message: " + e.getMessage(), e.getMessage().contains("FOOBA"));
         }
-
     }
 }
