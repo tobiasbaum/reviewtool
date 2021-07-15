@@ -607,7 +607,7 @@ public class JiraPersistence implements ITicketConnector {
                 this.oauthClientSecret);
 
         return "bearertoken=" + bearerToken;
-     }
+    }
 
     private void flushErrorStream(final HttpURLConnection c) throws IOException {
         try (final InputStream s = c.getErrorStream()) {
