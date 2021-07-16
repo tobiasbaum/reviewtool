@@ -16,6 +16,7 @@ CoRT is usually configure for a whole team. Therefore, it has an XML configurati
 
 - The settings dialog can be found under "Window -> Preferences -> Reviewtool". You need to reference a configuration file there.
 - The configuration file can contain placeholders, for example for user names. These need to be configured in the settings dialog, too.
+- If a placeholder starts with the prefix "env." (i. e. "${env.USERNAME}"), the placeholder will be replaced with the value of a environment variable (environment variable "USERNAME" in this case).
 - Two examples for configuration files can be found in the repository root ("testconfig1.xml" and "testconfig2.xml"). You need to adjust them for your specific situation.
 - There is not much documentation for the config format at the moment. If you want to get into the details, have a look at the various subclasses of de.setsoftware.reviewtool.config.IConfigurator from the ...core project.
 
