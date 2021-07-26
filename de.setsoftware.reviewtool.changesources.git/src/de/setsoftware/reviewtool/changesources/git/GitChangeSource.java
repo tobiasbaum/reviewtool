@@ -150,6 +150,8 @@ public class GitChangeSource extends AbstractChangeSource {
                 } catch (final Exception ex) {
                     Logger.error("An error occurred while computing changes for " + fileInfo.toString(), ex);
                 }
+            } else {
+                Logger.debug("history node is null for " + fileInfo);
             }
         }
         return ret;

@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
@@ -124,6 +125,9 @@ public abstract class AbstractChangeSource implements IChangeSource {
             } else {
                 changes.add(this.createBinaryChange(wc, node, ancestor));
             }
+        }
+        if (changes.isEmpty()) {
+            Logger.debug("no changes found in file " + node);
         }
         return changes;
     }
