@@ -1,0 +1,445 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension-point id="de.setsoftware.reviewtool.configurator" name="reviewtoolConfigurator" schema="schema/de.setsoftware.reviewtool.configurator.exsd"/>
+   <extension point="org.eclipse.ui.menus">
+	 <!--<menuContribution locationURI="popup:org.eclipse.jdt.ui.PackageExplorer">
+	   <command commandId="de.setsoftware.reviewtool.commands.addremark"
+	   		 label="Reviewanmerkung hinzufügen" 
+	   		 style="push">
+	   		 <!- -<visibleWhen
+                  checkEnabled="false">
+               <with
+                     variable="activeMenuSelection">
+                  <iterate
+                        ifEmpty="false"
+                        operator="or">
+                     <adapt
+                           type="org.eclipse.jdt.core.ICompilationUnit">
+                     </adapt>
+                  </iterate>
+               </with>
+            </visibleWhen>- ->
+	   </command>
+	 </menuContribution>-->
+	 <menuContribution locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+	   <menu label="CoRT code review">
+		   <command commandId="de.setsoftware.reviewtool.commands.startreview"
+		   		 label="Start review ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="IDLE"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.endrevieworfixing"
+		   		 label="End review / fixing ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	               	  <or>
+	                    <equals value="REVIEWING"/>
+	                    <equals value="FIXING"/>
+	               	  </or>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.startfixing"
+		   		 label="Start fixing ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="IDLE"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.addremark"
+		   		 label="Add review remark ..." 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="REVIEWING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.nextunvisitedstop"
+		   		 label="Jump to next unvisited review stop" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="REVIEWING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.nextopenremark"
+		   		 label="Jump to next open review remark" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	                  <equals value="FIXING"/>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.refreshmarkers"
+		   		 label="Reload review remarks" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	               	  <or>
+	                    <equals value="REVIEWING"/>
+	                    <equals value="FIXING"/>
+	                  </or>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.writeremarks"
+		   		 label="Write remarks to ticket system" 
+		   		 style="push">
+		   		 <visibleWhen
+	                  checkEnabled="false">
+	               <with variable="de.setsoftware.reviewtool.mode">
+	               	  <or>
+	                    <equals value="REVIEWING"/>
+	                    <equals value="FIXING"/>
+	                  </or>
+	               </with>
+	            </visibleWhen>
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.clearcommitcache"
+		   		 label="Clear commit cache" 
+		   		 style="push">
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.enableverboselogging"
+		   		 label="Enable verbose logging" 
+		   		 style="push">
+		   </command>
+		   <command commandId="de.setsoftware.reviewtool.commands.stopchangetracking"
+		   		 label="Stop local change tracking" 
+		   		 style="push">
+		   </command>
+	   </menu>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.reviewcontentview?after=additions">
+       <command commandId="de.setsoftware.reviewtool.commands.markAsChecked"
+             label="Mark/Unmark explicitly checked"
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.changestructure.Stop" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.openDirectory"
+             label="Open directory"
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.changestructure.Stop" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.openInTextEditor"
+             label="Open in text editor"
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.changestructure.Stop" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+	 </menuContribution>
+	 <menuContribution locationURI="popup:de.setsoftware.reviewtool.ui.views.fixingtasksview?after=additions">
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkFixedNoComment"
+             label="Mark remark as fixed"
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkFixed"
+             label="Mark remark as fixed and add a comment ..."
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkWontfix"
+             label="Mark remark as rejected ..."
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+       <command commandId="de.setsoftware.reviewtool.commands.markRemarkUnclear"
+             label="Mark remark as unclear ..."
+             style="push">
+             <visibleWhen>
+               <with variable="activeMenuSelection">
+                 <count value="+"/>
+                 <iterate>
+                   <adapt type="de.setsoftware.reviewtool.model.remarks.ReviewRemark" />
+                 </iterate>
+               </with>
+             </visibleWhen>
+       </command>
+	 </menuContribution>
+   </extension>
+   <extension point="org.eclipse.ui.commands">
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.AddRemarkAction"
+        id="de.setsoftware.reviewtool.commands.addremark" name="Add review remark">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextUnvisitedStopAction"
+        id="de.setsoftware.reviewtool.commands.nextunvisitedstop" name="Jump to next review stop">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextOpenRemarkAction"
+        id="de.setsoftware.reviewtool.commands.nextopenremark" name="Jump to next open review remark">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.JumpToNextAction"
+        id="de.setsoftware.reviewtool.commands.genericnext" name="Jump to next review stop or open review remark">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.ShowInReviewContentAction"
+        id="de.setsoftware.reviewtool.commands.showinreviewcontent" name="Show current position in Review content">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction"
+        id="de.setsoftware.reviewtool.commands.startreview" name="Start review">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EndReviewOrFixingAction"
+        id="de.setsoftware.reviewtool.commands.endrevieworfixing" name="End review/fixing">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StartFixingAction"
+        id="de.setsoftware.reviewtool.commands.startfixing" name="Start fixing">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.RefreshReviewMarkersAction"
+        id="de.setsoftware.reviewtool.commands.refreshmarkers" name="Refresh review markers">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.WriteToTicketSystemAction"
+        id="de.setsoftware.reviewtool.commands.writeremarks" name="Write remarks to ticket system">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.ClearCommitCacheAction"
+        id="de.setsoftware.reviewtool.commands.clearcommitcache" name="Clear commit cache">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.EnableVerboseLoggingAction"
+        id="de.setsoftware.reviewtool.commands.enableverboselogging" name="Enable verbose logging">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.StopChangeTrackingAction"
+        id="de.setsoftware.reviewtool.commands.stopchangetracking" name="Stop change tracking">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkAsCheckedAction"
+        id="de.setsoftware.reviewtool.commands.markAsChecked" name="Mark selected stop as checked/unchecked">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.OpenDirectoryAction"
+        id="de.setsoftware.reviewtool.commands.openDirectory" name="Open directory of selected stop">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.OpenInTextEditorAction"
+        id="de.setsoftware.reviewtool.commands.openInTextEditor" name="Open text editor for selected stop">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkFixedNoCommentAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkFixedNoComment" name="Mark the selected review remark as fixed">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkFixedAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkFixed" name="Mark the selected review remark as fixed and add a comment">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkWontfixAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkWontfix" name="Mark the selected review remark as rejected">
+     </command>
+     <command defaultHandler="de.setsoftware.reviewtool.ui.popup.actions.MarkRemarkUnclearAction"
+        id="de.setsoftware.reviewtool.commands.markRemarkUnclear" name="Mark the selected review remark as unclear">
+     </command>
+   </extension>
+
+	<extension id="de.setsoftware.reviewtool.reviewmarker" point="org.eclipse.core.resources.markers" name="Review remark">
+		<super type="org.eclipse.core.resources.problemmarker"/>
+		<super type="org.eclipse.core.resources.textmarker"/>
+		<persistent value="false"/>
+		<attribute name="de.setsoftware.reviewtool.markerattributes.remarktype"/>
+		<attribute name="de.setsoftware.reviewtool.markerattributes.resolution"/>
+		<attribute name="de.setsoftware.reviewtool.markerattributes.position"/>
+	</extension>
+	
+    <extension id="de.setsoftware.reviewtool.tourStopMarker" point="org.eclipse.core.resources.markers" name="Review tour stop">
+        <super type="org.eclipse.core.resources.textmarker"/>
+    </extension>
+
+    <extension id="de.setsoftware.reviewtool.inactiveTourStopMarker" point="org.eclipse.core.resources.markers" name="Inactive review tour stop">
+        <super type="org.eclipse.core.resources.textmarker"/>
+    </extension>
+
+	<extension
+		point="org.eclipse.ui.ide.markerResolution">
+		<markerResolutionGenerator
+			markerType="de.setsoftware.reviewtool.reviewmarker"
+			class="de.setsoftware.reviewtool.ui.popup.actions.MarkerResolutionGenerator">
+		</markerResolutionGenerator>
+	</extension>
+ <extension
+       point="org.eclipse.ui.bindings">
+    <sequenceModifier
+          find="M3"
+          replace="M1"
+          platforms="cocoa,carbon" />
+    <key
+          commandId="de.setsoftware.reviewtool.commands.addremark"
+          contextId="org.eclipse.ui.contexts.window"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M3+4">
+    </key>
+    <key
+          commandId="de.setsoftware.reviewtool.commands.genericnext"
+          contextId="org.eclipse.ui.contexts.window"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M3+5">
+    </key>
+    <key
+          commandId="de.setsoftware.reviewtool.commands.showinreviewcontent"
+          contextId="org.eclipse.ui.contexts.window"
+          schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+          sequence="M3+6">
+    </key>
+ </extension>
+ <extension
+       point="org.eclipse.ui.services">
+    <sourceProvider
+          provider="de.setsoftware.reviewtool.plugin.ReviewPluginModeService">
+       <variable
+             name="de.setsoftware.reviewtool.mode"
+             priorityLevel="workbench">
+       </variable>
+    </sourceProvider>
+ </extension>
+ <extension
+       point="org.eclipse.ui.preferencePages">
+    <page
+          class="de.setsoftware.reviewtool.plugin.ReviewToolPreferencePage"
+          id="de.setsoftware.reviewtool.preferences"
+          name="CoRT review settings">
+    </page>
+ </extension>
+ 
+ <extension
+      point="org.eclipse.ui.editors.annotationTypes">
+    <type
+          name="de.setsoftware.reviewtool.ui.tourStopAnnotation"
+          super="org.eclipse.ui.workbench.texteditor.info"
+          markerType="de.setsoftware.reviewtool.tourStopMarker">
+    </type>
+    <type
+          name="de.setsoftware.reviewtool.ui.inactiveTourStopAnnotation"
+          super="org.eclipse.ui.workbench.texteditor.info"
+          markerType="de.setsoftware.reviewtool.inactiveTourStopMarker">
+    </type>
+ </extension>
+ <extension
+      point="org.eclipse.ui.editors.markerAnnotationSpecification">
+    <specification
+            annotationType="de.setsoftware.reviewtool.ui.tourStopAnnotation"
+            colorPreferenceKey="tourStop_color"
+            colorPreferenceValue="202,202,255"
+            contributesToHeader="false"
+            highlightPreferenceKey="tourStop_highlight"
+            highlightPreferenceValue="true"
+            includeOnPreferencePage="true"
+            isGoToNextNavigationTarget="true"
+            isGoToNextNavigationTargetKey="tourStop_isGoToNextNavigationTargetKey"
+            isGoToPreviousNavigationTarget="true"
+            isGoToPreviousNavigationTargetKey="tourStop_isGoToPreviousNavigationTargetKey"
+            label="To review"
+            overviewRulerPreferenceKey="tourStop_overviewRuler"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            showInNextPrevDropdownToolbarAction="true"
+            showInNextPrevDropdownToolbarActionKey="tourStop_showInNextPrevDropdownToolbarAction"
+            textPreferenceKey="tourStop_text"
+            textPreferenceValue="true"
+            textStylePreferenceKey="tourStop_stylePreferences"
+            textStylePreferenceValue="BOX"
+            verticalRulerPreferenceKey="tourStop_verticalRuler"
+            verticalRulerPreferenceValue="true"
+            symbolicIcon="bookmark"/>
+    <specification
+            annotationType="de.setsoftware.reviewtool.ui.inactiveTourStopAnnotation"
+            colorPreferenceKey="inactiveTourStop_color"
+            colorPreferenceValue="212,212,245"
+            contributesToHeader="false"
+            highlightPreferenceKey="inactiveTourStop_highlight"
+            highlightPreferenceValue="true"
+            includeOnPreferencePage="true"
+            isGoToNextNavigationTarget="true"
+            isGoToNextNavigationTargetKey="inactiveTourStop_isGoToNextNavigationTargetKey"
+            isGoToPreviousNavigationTarget="true"
+            isGoToPreviousNavigationTargetKey="inactiveTourStop_isGoToPreviousNavigationTargetKey"
+            label="To review in another tour"
+            overviewRulerPreferenceKey="inactiveTourStop_overviewRuler"
+            overviewRulerPreferenceValue="true"
+            presentationLayer="0"
+            showInNextPrevDropdownToolbarAction="true"
+            showInNextPrevDropdownToolbarActionKey="inactiveTourStop_showInNextPrevDropdownToolbarAction"
+            textPreferenceKey="inactiveTourStop_text"
+            textPreferenceValue="true"
+            textStylePreferenceKey="inactiveTourStop_stylePreferences"
+            textStylePreferenceValue="BOX"
+            verticalRulerPreferenceKey="inactiveTourStop_verticalRuler"
+            verticalRulerPreferenceValue="true"
+            symbolicIcon="bookmark"/>
+ </extension>
+
+ <extension point="org.eclipse.ui.views">
+        <view id="de.setsoftware.reviewtool.ui.views.reviewinfoview"
+             name="Review info"
+             class="de.setsoftware.reviewtool.ui.views.ReviewInfoView"/>
+             <!-- icon="icons\view.gif"/> -->
+        <view id="de.setsoftware.reviewtool.ui.views.reviewcontentview"
+             name="Review content"
+             class="de.setsoftware.reviewtool.ui.views.ReviewContentView"/>
+        <view id="de.setsoftware.reviewtool.ui.views.fixingtasksview"
+             name="Review fixing tasks"
+             class="de.setsoftware.reviewtool.ui.views.FixingTasksView"/>
+        <view id="de.setsoftware.reviewtool.ui.views.fragmentinfoview"
+             name="Review stop info"
+             class="de.setsoftware.reviewtool.ui.views.StopInfoView"/>
+ </extension>
+
+<extension point="org.eclipse.ui.perspectives">
+      <perspective
+            id="de.setsoftware.reviewtool.ui.perspective.reviewPerspective"
+            name="Code Review"
+            class="de.setsoftware.reviewtool.ui.perspective.ReviewPerspective">
+      </perspective>
+      <perspective
+            id="de.setsoftware.reviewtool.ui.perspective.fixingPerspective"
+            name="Fixing Code Review Remarks"
+            class="de.setsoftware.reviewtool.ui.perspective.FixingPerspective">
+      </perspective>
+</extension>
+</plugin>
