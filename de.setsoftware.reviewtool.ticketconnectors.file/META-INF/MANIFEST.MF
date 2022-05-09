@@ -6,6 +6,6 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: .
 Bundle-Name: Ticketconnector-File
 Bundle-Vendor: Tobias Baum
-Require-Bundle: de.setsoftware.reviewtool.core
-Eclipse-RegisterBuddy: de.setsoftware.reviewtool.core
+Require-Bundle: de.setsoftware.reviewtool.core.model
+Eclipse-RegisterBuddy: de.setsoftware.reviewtool.core.model
 Automatic-Module-Name: de.setsoftware.reviewtool.ticketconnectors.file

@@ -172,9 +172,11 @@
     <module>de.setsoftware.reviewtool.ordering</module>
     <module>de.setsoftware.reviewtool.ordering.tests</module>
     <module>de.setsoftware.reviewtool.core.model</module>
+    <module>de.setsoftware.reviewtool.core.model.tests</module>
     <module>de.setsoftware.reviewtool.core.cognitive</module>
+    <module>de.setsoftware.reviewtool.core.cognitive.tests</module>
     <module>de.setsoftware.reviewtool.core.ui-eclipse</module>
-    <module>de.setsoftware.reviewtool.tests</module>
+    <module>de.setsoftware.reviewtool.core.ui-eclipse.tests</module>
     <module>de.setsoftware.reviewtool.changesources.git</module>
     <module>de.setsoftware.reviewtool.changesources.git.tests</module>
     <module>de.setsoftware.reviewtool.changesources.svn</module>

@@ -7,6 +7,6 @@ Bundle-ClassPath: target/lib/minimal-json-0.9.5.jar,
  .
 Bundle-Name: Ticketconnector-Jira
 Bundle-Vendor: Tobias Baum
-Require-Bundle: de.setsoftware.reviewtool.core
-Eclipse-RegisterBuddy: de.setsoftware.reviewtool.core
+Require-Bundle: de.setsoftware.reviewtool.core.model
+Eclipse-RegisterBuddy: de.setsoftware.reviewtool.core.model
 Automatic-Module-Name: de.setsoftware.reviewtool.ticketconnectors.jira

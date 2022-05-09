@@ -172,14 +172,6 @@ public class GitChangeSourceTest {
     @Before
     public void setUp() {
         GitWorkingCopyManager.reset();
-        Logger.setLogger(new Logger() {
-            @Override
-            protected void log(int status, String message, Throwable exception) {
-            }
-            @Override
-            protected void log(int status, String message) {
-            }
-        });
     }
 
     @Test

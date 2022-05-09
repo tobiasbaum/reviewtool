@@ -24,8 +24,6 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: target/lib/javaparser-core-3.9.1.jar,
  hackybuffer-1.0.jar,
  .
-Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator
-Bundle-ActivationPolicy: lazy
 Export-Package: de.setsoftware.reviewtool.base,
  de.setsoftware.reviewtool.base.tree,
  de.setsoftware.reviewtool.model,

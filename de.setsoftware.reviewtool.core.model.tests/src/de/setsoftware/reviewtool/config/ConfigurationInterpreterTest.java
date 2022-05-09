@@ -28,12 +28,6 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.ITicketConnector;
-import de.setsoftware.reviewtool.model.api.IChangeSource;
-import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
-import de.setsoftware.reviewtool.preferredtransitions.api.IPreferredTransitionStrategy;
-import de.setsoftware.reviewtool.ui.api.EndReviewExtension;
-import de.setsoftware.reviewtool.ui.api.IStopViewer;
 
 /**
  * Tests for {@link ConfigurationInterpreter}.
@@ -88,35 +82,9 @@ public class ConfigurationInterpreterTest {
      * A stub implementation of {@link IReviewConfigurable}.
      */
     private static final class TestConfigurable implements IReviewConfigurable {
-
         @Override
-        public void setPersistence(ITicketConnector persistence) {
+        public void configureWith(Object strategy) {
         }
-
-        @Override
-        public void addChangeSource(IChangeSource changeSource) {
-        }
-
-        @Override
-        public void addEndReviewExtension(EndReviewExtension extension) {
-        }
-
-        @Override
-        public void setStopViewer(IStopViewer stopViewer) {
-        }
-
-        @Override
-        public void addPostInitTask(Runnable r) {
-        }
-
-        @Override
-        public void addPreferredTransitionStrategy(IPreferredTransitionStrategy strategy) {
-        }
-
-        @Override
-        public void addClassificationStrategy(IChangeClassifier strategy) {
-        }
-
     }
 
     private static Document load(String xml) throws Exception {

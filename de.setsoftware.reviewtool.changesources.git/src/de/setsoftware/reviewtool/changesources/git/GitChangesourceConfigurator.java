@@ -24,7 +24,7 @@ public class GitChangesourceConfigurator implements IConfigurator {
         final String pattern = xml.getAttribute("pattern");
         final String maxTextDiffThreshold = xml.getAttribute("maxTextDiffFileSizeThreshold");
 
-        configurable.addChangeSource(new GitChangeSource(
+        configurable.configureWith(new GitChangeSource(
                 pattern,
                 Long.parseLong(maxTextDiffThreshold)));
     }
