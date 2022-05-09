@@ -57,6 +57,7 @@ import de.setsoftware.reviewtool.irrelevancestrategies.basicfilters.FileDeletion
 import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.FileCountInCommitAndPathFilterConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.FileCountInCommitFilterConfigurator;
 import de.setsoftware.reviewtool.irrelevancestrategies.pathfilters.PathIrrelevanceFilterConfigurator;
+import de.setsoftware.reviewtool.lifecycle.IPostInitTask;
 import de.setsoftware.reviewtool.model.EndTransition;
 import de.setsoftware.reviewtool.model.FileReviewDataCache;
 import de.setsoftware.reviewtool.model.ISyntaxFixer;
@@ -64,6 +65,7 @@ import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
+import de.setsoftware.reviewtool.model.Mode;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
@@ -111,15 +113,6 @@ import de.setsoftware.reviewtool.viewtracking.TrackerManager;
  * Plugin that handles the review workflow and ties together the different parts.
  */
 public class ReviewPlugin implements IReviewConfigurable {
-
-    /**
-     * The plugin can be in one of three modes: Inactive/Idle, Reviewing or Fixing of review remarks.
-     */
-    public static enum Mode {
-        IDLE,
-        REVIEWING,
-        FIXING
-    }
 
     /**
      * Implementation of {@link IUserInteraction} delegating to the real dialogs.
@@ -423,8 +416,42 @@ public class ReviewPlugin implements IReviewConfigurable {
         this.relationTypes.addAll(
                 RelationMatcherPreferences.load(Activator.getDefault().getPreferenceStore()).createMatchers());
     }
+    
+    public final void configureWith(Object strategy) {
+        boolean handled = false;
+        if (strategy instanceof ITicketConnector) {
+            this.setPersistence((ITicketConnector) strategy);
+            handled = true;
+        }
+        if (strategy instanceof IChangeSource) {
+            this.addChangeSource((IChangeSource) strategy);
+            handled = true;
+        }
+        if (strategy instanceof EndReviewExtension) {
+            this.addEndReviewExtension((EndReviewExtension) strategy);
+            handled = true;
+        }
+        if (strategy instanceof IStopViewer) {
+            this.setStopViewer((IStopViewer) strategy);
+            handled = true;
+        }
+        if (strategy instanceof IPostInitTask) {
+            this.addPostInitTask((IPostInitTask) strategy);
+            handled = true;
+        }
+        if (strategy instanceof IPreferredTransitionStrategy) {
+            this.addPreferredTransitionStrategy((IPreferredTransitionStrategy) strategy);
+            handled = true;
+        }
+        if (strategy instanceof IChangeClassifier) {
+            this.addClassificationStrategy((IChangeClassifier) strategy);
+            handled = true;
+        }
+        if (!handled) {
+            throw new AssertionError("unhandled configuration result: " + strategy);
+        }
+    }
 
-    @Override
     public void addPostInitTask(final Runnable r) {
         this.postInitTasks.add(r);
     }
@@ -979,12 +1006,10 @@ public class ReviewPlugin implements IReviewConfigurable {
         return ret;
     }
 
-    @Override
     public void setPersistence(final ITicketConnector newPersistence) {
         this.persistence.setPersistence(newPersistence);
     }
 
-    @Override
     public void addChangeSource(final IChangeSource changeSource) {
         this.changeSources.add(changeSource);
         this.changeManager.setChangeSources(this.changeSources);
@@ -1026,22 +1051,18 @@ public class ReviewPlugin implements IReviewConfigurable {
         DebugPlugin.getDefault().getLaunchManager().removeLaunchListener(this.launchesListener);
     }
 
-    @Override
     public void addClassificationStrategy(final IChangeClassifier strategy) {
         this.relevanceFilters.add(strategy);
     }
 
-    @Override
     public void addEndReviewExtension(final EndReviewExtension extension) {
         this.endReviewExtensions.add(extension);
     }
 
-    @Override
     public void addPreferredTransitionStrategy(final IPreferredTransitionStrategy strategy) {
         this.preferredTransitionStrategies.add(strategy);
     }
 
-    @Override
     public void setStopViewer(final IStopViewer stopViewer) {
         this.stopViewer = stopViewer;
     }

@@ -21,7 +21,7 @@ public class PathRegexStrategyConfigurator implements IConfigurator {
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
         final String maxReviewerCount = xml.getAttribute("maxReviewerCount");
-        configurable.addPreferredTransitionStrategy(new PathRegexAndReviewerCountStrategy(
+        configurable.configureWith(new PathRegexAndReviewerCountStrategy(
                 xml.getAttribute("pattern"),
                 xml.getAttribute("transitionName"),
                 maxReviewerCount.isEmpty() ? Integer.MAX_VALUE : Integer.parseInt(maxReviewerCount)));

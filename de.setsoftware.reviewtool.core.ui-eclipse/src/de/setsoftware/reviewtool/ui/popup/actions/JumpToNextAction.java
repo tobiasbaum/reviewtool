@@ -4,8 +4,8 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 
+import de.setsoftware.reviewtool.model.Mode;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
-import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 
 /**
  * Jumps to the next stop or open remark, depending on the current mode.

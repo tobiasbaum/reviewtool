@@ -20,7 +20,7 @@ public class FileCountInCommitFilterConfigurator implements IConfigurator {
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
-        configurable.addClassificationStrategy(new FileCountInCommitFilter(
+        configurable.configureWith(new FileCountInCommitFilter(
                 Integer.parseInt(xml.getAttribute("number")),
                 xml.getAttribute("description"),
                 Integer.parseInt(xml.getAttribute("threshold"))));

@@ -20,7 +20,7 @@ public class PathIrrelevanceFilterConfigurator implements IConfigurator {
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
-        configurable.addClassificationStrategy(
+        configurable.configureWith(
                 new PathFilter(this.getNumber(xml), xml.getAttribute("pattern"), xml.getAttribute("description")));
     }
 

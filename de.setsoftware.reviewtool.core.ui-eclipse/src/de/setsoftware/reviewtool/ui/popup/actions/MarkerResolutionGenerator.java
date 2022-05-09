@@ -4,6 +4,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
 
+import de.setsoftware.reviewtool.model.Mode;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 /**
@@ -13,7 +14,7 @@ public class MarkerResolutionGenerator implements IMarkerResolutionGenerator2 {
 
     @Override
     public boolean hasResolutions(IMarker marker) {
-        return ReviewPlugin.getInstance().getMode() != ReviewPlugin.Mode.IDLE;
+        return ReviewPlugin.getInstance().getMode() != Mode.IDLE;
     }
 
     @Override

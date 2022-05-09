@@ -20,7 +20,7 @@ public class BinaryFileFilterConfigurator implements IConfigurator {
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
-        configurable.addClassificationStrategy(
+        configurable.configureWith(
                 new BinaryFileFilter(Integer.parseInt(xml.getAttribute("number"))));
     }
 

@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Reviewtool
-Bundle-SymbolicName: de.setsoftware.reviewtool.core;singleton:=true
+Bundle-SymbolicName: de.setsoftware.reviewtool.core.ui-eclipse;singleton:=true
 Bundle-Version: 1.33.0.qualifier
 Bundle-Vendor: TB
 Require-Bundle: org.eclipse.ui;bundle-version="[3.106.0,4.0.0)",
@@ -18,11 +18,12 @@ Require-Bundle: org.eclipse.ui;bundle-version="[3.106.0,4.0.0)",
  org.eclipse.equinox.security;bundle-version="[1.2.0,2.0.0)",
  org.eclipse.compare;bundle-version="[3.5.0,4.0.0)",
  org.eclipse.equinox.registry,
+ de.setsoftware.reviewtool.core.model;bundle-version="1.33.0",
+ de.setsoftware.reviewtool.core.cognitive;bundle-version="1.33.0",
  de.setsoftware.reviewtool.reviewdata;bundle-version="1.33.0",
  de.setsoftware.reviewtool.ordering;bundle-version="1.33.0" 
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ClassPath: target/lib/javaparser-core-3.9.1.jar,
- hackybuffer-1.0.jar,
  .
 Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator
 Bundle-ActivationPolicy: lazy
@@ -38,4 +39,5 @@ Export-Package: de.setsoftware.reviewtool.base,
  de.setsoftware.reviewtool.ui.api,
  de.setsoftware.reviewtool.ui.facade
 Eclipse-BuddyPolicy: registered
-Automatic-Module-Name: de.setsoftware.reviewtool.core
+Automatic-Module-Name: de.setsoftware.reviewtool.core.ui-eclipse
+Import-Package: de.setsoftware.reviewtool.model

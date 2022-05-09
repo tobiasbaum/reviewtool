@@ -20,7 +20,7 @@ public class FileDeletionFilterConfigurator implements IConfigurator {
 
     @Override
     public void configure(Element xml, IReviewConfigurable configurable) {
-        configurable.addClassificationStrategy(
+        configurable.configureWith(
                 new FileDeletionFilter(Integer.parseInt(xml.getAttribute("number"))));
     }
 

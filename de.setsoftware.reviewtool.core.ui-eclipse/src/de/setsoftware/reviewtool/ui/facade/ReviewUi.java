@@ -5,12 +5,12 @@ import java.util.List;
 
 import org.eclipse.core.commands.ExecutionException;
 
+import de.setsoftware.reviewtool.model.Mode;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.changestructure.CommitsInReview;
 import de.setsoftware.reviewtool.model.changestructure.CommitsInReview.CommitsInReviewListener;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
-import de.setsoftware.reviewtool.plugin.ReviewPlugin.Mode;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.SelectTicketDialog;
 import de.setsoftware.reviewtool.ui.popup.actions.StartReviewAction;
