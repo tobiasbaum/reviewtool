@@ -11,17 +11,41 @@ public abstract class BackgroundJobExecutor {
     private static BackgroundJobExecutor instance;
     
     public static void execute(String name, Function<ICortProgressMonitor, Throwable> job) {
-        instance.startJob(name, job);
+        executeWithMutex(name, null, job);
     }
 
     public static void execute(String name, Consumer<ICortProgressMonitor> job) {
-        instance.startJob(name, (ICortProgressMonitor m) -> {
-            job.accept(m);
-            return null;
-        });
+        executeWithMutex(name, null, job);
+    }
+    
+    public static void executeWithMutex(
+            String name, Object mutexResource, Function<ICortProgressMonitor, Throwable> job) {
+        executeWithMutex(name, mutexResource, job, -1);
+    }
+    
+    public static void executeWithMutex(
+            String name, Object mutexResource, Consumer<ICortProgressMonitor> job, long processingDelay) {
+        executeWithMutex(name, mutexResource, wrap(job), processingDelay);
     }
 
-    protected abstract void startJob(String name, Function<ICortProgressMonitor, Throwable> job);
+    public static void executeWithMutex(
+            String name, Object mutexResource, Function<ICortProgressMonitor, Throwable> job, long processingDelay) {
+        instance.startJob(name, mutexResource, job, processingDelay);
+    }
+
+    public static void executeWithMutex(String name, Object mutexResource, Consumer<ICortProgressMonitor> job) {
+        executeWithMutex(name, mutexResource, wrap(job));
+    }
+
+    private static Function<ICortProgressMonitor, Throwable> wrap(Consumer<ICortProgressMonitor> job) {
+        return (ICortProgressMonitor m) -> {
+            job.accept(m);
+            return null;
+        };
+    }
+
+    protected abstract void startJob(
+            String name, Object mutexResource, Function<ICortProgressMonitor, Throwable> job, long processingDelay);
 
     public static void setInstance(BackgroundJobExecutor inst) {
         instance = inst;

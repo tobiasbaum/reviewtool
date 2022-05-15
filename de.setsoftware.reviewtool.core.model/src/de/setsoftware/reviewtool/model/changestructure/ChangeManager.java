@@ -18,7 +18,6 @@ import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobFunction;
@@ -27,8 +26,10 @@ import org.eclipse.core.runtime.jobs.Job;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.WeakListeners;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.api.ICortProgressMonitor;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**
@@ -111,16 +112,11 @@ public final class ChangeManager {
             if (!projectsAdded.isEmpty() || !projectsRemoved.isEmpty() || !filesChanged.isEmpty()) {
                 ChangeManager.this.lastChangeTime.set(System.currentTimeMillis());
                 ChangeManager.this.workQueue.add(new LocalChangeWorkItem(projectsAdded, projectsRemoved, filesChanged));
-                final Job job = Job.create("Processing local changes",
-                        new IJobFunction() {
-                            @Override
-                            public IStatus run(final IProgressMonitor monitor) {
-                                ChangeManager.this.processLocalChanges();
-                                return Status.OK_STATUS;
-                            }
-                        });
-                job.setRule(MutexRule.getInstance());
-                job.schedule(PROCESSING_DELAY);
+                BackgroundJobExecutor.executeWithMutex(
+                        "Processing local changes",
+                        "localChangeProcessingMutex",
+                        (final ICortProgressMonitor monitor) -> ChangeManager.this.processLocalChanges(),
+                        PROCESSING_DELAY);
             }
         }
 
@@ -223,15 +219,8 @@ public final class ChangeManager {
         this.changeSourceRef.clear();
         if (changeSource != null) {
             this.changeSourceRef.addAll(changeSource);
-            final Job job = Job.create("Initializing " + changeSource.size() + " change sources",
-                    new IJobFunction() {
-                        @Override
-                        public IStatus run(final IProgressMonitor monitor) {
-                            ChangeManager.this.addProjectsAndCollectLocalChanges();
-                            return Status.OK_STATUS;
-                        }
-                    });
-            job.schedule();
+            BackgroundJobExecutor.execute("Initializing " + changeSource.size() + " change sources",
+                    (ICortProgressMonitor monitor) -> addProjectsAndCollectLocalChanges());
         }
     }
 

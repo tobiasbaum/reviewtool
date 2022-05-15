@@ -15,13 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.core.runtime.jobs.Job;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
@@ -31,39 +25,15 @@ import org.tmatesoft.svn.core.wc.SVNClientManager;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
+import de.setsoftware.reviewtool.model.api.ICortProgressMonitor;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 
 /**
  * Manages all known remote repositories.
  */
 final class SvnRepositoryManager {
-
-    /**
-     * Scheduling rule preventing two jobs to run concurrently for the same cache.
-     */
-    private static class CacheJobMutexRule implements ISchedulingRule {
-
-        private final File cache;
-
-        CacheJobMutexRule(final File cache) {
-            this.cache = cache;
-        }
-
-        @Override
-        public boolean isConflicting(final ISchedulingRule rule) {
-            if (rule instanceof CacheJobMutexRule) {
-                final CacheJobMutexRule other = (CacheJobMutexRule) rule;
-                return this.cache.equals(other.cache);
-            }
-            return false;
-        }
-
-        @Override
-        public boolean contains(final ISchedulingRule rule) {
-            return rule == this;
-        }
-    }
 
     private static final SvnRepositoryManager INSTANCE = new SvnRepositoryManager();
     private static final long REVISION_BLOCK_SIZE = 500L;
@@ -255,16 +225,10 @@ final class SvnRepositoryManager {
             repo.appendNewEntries(newEntries);
 
             if (!newEntries.isEmpty()) {
-                final Job job = Job.create("Storing SVN review cache for " + repo,
-                        new IJobFunction() {
-                            @Override
-                            public IStatus run(final IProgressMonitor monitor) {
-                                SvnRepositoryManager.this.tryToStoreCacheToFile(repo);
-                                return Status.OK_STATUS;
-                            }
-                        });
-                job.setRule(new CacheJobMutexRule(repo.getCacheFilePath().toFile()));
-                job.schedule();
+                BackgroundJobExecutor.executeWithMutex(
+                        "Storing SVN review cache for " + repo,
+                        repo.getCacheFilePath().toFile(),
+                        (ICortProgressMonitor monitor) -> tryToStoreCacheToFile(repo));
             }
         }
     }
