@@ -10,11 +10,9 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.junit.Before;
 import org.junit.Test;
 
-import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
@@ -503,7 +501,7 @@ public class GitChangeSourceTest {
             try {
                 src.getRepositoryChanges("TIC-1", uiCancel);
                 fail("expected exception");
-            } catch (final OperationCanceledException e) {
+            } catch (final RuntimeException e) {
             }
         } finally {
             repo.clean();

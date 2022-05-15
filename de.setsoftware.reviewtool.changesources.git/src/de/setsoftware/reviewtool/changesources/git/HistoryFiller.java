@@ -7,9 +7,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.runtime.OperationCanceledException;
-
 import de.setsoftware.reviewtool.base.Multimap;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 
@@ -47,7 +46,7 @@ class HistoryFiller {
                 final IMutableFileHistoryGraph graph = repo.getFileHistoryGraph();
                 for (final GitRevision r : revisionsToAnalyze.get(repo)) {
                     if (ui.isCanceled()) {
-                        throw new OperationCanceledException();
+                        throw BackgroundJobExecutor.createOperationCanceledException();
                     }
 
                     if (repo.wasAlreadyAnalyzed(r.getRevisionString())) {

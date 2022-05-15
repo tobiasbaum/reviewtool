@@ -15,7 +15,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNLogEntry;
@@ -129,7 +128,7 @@ final class SvnRepositoryManager {
         final Pair<Boolean, List<CachedLogEntry>> entries = this.getEntries(repo, ui);
         for (final CachedLogEntry entry : entries.getSecond()) {
             if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
             if (handler.handleLogEntry(entry)) {
                 result.add(new SvnRepoRevision(repo, entry));
@@ -291,7 +290,7 @@ final class SvnRepositoryManager {
             final IChangeSourceUi ui) {
 
         if (ui.isCanceled()) {
-            throw new OperationCanceledException();
+            throw BackgroundJobExecutor.createOperationCanceledException();
         }
 
         final SvnRepoRevision revision = new SvnRepoRevision(repo, entry);

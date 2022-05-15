@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.internal.wc.DefaultSVNAuthenticationManager;
@@ -20,6 +19,7 @@ import org.tmatesoft.svn.core.wc.SVNRevision;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -121,7 +121,7 @@ final class SvnChangeSource extends AbstractChangeSource {
 
         for (final SvnWorkingCopy wc : SvnWorkingCopyManager.getInstance().getWorkingCopies()) {
             if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
 
             final ISvnRepo repo = wc.getRepository();
@@ -133,7 +133,7 @@ final class SvnChangeSource extends AbstractChangeSource {
                     final Boolean doUpdate = ui.handleLocalWorkingIncomplete("The working copy (" + wc.toString()
                             + ") does not contain all relevant changes. Perform an update?");
                     if (doUpdate == null) {
-                        throw new OperationCanceledException();
+                        throw BackgroundJobExecutor.createOperationCanceledException();
                     }
                     if (doUpdate) {
                         this.mgr.getUpdateClient().doUpdate(wcRoot, SVNRevision.HEAD, SVNDepth.INFINITY, true, false);
@@ -186,7 +186,7 @@ final class SvnChangeSource extends AbstractChangeSource {
         final List<ICommit> ret = new ArrayList<>();
         for (final Pair<SvnWorkingCopy, SvnRepoRevision> e : revisions) {
             if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
             this.convertToCommitIfPossible(e.getFirst(), e.getSecond(), ret, ui);
         }
@@ -252,7 +252,7 @@ final class SvnChangeSource extends AbstractChangeSource {
         Collections.sort(sortedPaths);
         for (final String path : sortedPaths) {
             if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
 
             final CachedLogEntryPath value = changedPaths.get(path);

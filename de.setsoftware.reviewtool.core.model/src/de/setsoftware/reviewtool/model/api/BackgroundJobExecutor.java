@@ -10,6 +10,10 @@ public abstract class BackgroundJobExecutor {
     
     private static BackgroundJobExecutor instance;
     
+    public static void setInstance(BackgroundJobExecutor inst) {
+        instance = inst;
+    }
+
     public static void execute(String name, Function<ICortProgressMonitor, Throwable> job) {
         executeWithMutex(name, null, job);
     }
@@ -47,7 +51,13 @@ public abstract class BackgroundJobExecutor {
     protected abstract void startJob(
             String name, Object mutexResource, Function<ICortProgressMonitor, Throwable> job, long processingDelay);
 
-    public static void setInstance(BackgroundJobExecutor inst) {
-        instance = inst;
+    public static RuntimeException createOperationCanceledException() {
+        if (instance == null) {
+            return new RuntimeException("operation cancelled on uninitialized BackgroundJobExecutor");
+        }
+        return instance.doCreateOperationCanceledException();
     }
+    
+    protected abstract RuntimeException doCreateOperationCanceledException();
+
 }

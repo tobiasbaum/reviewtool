@@ -13,10 +13,10 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -75,7 +75,7 @@ public class GitChangeSource extends AbstractChangeSource {
                     "The current HEAD does not contain all commits for the ticket (other refs: " + refs
                     + "). Restrict review to current HEAD?");
             if (answer == null) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             } else if (!answer) {
                 ret.addAll(nonHeadRevisions);
             }
@@ -107,7 +107,7 @@ public class GitChangeSource extends AbstractChangeSource {
         final List<ICommit> ret = new ArrayList<>();
         for (final GitRevision e : revisions) {
             if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
             this.convertToCommitIfPossible(e, ret, ui);
         }
@@ -139,7 +139,7 @@ public class GitChangeSource extends AbstractChangeSource {
         Collections.sort(sortedPaths);
         for (final String path : sortedPaths) {
             if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
 
             final IRevisionedFile fileInfo = ChangestructureFactory.createFileInRevision(path, e.toRevision());

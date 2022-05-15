@@ -12,7 +12,6 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
@@ -24,6 +23,7 @@ import org.tmatesoft.svn.core.wc.SVNStatus;
 
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.diffalgorithms.DiffAlgorithmFactory;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IMutableFileHistoryGraph;
 import de.setsoftware.reviewtool.model.changestructure.FileHistoryGraph;
@@ -106,7 +106,7 @@ final class SvnWorkingCopyManager {
         final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions = new ArrayList<>();
         for (final SvnWorkingCopy wc : this.wcPerRootDirectory.values()) {
             if (ui.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
 
             final Pair<Boolean, List<SvnRepoRevision>> getEntriesResult =

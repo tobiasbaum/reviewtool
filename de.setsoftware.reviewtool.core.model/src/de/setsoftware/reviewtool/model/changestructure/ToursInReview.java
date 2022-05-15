@@ -17,7 +17,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.OperationCanceledException;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multiset;
@@ -280,7 +279,7 @@ public class ToursInReview {
             }
             return ret;
         } catch (final InterruptedException e) {
-            throw new OperationCanceledException();
+            throw BackgroundJobExecutor.createOperationCanceledException();
         }
     }
 
@@ -363,7 +362,7 @@ public class ToursInReview {
         IChange ret = change;
         for (final IChangeClassifier strategy : changeClassificationStrategies) {
             if (progressMonitor.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
             try {
                 final IClassification cl = strategy.classify(commit, ret);
@@ -401,7 +400,7 @@ public class ToursInReview {
 
         for (final ITourRestructuring restructuringStrategy : tourRestructuringStrategies) {
             if (progressMonitor.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
 
             try {
@@ -431,7 +430,7 @@ public class ToursInReview {
         final List<Tour> ret = new ArrayList<>();
         for (final ICommit c : changes) {
             if (progressMonitor.isCanceled()) {
-                throw new OperationCanceledException();
+                throw BackgroundJobExecutor.createOperationCanceledException();
             }
             ret.add(new Tour(
                     c.getMessage(),
@@ -488,7 +487,7 @@ public class ToursInReview {
             final Tour s = this.topmostTours.get(i);
             for (final Stop f : s.getStops()) {
                 if (progressMonitor.isCanceled()) {
-                    throw new OperationCanceledException();
+                    throw BackgroundJobExecutor.createOperationCanceledException();
                 }
                 this.createMarkerFor(markerFactory, lookupTables, s, f, i == this.currentTourIndex);
             }

@@ -4,6 +4,7 @@ import java.util.function.Function;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.IJobFunction;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
@@ -110,6 +111,11 @@ public class EclipseBackgroundJobExecutor extends BackgroundJobExecutor {
         } else {
             eclipseJob.schedule();
         }
+    }
+
+    @Override
+    protected RuntimeException doCreateOperationCanceledException() {
+        return new OperationCanceledException();
     }
 
 }
