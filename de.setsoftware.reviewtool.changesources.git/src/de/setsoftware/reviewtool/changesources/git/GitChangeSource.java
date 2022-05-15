@@ -13,7 +13,6 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
@@ -23,6 +22,7 @@ import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.ICortProgressMonitor;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.AbstractChangeSource;
@@ -103,7 +103,7 @@ public class GitChangeSource extends AbstractChangeSource {
 
     private List<ICommit> convertRepoRevisionsToChanges(
             final List<GitRevision> revisions,
-            final IProgressMonitor ui) throws IOException {
+            final ICortProgressMonitor ui) throws IOException {
         final List<ICommit> ret = new ArrayList<>();
         for (final GitRevision e : revisions) {
             if (ui.isCanceled()) {
@@ -117,7 +117,7 @@ public class GitChangeSource extends AbstractChangeSource {
     private void convertToCommitIfPossible(
             final GitRevision e,
             final Collection<? super ICommit> result,
-            final IProgressMonitor ui) throws IOException {
+            final ICortProgressMonitor ui) throws IOException {
         final List<? extends IChange> changes = this.determineChangesInCommit(e, ui);
         if (!changes.isEmpty()) {
             result.add(ChangestructureFactory.createCommit(
@@ -131,7 +131,7 @@ public class GitChangeSource extends AbstractChangeSource {
 
     private List<? extends IChange> determineChangesInCommit(
             final GitRevision e,
-            final IProgressMonitor ui) throws IOException {
+            final ICortProgressMonitor ui) throws IOException {
 
         final List<IChange> ret = new ArrayList<>();
         final Set<String> changedPaths = e.getChangedPaths();

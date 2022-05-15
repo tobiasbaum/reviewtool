@@ -15,13 +15,9 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.resources.WorkspaceJob;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
-import org.eclipse.core.runtime.Status;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multiset;
@@ -29,6 +25,7 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -36,6 +33,7 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IChangeVisitor;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.ICortProgressMonitor;
 import de.setsoftware.reviewtool.model.api.IFragment;
 import de.setsoftware.reviewtool.model.api.IFragmentTracer;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
@@ -299,7 +297,7 @@ public class ToursInReview {
             final List<? extends IChangeClassifier> changeClassificationStrategies,
             final List<? extends ICommit> changes,
             final ICreateToursUi createUi,
-            final IProgressMonitor progressMonitor,
+            final ICortProgressMonitor progressMonitor,
             final List<ReviewRoundInfo> reviewRounds) {
 
         Telemetry.event("originalChanges")
@@ -361,7 +359,7 @@ public class ToursInReview {
             ICommit commit,
             IChange change,
             List<? extends IChangeClassifier> changeClassificationStrategies,
-            final IProgressMonitor progressMonitor) {
+            final ICortProgressMonitor progressMonitor) {
         IChange ret = change;
         for (final IChangeClassifier strategy : changeClassificationStrategies) {
             if (progressMonitor.isCanceled()) {
@@ -391,7 +389,7 @@ public class ToursInReview {
             final List<? extends ITourRestructuring> tourRestructuringStrategies,
             final List<Tour> originalTours,
             final ICreateToursUi createUi,
-            final IProgressMonitor progressMonitor,
+            final ICortProgressMonitor progressMonitor,
             final Set<? extends IClassification> irrelevantCategories) {
 
         final List<Pair<String, List<? extends Tour>>> possibleRestructurings = new ArrayList<>();
@@ -429,7 +427,7 @@ public class ToursInReview {
     }
 
     private static List<Tour> toTours(final List<? extends ICommit> changes, final IFragmentTracer tracer,
-            final IProgressMonitor progressMonitor) {
+            final ICortProgressMonitor progressMonitor) {
         final List<Tour> ret = new ArrayList<>();
         for (final ICommit c : changes) {
             if (progressMonitor.isCanceled()) {
@@ -484,7 +482,7 @@ public class ToursInReview {
     /**
      * Creates markers for the tour stops.
      */
-    public void createMarkers(final IStopMarkerFactory markerFactory, final IProgressMonitor progressMonitor) {
+    public void createMarkers(final IStopMarkerFactory markerFactory, final ICortProgressMonitor progressMonitor) {
         final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
         for (int i = 0; i < this.topmostTours.size(); i++) {
             final Tour s = this.topmostTours.get(i);
@@ -567,14 +565,15 @@ public class ToursInReview {
         if (index != this.currentTourIndex) {
             final Tour oldActive = this.getActiveTour();
             this.currentTourIndex = index;
-            new WorkspaceJob("Review marker update") {
-                @Override
-                public IStatus runInWorkspace(final IProgressMonitor progressMonitor) throws CoreException {
+            BackgroundJobExecutor.execute("Review marker update", (ICortProgressMonitor progressMonitor) -> {
+                try {
                     ToursInReview.this.clearMarkers();
                     ToursInReview.this.createMarkers(markerFactory, progressMonitor);
-                    return Status.OK_STATUS;
+                    return null;
+                } catch (Exception e) {
+                    return e;
                 }
-            }.schedule();
+            });
             if (notify) {
                 this.listeners.notifyListeners(l -> l.activeTourChanged(oldActive, this.getActiveTour()));
             }

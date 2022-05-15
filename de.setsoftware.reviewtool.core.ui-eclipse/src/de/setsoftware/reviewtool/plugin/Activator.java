@@ -6,6 +6,7 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.api.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
@@ -35,6 +36,7 @@ public class Activator extends AbstractUIPlugin {
                         new Status(status, Activator.this.getBundle().getSymbolicName(), message, exception));
             }
         });
+        BackgroundJobExecutor.setInstance(new EclipseBackgroundJobExecutor());
         DialogHelper.setPreferenceStore((IPersistentPreferenceStore) this.getPreferenceStore());
         ViewDataSource.setInstance(new ViewDataSource() {
             @Override

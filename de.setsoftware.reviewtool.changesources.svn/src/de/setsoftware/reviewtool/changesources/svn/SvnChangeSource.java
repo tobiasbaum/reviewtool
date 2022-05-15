@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.tmatesoft.svn.core.SVNDepth;
 import org.tmatesoft.svn.core.SVNException;
@@ -26,6 +25,7 @@ import de.setsoftware.reviewtool.model.api.IChange;
 import de.setsoftware.reviewtool.model.api.IChangeData;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.ICortProgressMonitor;
 import de.setsoftware.reviewtool.model.api.IFileHistoryNode;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.changestructure.AbstractChangeSource;
@@ -182,7 +182,7 @@ final class SvnChangeSource extends AbstractChangeSource {
 
     private List<ICommit> convertRepoRevisionsToChanges(
             final List<Pair<SvnWorkingCopy, SvnRepoRevision>> revisions,
-            final IProgressMonitor ui) {
+            final ICortProgressMonitor ui) {
         final List<ICommit> ret = new ArrayList<>();
         for (final Pair<SvnWorkingCopy, SvnRepoRevision> e : revisions) {
             if (ui.isCanceled()) {
@@ -197,7 +197,7 @@ final class SvnChangeSource extends AbstractChangeSource {
             final SvnWorkingCopy wc,
             final SvnRevision e,
             final Collection<? super ICommit> result,
-            final IProgressMonitor ui) {
+            final ICortProgressMonitor ui) {
         final List<? extends IChange> changes = this.determineChangesInCommit(wc, e, ui);
         if (!changes.isEmpty()) {
             result.add(ChangestructureFactory.createCommit(
@@ -242,7 +242,7 @@ final class SvnChangeSource extends AbstractChangeSource {
     private List<? extends IChange> determineChangesInCommit(
             final SvnWorkingCopy wc,
             final SvnRevision e,
-            final IProgressMonitor ui) {
+            final ICortProgressMonitor ui) {
 
         final List<IChange> ret = new ArrayList<>();
         final Map<String, CachedLogEntryPath> changedPaths = e.getChangedPaths();

@@ -5,9 +5,9 @@ import java.util.List;
 
 import org.eclipse.core.commands.ExecutionException;
 
-import de.setsoftware.reviewtool.model.Mode;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.Mode;
 import de.setsoftware.reviewtool.model.changestructure.CommitsInReview;
 import de.setsoftware.reviewtool.model.changestructure.CommitsInReview.CommitsInReviewListener;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;

@@ -19,16 +19,13 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.IJobFunction;
-import org.eclipse.core.runtime.jobs.Job;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeSource;
+import de.setsoftware.reviewtool.model.api.ICortProgressMonitor;
 import de.setsoftware.reviewtool.model.remarks.FileLinePosition;
 import de.setsoftware.reviewtool.model.remarks.FilePosition;
 import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
@@ -51,30 +48,14 @@ public class PositionTransformer {
     private static volatile long cacheRefreshTime;
     private static volatile IChangeSource[] changeSources = new IChangeSource[0];
 
-    private static final IProgressMonitor NO_CANCEL_MONITOR = new IProgressMonitor() {
-        @Override
-        public void worked(int work) {
-        }
-
+    private static final ICortProgressMonitor NO_CANCEL_MONITOR = new ICortProgressMonitor() {
         @Override
         public void subTask(String name) {
         }
 
         @Override
-        public void setTaskName(String name) {
-        }
-
-        @Override
-        public void setCanceled(boolean value) {
-        }
-
-        @Override
         public boolean isCanceled() {
             return false;
-        }
-
-        @Override
-        public void internalWorked(double work) {
         }
 
         @Override
@@ -203,7 +184,7 @@ public class PositionTransformer {
         return System.currentTimeMillis() - cacheRefreshTime > REALLY_OLD_LIMIT_MS;
     }
 
-    private static void fillCache(IWorkspace workspace, IProgressMonitor monitor)
+    private static void fillCache(IWorkspace workspace, ICortProgressMonitor monitor)
             throws InterruptedException {
 
         if (refreshRunning.compareAndSet(false, true)) {
@@ -262,7 +243,7 @@ public class PositionTransformer {
         return location;
     }
 
-    private static void fillCacheIfEmpty(IWorkspace workspace, IProgressMonitor monitor)
+    private static void fillCacheIfEmpty(IWorkspace workspace, ICortProgressMonitor monitor)
             throws InterruptedException {
 
         if (cache != null) {
@@ -277,38 +258,30 @@ public class PositionTransformer {
      */
     public static void initializeCacheInBackground() {
         final IWorkspace root = ResourcesPlugin.getWorkspace();
-        final Job job = Job.create("Review resource cache init", new IJobFunction() {
-            @Override
-            public IStatus run(IProgressMonitor monitor) {
-                try {
-                    fillCacheIfEmpty(root, monitor);
-                    return Status.OK_STATUS;
-                } catch (final InterruptedException e) {
-                    return Status.CANCEL_STATUS;
-                }
-            }
-
-        });
-        job.schedule();
+        BackgroundJobExecutor.execute("Review resource cache init",
+                (ICortProgressMonitor monitor) -> {
+                    try {
+                        fillCacheIfEmpty(root, monitor);
+                        return null;
+                    } catch (InterruptedException e) {
+                        return e;
+                    }
+                });
     }
 
     /**
      * Starts a new job that refreshes the cache in the background.
      */
     public static void refreshCacheInBackground(final IWorkspace root) {
-        final Job job = Job.create("Review resource cache refresh", new IJobFunction() {
-            @Override
-            public IStatus run(IProgressMonitor monitor) {
-                try {
-                    fillCache(root, monitor);
-                    return Status.OK_STATUS;
-                } catch (final InterruptedException e) {
-                    return Status.CANCEL_STATUS;
-                }
-            }
-
-        });
-        job.schedule();
+        BackgroundJobExecutor.execute("Review resource cache refresh",
+                (ICortProgressMonitor monitor) -> {
+                    try {
+                        fillCache(root, monitor);
+                        return null;
+                    } catch (final InterruptedException e) {
+                        return e;
+                    }
+                });
     }
 
     /**

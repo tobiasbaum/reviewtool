@@ -27,16 +27,7 @@ Bundle-ClassPath: target/lib/javaparser-core-3.9.1.jar,
  .
 Bundle-Activator: de.setsoftware.reviewtool.plugin.Activator
 Bundle-ActivationPolicy: lazy
-Export-Package: de.setsoftware.reviewtool.base,
- de.setsoftware.reviewtool.base.tree,
- de.setsoftware.reviewtool.config,
- de.setsoftware.reviewtool.diffalgorithms,
- de.setsoftware.reviewtool.model,
- de.setsoftware.reviewtool.model.api,
- de.setsoftware.reviewtool.model.changestructure,
- de.setsoftware.reviewtool.preferredtransitions.api,
- de.setsoftware.reviewtool.telemetry,
- de.setsoftware.reviewtool.ui.api,
+Export-Package: de.setsoftware.reviewtool.ui.api,
  de.setsoftware.reviewtool.ui.facade
 Eclipse-BuddyPolicy: registered
 Automatic-Module-Name: de.setsoftware.reviewtool.core.ui-eclipse

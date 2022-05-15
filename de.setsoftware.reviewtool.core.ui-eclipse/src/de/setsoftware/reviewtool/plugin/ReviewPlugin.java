@@ -65,7 +65,6 @@ import de.setsoftware.reviewtool.model.ITicketChooser;
 import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
-import de.setsoftware.reviewtool.model.Mode;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
@@ -74,6 +73,7 @@ import de.setsoftware.reviewtool.model.api.IChangeSource;
 import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
+import de.setsoftware.reviewtool.model.api.Mode;
 import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
@@ -214,34 +214,14 @@ public class ReviewPlugin implements IReviewConfigurable {
         }
 
         @Override
-        public void internalWorked(final double work) {
-            this.progressMonitor.internalWorked(work);
-        }
-
-        @Override
         public boolean isCanceled() {
             return this.progressMonitor.isCanceled();
-        }
-
-        @Override
-        public void setCanceled(final boolean value) {
-            this.progressMonitor.setCanceled(value);
-        }
-
-        @Override
-        public void setTaskName(final String name) {
-            this.progressMonitor.setTaskName(name);
         }
 
         @Override
         public void subTask(final String name) {
             this.currentSubTask = name;
             this.progressMonitor.subTask(this.buildSubTaskName(this.currentSubTask));
-        }
-
-        @Override
-        public void worked(final int work) {
-            this.progressMonitor.worked(work);
         }
 
         @Override

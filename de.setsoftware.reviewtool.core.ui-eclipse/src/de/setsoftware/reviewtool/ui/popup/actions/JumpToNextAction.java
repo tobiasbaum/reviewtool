@@ -4,7 +4,7 @@ import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 
-import de.setsoftware.reviewtool.model.Mode;
+import de.setsoftware.reviewtool.model.api.Mode;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 /**

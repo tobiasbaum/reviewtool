@@ -54,33 +54,13 @@ public class GitChangeSourceTest {
         }
 
         @Override
-        public void internalWorked(double work) {
-            this.log.append("internalWorked ").append(Math.round(work *  1000)).append('\n');
-        }
-
-        @Override
         public boolean isCanceled() {
             return this.canceled;
         }
 
         @Override
-        public void setCanceled(boolean value) {
-            this.canceled = value;
-        }
-
-        @Override
-        public void setTaskName(String name) {
-            this.log.append("setTaskName ").append(name).append('\n');
-        }
-
-        @Override
         public void subTask(String name) {
             this.log.append("subTask ").append(name).append('\n');
-        }
-
-        @Override
-        public void worked(int work) {
-            this.log.append("worked ").append(work).append('\n');
         }
 
         @Override

@@ -4,7 +4,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.ui.IMarkerResolution;
 import org.eclipse.ui.IMarkerResolutionGenerator2;
 
-import de.setsoftware.reviewtool.model.Mode;
+import de.setsoftware.reviewtool.model.api.Mode;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 /**
