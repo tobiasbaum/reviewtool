@@ -29,7 +29,8 @@ public class SvnChangesourceConfigurator implements IConfigurator {
         configurable.configureWith(new SvnChangeSource(
                 pattern, user, pwd,
                 Long.parseLong(maxTextDiffThreshold),
-                minLogCacheSize.isEmpty() ? 1000 : Integer.parseInt(minLogCacheSize)));
+                minLogCacheSize.isEmpty() ? 1000 : Integer.parseInt(minLogCacheSize),
+                configurable.getStateDirectory()));
     }
 
 }

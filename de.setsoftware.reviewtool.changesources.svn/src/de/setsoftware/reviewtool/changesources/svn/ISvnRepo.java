@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IPath;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
@@ -54,7 +53,7 @@ interface ISvnRepo extends IRepository {
     /**
      * Returns the path to the cache file.
      */
-    public abstract IPath getCacheFilePath();
+    public abstract java.io.File getCacheFilePath();
 
     /**
      * Determines all commits between passed revision and the latest one.

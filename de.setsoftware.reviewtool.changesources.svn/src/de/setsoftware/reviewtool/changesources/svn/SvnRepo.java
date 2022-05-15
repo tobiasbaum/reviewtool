@@ -12,10 +12,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNCommitInfo;
 import org.tmatesoft.svn.core.SVNDepth;
@@ -102,6 +98,7 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
 
     private static final long serialVersionUID = 8792151363600093081L;
 
+    private final java.io.File cacheDir;
     private final SVNRepository svnRepo;
     private final String id;
     private final SVNURL remoteUrl;
@@ -110,7 +107,8 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
     private final List<CachedLogEntry> entries;
     private IMutableFileHistoryGraph fileHistoryGraph;
 
-    SvnRepo(final SVNRepository svnRepo, final SVNURL remoteUrl) throws SVNException {
+    SvnRepo(final SVNRepository svnRepo, final SVNURL remoteUrl, java.io.File cacheDir) throws SVNException {
+        this.cacheDir = cacheDir;
         this.svnRepo = svnRepo;
         this.id = svnRepo.getRepositoryUUID(true);
         this.remoteUrl = remoteUrl;
@@ -142,10 +140,8 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
     }
 
     @Override
-    public IPath getCacheFilePath() {
-        final Bundle bundle = FrameworkUtil.getBundle(this.getClass());
-        final IPath dir = Platform.getStateLocation(bundle);
-        return dir.append("svnlog-" + encodeString(this.remoteUrl.toString()) + ".cache");
+    public java.io.File getCacheFilePath() {
+        return new java.io.File(this.cacheDir, "svnlog-" + encodeString(this.remoteUrl.toString()) + ".cache");
     }
 
     @Override
@@ -343,7 +339,7 @@ final class SvnRepo extends AbstractRepository implements ISvnRepo {
 
     @Override
     public void clearCache() {
-        this.getCacheFilePath().toFile().delete();
+        this.getCacheFilePath().delete();
         this.setFileHistoryGraph(new FileHistoryGraph(DiffAlgorithmFactory.createDefault()));
         this.entries.clear();
     }

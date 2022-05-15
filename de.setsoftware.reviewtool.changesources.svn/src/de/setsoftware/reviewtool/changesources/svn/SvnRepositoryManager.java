@@ -40,6 +40,7 @@ final class SvnRepositoryManager {
     private final Map<SVNURL, SvnRepo> repoPerRemoteUrl;
     private SVNClientManager mgr;
     private int minCount;
+    private File cacheDir;
 
     /**
      * Constructor.
@@ -61,9 +62,10 @@ final class SvnRepositoryManager {
      * @param mgr The {@link SVNClientManager} for retrieving information about working copies.
      * @param minCount maximum initial size of the log
      */
-    void init(final SVNClientManager mgr, final int minCount) {
+    void init(final SVNClientManager mgr, final int minCount, File cacheDir) {
         this.mgr = mgr;
         this.minCount = minCount;
+        this.cacheDir = cacheDir;
     }
 
     /**
@@ -83,7 +85,7 @@ final class SvnRepositoryManager {
         if (c == null) {
             try {
                 final SVNRepository svnRepo = this.mgr.createRepository(remoteUrl, false);
-                c = new SvnRepo(svnRepo, remoteUrl);
+                c = new SvnRepo(svnRepo, remoteUrl, this.cacheDir);
             } catch (final SVNException e) {
                 Logger.error("Could not access repository " + remoteUrl, e);
                 return null;
@@ -226,7 +228,7 @@ final class SvnRepositoryManager {
             if (!newEntries.isEmpty()) {
                 BackgroundJobExecutor.executeWithMutex(
                         "Storing SVN review cache for " + repo,
-                        repo.getCacheFilePath().toFile(),
+                        repo.getCacheFilePath(),
                         (ICortProgressMonitor monitor) -> tryToStoreCacheToFile(repo));
             }
         }
@@ -243,7 +245,7 @@ final class SvnRepositoryManager {
     private synchronized void readCacheFromFile(final ISvnRepo repo)
             throws IOException, ClassNotFoundException {
 
-        final File cache = repo.getCacheFilePath().toFile();
+        final File cache = repo.getCacheFilePath();
         if (!cache.exists()) {
             Logger.info("SVN cache " + cache + " is missing for " + repo + ", nothing to load");
             return;
@@ -271,7 +273,7 @@ final class SvnRepositoryManager {
     }
 
     private synchronized void storeCacheToFile(final ISvnRepo repo) throws IOException {
-        final File cache = repo.getCacheFilePath().toFile();
+        final File cache = repo.getCacheFilePath();
         Logger.info("Storing SVN history data for " + repo + " to " + cache);
         try (ObjectOutputStream oos =
                 new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(cache)))) {

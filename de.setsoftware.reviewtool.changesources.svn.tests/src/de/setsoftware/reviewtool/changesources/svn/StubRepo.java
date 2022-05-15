@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
 import org.tmatesoft.svn.core.ISVNLogEntryHandler;
 import org.tmatesoft.svn.core.SVNException;
 import org.tmatesoft.svn.core.SVNURL;
@@ -68,8 +66,8 @@ public final class StubRepo extends AbstractRepository implements ISvnRepo {
     }
 
     @Override
-    public IPath getCacheFilePath() {
-        return new Path("");
+    public java.io.File getCacheFilePath() {
+        return new java.io.File("");
     }
 
     @Override

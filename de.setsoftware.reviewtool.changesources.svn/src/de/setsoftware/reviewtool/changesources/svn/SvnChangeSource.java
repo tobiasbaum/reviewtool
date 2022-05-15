@@ -43,13 +43,14 @@ final class SvnChangeSource extends AbstractChangeSource {
             final String user,
             final String pwd,
             final long maxTextDiffThreshold,
-            final int logCacheMinSize) {
+            final int logCacheMinSize,
+            final File cacheDir) {
         super(logMessagePattern, maxTextDiffThreshold);
 
         this.mgr.setAuthenticationManager(new DefaultSVNAuthenticationManager(
                 null, false, user, pwd.toCharArray(), null, null));
 
-        SvnRepositoryManager.getInstance().init(this.mgr, logCacheMinSize);
+        SvnRepositoryManager.getInstance().init(this.mgr, logCacheMinSize, cacheDir);
         SvnWorkingCopyManager.getInstance().init(this.mgr);
     }
 
