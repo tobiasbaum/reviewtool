@@ -14,7 +14,7 @@ class RevisionId implements IPartiallyComparable<RevisionId>, Serializable {
     private static final long serialVersionUID = -8543239627001714924L;
 
     private final int time;
-    private final String id;
+    private final String id; 
 
     public RevisionId(RevCommit commit) {
         this(commit.name(), commit.getCommitTime());

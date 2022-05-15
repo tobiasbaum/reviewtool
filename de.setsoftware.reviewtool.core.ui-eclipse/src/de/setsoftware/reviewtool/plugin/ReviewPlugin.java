@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.plugin;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -17,6 +18,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
@@ -38,6 +40,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.WorkbenchException;
 import org.eclipse.ui.progress.IProgressService;
 import org.eclipse.ui.statushandlers.StatusManager;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
 import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
@@ -1100,6 +1104,13 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     public ChangeManager getChangeManager() {
         return this.changeManager;
+    }
+
+    @Override
+    public File getStateDirectory() {
+        final Bundle bundle = FrameworkUtil.getBundle(ReviewPlugin.class);
+        final IPath dir = Platform.getStateLocation(bundle);
+        return dir.toFile();
     }
 
 }

@@ -21,9 +21,9 @@ final class GitWorkingCopy extends AbstractWorkingCopy {
     /**
      * Constructor.
      */
-    GitWorkingCopy(final File workingCopyRoot) {
+    GitWorkingCopy(final File workingCopyRoot, File cacheDir) {
         this.workingCopyRoot = workingCopyRoot;
-        this.repository = GitRepository.create(workingCopyRoot);
+        this.repository = GitRepository.create(workingCopyRoot, cacheDir);
         this.combinedFileHistoryGraph = new VirtualFileHistoryGraph(this.repository.getFileHistoryGraph());
         this.setLocalFileHistoryGraph(new FileHistoryGraph(DiffAlgorithmFactory.createDefault()));
     }

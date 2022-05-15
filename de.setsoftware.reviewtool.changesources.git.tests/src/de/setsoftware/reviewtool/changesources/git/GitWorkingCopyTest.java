@@ -27,7 +27,7 @@ public class GitWorkingCopyTest {
     public void testConvertPath() throws Exception {
         final TestdataRepo repo = new TestdataRepo();
         try {
-            final GitWorkingCopy wc = new GitWorkingCopy(repo.getGitBaseDir());
+            final GitWorkingCopy wc = new GitWorkingCopy(repo.getGitBaseDir(), new File("."));
             final File inWc = wc.toAbsolutePathInWc("/a/b/c");
             final String inRepo = wc.toAbsolutePathInRepo(inWc);
             assertEquals("/a/b/c", inRepo);

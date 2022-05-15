@@ -26,6 +26,7 @@ public class GitChangesourceConfigurator implements IConfigurator {
 
         configurable.configureWith(new GitChangeSource(
                 pattern,
-                Long.parseLong(maxTextDiffThreshold)));
+                Long.parseLong(maxTextDiffThreshold),
+                configurable.getStateDirectory()));
     }
 }

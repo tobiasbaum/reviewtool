@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -84,6 +85,11 @@ public class ConfigurationInterpreterTest {
     private static final class TestConfigurable implements IReviewConfigurable {
         @Override
         public void configureWith(Object strategy) {
+        }
+
+        @Override
+        public File getStateDirectory() {
+            return new File(".");
         }
     }
 

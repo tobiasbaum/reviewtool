@@ -74,10 +74,10 @@ final class GitWorkingCopyManager {
      * @param workingCopyRoot The root directory of the working copy.
      * @return A {@link GitWorkingCopy} or {@code null} if not found.
      */
-    synchronized GitWorkingCopy getWorkingCopy(final File workingCopyRoot) {
+    synchronized GitWorkingCopy getWorkingCopy(final File workingCopyRoot, File cacheDir) {
         GitWorkingCopy wc = this.wcPerRootDirectory.get(workingCopyRoot.toString());
         if (wc == null) {
-            wc = new GitWorkingCopy(workingCopyRoot);
+            wc = new GitWorkingCopy(workingCopyRoot, cacheDir);
             this.wcPerRootDirectory.put(workingCopyRoot.toString(), wc);
         }
         return wc;

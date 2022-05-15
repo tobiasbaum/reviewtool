@@ -32,14 +32,18 @@ import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
  * A change source that loads the changes from Git.
  */
 public class GitChangeSource extends AbstractChangeSource {
+    
+    private File cacheDir;
 
     /**
      * Constructor.
      */
     GitChangeSource(
             final String logMessagePattern,
-            final long maxTextDiffThreshold) {
+            final long maxTextDiffThreshold,
+            File cacheDir) {
         super(logMessagePattern, maxTextDiffThreshold);
+        this.cacheDir = cacheDir;
     }
 
     @Override
@@ -185,7 +189,7 @@ public class GitChangeSource extends AbstractChangeSource {
 
     @Override
     protected void workingCopyAdded(File wcRoot) {
-        GitWorkingCopyManager.getInstance().getWorkingCopy(wcRoot);
+        GitWorkingCopyManager.getInstance().getWorkingCopy(wcRoot, cacheDir);
     }
 
     @Override

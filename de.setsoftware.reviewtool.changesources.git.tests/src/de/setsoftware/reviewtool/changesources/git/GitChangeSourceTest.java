@@ -6,6 +6,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -84,7 +85,7 @@ public class GitChangeSourceTest {
     }
 
     private static GitChangeSource createCs() {
-        return new GitChangeSource(".*${key}[^0-9].*", 1000000);
+        return new GitChangeSource(".*${key}[^0-9].*", 1000000, new File("."));
     }
 
     private static GitChangeSource createCs(TestdataRepo repo) throws Exception {
@@ -402,7 +403,7 @@ public class GitChangeSourceTest {
             src.analyzeLocalChanges(null);
 
             final GitWorkingCopy workingCopy =
-                    GitWorkingCopyManager.getInstance().getWorkingCopy(repo.getGitBaseDir());
+                    GitWorkingCopyManager.getInstance().getWorkingCopy(repo.getGitBaseDir(), new File("."));
 
             final List<IRevisionedFile> latestFiles = workingCopy.getFileHistoryGraph().getLatestFiles(
                     ChangestructureFactory.createFileInRevision("A",

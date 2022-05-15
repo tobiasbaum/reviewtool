@@ -12,8 +12,6 @@ import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.Repository;
@@ -22,8 +20,6 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.eclipse.jgit.treewalk.TreeWalk;
-import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
@@ -40,6 +36,7 @@ final class GitRepository extends AbstractRepository {
 
     private static final long serialVersionUID = -6614056402124460918L;
 
+    private final File cacheDir;
     private final File workingCopyRoot;
     private transient Repository gitRepository;
     private final Set<String> analyzedCommits;
@@ -48,19 +45,20 @@ final class GitRepository extends AbstractRepository {
     /**
      * Constructor of the {@link GitRepository}.
      */
-    private GitRepository(final File workingCopyRoot) {
+    private GitRepository(final File workingCopyRoot, File cacheDir) {
         this.workingCopyRoot = workingCopyRoot;
+        this.cacheDir = cacheDir;
 
         this.analyzedCommits = new HashSet<>();
         this.fileHistoryGraph = new FileHistoryGraph(DiffAlgorithmFactory.createDefault());
     }
 
-    public static GitRepository create(final File workingCopyRoot) {
-        final GitRepository fromCache = loadFromCache(workingCopyRoot);
+    public static GitRepository create(final File workingCopyRoot, File cacheDir) {
+        final GitRepository fromCache = loadFromCache(workingCopyRoot, cacheDir);
         if (fromCache != null && fromCache.workingCopyRoot.equals(workingCopyRoot)) {
             return fromCache;
         } else {
-            return new GitRepository(workingCopyRoot);
+            return new GitRepository(workingCopyRoot, cacheDir);
         }
     }
 
@@ -76,8 +74,8 @@ final class GitRepository extends AbstractRepository {
     }
 
     @SuppressWarnings("unchecked")
-    private static GitRepository loadFromCache(File wcRoot) {
-        final File cacheFile = getCacheFilePath(wcRoot);
+    private static GitRepository loadFromCache(File wcRoot, File cacheDir) {
+        final File cacheFile = getCacheFilePath(wcRoot, cacheDir);
         if (cacheFile.exists()) {
             try (FileInputStream in = new FileInputStream(cacheFile)) {
                 final ObjectInputStream os = new ObjectInputStream(new BufferedInputStream(in));
@@ -90,7 +88,7 @@ final class GitRepository extends AbstractRepository {
     }
 
     void saveCache() {
-        try (FileOutputStream in = new FileOutputStream(getCacheFilePath(this.workingCopyRoot))) {
+        try (FileOutputStream in = new FileOutputStream(getCacheFilePath(this.workingCopyRoot, this.cacheDir))) {
             final ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(in));
             os.writeObject(this);
             os.close();
@@ -136,13 +134,8 @@ final class GitRepository extends AbstractRepository {
         return this.fileHistoryGraph;
     }
 
-    private static File getCacheFilePath(File wcRoot) {
-        if (!Platform.isRunning()) {
-            return new File("gitHistory.cache");
-        }
-        final Bundle bundle = FrameworkUtil.getBundle(GitRepository.class);
-        final IPath dir = Platform.getStateLocation(bundle);
-        return dir.append("git-" + encodeString(wcRoot.toString()) + ".cache").toFile();
+    private static File getCacheFilePath(File wcRoot, File cacheDir) {
+        return new File(cacheDir, "git-" + encodeString(wcRoot.toString()) + ".cache");
     }
 
     private static String encodeString(final String s) {
@@ -158,7 +151,7 @@ final class GitRepository extends AbstractRepository {
     }
 
     public void clearCache() {
-        final File filePath = getCacheFilePath(this.workingCopyRoot);
+        final File filePath = getCacheFilePath(this.workingCopyRoot, this.cacheDir);
         filePath.delete();
         if (!this.analyzedCommits.isEmpty()) {
             this.analyzedCommits.clear();
