@@ -1,8 +1,10 @@
-package de.setsoftware.reviewtool.model;
+package de.setsoftware.reviewtool.ui.views;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.model.Constants;
+import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewResource;
 import de.setsoftware.reviewtool.model.remarks.Position;
@@ -11,7 +13,7 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 /**
  * A resource that is referenced as an Eclipse {@link IResource}.
  */
-public class EclipseResource implements IReviewResource {
+class EclipseResource implements IReviewResource {
 
     private final IResource resource;
 

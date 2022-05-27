@@ -25,7 +25,6 @@ import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PathResource;
-import de.setsoftware.reviewtool.model.EclipseResource;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.Mode;
@@ -37,6 +36,7 @@ import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.CreateDialogCallback;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.PositionReference;
+import de.setsoftware.reviewtool.ui.views.EclipseResource;
 import de.setsoftware.reviewtool.ui.views.ViewHelper;
 
 /**

@@ -11,7 +11,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.changestructure.IStopMarkerFactory;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
@@ -19,6 +18,7 @@ import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.Position;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
+import de.setsoftware.reviewtool.ui.views.EclipseMarker;
 
 /**
  * A factory to create normal Eclipse markers.

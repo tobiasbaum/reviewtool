@@ -4,7 +4,6 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.ui.IMarkerResolution;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.remarks.ResolutionType;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
@@ -12,6 +11,7 @@ import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.AddReplyDialog;
 import de.setsoftware.reviewtool.ui.dialogs.InputDialogCallback;
+import de.setsoftware.reviewtool.ui.views.EclipseMarker;
 
 /**
  * Action to add a question to a review remark.

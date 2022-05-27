@@ -10,12 +10,12 @@ import org.eclipse.ui.views.markers.WorkbenchMarkerResolution;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
-import de.setsoftware.reviewtool.model.EclipseMarker;
 import de.setsoftware.reviewtool.model.remarks.ResolutionType;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
+import de.setsoftware.reviewtool.ui.views.EclipseMarker;
 
 /**
  * Quick fix resolution that marks a review remark as fixed.
