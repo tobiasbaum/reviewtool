@@ -85,7 +85,6 @@ import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.Mode;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
-import de.setsoftware.reviewtool.model.changestructure.IChangeManagerListener;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
