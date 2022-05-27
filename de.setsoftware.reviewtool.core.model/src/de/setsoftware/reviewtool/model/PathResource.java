@@ -13,12 +13,12 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
  * A resource that is not imported into Eclipse and therefore has to be
  * referenced by an {@link IPath}.
  */
-public class EclipsePathResource implements IReviewResource {
+public class PathResource implements IReviewResource {
 
     private final IPath path;
     private final IWorkspace workspace;
 
-    public EclipsePathResource(IPath path, IWorkspace workspace) {
+    public PathResource(IPath path, IWorkspace workspace) {
         this.path = path;
         this.workspace = workspace;
     }

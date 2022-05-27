@@ -24,7 +24,7 @@ import org.eclipse.ui.part.MultiPageEditorPart;
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.EclipsePathResource;
+import de.setsoftware.reviewtool.model.PathResource;
 import de.setsoftware.reviewtool.model.EclipseResource;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
@@ -122,7 +122,7 @@ public class AddRemarkAction extends AbstractHandler {
                         final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
                         final String reviewer = p.getReviewerForCurrentRound();
                         final ReviewRemark remark = ReviewRemark.create(
-                                new EclipsePathResource(pathFiltered, workspace),
+                                new PathResource(pathFiltered, workspace),
                                 reviewer,
                                 text,
                                 lineFiltered,

@@ -10,9 +10,6 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.Path;
-
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.base.ReviewtoolException;

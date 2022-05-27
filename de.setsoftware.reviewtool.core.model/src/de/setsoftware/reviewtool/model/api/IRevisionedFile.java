@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 
-import org.eclipse.core.runtime.IPath;
-
 import de.setsoftware.reviewtool.base.IPartiallyComparable;
 
 /**
