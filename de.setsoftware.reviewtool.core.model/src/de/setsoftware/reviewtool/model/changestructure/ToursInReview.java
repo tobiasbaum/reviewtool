@@ -18,6 +18,7 @@ import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multiset;
@@ -555,7 +556,7 @@ public class ToursInReview {
             partOfPath = partOfPath.substring(1);
         }
         while (true) {
-            final IResource resource = PositionTransformer.toResource(partOfPath);
+            final IResource resource = getResourceForPath(PositionTransformer.toPath(partOfPath));
             if (!(resource instanceof IWorkspaceRoot)) {
                 //perhaps too much was dropped and a different file then the intended returned
                 //  therefore double check by using the inverse lookup
@@ -573,6 +574,19 @@ public class ToursInReview {
         }
     }
 
+    public static IResource getResourceForPath(File path) {
+        final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
+        return path == null ? workspaceRoot : getResourceForPath(workspaceRoot, path);
+    }
+
+    private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, File fittingPath) {
+        final IFile file = workspaceRoot.getFileForLocation(new Path(fittingPath.getPath()));
+        if (file == null || !file.exists()) {
+            return workspaceRoot;
+        }
+        return file;
+    }
+    
     public List<Tour> getTopmostTours() {
         return this.topmostTours;
     }

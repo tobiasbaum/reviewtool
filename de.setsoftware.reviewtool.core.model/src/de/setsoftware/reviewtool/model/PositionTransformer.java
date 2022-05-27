@@ -13,12 +13,6 @@ import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Path;
-
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
@@ -367,24 +361,6 @@ public class PositionTransformer {
 
     /**
      * Returns the resource for the file from the given position.
-     * Returns the workspace root if no file resource could be found.
-     */
-    public static IResource toResource(Position pos) {
-        return toResource(pos.getShortFileName());
-    }
-
-    /**
-     * Returns the resource for the given short filename.
-     * Returns the workspace root if no file resource could be found.
-     */
-    public static IResource toResource(String filename) {
-        final File path = toPath(filename);
-        final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
-        return path == null ? workspaceRoot : getResourceForPath(workspaceRoot, path);
-    }
-
-    /**
-     * Returns the resource for the file from the given position.
      * Returns null if no file could be found.
      */
     public static File toPath(Position pos) {
@@ -436,14 +412,6 @@ public class PositionTransformer {
         return ret;
     }
 
-    private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, File fittingPath) {
-        final IFile file = workspaceRoot.getFileForLocation(new Path(fittingPath.getPath()));
-        if (file == null || !file.exists()) {
-            return workspaceRoot;
-        }
-        return file;
-    }
-    
     public static void setProjectSource(Supplier<Set<File>> projectPathSupplier2) {
         projectPathSupplier = projectPathSupplier2;
     }
