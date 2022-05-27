@@ -658,9 +658,7 @@ public class ReviewPlugin implements IReviewConfigurable {
 
     private void clearMarkers() throws CoreException {
         RemarkMarkers.clearMarkers();
-        if (this.toursInReview != null) {
-            this.toursInReview.clearMarkers();
-        }
+        new RealMarkerFactory().clearStopMarkers();
     }
 
     private void setMode(final Mode mode) {

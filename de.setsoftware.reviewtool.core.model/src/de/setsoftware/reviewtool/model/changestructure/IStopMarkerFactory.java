@@ -14,4 +14,5 @@ public interface IStopMarkerFactory {
     public abstract IStopMarker createStopMarker(
             IRevisionedFile file, boolean tourActive, String message, IFragment pos);
 
+    public abstract void clearStopMarkers();
 }

@@ -12,6 +12,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Path;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.api.IFragment;
@@ -125,4 +126,18 @@ public class RealMarkerFactory implements IStopMarkerFactory, IMarkerFactory {
         return file;
     }
     
+    /**
+     * Clears all current tour stop markers.
+     */
+    public void clearStopMarkers() {
+        try {
+            ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
+                    Constants.STOPMARKER_ID, true, IResource.DEPTH_INFINITE);
+            ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
+                    Constants.INACTIVESTOPMARKER_ID, true, IResource.DEPTH_INFINITE);
+        } catch (CoreException e) {
+            throw new ReviewtoolException(e);
+        }
+    }
+
 }

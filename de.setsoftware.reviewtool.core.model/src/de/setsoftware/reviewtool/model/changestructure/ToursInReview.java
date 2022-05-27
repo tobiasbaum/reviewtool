@@ -8,15 +8,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.CoreException;
-
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multiset;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.WeakListeners;
-import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
@@ -540,7 +535,7 @@ public class ToursInReview {
             this.currentTourIndex = index;
             BackgroundJobExecutor.execute("Review marker update", (ICortProgressMonitor progressMonitor) -> {
                 try {
-                    ToursInReview.this.clearMarkers();
+                    markerFactory.clearStopMarkers();
                     ToursInReview.this.createMarkers(markerFactory, progressMonitor);
                     return null;
                 } catch (Exception e) {
@@ -554,16 +549,6 @@ public class ToursInReview {
                     .param("tourIndex", index)
                     .log();
         }
-    }
-
-    /**
-     * Clears all current tour stop markers.
-     */
-    public void clearMarkers() throws CoreException {
-        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
-                Constants.STOPMARKER_ID, true, IResource.DEPTH_INFINITE);
-        ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
-                Constants.INACTIVESTOPMARKER_ID, true, IResource.DEPTH_INFINITE);
     }
 
     /**
