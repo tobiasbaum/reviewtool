@@ -1,19 +1,10 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.core.filesystem.EFS;
-import org.eclipse.core.filesystem.IFileStore;
-import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.CoreException;
-
-import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 
 /**
@@ -28,43 +19,9 @@ public class PositionLookupTable {
     }
 
     /**
-     * Creates a lookup table for the contents from the given file.
-     */
-    public static PositionLookupTable create(IFile file) {
-        try {
-            if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
-                file.refreshLocal(IResource.DEPTH_ZERO, null);
-            }
-            final InputStream stream = file.getContents();
-            try {
-                final Reader r = new InputStreamReader(stream, file.getCharset());
-                return create(r);
-            } finally {
-                stream.close();
-            }
-        } catch (CoreException | IOException e) {
-            throw new ReviewtoolException(e);
-        }
-    }
-
-    /**
-     * Creates a lookup table for the contents from the given file.
-     */
-    public static PositionLookupTable create(IFileStore fileStore)
-            throws IOException, CoreException {
-        final InputStream stream = fileStore.openInputStream(EFS.NONE, null);
-        try {
-            final Reader r = new InputStreamReader(stream, "UTF-8");
-            return create(r);
-        } finally {
-            stream.close();
-        }
-    }
-
-    /**
      * Creates a lookup table for the contents from the given reader.
      */
-    static PositionLookupTable create(Reader reader) throws IOException {
+    public static PositionLookupTable create(Reader reader) throws IOException {
         final PositionLookupTable ret = new PositionLookupTable();
         int ch;
         int charCount = 0;

@@ -1,6 +1,10 @@
 package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -136,6 +140,26 @@ public class RealMarkerFactory implements IStopMarkerFactory, IMarkerFactory {
             ResourcesPlugin.getWorkspace().getRoot().deleteMarkers(
                     Constants.INACTIVESTOPMARKER_ID, true, IResource.DEPTH_INFINITE);
         } catch (CoreException e) {
+            throw new ReviewtoolException(e);
+        }
+    }
+
+    /**
+     * Creates a lookup table for the contents from the given file.
+     */
+    private static PositionLookupTable create(IFile file) {
+        try {
+            if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
+                file.refreshLocal(IResource.DEPTH_ZERO, null);
+            }
+            final InputStream stream = file.getContents();
+            try {
+                final Reader r = new InputStreamReader(stream, file.getCharset());
+                return PositionLookupTable.create(r);
+            } finally {
+                stream.close();
+            }
+        } catch (CoreException | IOException e) {
             throw new ReviewtoolException(e);
         }
     }

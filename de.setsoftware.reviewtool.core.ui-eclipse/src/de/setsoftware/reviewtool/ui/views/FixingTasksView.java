@@ -232,7 +232,7 @@ public class FixingTasksView extends ViewPart implements ReviewModeListener, IRe
         final IFileStore fileStore = EFS.getLocalFileSystem().getStore(new Path(path.getPath()));
         final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, false);
         if (pos instanceof FileLinePosition && fileStore.fetchInfo().exists()) {
-            final PositionLookupTable lookup = PositionLookupTable.create(fileStore);
+            final PositionLookupTable lookup = FileStoreLookupTable.create(fileStore);
             final int posStart = lookup.getCharsSinceFileStart(ChangestructureFactory.createPositionInText(
                     ((FileLinePosition) pos).getLine(), 1));
             ViewHelper.setSelection(part, new TextSelection(posStart, 0));
