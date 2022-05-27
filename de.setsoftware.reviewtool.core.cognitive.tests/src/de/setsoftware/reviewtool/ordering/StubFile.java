@@ -1,6 +1,6 @@
 package de.setsoftware.reviewtool.ordering;
 
-import org.eclipse.core.runtime.IPath;
+import java.io.File;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
 import de.setsoftware.reviewtool.model.api.IRepository;
@@ -24,7 +24,7 @@ public class StubFile implements IRevisionedFile {
     }
 
     @Override
-    public IPath toLocalPath(final IWorkingCopy wc) {
+    public File toLocalPath(final IWorkingCopy wc) {
         return this.file.toLocalPath(wc);
     }
 

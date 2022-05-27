@@ -61,8 +61,7 @@ public class FileInRevision implements IRevisionedFile {
 
             @Override
             public byte[] handleLocalRevision(final ILocalRevision revision) throws IOException {
-                final IPath localPath = FileInRevision.this.toLocalPath(revision.getWorkingCopy());
-                final File file = localPath.toFile();
+                final File file = FileInRevision.this.toLocalPath(revision.getWorkingCopy());
                 if (!file.exists()) {
                     return new byte[0];
                 } else {
@@ -89,10 +88,10 @@ public class FileInRevision implements IRevisionedFile {
     }
 
     @Override
-    public IPath toLocalPath(final IWorkingCopy wc) {
+    public File toLocalPath(final IWorkingCopy wc) {
         final File absolutePathInWc = wc.toAbsolutePathInWc(this.path);
         if (absolutePathInWc != null) {
-            return new Path(absolutePathInWc.getPath());
+            return absolutePathInWc;
         } else {
             throw new ReviewtoolException("File " + this + " cannot be mapped to working copy at " + wc.getLocalRoot());
         }

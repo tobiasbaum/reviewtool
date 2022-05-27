@@ -19,6 +19,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.CellLabelProvider;
@@ -332,8 +333,8 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             ViewHelper.openEditorForMarker(page, marker, forceTextEditor);
             marker.delete();
         } else {
-            final IFileStore fileStore =
-                    EFS.getLocalFileSystem().getStore(stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()));
+            File file = stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy());
+            final IFileStore fileStore = EFS.getLocalFileSystem().getStore(new Path(file.getPath()));
             final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, forceTextEditor);
             //for files not in the workspace, we cannot create markers, but let's at least select the text
             if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {
@@ -394,7 +395,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             final Object pathOrResource = pos.getFirst();
             final IPath path = pathOrResource instanceof IPath
                     ? (IPath) pathOrResource : ((IResource) pathOrResource).getLocation();
-            final Pair<Tour, Stop> nearestStop = tours.findNearestStop(path, pos.getSecond());
+            final Pair<Tour, Stop> nearestStop = tours.findNearestStop(path.toFile(), pos.getSecond());
             if (nearestStop == null) {
                 return false;
             }

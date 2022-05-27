@@ -38,7 +38,7 @@ public class InSameFileRelation implements RelationMatcher {
             final Pair<IWorkingCopy, IRevisionedFile> p = e.getKey();
             ret.add(OrderingInfoImpl.unordered(
                     this.explicitness,
-                    p.getSecond().toLocalPath(p.getFirst()).lastSegment(), e.getValue()));
+                    p.getSecond().toLocalPath(p.getFirst()).getName(), e.getValue()));
         }
         return ret;
     }

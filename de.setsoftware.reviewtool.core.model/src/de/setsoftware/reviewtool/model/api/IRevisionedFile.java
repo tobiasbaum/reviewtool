@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.model.api;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 
@@ -38,6 +39,6 @@ public interface IRevisionedFile extends IPartiallyComparable<IRevisionedFile>, 
      * Returns the absolute path of the file in some local working copy.
      * @param wc The working copy to use.
      */
-    public abstract IPath toLocalPath(final IWorkingCopy wc);
+    public abstract File toLocalPath(final IWorkingCopy wc);
 
 }

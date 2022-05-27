@@ -264,7 +264,7 @@ public class Stop extends TourElement implements IStop {
     }
 
     public File getAbsoluteFile() {
-        return this.getMostRecentFile().toLocalPath(this.wc).toFile().getAbsoluteFile();
+        return this.getMostRecentFile().toLocalPath(this.wc).getAbsoluteFile();
     }
 
     /* (non-Javadoc)

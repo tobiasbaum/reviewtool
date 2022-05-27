@@ -70,6 +70,13 @@ public class PositionTransformer {
     /**
      * Creates a position identifying the given line in the given resource.
      */
+    public static Position toPosition(File path, int line, IWorkspace workspace) {
+        return toPosition(new Path(path.getPath()), line, workspace);
+    }
+    
+    /**
+     * Creates a position identifying the given line in the given resource.
+     */
     public static Position toPosition(IPath path, int line, IWorkspace workspace) {
         if (path.toFile().isDirectory()) {
             return new GlobalPosition();

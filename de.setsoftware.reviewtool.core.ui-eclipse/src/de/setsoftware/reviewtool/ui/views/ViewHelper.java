@@ -140,7 +140,7 @@ public class ViewHelper {
             }
             final Stop stop = getAs(element, Stop.class);
             if (stop != null) {
-                return Pair.create(stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()),
+                return Pair.create(new Path(stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()).getPath()),
                         stop.isDetailedFragmentKnown() ? stop.getMostRecentFragment().getFrom().getLine() : 0);
             }
         }

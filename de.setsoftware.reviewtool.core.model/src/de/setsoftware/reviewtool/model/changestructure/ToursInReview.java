@@ -667,7 +667,7 @@ public class ToursInReview {
      * The closeness measure is tweaked to (hopefully) capture the users intention as good as possible
      * for cases where he did not click directly on a stop.
      */
-    public Pair<Tour, Stop> findNearestStop(final IPath absoluteResourcePath, final int line) {
+    public Pair<Tour, Stop> findNearestStop(final File absoluteResourcePath, final int line) {
         if (this.topmostTours.isEmpty()) {
             return null;
         }
@@ -687,7 +687,7 @@ public class ToursInReview {
         return Pair.create(bestTour, bestStop);
     }
 
-    private int calculateDistance(final Stop stop, final IPath resource, final int line) {
+    private int calculateDistance(final Stop stop, final File resource, final int line) {
         if (!stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy()).equals(resource)) {
             return Integer.MAX_VALUE;
         }
