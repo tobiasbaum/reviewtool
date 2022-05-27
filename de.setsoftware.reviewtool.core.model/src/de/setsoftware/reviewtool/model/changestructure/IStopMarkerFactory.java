@@ -1,17 +1,17 @@
 package de.setsoftware.reviewtool.model.changestructure;
 
-import org.eclipse.core.resources.IMarker;
-import org.eclipse.core.resources.IResource;
-
 import de.setsoftware.reviewtool.model.api.IFragment;
+import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 
 /**
- * Factory for {@link IMarker}s belonging to review stops.
+ * Factory for {@link IStopMarker}s belonging to review stops.
  */
 public interface IStopMarkerFactory {
 
-    public abstract IStopMarker createStopMarker(IResource resource, boolean tourActive, String message);
+    public abstract IStopMarker createStopMarker(
+            IRevisionedFile file, boolean tourActive, String message);
 
-    public abstract IStopMarker createStopMarker(IResource resource, boolean tourActive, String message, IFragment pos);
+    public abstract IStopMarker createStopMarker(
+            IRevisionedFile file, boolean tourActive, String message, IFragment pos);
 
 }

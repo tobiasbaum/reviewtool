@@ -30,7 +30,7 @@ public class PositionLookupTable {
     /**
      * Creates a lookup table for the contents from the given file.
      */
-    public static PositionLookupTable create(IFile file) throws IOException {
+    public static PositionLookupTable create(IFile file) {
         try {
             if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
                 file.refreshLocal(IResource.DEPTH_ZERO, null);
