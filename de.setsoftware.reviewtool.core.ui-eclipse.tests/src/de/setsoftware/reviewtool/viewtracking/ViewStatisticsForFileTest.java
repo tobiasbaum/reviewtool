@@ -6,6 +6,8 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatisticsForFile;
+
 /**
  * Tests for {@link ViewStatisticsForFile}.
  */

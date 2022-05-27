@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.viewtracking;
+package de.setsoftware.reviewtool.model.viewtracking;
 
 /**
  * Combines the view statistics for a Stop.

@@ -20,6 +20,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.FileStoreEditorInput;
 
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 
 /**

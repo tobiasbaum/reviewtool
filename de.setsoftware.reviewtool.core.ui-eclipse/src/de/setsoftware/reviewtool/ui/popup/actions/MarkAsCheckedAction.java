@@ -11,8 +11,8 @@ import org.eclipse.jface.viewers.TreeSelection;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
-import de.setsoftware.reviewtool.viewtracking.ViewStatistics;
 
 /**
  * Sets the stop on which the action was called as explicitly checked or clears the flag

@@ -10,14 +10,14 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics.INextStopCallback;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.views.CurrentStop;
 import de.setsoftware.reviewtool.ui.views.ReviewContentView;
 import de.setsoftware.reviewtool.ui.views.ViewDataSource;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
-import de.setsoftware.reviewtool.viewtracking.ViewStatistics;
-import de.setsoftware.reviewtool.viewtracking.ViewStatistics.INextStopCallback;
 
 /**
  * Action that jumps to the next review stop that has not been viewed yet.

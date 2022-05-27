@@ -2,6 +2,8 @@ package de.setsoftware.reviewtool.viewtracking;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatDataForStop;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics;
 
 /**
  * Singleton that manages the currently active {@link CodeViewTracker} and allows

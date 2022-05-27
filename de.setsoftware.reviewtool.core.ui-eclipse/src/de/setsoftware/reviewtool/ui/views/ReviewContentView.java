@@ -75,16 +75,16 @@ import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.IToursInReviewChangeListener;
 import de.setsoftware.reviewtool.model.remarks.GlobalPosition;
 import de.setsoftware.reviewtool.model.remarks.Position;
+import de.setsoftware.reviewtool.model.viewtracking.IViewStatisticsListener;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatDataForStop;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
 import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 import de.setsoftware.reviewtool.viewtracking.CodeViewTracker;
 import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
-import de.setsoftware.reviewtool.viewtracking.IViewStatisticsListener;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
-import de.setsoftware.reviewtool.viewtracking.ViewStatDataForStop;
-import de.setsoftware.reviewtool.viewtracking.ViewStatistics;
 
 /**
  * A view to show the content (tours and stops) belonging to a review.

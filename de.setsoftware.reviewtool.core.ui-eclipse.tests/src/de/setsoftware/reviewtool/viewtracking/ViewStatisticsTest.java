@@ -14,7 +14,8 @@ import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.StubWorkingCopy;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
-import de.setsoftware.reviewtool.viewtracking.ViewStatistics.INextStopCallback;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics;
+import de.setsoftware.reviewtool.model.viewtracking.ViewStatistics.INextStopCallback;
 
 /**
  * Tests for {@link ViewStatistics}.
