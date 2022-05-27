@@ -1,6 +1,5 @@
 package de.setsoftware.reviewtool.ordering;
 
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IPath;
 
 import de.setsoftware.reviewtool.base.ComparableWrapper;
@@ -47,11 +46,6 @@ public class StubFile implements IRevisionedFile {
     @Override
     public byte[] getContents() throws Exception {
         return this.content.getBytes("UTF-8");
-    }
-
-    @Override
-    public IResource determineResource() {
-        return this.file.determineResource();
     }
 
     @Override

@@ -14,6 +14,7 @@ import java.util.Set;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.resources.IResource;
+import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
@@ -24,6 +25,7 @@ import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.base.WeakListeners;
 import de.setsoftware.reviewtool.model.Constants;
+import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.api.IBinaryChange;
 import de.setsoftware.reviewtool.model.api.IChange;
@@ -502,7 +504,7 @@ public class ToursInReview {
             final boolean tourActive) {
 
         try {
-            final IResource resource = f.getMostRecentFile().determineResource();
+            final IResource resource = determineResource(f.getMostRecentFile());
             if (resource == null) {
                 return null;
             }
@@ -540,6 +542,35 @@ public class ToursInReview {
             final Stop f) {
         return this.createMarkerFor(
                 markerFactory, new HashMap<IResource, PositionLookupTable>(), topmostTour, f, true);
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Heuristically drops path prefixes (like "trunk", ...) until a resource can be found.
+     */
+    private IResource determineResource(IRevisionedFile f) {
+        String partOfPath = f.getPath();
+        if (partOfPath.startsWith("/")) {
+            partOfPath = partOfPath.substring(1);
+        }
+        while (true) {
+            final IResource resource = PositionTransformer.toResource(partOfPath);
+            if (!(resource instanceof IWorkspaceRoot)) {
+                //perhaps too much was dropped and a different file then the intended returned
+                //  therefore double check by using the inverse lookup
+                final String shortName = PositionTransformer.toPosition(
+                        resource.getFullPath(), 1, resource.getWorkspace()).getShortFileName();
+                if (partOfPath.contains(shortName)) {
+                    return resource;
+                }
+            }
+            final int slashIndex = partOfPath.indexOf('/');
+            if (slashIndex < 0) {
+                return null;
+            }
+            partOfPath = partOfPath.substring(slashIndex + 1);
+        }
     }
 
     public List<Tour> getTopmostTours() {

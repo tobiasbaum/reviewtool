@@ -5,10 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map.Entry;
 
-import org.eclipse.core.resources.IProject;
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.runtime.IPath;
-
 import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
@@ -16,8 +12,11 @@ import de.setsoftware.reviewtool.ordering.efficientalgorithm.TourCalculatorContr
 
 /**
  * Groups stops that belong to the same source folder (and project).
+ * This matcher relies on naming conventions and is therefore probably not well portable to other contexts.
  */
 public class InSameSourceFolderRelation implements RelationMatcher {
+    
+    private static final String[] SOURCE_FOLDER_NAMES = new String[] {"src", "test", "resources", "testresources"};
 
     private final HierarchyExplicitness explicitness;
 
@@ -48,19 +47,14 @@ public class InSameSourceFolderRelation implements RelationMatcher {
     }
 
     private String determineSourceFolder(IRevisionedFile file) {
-        final IResource resource = file.determineResource();
-        if (resource == null) {
-            return null;
+        String path = file.getPath().replace('\\', '/');
+        for (String sf : SOURCE_FOLDER_NAMES) {
+            int index = sf.indexOf("/" + sf + "/");
+            if (index >= 0) {
+                return path.substring(0, index + sf.length() + 2);
+            }
         }
-        final IProject project = resource.getProject();
-        if (project == null) {
-            return null;
-        }
-        final IPath projectRelativePath = resource.getProjectRelativePath();
-        if (projectRelativePath.isEmpty()) {
-            return project.getName();
-        }
-        return project.getName() + "/" + projectRelativePath.segment(0);
+        return null;
     }
 
 }

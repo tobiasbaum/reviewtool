@@ -10,15 +10,12 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 
-import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.base.Multimap;
 import de.setsoftware.reviewtool.base.PartialOrderAlgorithms;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
-import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.api.ILocalRevision;
 import de.setsoftware.reviewtool.model.api.IRepoRevision;
 import de.setsoftware.reviewtool.model.api.IRepository;
@@ -89,36 +86,6 @@ public class FileInRevision implements IRevisionedFile {
     @Override
     public String toString() {
         return this.path + "@" + this.revision;
-    }
-
-    /**
-     * {@inheritDoc}
-     * <p/>
-     * Heuristically drops path prefixes (like "trunk", ...) until a resource can be found.
-     */
-    @Override
-    public IResource determineResource() {
-        String partOfPath = this.getPath();
-        if (partOfPath.startsWith("/")) {
-            partOfPath = partOfPath.substring(1);
-        }
-        while (true) {
-            final IResource resource = PositionTransformer.toResource(partOfPath);
-            if (!(resource instanceof IWorkspaceRoot)) {
-                //perhaps too much was dropped and a different file then the intended returned
-                //  therefore double check by using the inverse lookup
-                final String shortName = PositionTransformer.toPosition(
-                        resource.getFullPath(), 1, resource.getWorkspace()).getShortFileName();
-                if (partOfPath.contains(shortName)) {
-                    return resource;
-                }
-            }
-            final int slashIndex = partOfPath.indexOf('/');
-            if (slashIndex < 0) {
-                return null;
-            }
-            partOfPath = partOfPath.substring(slashIndex + 1);
-        }
     }
 
     @Override
