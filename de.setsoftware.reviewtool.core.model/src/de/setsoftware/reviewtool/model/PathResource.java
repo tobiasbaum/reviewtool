@@ -2,8 +2,6 @@ package de.setsoftware.reviewtool.model;
 
 import java.io.File;
 
-import org.eclipse.core.resources.IWorkspace;
-
 import de.setsoftware.reviewtool.model.remarks.DummyMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewResource;
@@ -17,11 +15,9 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 public class PathResource implements IReviewResource {
 
     private final File path;
-    private final IWorkspace workspace;
 
-    public PathResource(File path, IWorkspace workspace) {
+    public PathResource(File path) {
         this.path = path;
-        this.workspace = workspace;
     }
 
     @Override

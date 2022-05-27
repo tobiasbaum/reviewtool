@@ -122,7 +122,7 @@ public class AddRemarkAction extends AbstractHandler {
                         final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
                         final String reviewer = p.getReviewerForCurrentRound();
                         final ReviewRemark remark = ReviewRemark.create(
-                                new PathResource(pathFiltered.toFile(), workspace),
+                                new PathResource(pathFiltered.toFile()),
                                 reviewer,
                                 text,
                                 lineFiltered,
