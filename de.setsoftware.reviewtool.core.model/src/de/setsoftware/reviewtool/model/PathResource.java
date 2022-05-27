@@ -31,7 +31,7 @@ public class PathResource implements IReviewResource {
 
     @Override
     public Position createPosition(int line) {
-        return PositionTransformer.toPosition(this.path, line, this.workspace);
+        return PositionTransformer.toPosition(this.path, line);
     }
 
 }

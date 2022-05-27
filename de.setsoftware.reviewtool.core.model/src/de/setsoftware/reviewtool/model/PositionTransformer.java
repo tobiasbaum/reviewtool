@@ -11,11 +11,10 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
-import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IPath;
@@ -47,6 +46,7 @@ public class PositionTransformer {
     private static volatile ConcurrentHashMap<String, PathChainNode> cache = null;
     private static volatile long cacheRefreshTime;
     private static volatile IChangeSource[] changeSources = new IChangeSource[0];
+    private static volatile Supplier<Set<File>> projectPathSupplier;
 
     private static final ICortProgressMonitor NO_CANCEL_MONITOR = new ICortProgressMonitor() {
         @Override
@@ -70,36 +70,36 @@ public class PositionTransformer {
     /**
      * Creates a position identifying the given line in the given resource.
      */
-    public static Position toPosition(File path, int line, IWorkspace workspace) {
-        return toPosition(new Path(path.getPath()), line, workspace);
+    public static Position toPosition(File path, int line) {
+        if (path.isDirectory()) {
+            return new GlobalPosition();
+        }
+        final String filename = stripExtension(path.getName());
+        if (filename.isEmpty()) {
+            return new GlobalPosition();
+        }
+        final List<File> possiblePaths = getCachedPathsForName(filename);
+        if (possiblePaths == null) {
+            return new GlobalPosition();
+        }
+        if (possiblePaths.size() == 1) {
+            return createPos(path.getName(), line);
+        }
+        return createPos(getShortestUniqueName(path, possiblePaths), line);
     }
     
     /**
      * Creates a position identifying the given line in the given resource.
      */
-    public static Position toPosition(IPath path, int line, IWorkspace workspace) {
-        if (path.toFile().isDirectory()) {
-            return new GlobalPosition();
-        }
-        final String filename = stripExtension(path.lastSegment());
-        if (filename.isEmpty()) {
-            return new GlobalPosition();
-        }
-        final List<IPath> possiblePaths = getCachedPathsForName(workspace, filename);
-        if (possiblePaths == null) {
-            return new GlobalPosition();
-        }
-        if (possiblePaths.size() == 1) {
-            return createPos(path.lastSegment(), line);
-        }
-        return createPos(getShortestUniqueName(path, possiblePaths), line);
+    public static Position toPosition(IPath path, int line) {
+        return toPosition(path.toFile(), line);
     }
 
-    private static String getShortestUniqueName(IPath resourcePath, List<IPath> possiblePaths) {
-        final String[] segments = resourcePath.segments();
+    private static String getShortestUniqueName(File resourcePath, List<File> possiblePaths) {
+        final String[] segments = segments(resourcePath);
         int suffixLength = 1;
         while (suffixLength < segments.length) {
-            final int count = countWithSameSuffix(resourcePath, possiblePaths, suffixLength);
+            final int count = countWithSameSuffix(segments, possiblePaths, suffixLength);
             if (count == 1) {
                 break;
             }
@@ -108,10 +108,10 @@ public class PositionTransformer {
         return implodePath(segments, suffixLength);
     }
 
-    private static int countWithSameSuffix(IPath resourcePath, List<IPath> possiblePaths, int suffixLength) {
+    private static int countWithSameSuffix(String[] resourcePathSegments, List<File> possiblePaths, int suffixLength) {
         int count = 0;
-        for (final IPath path : possiblePaths) {
-            if (sameSuffix(resourcePath.segments(), path.segments(), suffixLength)) {
+        for (final File path : possiblePaths) {
+            if (sameSuffix(resourcePathSegments, segments(path), suffixLength)) {
                 count++;
             }
         }
@@ -143,12 +143,12 @@ public class PositionTransformer {
         return ret.toString();
     }
 
-    private static synchronized List<IPath> getCachedPathsForName(IWorkspace workspace, String filename) {
+    private static synchronized List<File> getCachedPathsForName(String filename) {
         while (cache == null) {
             //should normally have already been initialized, but it wasn't, so take
             //  the last chance to do so and do it synchronously
             try {
-                fillCache(workspace, NO_CANCEL_MONITOR);
+                fillCache(NO_CANCEL_MONITOR);
             } catch (final InterruptedException e) {
                 throw new AssertionError(e);
             }
@@ -162,19 +162,19 @@ public class PositionTransformer {
                 }
             }
         }
-        final List<IPath> cachedPaths = toList(cache.get(filename));
+        final List<File> cachedPaths = toList(cache.get(filename));
         if ((cachedPaths == null && cacheMightBeStale()) || cacheIsReallyOld()) {
             //Perhaps the resource exists but the cache was stale => trigger refresh
-            refreshCacheInBackground(workspace);
+            refreshCacheInBackground();
         }
         return cachedPaths;
     }
 
-    private static List<IPath> toList(PathChainNode startNode) {
+    private static List<File> toList(PathChainNode startNode) {
         if (startNode == null) {
             return null;
         }
-        final List<IPath> ret = new ArrayList<>();
+        final List<File> ret = new ArrayList<>();
         PathChainNode curNode = startNode;
         do {
             ret.add(curNode.path);
@@ -191,14 +191,14 @@ public class PositionTransformer {
         return System.currentTimeMillis() - cacheRefreshTime > REALLY_OLD_LIMIT_MS;
     }
 
-    private static void fillCache(IWorkspace workspace, ICortProgressMonitor monitor)
+    private static void fillCache(ICortProgressMonitor monitor)
             throws InterruptedException {
 
         if (refreshRunning.compareAndSet(false, true)) {
             final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
             final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
             final ConcurrentHashMap<String, PathChainNode> newCache = new ConcurrentHashMap<>();
-            for (final IPath path : determineRootPaths(workspace.getRoot().getProjects())) {
+            for (final File path : determineRootPaths()) {
                 if (monitor.isCanceled()) {
                     throw new InterruptedException();
                 }
@@ -217,16 +217,16 @@ public class PositionTransformer {
         }
     }
 
-    private static Set<IPath> determineRootPaths(IProject[] projects) {
-        final Set<IPath> ret = new LinkedHashSet<>();
+    private static Set<File> determineRootPaths() {
+        final Set<File> ret = new LinkedHashSet<>();
         //paths that are not included as a project but part of the scm repo should be included, too
-        for (final IProject project : projects) {
-            ret.add(getWorkingCopyRoot(project.getLocation()));
+        for (final File projectPath : projectPathSupplier.get()) {
+            ret.add(getWorkingCopyRoot(projectPath));
         }
         //with nested projects, the set now contains a parent as well as its children. remove the children
-        final Set<IPath> childProjects = new HashSet<>();
-        for (final IPath cur : ret) {
-            if (ret.contains(cur.removeLastSegments(1))) {
+        final Set<File> childProjects = new HashSet<>();
+        for (final File cur : ret) {
+            if (ret.contains(cur.getParentFile())) {
                 childProjects.add(cur);
             }
         }
@@ -234,29 +234,28 @@ public class PositionTransformer {
         return ret;
     }
 
-    private static IPath getWorkingCopyRoot(IPath location) {
+    private static File getWorkingCopyRoot(File dir) {
         final IChangeSource[] cs = changeSources;
-        final File dir = location.toFile();
         for (final IChangeSource c : cs) {
             try {
                 final File root = c.determineWorkingCopyRoot(dir);
                 if (root != null) {
-                    return Path.fromOSString(root.toString());
+                    return root;
                 }
             } catch (final ChangeSourceException e) {
                 Logger.warn("exception from changesource", e);
             }
         }
-        return location;
+        return dir;
     }
 
-    private static void fillCacheIfEmpty(IWorkspace workspace, ICortProgressMonitor monitor)
+    private static void fillCacheIfEmpty(ICortProgressMonitor monitor)
             throws InterruptedException {
 
         if (cache != null) {
             return;
         }
-        fillCache(workspace, monitor);
+        fillCache(monitor);
     }
 
     /**
@@ -264,11 +263,10 @@ public class PositionTransformer {
      * If the cache has already been initialized, it does nothing.
      */
     public static void initializeCacheInBackground() {
-        final IWorkspace root = ResourcesPlugin.getWorkspace();
         BackgroundJobExecutor.execute("Review resource cache init",
                 (ICortProgressMonitor monitor) -> {
                     try {
-                        fillCacheIfEmpty(root, monitor);
+                        fillCacheIfEmpty(monitor);
                         return null;
                     } catch (InterruptedException e) {
                         return e;
@@ -279,11 +277,11 @@ public class PositionTransformer {
     /**
      * Starts a new job that refreshes the cache in the background.
      */
-    public static void refreshCacheInBackground(final IWorkspace root) {
+    public static void refreshCacheInBackground() {
         BackgroundJobExecutor.execute("Review resource cache refresh",
                 (ICortProgressMonitor monitor) -> {
                     try {
-                        fillCache(root, monitor);
+                        fillCache(monitor);
                         return null;
                     } catch (final InterruptedException e) {
                         return e;
@@ -296,9 +294,9 @@ public class PositionTransformer {
      */
     private static final class PathChainNode {
         private final PathChainNode next;
-        private final IPath path;
+        private final File path;
 
-        public PathChainNode(IPath path2, PathChainNode oldNode) {
+        public PathChainNode(File path2, PathChainNode oldNode) {
             this.next = oldNode;
             this.path = path2;
         }
@@ -313,17 +311,17 @@ public class PositionTransformer {
 
         private static final long serialVersionUID = -6349559047252339690L;
 
-        private final IPath path;
+        private final File path;
         private final ConcurrentHashMap<String, PathChainNode> sharedMap;
 
-        public FillCacheAction(IPath directory, ConcurrentHashMap<String, PathChainNode> sharedMap) {
+        public FillCacheAction(File directory, ConcurrentHashMap<String, PathChainNode> sharedMap) {
             this.path = directory;
             this.sharedMap = sharedMap;
         }
 
         @Override
         protected void compute() {
-            final File[] children = this.path.toFile().listFiles();
+            final File[] children = this.path.listFiles();
             if (children == null) {
                 return;
             }
@@ -334,16 +332,16 @@ public class PositionTransformer {
                     continue;
                 }
                 if (child.isDirectory()) {
-                    subActions.add(new FillCacheAction(this.path.append(childName), this.sharedMap));
+                    subActions.add(new FillCacheAction(new File(this.path, childName), this.sharedMap));
                 } else {
                     final String childNameWithoutExtension = stripExtension(childName);
-                    this.addToMap(childNameWithoutExtension, this.path.append(childName));
+                    this.addToMap(childNameWithoutExtension, new File(this.path, childName));
                 }
             }
             invokeAll(subActions);
         }
 
-        private void addToMap(String childNameWithoutExtension, IPath path) {
+        private void addToMap(String childNameWithoutExtension, File path) {
             boolean success;
             do {
                 final PathChainNode oldNode = this.sharedMap.get(childNameWithoutExtension);
@@ -388,7 +386,7 @@ public class PositionTransformer {
      * Returns the workspace root if no file resource could be found.
      */
     public static IResource toResource(String filename) {
-        final IPath path = toPath(filename);
+        final File path = toPath(filename);
         final IWorkspaceRoot workspaceRoot = ResourcesPlugin.getWorkspace().getRoot();
         return path == null ? workspaceRoot : getResourceForPath(workspaceRoot, path);
     }
@@ -397,7 +395,7 @@ public class PositionTransformer {
      * Returns the resource for the file from the given position.
      * Returns null if no file could be found.
      */
-    public static IPath toPath(Position pos) {
+    public static File toPath(Position pos) {
         return toPath(pos.getShortFileName());
     }
 
@@ -405,44 +403,57 @@ public class PositionTransformer {
      * Returns the path for the given short filename.
      * Returns null if no file could be found.
      */
-    public static IPath toPath(String filename) {
+    public static File toPath(String filename) {
         if (filename == null) {
             return null;
         }
         final String[] segments = filename.split("/");
         final String filenameWithoutExtension = stripExtension(segments[segments.length - 1]);
-        final List<IPath> paths = getCachedPathsForName(ResourcesPlugin.getWorkspace(), filenameWithoutExtension);
+        final List<File> paths = getCachedPathsForName(filenameWithoutExtension);
         if (paths == null) {
             return null;
         }
         if (segments.length == 1 && paths.size() == 1) {
             return paths.get(0);
         }
-        final IPath fittingPath = findFittingPath(segments, paths);
+        final File fittingPath = findFittingPath(segments, paths);
         if (fittingPath == null) {
             return null;
         }
         return fittingPath;
     }
 
-    private static IPath findFittingPath(String[] segments, List<IPath> paths) {
-        IPath result = null;
-        for (final IPath path : paths) {
-            final String[] pathSegments = path.segments();
+    private static File findFittingPath(String[] segments, List<File> paths) {
+        File result = null;
+        for (final File path : paths) {
+            final String[] pathSegments = segments(path);
             if (sameSuffix(segments, pathSegments, segments.length)
-                    && (result == null || pathSegments.length < result.segments().length)) {
+                    && (result == null || pathSegments.length < segments(result).length)) {
                 result = path;
             }
         }
         return result;
     }
+    
+    private static String[] segments(File path) {
+        java.nio.file.Path p = path.toPath();
+        String[] ret = new String[p.getNameCount()];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = p.getName(i).toString();
+        }
+        return ret;
+    }
 
-    private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, IPath fittingPath) {
-        final IFile file = workspaceRoot.getFileForLocation(fittingPath);
+    private static IResource getResourceForPath(IWorkspaceRoot workspaceRoot, File fittingPath) {
+        final IFile file = workspaceRoot.getFileForLocation(new Path(fittingPath.getPath()));
         if (file == null || !file.exists()) {
             return workspaceRoot;
         }
         return file;
+    }
+    
+    public static void setProjectSource(Supplier<Set<File>> projectPathSupplier2) {
+        projectPathSupplier = projectPathSupplier2;
     }
 
     public static void setChangeSources(List<IChangeSource> list) {

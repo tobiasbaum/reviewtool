@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.ui.views;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +18,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.text.TextSelection;
 import org.eclipse.jface.viewers.CellLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
@@ -222,12 +224,12 @@ public class FixingTasksView extends ViewPart implements ReviewModeListener, IRe
             return;
         }
 
-        final IPath path = PositionTransformer.toPath(pos);
+        final File path = PositionTransformer.toPath(pos);
         if (path == null) {
             return;
         }
 
-        final IFileStore fileStore = EFS.getLocalFileSystem().getStore(path);
+        final IFileStore fileStore = EFS.getLocalFileSystem().getStore(new Path(path.getPath()));
         final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, false);
         if (pos instanceof FileLinePosition && fileStore.fetchInfo().exists()) {
             final PositionLookupTable lookup = PositionLookupTable.create(fileStore);

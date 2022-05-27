@@ -559,8 +559,8 @@ public class ToursInReview {
             if (!(resource instanceof IWorkspaceRoot)) {
                 //perhaps too much was dropped and a different file then the intended returned
                 //  therefore double check by using the inverse lookup
-                final String shortName = PositionTransformer.toPosition(
-                        resource.getFullPath(), 1, resource.getWorkspace()).getShortFileName();
+                final String shortName = 
+                        PositionTransformer.toPosition(resource.getFullPath(), 1).getShortFileName();
                 if (partOfPath.contains(shortName)) {
                     return resource;
                 }

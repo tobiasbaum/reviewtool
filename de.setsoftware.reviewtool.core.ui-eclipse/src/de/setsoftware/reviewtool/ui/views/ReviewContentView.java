@@ -810,8 +810,7 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
         private String determineFilename(final Stop f) {
             final Position pos = PositionTransformer.toPosition(
                     f.getMostRecentFile().toLocalPath(f.getWorkingCopy()),
-                    -1,
-                    ResourcesPlugin.getWorkspace());
+                    -1);
             if (pos instanceof GlobalPosition) {
                 return new File(f.getMostRecentFile().getPath()).getName();
             } else {

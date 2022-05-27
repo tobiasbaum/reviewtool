@@ -9,11 +9,16 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.parsers.ParserConfigurationException;
 
+import org.eclipse.core.resources.IProject;
+import org.eclipse.core.resources.IWorkspace;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -320,6 +325,8 @@ public class ReviewPlugin implements IReviewConfigurable {
                 new FileReviewDataCache(Activator.getDefault().getStateLocation().toFile()),
                 new DummyPersistence(),
                 new RealUi());
+        
+        PositionTransformer.setProjectSource(this::determineProjectPaths);
 
         final Version bundleVersion = Activator.getDefault().getBundle().getVersion();
         this.configInterpreter.addConfigurator(new TelemetryConfigurator(bundleVersion));
@@ -356,6 +363,15 @@ public class ReviewPlugin implements IReviewConfigurable {
                 ReviewPlugin.this.reconfigure();
             }
         });
+    }
+    
+    private Set<File> determineProjectPaths() {
+        IWorkspace w = ResourcesPlugin.getWorkspace();
+        LinkedHashSet<File> ret = new LinkedHashSet<>();
+        for (IProject p : w.getRoot().getProjects()) {
+            ret.add(p.getFullPath().toFile());
+        }
+        return ret;
     }
 
     private void reconfigure() {

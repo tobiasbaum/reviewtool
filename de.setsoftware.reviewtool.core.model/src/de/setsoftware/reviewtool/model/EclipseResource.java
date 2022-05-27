@@ -30,7 +30,7 @@ public class EclipseResource implements IReviewResource {
 
     @Override
     public Position createPosition(int line) {
-        return PositionTransformer.toPosition(this.resource.getFullPath(), line, this.resource.getWorkspace());
+        return PositionTransformer.toPosition(this.resource.getFullPath(), line);
     }
 
 }
