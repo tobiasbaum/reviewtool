@@ -34,9 +34,9 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog;
+import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.CreateDialogCallback;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.PositionReference;
-import de.setsoftware.reviewtool.ui.views.ViewHelper;
 
 /**
  * Action that adds a review remark (after prompting the user for details with a dialog).

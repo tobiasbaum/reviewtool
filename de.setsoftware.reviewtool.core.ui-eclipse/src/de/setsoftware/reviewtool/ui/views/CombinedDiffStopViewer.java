@@ -52,6 +52,7 @@ import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.IStop;
 import de.setsoftware.reviewtool.ui.api.IStopViewer;
+import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 
 /**
  * Displays all differences of a {@link IStop} combined in a single window.

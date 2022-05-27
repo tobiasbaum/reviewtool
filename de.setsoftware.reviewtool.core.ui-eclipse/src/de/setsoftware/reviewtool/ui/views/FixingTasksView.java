@@ -62,6 +62,7 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.model.remarks.ReviewRound;
 import de.setsoftware.reviewtool.ui.dialogs.CorrectSyntaxDialog;
 import de.setsoftware.reviewtool.ui.dialogs.EclipseMarker;
+import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 
 /**
  * A view to show the review remarks that need to be fixed (and the other remarks, too).

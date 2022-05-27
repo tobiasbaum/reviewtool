@@ -38,6 +38,7 @@ import de.setsoftware.reviewtool.model.TicketLinkSettings;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.RemarkMarkers;
+import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 
 /**
  * A view that contains general information on the review and the ticket.

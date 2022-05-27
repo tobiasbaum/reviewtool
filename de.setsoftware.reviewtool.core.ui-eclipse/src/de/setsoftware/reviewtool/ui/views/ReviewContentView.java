@@ -78,6 +78,7 @@ import de.setsoftware.reviewtool.model.remarks.Position;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
 import de.setsoftware.reviewtool.ui.dialogs.RealMarkerFactory;
+import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 import de.setsoftware.reviewtool.viewtracking.CodeViewTracker;
 import de.setsoftware.reviewtool.viewtracking.ITrackerCreationListener;
 import de.setsoftware.reviewtool.viewtracking.IViewStatisticsListener;

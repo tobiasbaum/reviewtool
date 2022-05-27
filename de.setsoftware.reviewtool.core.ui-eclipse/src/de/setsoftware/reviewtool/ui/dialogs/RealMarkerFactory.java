@@ -67,7 +67,7 @@ public class RealMarkerFactory implements IStopMarkerFactory, IMarkerFactory {
             return null;
         }
         if (!lookupTables.containsKey(resource)) {
-            lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
+            lookupTables.put(resource, createLookupTable((IFile) resource));
         }
         marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
         marker.setAttribute(IMarker.CHAR_START,
@@ -147,7 +147,7 @@ public class RealMarkerFactory implements IStopMarkerFactory, IMarkerFactory {
     /**
      * Creates a lookup table for the contents from the given file.
      */
-    private static PositionLookupTable create(IFile file) {
+    private static PositionLookupTable createLookupTable(IFile file) {
         try {
             if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
                 file.refreshLocal(IResource.DEPTH_ZERO, null);

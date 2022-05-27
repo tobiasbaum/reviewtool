@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ui.views;
+package de.setsoftware.reviewtool.ui.dialogs;
 
 import java.net.URI;
 
