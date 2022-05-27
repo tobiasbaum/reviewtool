@@ -18,7 +18,6 @@ import de.setsoftware.reviewtool.model.remarks.IMarkerFactory;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.Position;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
-import de.setsoftware.reviewtool.ui.views.EclipseMarker;
 
 /**
  * A factory to create normal Eclipse markers.

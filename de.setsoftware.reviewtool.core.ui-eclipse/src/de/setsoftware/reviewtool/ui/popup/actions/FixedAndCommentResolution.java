@@ -10,8 +10,8 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.AddReplyDialog;
+import de.setsoftware.reviewtool.ui.dialogs.EclipseMarker;
 import de.setsoftware.reviewtool.ui.dialogs.InputDialogCallback;
-import de.setsoftware.reviewtool.ui.views.EclipseMarker;
 
 /**
  * Quick fix resolution that marks a review remark as fixed and also adds a comment/reply.

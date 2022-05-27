@@ -36,7 +36,6 @@ import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.CreateDialogCallback;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.PositionReference;
-import de.setsoftware.reviewtool.ui.views.EclipseResource;
 import de.setsoftware.reviewtool.ui.views.ViewHelper;
 
 /**

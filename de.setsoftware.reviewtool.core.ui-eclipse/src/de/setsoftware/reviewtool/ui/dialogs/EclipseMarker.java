@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ui.views;
+package de.setsoftware.reviewtool.ui.dialogs;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;

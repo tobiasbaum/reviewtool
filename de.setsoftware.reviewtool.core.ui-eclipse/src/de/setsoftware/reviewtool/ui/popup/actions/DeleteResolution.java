@@ -14,7 +14,7 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 import de.setsoftware.reviewtool.telemetry.Telemetry;
-import de.setsoftware.reviewtool.ui.views.EclipseMarker;
+import de.setsoftware.reviewtool.ui.dialogs.EclipseMarker;
 
 /**
  * Quickfix resolution that deletes a review remark.

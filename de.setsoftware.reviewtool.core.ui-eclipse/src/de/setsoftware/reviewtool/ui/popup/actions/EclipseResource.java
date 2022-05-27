@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.ui.views;
+package de.setsoftware.reviewtool.ui.popup.actions;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
@@ -9,6 +9,7 @@ import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewResource;
 import de.setsoftware.reviewtool.model.remarks.Position;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
+import de.setsoftware.reviewtool.ui.dialogs.EclipseMarker;
 
 /**
  * A resource that is referenced as an Eclipse {@link IResource}.
