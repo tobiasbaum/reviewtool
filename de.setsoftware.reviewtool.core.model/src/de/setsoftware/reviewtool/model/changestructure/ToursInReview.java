@@ -142,36 +142,23 @@ public class ToursInReview {
         }
     }
 
-    private final ChangeManager changeManager;
     private final List<Tour> topmostTours;
     private int currentTourIndex;
     private final WeakListeners<IToursInReviewChangeListener> listeners = new WeakListeners<>();
-    private final IChangeManagerListener mostRecentFragmentUpdater;
     private final Set<? extends IClassification> irrelevantCategories;
 
     private ToursInReview(
-            final ChangeManager changeManager,
             final List<? extends Tour> topmostTours,
             final Set<? extends IClassification> irrelevantCategories) {
-        this.changeManager = changeManager;
         this.topmostTours = new ArrayList<>(topmostTours);
         this.currentTourIndex = 0;
-        this.mostRecentFragmentUpdater = new IChangeManagerListener() {
-            @Override
-            public void localChangeInfoUpdated(final ChangeManager changeManager) {
-                ToursInReview.this.updateMostRecentFragmentsWithLocalChanges();
-            }
-        };
-        this.changeManager.addListener(this.mostRecentFragmentUpdater);
         this.irrelevantCategories = irrelevantCategories;
         this.updateMostRecentFragmentsWithLocalChanges();
     }
 
     private ToursInReview(final List<? extends Tour> topmostTours) {
-        this.changeManager = new ChangeManager(false);
         this.topmostTours = new ArrayList<>(topmostTours);
         this.currentTourIndex = 0;
-        this.mostRecentFragmentUpdater = null;
         this.irrelevantCategories = Collections.emptySet();
     }
 
@@ -188,7 +175,6 @@ public class ToursInReview {
      * null is returned.
      */
     public static ToursInReview create(
-            final ChangeManager changeManager,
             final IChangeSourceUi changeSourceUi,
             final List<? extends IChangeClassifier> changeClassificationStrategies,
             final List<? extends ITourRestructuring> tourRestructuringStrategies,
@@ -238,7 +224,7 @@ public class ToursInReview {
                 });
         Logger.info("after ordering tours=" + formatSizes(toursToShow));
 
-        return new ToursInReview(changeManager, toursToShow, filteredChanges.toMakeIrrelevant);
+        return new ToursInReview(toursToShow, filteredChanges.toMakeIrrelevant);
     }
 
     private static String formatSizes(List<? extends Tour> tours) {
@@ -271,7 +257,7 @@ public class ToursInReview {
         }
     }
 
-    private synchronized void updateMostRecentFragmentsWithLocalChanges() {
+    public synchronized void updateMostRecentFragmentsWithLocalChanges() {
         final IFragmentTracer tracer = new FragmentTracer();
         for (final Tour tour : this.topmostTours) {
             for (final Stop stop : tour.getStops()) {

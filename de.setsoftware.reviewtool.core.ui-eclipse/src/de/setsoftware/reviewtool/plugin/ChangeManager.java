@@ -1,4 +1,4 @@
-package de.setsoftware.reviewtool.model.changestructure;
+package de.setsoftware.reviewtool.plugin;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -164,7 +164,7 @@ public final class ChangeManager {
 
     private final Set<File> projectDirs;
     private final CopyOnWriteArrayList<IChangeSource> changeSourceRef;
-    private final WeakListeners<IChangeManagerListener> changeManagerListeners = new WeakListeners<>();
+    private final WeakListeners<Runnable> changeManagerListeners = new WeakListeners<>();
     private final AtomicLong lastChangeTime = new AtomicLong();
     private final ConcurrentLinkedQueue<LocalChangeWorkItem> workQueue = new ConcurrentLinkedQueue<>();
     private final AtomicBoolean changeTrackingEnabled = new AtomicBoolean(true);
@@ -241,7 +241,7 @@ public final class ChangeManager {
      *
      * @param changeManagerListener The listener to add.
      */
-    public synchronized void addListener(final IChangeManagerListener changeManagerListener) {
+    public synchronized void addListener(final Runnable changeManagerListener) {
         this.changeManagerListeners.add(changeManagerListener);
     }
 
@@ -255,7 +255,7 @@ public final class ChangeManager {
     private void analyzeLocalChanges(final IChangeSource changeSource, final List<File> filesToAnalyze)
             throws ChangeSourceException {
         changeSource.analyzeLocalChanges(filesToAnalyze);
-        this.changeManagerListeners.notifyListeners(listener -> listener.localChangeInfoUpdated(this));
+        this.changeManagerListeners.notifyListeners(listener -> listener.run());
     }
 
     /**

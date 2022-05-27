@@ -5,7 +5,7 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.jface.dialogs.MessageDialog;
 
-import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
+import de.setsoftware.reviewtool.plugin.ChangeManager;
 import de.setsoftware.reviewtool.plugin.ReviewPlugin;
 
 /**

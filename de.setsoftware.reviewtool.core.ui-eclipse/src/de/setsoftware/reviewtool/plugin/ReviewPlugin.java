@@ -83,9 +83,9 @@ import de.setsoftware.reviewtool.model.api.IChangeSourceUi;
 import de.setsoftware.reviewtool.model.api.IClassification;
 import de.setsoftware.reviewtool.model.api.ICommit;
 import de.setsoftware.reviewtool.model.api.Mode;
-import de.setsoftware.reviewtool.model.changestructure.ChangeManager;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.IChangeClassifier;
+import de.setsoftware.reviewtool.model.changestructure.IChangeManagerListener;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview.ICreateToursUi;
@@ -964,7 +964,6 @@ public class ReviewPlugin implements IReviewConfigurable {
 
             sourceUi.subTask("Creating tours...");
             this.toursInReview = ToursInReview.create(
-                    this.changeManager,
                     sourceUi,
                     this.relevanceFilters,
                     Arrays.asList(
@@ -976,6 +975,7 @@ public class ReviewPlugin implements IReviewConfigurable {
             if (this.toursInReview == null) {
                 return false;
             }
+            changeManager.addListener(toursInReview::updateMostRecentFragmentsWithLocalChanges);
 
             sourceUi.subTask("Creating stop markers...");
             this.toursInReview.createMarkers(new RealMarkerFactory(), sourceUi);
