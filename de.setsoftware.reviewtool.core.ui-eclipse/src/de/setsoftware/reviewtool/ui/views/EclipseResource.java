@@ -13,7 +13,7 @@ import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 /**
  * A resource that is referenced as an Eclipse {@link IResource}.
  */
-class EclipseResource implements IReviewResource {
+public class EclipseResource implements IReviewResource {
 
     private final IResource resource;
 
