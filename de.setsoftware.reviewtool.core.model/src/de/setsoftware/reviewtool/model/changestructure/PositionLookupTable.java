@@ -13,6 +13,7 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 
+import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.api.IPositionInText;
 
 /**
@@ -29,17 +30,20 @@ public class PositionLookupTable {
     /**
      * Creates a lookup table for the contents from the given file.
      */
-    public static PositionLookupTable create(IFile file)
-            throws IOException, CoreException {
-        if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
-            file.refreshLocal(IResource.DEPTH_ZERO, null);
-        }
-        final InputStream stream = file.getContents();
+    public static PositionLookupTable create(IFile file) throws IOException {
         try {
-            final Reader r = new InputStreamReader(stream, file.getCharset());
-            return create(r);
-        } finally {
-            stream.close();
+            if (!file.isSynchronized(IResource.DEPTH_ZERO)) {
+                file.refreshLocal(IResource.DEPTH_ZERO, null);
+            }
+            final InputStream stream = file.getContents();
+            try {
+                final Reader r = new InputStreamReader(stream, file.getCharset());
+                return create(r);
+            } finally {
+                stream.close();
+            }
+        } catch (CoreException | IOException e) {
+            throw new ReviewtoolException(e);
         }
     }
 

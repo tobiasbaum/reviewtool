@@ -485,50 +485,36 @@ public class ToursInReview {
      * Creates markers for the tour stops.
      */
     public void createMarkers(final IStopMarkerFactory markerFactory, final ICortProgressMonitor progressMonitor) {
-        final Map<IResource, PositionLookupTable> lookupTables = new HashMap<>();
         for (int i = 0; i < this.topmostTours.size(); i++) {
             final Tour s = this.topmostTours.get(i);
             for (final Stop f : s.getStops()) {
                 if (progressMonitor.isCanceled()) {
                     throw BackgroundJobExecutor.createOperationCanceledException();
                 }
-                this.createMarkerFor(markerFactory, lookupTables, s, f, i == this.currentTourIndex);
+                this.createMarkerFor(markerFactory, s, f, i == this.currentTourIndex);
             }
         }
     }
 
-    private IMarker createMarkerFor(
+    private IStopMarker createMarkerFor(
             final IStopMarkerFactory markerFactory,
-            final Map<IResource, PositionLookupTable> lookupTables,
             final Tour topmostTour,
             final Stop f,
             final boolean tourActive) {
 
-        try {
-            final IResource resource = determineResource(f.getMostRecentFile());
-            if (resource == null) {
-                return null;
-            }
-            final IMarker marker;
-            if (f.isDetailedFragmentKnown()) {
-                if (!lookupTables.containsKey(resource)) {
-                    lookupTables.put(resource, PositionLookupTable.create((IFile) resource));
-                }
-                final IFragment pos = f.getMostRecentFragment();
-                marker = markerFactory.createStopMarker(resource, tourActive);
-                marker.setAttribute(IMarker.LINE_NUMBER, pos.getFrom().getLine());
-                marker.setAttribute(IMarker.CHAR_START,
-                        lookupTables.get(resource).getCharsSinceFileStart(pos.getFrom()));
-                marker.setAttribute(IMarker.CHAR_END,
-                        lookupTables.get(resource).getCharsSinceFileStart(pos.getTo()));
-            } else {
-                marker = markerFactory.createStopMarker(resource, tourActive);
-            }
-            marker.setAttribute(IMarker.MESSAGE, f.getClassificationFormatted() + topmostTour.getDescription());
-            return marker;
-        } catch (final CoreException | IOException e) {
-            throw new ReviewtoolException(e);
+        final IResource resource = determineResource(f.getMostRecentFile());
+        if (resource == null) {
+            return null;
         }
+        String message = f.getClassificationFormatted() + topmostTour.getDescription();
+        final IStopMarker marker;
+        if (f.isDetailedFragmentKnown()) {
+            final IFragment pos = f.getMostRecentFragment();
+            marker = markerFactory.createStopMarker(resource, tourActive, message, pos);
+        } else {
+            marker = markerFactory.createStopMarker(resource, tourActive, message);
+        }
+        return marker;
     }
 
     /**
@@ -537,12 +523,11 @@ public class ToursInReview {
      * If a marker could not be created (for example because the resource is not available in Eclipse), null
      * is returned.
      */
-    public IMarker createMarkerFor(
+    public IStopMarker createMarkerFor(
             final IStopMarkerFactory markerFactory,
             final Tour topmostTour,
             final Stop f) {
-        return this.createMarkerFor(
-                markerFactory, new HashMap<IResource, PositionLookupTable>(), topmostTour, f, true);
+        return this.createMarkerFor(markerFactory, topmostTour, f, true);
     }
 
     /**

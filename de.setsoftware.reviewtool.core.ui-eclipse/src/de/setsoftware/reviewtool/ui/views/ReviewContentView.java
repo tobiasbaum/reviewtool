@@ -66,6 +66,7 @@ import de.setsoftware.reviewtool.model.api.IHunk;
 import de.setsoftware.reviewtool.model.api.IRevisionedFile;
 import de.setsoftware.reviewtool.model.api.ITextualChange;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
+import de.setsoftware.reviewtool.model.changestructure.IStopMarker;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
 import de.setsoftware.reviewtool.model.changestructure.Tour;
@@ -308,8 +309,6 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             final ToursInReview tours, Tour topmostTour, final Stop stop, boolean forceTextEditor)
         throws CoreException, IOException {
 
-        final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
-
         //when jumping to a marker, Eclipse selects all the contained text. We don't want that, so
         //  we create a copy of the fragment without size
         Stop jumpTarget;
@@ -328,13 +327,14 @@ public class ReviewContentView extends ViewPart implements ReviewModeListener, I
             jumpTarget = stop;
         }
 
-        final IMarker marker = tours.createMarkerFor(new RealMarkerFactory(), topmostTour, jumpTarget);
+        final IStopMarker marker = tours.createMarkerFor(new RealMarkerFactory(), topmostTour, jumpTarget);
         if (marker != null) {
-            ViewHelper.openEditorForMarker(page, marker, forceTextEditor);
+            marker.openEditor(forceTextEditor);
             marker.delete();
         } else {
             File file = stop.getMostRecentFile().toLocalPath(stop.getWorkingCopy());
             final IFileStore fileStore = EFS.getLocalFileSystem().getStore(new Path(file.getPath()));
+            final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
             final IEditorPart part = ViewHelper.openEditorForFile(page, fileStore, forceTextEditor);
             //for files not in the workspace, we cannot create markers, but let's at least select the text
             if (stop.isDetailedFragmentKnown() && fileStore.fetchInfo().exists()) {

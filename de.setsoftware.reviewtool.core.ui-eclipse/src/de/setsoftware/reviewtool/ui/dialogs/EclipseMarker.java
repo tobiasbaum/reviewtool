@@ -2,15 +2,18 @@ package de.setsoftware.reviewtool.ui.dialogs;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.PlatformUI;
 
 import de.setsoftware.reviewtool.base.ReviewtoolException;
+import de.setsoftware.reviewtool.model.changestructure.IStopMarker;
 import de.setsoftware.reviewtool.model.remarks.IReviewMarker;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
 
 /**
  * Adapter from {@link IReviewMarker} to Eclipse's {@link IMarker}.
  */
-public class EclipseMarker implements IReviewMarker {
+public class EclipseMarker implements IReviewMarker, IStopMarker {
 
     private final IMarker marker;
 
@@ -34,7 +37,7 @@ public class EclipseMarker implements IReviewMarker {
     /**
      * Wraps the given marker as an {@link EclipseMarker} without changing it further.
      */
-    public static IReviewMarker wrap(IMarker m) {
+    public static EclipseMarker wrap(IMarker m) {
         return new EclipseMarker(m);
     }
 
@@ -97,6 +100,16 @@ public class EclipseMarker implements IReviewMarker {
     @Override
     public void setSeverityWarning() {
         this.setAttribute(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
+    }
+
+    @Override
+    public void openEditor(boolean forceTextEditor) {
+        final IWorkbenchPage page = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage();
+        try {
+            ViewHelper.openEditorForMarker(page, marker, forceTextEditor);
+        } catch (CoreException e) {
+            throw new ReviewtoolException(e);
+        }
     }
 
 }
