@@ -560,7 +560,7 @@ public class ToursInReview {
                 //perhaps too much was dropped and a different file then the intended returned
                 //  therefore double check by using the inverse lookup
                 final String shortName = 
-                        PositionTransformer.toPosition(resource.getFullPath(), 1).getShortFileName();
+                        PositionTransformer.toPosition(resource.getFullPath().toFile(), 1).getShortFileName();
                 if (partOfPath.contains(shortName)) {
                     return resource;
                 }

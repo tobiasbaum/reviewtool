@@ -17,7 +17,6 @@ import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 
 import de.setsoftware.reviewtool.base.Logger;
@@ -88,13 +87,6 @@ public class PositionTransformer {
         return createPos(getShortestUniqueName(path, possiblePaths), line);
     }
     
-    /**
-     * Creates a position identifying the given line in the given resource.
-     */
-    public static Position toPosition(IPath path, int line) {
-        return toPosition(path.toFile(), line);
-    }
-
     private static String getShortestUniqueName(File resourcePath, List<File> possiblePaths) {
         final String[] segments = segments(resourcePath);
         int suffixLength = 1;
