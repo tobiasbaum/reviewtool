@@ -117,11 +117,11 @@ public class AddRemarkAction extends AbstractHandler {
                         final ReviewStateManager p = ReviewPlugin.getPersistence();
                         final IWorkspace workspace = ResourcesPlugin.getWorkspace();
                         final IPath pathFiltered = chosenRef != PositionReference.GLOBAL
-                                ? path : workspace.getRoot().getFullPath();
+                                ? path : workspace.getRoot().getLocation();
                         final int lineFiltered = chosenRef == PositionReference.LINE ? line : 0;
                         final String reviewer = p.getReviewerForCurrentRound();
                         final ReviewRemark remark = ReviewRemark.create(
-                                new PathResource(pathFiltered.toFile()),
+                                new PathResource(pathFiltered.makeAbsolute().toFile()),
                                 reviewer,
                                 text,
                                 lineFiltered,

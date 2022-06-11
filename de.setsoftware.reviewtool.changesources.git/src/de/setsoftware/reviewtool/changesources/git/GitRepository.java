@@ -39,7 +39,7 @@ final class GitRepository extends AbstractRepository {
 
     private final File cacheDir;
     private final File workingCopyRoot;
-    private transient AtomicBoolean saveCacheWaiting = new AtomicBoolean();
+    private transient AtomicBoolean saveCacheWaiting;
     private transient Repository gitRepository;
     private final Set<String> analyzedCommits;
     private IMutableFileHistoryGraph fileHistoryGraph;
@@ -90,6 +90,13 @@ final class GitRepository extends AbstractRepository {
     }
     
     void saveCacheInBackground() {
+        if (this.saveCacheWaiting == null) {
+            synchronized(this) {
+                if (this.saveCacheWaiting == null) {
+                    this.saveCacheWaiting = new AtomicBoolean();
+                }
+            }
+        }
         if (!this.saveCacheWaiting.compareAndSet(false, true)) {
             // es wartet schon wer
             return;

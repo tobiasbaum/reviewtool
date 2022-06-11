@@ -368,7 +368,7 @@ public class ReviewPlugin implements IReviewConfigurable {
         IWorkspace w = ResourcesPlugin.getWorkspace();
         LinkedHashSet<File> ret = new LinkedHashSet<>();
         for (IProject p : w.getRoot().getProjects()) {
-            ret.add(p.getFullPath().toFile());
+            ret.add(p.getLocation().toFile());
         }
         return ret;
     }
