@@ -91,7 +91,7 @@ final class GitRepository extends AbstractRepository {
     
     void saveCacheInBackground() {
         if (this.saveCacheWaiting == null) {
-            synchronized(this) {
+            synchronized (this) {
                 if (this.saveCacheWaiting == null) {
                     this.saveCacheWaiting = new AtomicBoolean();
                 }
