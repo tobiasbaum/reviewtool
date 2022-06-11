@@ -23,7 +23,7 @@ import de.setsoftware.reviewtool.model.api.IUnknownRevision;
 public abstract class AbstractFileHistoryGraph implements IFileHistoryGraph {
 
     @Override
-    public final List<IRevisionedFile> getLatestFiles(
+    public final synchronized List<IRevisionedFile> getLatestFiles(
             final IRevisionedFile file,
             final boolean ignoreNonLocalCopies) {
 

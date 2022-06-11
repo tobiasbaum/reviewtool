@@ -19,7 +19,7 @@ import de.setsoftware.reviewtool.model.api.IncompatibleFragmentException;
 /**
  * Implementation of a {@link IMutableFileHistoryEdge}.
  */
-public final class FileHistoryEdge extends ProxyableFileHistoryEdge {
+final class FileHistoryEdge extends ProxyableFileHistoryEdge {
 
     private static final long serialVersionUID = 2504351095940964539L;
 

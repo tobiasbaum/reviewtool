@@ -57,7 +57,7 @@ class HistoryFiller {
                     r.analyzeRevision(graph);
                     repo.markAsAnalyzed(r.getRevisionString());
                 }
-                repo.saveCache();
+                repo.saveCacheInBackground();
             }
         } finally {
             ui.decreaseTaskNestingLevel();

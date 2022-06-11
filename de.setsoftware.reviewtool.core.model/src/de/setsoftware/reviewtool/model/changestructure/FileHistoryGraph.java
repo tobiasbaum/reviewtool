@@ -40,12 +40,12 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public final Set<String> getPaths() {
+    public final synchronized Set<String> getPaths() {
         return this.index.keySet();
     }
 
     @Override
-    public final void addAddition(
+    public final synchronized void addAddition(
             final String path,
             final IRevision revision) {
 
@@ -59,7 +59,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public final void addChange(
+    public final synchronized void addChange(
             final String path,
             final IRevision revision,
             final Set<? extends IRevision> ancestorRevisions) {
@@ -98,7 +98,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public final void addDeletion(
+    public final synchronized void addDeletion(
             final String path,
             final IRevision revision) {
 
@@ -108,7 +108,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public final void addCopy(
+    public final synchronized void addCopy(
             final String pathFrom,
             final IRevision revisionFrom,
             final String pathTo,
@@ -296,7 +296,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public Set<ProxyableFileHistoryNode> findAncestorsFor(final IRevisionedFile file) {
+    public synchronized Set<ProxyableFileHistoryNode> findAncestorsFor(final IRevisionedFile file) {
         final List<ProxyableFileHistoryNode> nodesForKey = this.lookupFile(file);
 
         final Map<IRevisionedFile, ProxyableFileHistoryNode> ancestorNodes = nodesForKey.stream().filter(
@@ -315,7 +315,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public final Set<IFileHistoryNode> getIncompleteFlowStarts() {
+    public final synchronized Set<IFileHistoryNode> getIncompleteFlowStarts() {
         final Set<IFileHistoryNode> result = new LinkedHashSet<>();
         for (final IRevisionedFile file : this.incompleteFlowStarts.keySet()) {
             result.addAll(this.incompleteFlowStarts.get(file));
@@ -338,7 +338,7 @@ public final class FileHistoryGraph extends AbstractFileHistoryGraph implements 
     }
 
     @Override
-    public String toString() {
+    public synchronized String toString() {
         return this.index.toString();
     }
 }

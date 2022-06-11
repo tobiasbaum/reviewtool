@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectReader;
@@ -38,6 +39,7 @@ final class GitRepository extends AbstractRepository {
 
     private final File cacheDir;
     private final File workingCopyRoot;
+    private transient AtomicBoolean saveCacheWaiting = new AtomicBoolean();
     private transient Repository gitRepository;
     private final Set<String> analyzedCommits;
     private IMutableFileHistoryGraph fileHistoryGraph;
@@ -86,14 +88,25 @@ final class GitRepository extends AbstractRepository {
         }
         return null;
     }
+    
+    void saveCacheInBackground() {
+        if (!this.saveCacheWaiting.compareAndSet(false, true)) {
+            // es wartet schon wer
+            return;
+        }
+        new Thread(this::saveCache, "saveCacheThread " + this).run();
+    }
 
-    void saveCache() {
-        try (FileOutputStream in = new FileOutputStream(getCacheFilePath(this.workingCopyRoot, this.cacheDir))) {
-            final ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(in));
-            os.writeObject(this);
-            os.close();
-        } catch (final Exception e) {
-            Logger.warn("could not save git repo cache file", e);
+    private synchronized void saveCache() {
+        synchronized (this.fileHistoryGraph) {
+            this.saveCacheWaiting.set(false);
+            try (FileOutputStream in = new FileOutputStream(getCacheFilePath(this.workingCopyRoot, this.cacheDir))) {
+                final ObjectOutputStream os = new ObjectOutputStream(new BufferedOutputStream(in));
+                os.writeObject(this);
+                os.close();
+            } catch (final Exception e) {
+                Logger.warn("could not save git repo cache file", e);
+            }            
         }
     }
 
@@ -142,15 +155,15 @@ final class GitRepository extends AbstractRepository {
         return Base64.getUrlEncoder().encodeToString(s.getBytes());
     }
 
-    boolean wasAlreadyAnalyzed(String revisionString) {
+    synchronized boolean wasAlreadyAnalyzed(String revisionString) {
         return this.analyzedCommits.contains(revisionString);
     }
 
-    void markAsAnalyzed(String revisionString) {
+    synchronized void markAsAnalyzed(String revisionString) {
         this.analyzedCommits.add(revisionString);
     }
 
-    public void clearCache() {
+    public synchronized void clearCache() {
         final File filePath = getCacheFilePath(this.workingCopyRoot, this.cacheDir);
         filePath.delete();
         if (!this.analyzedCommits.isEmpty()) {

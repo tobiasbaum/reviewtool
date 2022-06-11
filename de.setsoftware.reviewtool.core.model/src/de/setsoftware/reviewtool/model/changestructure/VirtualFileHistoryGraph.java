@@ -36,7 +36,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
      * Returns the underlying local file history graph.
      * @return The {@link IFileHistoryGraph local file history graph}. May be {@code null}.
      */
-    public IFileHistoryGraph getLocalFileHistoryGraph() {
+    public synchronized IFileHistoryGraph getLocalFileHistoryGraph() {
         return this.localFileHistoryGraph;
     }
 
@@ -44,7 +44,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
      * Sets or unsets the local file history graph.
      * @param localFileHistoryGraph The new local file history graph. May be {@code null}.
      */
-    public void setLocalFileHistoryGraph(final IFileHistoryGraph localFileHistoryGraph) {
+    public synchronized void setLocalFileHistoryGraph(final IFileHistoryGraph localFileHistoryGraph) {
         this.localFileHistoryGraph = localFileHistoryGraph;
         this.virtualNodes.clear();
         if (this.localFileHistoryGraph != null) {
@@ -100,7 +100,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public Set<String> getPaths() {
+    public synchronized Set<String> getPaths() {
         final Set<String> result = new LinkedHashSet<>();
         result.addAll(this.remoteFileHistoryGraph.getPaths());
         result.addAll(this.localFileHistoryGraph.getPaths());
@@ -108,7 +108,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public IFileHistoryNode getNodeFor(final IRevisionedFile file) {
+    public synchronized IFileHistoryNode getNodeFor(final IRevisionedFile file) {
         final IFileHistoryNode virtualNode = this.virtualNodes.get(file);
         if (virtualNode != null) {
             return virtualNode;
@@ -137,7 +137,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public Set<VirtualFileHistoryNode> findAncestorsFor(final IRevisionedFile file) {
+    public synchronized Set<VirtualFileHistoryNode> findAncestorsFor(final IRevisionedFile file) {
         final Multimap<IRevisionedFile, IFileHistoryNode> nodeMap = new Multimap<>();
 
         final Set<? extends IFileHistoryNode> remoteAncestors = this.remoteFileHistoryGraph.findAncestorsFor(file);
@@ -165,7 +165,7 @@ public final class VirtualFileHistoryGraph extends AbstractFileHistoryGraph {
     }
 
     @Override
-    public final Set<IFileHistoryNode> getIncompleteFlowStarts() {
+    public final synchronized Set<IFileHistoryNode> getIncompleteFlowStarts() {
         final Set<IFileHistoryNode> result = new LinkedHashSet<>();
         result.addAll(this.remoteFileHistoryGraph.getIncompleteFlowStarts());
         result.addAll(this.localFileHistoryGraph.getIncompleteFlowStarts());

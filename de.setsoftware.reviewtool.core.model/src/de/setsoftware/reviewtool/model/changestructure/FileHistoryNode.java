@@ -13,7 +13,7 @@ import de.setsoftware.reviewtool.model.api.IRevisionedFile;
  * A node can be in one of three states: "normal", deleted, or replaced (which basically means that
  * the chain of history has been broken deliberately).
  */
-public final class FileHistoryNode extends ProxyableFileHistoryNode {
+final class FileHistoryNode extends ProxyableFileHistoryNode {
 
     private static final long serialVersionUID = 7938054839176372206L;
 

@@ -8,7 +8,7 @@ import de.setsoftware.reviewtool.model.api.IMutableFileHistoryNode;
 /**
  * Implementation of a {@link IMutableFileHistoryNode} that can act as a proxy.
  */
-public abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
+abstract class ProxyableFileHistoryNode extends AbstractFileHistoryNode implements IMutableFileHistoryNode {
 
     private static final long serialVersionUID = 5772651677502483400L;
 
