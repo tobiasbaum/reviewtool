@@ -611,6 +611,10 @@ public class JiraPersistence implements ITicketConnector {
 
     private void flushErrorStream(final HttpURLConnection c) throws IOException {
         try (final InputStream s = c.getErrorStream()) {
+            if (s == null) {
+                System.err.print("cannot flush, error stream is null");
+                return;
+            }
             int r;
             while ((r = s.read()) >= 0) {
                 System.err.write(r);
