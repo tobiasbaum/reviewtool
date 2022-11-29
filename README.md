@@ -8,7 +8,7 @@ Modern IDEs already provide a lot of support in understanding source code (linki
 
 ## Installation
 
-Download the Eclipse update site zip from the "releases" page or build it yourself by calling "mvn install". Then install it to Eclipse in the usual way.
+Download the Eclipse update site zip from the "releases" page or build it yourself by calling "./mvnw install". Then install it to Eclipse in the usual way.
 
 ## Configuration
 
