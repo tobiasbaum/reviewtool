@@ -32,6 +32,7 @@ import de.setsoftware.reviewtool.base.Logger;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.IReviewDataSaveListener;
 import de.setsoftware.reviewtool.model.ITicketData;
+import de.setsoftware.reviewtool.model.ReviewModeListener;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.TicketInfo;
 import de.setsoftware.reviewtool.model.TicketLinkSettings;

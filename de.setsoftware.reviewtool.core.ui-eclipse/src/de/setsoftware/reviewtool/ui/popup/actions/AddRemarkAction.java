@@ -127,7 +127,6 @@ public class AddRemarkAction extends AbstractHandler {
                                 lineFiltered,
                                 type);
                         p.saveRemark(remark);
-                        AddRemarkAction.this.logRemarkCreated(path, type, lineFiltered);
                     } catch (final ReviewRemarkException e) {
                         throw new ReviewtoolException(e);
                     }

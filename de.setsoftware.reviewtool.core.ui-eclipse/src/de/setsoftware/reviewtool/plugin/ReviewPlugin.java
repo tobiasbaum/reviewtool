@@ -76,6 +76,7 @@ import de.setsoftware.reviewtool.model.ITicketConnector;
 import de.setsoftware.reviewtool.model.ITicketData;
 import de.setsoftware.reviewtool.model.IUserInteraction;
 import de.setsoftware.reviewtool.model.PositionTransformer;
+import de.setsoftware.reviewtool.model.ReviewModeListener;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.ChangeSourceException;
 import de.setsoftware.reviewtool.model.api.IChangeData;
@@ -114,7 +115,6 @@ import de.setsoftware.reviewtool.ui.dialogs.extensions.surveyatend.SurveyAtEndCo
 import de.setsoftware.reviewtool.ui.views.CombinedDiffStopViewer;
 import de.setsoftware.reviewtool.ui.views.FullLineHighlighter;
 import de.setsoftware.reviewtool.ui.views.ImageCache;
-import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.ui.views.StopViewConfigurator;
 import de.setsoftware.reviewtool.viewtracking.TrackerManager;
 
@@ -676,19 +676,7 @@ public class ReviewPlugin implements IReviewConfigurable {
     }
 
     private void notifyModeListener(final ReviewModeListener s) {
-        switch (this.mode) {
-        case FIXING:
-            s.notifyFixing(this.persistence);
-            break;
-        case REVIEWING:
-            s.notifyReview(this.persistence, this.toursInReview);
-            break;
-        case IDLE:
-            s.notifyIdle();
-            break;
-        default:
-            throw new AssertionError();
-        }
+        s.notifyForMode(this.mode, this.persistence, this.toursInReview);
     }
 
     public void registerModeListener(final ReviewModeListener reviewPluginModeService) {

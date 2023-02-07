@@ -58,6 +58,7 @@ import de.setsoftware.reviewtool.base.Multiset;
 import de.setsoftware.reviewtool.base.Pair;
 import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.PositionTransformer;
+import de.setsoftware.reviewtool.model.ReviewModeListener;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.FileChangeType;
 import de.setsoftware.reviewtool.model.api.IClassification;

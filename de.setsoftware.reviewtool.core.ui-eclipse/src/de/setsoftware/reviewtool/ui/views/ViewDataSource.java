@@ -1,5 +1,6 @@
 package de.setsoftware.reviewtool.ui.views;
 
+import de.setsoftware.reviewtool.model.ReviewModeListener;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.api.IStopViewer;
 

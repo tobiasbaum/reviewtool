@@ -47,6 +47,7 @@ import de.setsoftware.reviewtool.base.ReviewtoolException;
 import de.setsoftware.reviewtool.model.Constants;
 import de.setsoftware.reviewtool.model.IReviewDataSaveListener;
 import de.setsoftware.reviewtool.model.PositionTransformer;
+import de.setsoftware.reviewtool.model.ReviewModeListener;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.ChangestructureFactory;
 import de.setsoftware.reviewtool.model.changestructure.PositionLookupTable;

@@ -6,9 +6,9 @@ import java.util.Map;
 import org.eclipse.ui.AbstractSourceProvider;
 import org.eclipse.ui.ISources;
 
+import de.setsoftware.reviewtool.model.ReviewModeListener;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
-import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 
 /**
  * Services that provides and allows listening to the current review mode.

@@ -6,11 +6,11 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import de.setsoftware.reviewtool.base.Logger;
+import de.setsoftware.reviewtool.model.ReviewModeListener;
 import de.setsoftware.reviewtool.model.api.BackgroundJobExecutor;
 import de.setsoftware.reviewtool.model.changestructure.ToursInReview;
 import de.setsoftware.reviewtool.ui.api.IStopViewer;
 import de.setsoftware.reviewtool.ui.dialogs.DialogHelper;
-import de.setsoftware.reviewtool.ui.views.ReviewModeListener;
 import de.setsoftware.reviewtool.ui.views.ViewDataSource;
 
 /**
