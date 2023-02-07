@@ -1,9 +1,8 @@
-package de.setsoftware.reviewtool.ui.views;
+package de.setsoftware.reviewtool.model.changestructure;
 
 import java.lang.ref.WeakReference;
 
 import de.setsoftware.reviewtool.base.WeakListeners;
-import de.setsoftware.reviewtool.model.changestructure.Stop;
 
 /**
  * Manages the currently selected stop and listeners for its change.

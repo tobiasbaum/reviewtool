@@ -8,7 +8,9 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.part.ViewPart;
 
+import de.setsoftware.reviewtool.model.changestructure.CurrentStop;
 import de.setsoftware.reviewtool.model.changestructure.Stop;
+import de.setsoftware.reviewtool.model.changestructure.StopSelectionListener;
 import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 
 /**

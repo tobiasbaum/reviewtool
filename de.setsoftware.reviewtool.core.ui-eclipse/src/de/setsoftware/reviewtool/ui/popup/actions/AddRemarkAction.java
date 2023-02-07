@@ -28,6 +28,7 @@ import de.setsoftware.reviewtool.model.PathResource;
 import de.setsoftware.reviewtool.model.PositionTransformer;
 import de.setsoftware.reviewtool.model.ReviewStateManager;
 import de.setsoftware.reviewtool.model.api.Mode;
+import de.setsoftware.reviewtool.model.api.PositionReference;
 import de.setsoftware.reviewtool.model.remarks.RemarkType;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemark;
 import de.setsoftware.reviewtool.model.remarks.ReviewRemarkException;
@@ -36,7 +37,6 @@ import de.setsoftware.reviewtool.telemetry.Telemetry;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog;
 import de.setsoftware.reviewtool.ui.dialogs.ViewHelper;
 import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.CreateDialogCallback;
-import de.setsoftware.reviewtool.ui.dialogs.CreateRemarkDialog.PositionReference;
 
 /**
  * Action that adds a review remark (after prompting the user for details with a dialog).

@@ -18,6 +18,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 
+import de.setsoftware.reviewtool.model.api.PositionReference;
 import de.setsoftware.reviewtool.model.remarks.RemarkType;
 import de.setsoftware.reviewtool.model.remarks.ReviewRound;
 
@@ -29,15 +30,6 @@ public class CreateRemarkDialog extends Dialog {
     private static final String LINE_TEXT = "Reference: Line";
     private static final String FILE_TEXT = "Reference: File";
     private static final String GLOBAL_TEXT = "Reference: global";
-
-    /**
-     * Types of reference points for positions.
-     */
-    public static enum PositionReference {
-        LINE,
-        FILE,
-        GLOBAL
-    }
 
     /**
      * Callback that is called when the user entered the remark's information.

@@ -1,14 +1,8 @@
-package de.setsoftware.reviewtool.plugin;
+package de.setsoftware.reviewtool.model;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import de.setsoftware.reviewtool.model.EndTransition;
-import de.setsoftware.reviewtool.model.ITicketConnector;
-import de.setsoftware.reviewtool.model.ITicketData;
-import de.setsoftware.reviewtool.model.TicketInfo;
-import de.setsoftware.reviewtool.model.TicketLinkSettings;
 
 /**
  * Dummy ticket connector to be used when none is configured.

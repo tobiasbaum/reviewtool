@@ -1,6 +1,4 @@
-package de.setsoftware.reviewtool.ui.views;
-
-import de.setsoftware.reviewtool.model.changestructure.Stop;
+package de.setsoftware.reviewtool.model.changestructure;
 
 /**
  * Interface for listeners that are called when the currently selected
