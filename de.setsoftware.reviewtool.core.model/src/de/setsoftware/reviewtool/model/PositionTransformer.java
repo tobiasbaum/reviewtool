@@ -2,6 +2,7 @@ package de.setsoftware.reviewtool.model;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -145,6 +146,7 @@ public class PositionTransformer {
                     Thread.sleep(100);
                 } catch (final InterruptedException e) {
                     Thread.currentThread().interrupt();
+                    return Collections.emptyList();
                 }
             }
         }
@@ -181,25 +183,28 @@ public class PositionTransformer {
             throws InterruptedException {
 
         if (refreshRunning.compareAndSet(false, true)) {
-            final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
-            final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
-            final ConcurrentHashMap<String, PathChainNode> newCache = new ConcurrentHashMap<>();
-            for (final File path : determineRootPaths()) {
-                if (monitor.isCanceled()) {
-                    throw new InterruptedException();
+            try {
+                final ForkJoinPool pool = new ForkJoinPool((Runtime.getRuntime().availableProcessors() + 1) / 2);
+                final List<ForkJoinTask<Void>> tasks = new ArrayList<>();
+                final ConcurrentHashMap<String, PathChainNode> newCache = new ConcurrentHashMap<>();
+                for (final File path : determineRootPaths()) {
+                    if (monitor.isCanceled()) {
+                        throw new InterruptedException();
+                    }
+                    tasks.add(pool.submit(new FillCacheAction(path, newCache)));
                 }
-                tasks.add(pool.submit(new FillCacheAction(path, newCache)));
-            }
-            for (final ForkJoinTask<Void> task : tasks) {
-                if (monitor.isCanceled()) {
-                    throw new InterruptedException();
+                for (final ForkJoinTask<Void> task : tasks) {
+                    if (monitor.isCanceled()) {
+                        throw new InterruptedException();
+                    }
+                    task.join();
                 }
-                task.join();
+                pool.shutdown();
+                cache = newCache;
+                cacheRefreshTime = System.currentTimeMillis();
+            } finally {
+                refreshRunning.set(false);
             }
-            pool.shutdown();
-            cache = newCache;
-            cacheRefreshTime = System.currentTimeMillis();
-            refreshRunning.set(false);
         }
     }
 
