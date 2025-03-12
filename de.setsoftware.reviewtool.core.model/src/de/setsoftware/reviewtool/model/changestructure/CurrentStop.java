@@ -12,7 +12,7 @@ public class CurrentStop {
     private static WeakListeners<StopSelectionListener> listeners = new WeakListeners<>();
     private static WeakReference<Stop> currentStop;
 
-    static void setCurrentStop(Stop fragment) {
+    public static void setCurrentStop(Stop fragment) {
         currentStop = new WeakReference<Stop>(fragment);
         listeners.notifyListeners(l -> l.notifyStopChange(fragment));
     }
@@ -35,12 +35,12 @@ public class CurrentStop {
         return currentStop.get();
     }
 
-    static void registerListener(StopSelectionListener listener) {
+    public static void registerListener(StopSelectionListener listener) {
         listeners.add(listener);
         listener.notifyStopChange(getCurrentStop());
     }
 
-    static void unregisterListener(StopSelectionListener listener) {
+    public static void unregisterListener(StopSelectionListener listener) {
         listeners.remove(listener);
     }
 

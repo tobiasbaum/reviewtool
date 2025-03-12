@@ -3,11 +3,9 @@ Bundle-ManifestVersion: 2
 Bundle-SymbolicName: de.setsoftware.reviewtool.changesources.git;singleton:=true
 Bundle-Version: 1.35.0.qualifier
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
-Bundle-ClassPath: target/lib/org.eclipse.jgit-5.1.3.201810200350-r.jar,
- target/lib/JavaEWAH-1.1.6.jar,
- target/lib/jsch-0.1.54.jar,
- target/lib/jzlib-1.1.1.jar,
- target/lib/slf4j-api-1.7.2.jar,
+Bundle-ClassPath: target/lib/org.eclipse.jgit-6.6.1.202309021850-r.jar,
+ target/lib/JavaEWAH-1.2.3.jar,
+ target/lib/slf4j-api-1.7.36.jar,
  .
 Bundle-Name: Changesource-GIT
 Bundle-Vendor: Tobias Baum

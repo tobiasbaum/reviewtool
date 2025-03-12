@@ -473,7 +473,7 @@ public class GitChangeSourceTest {
                     "subTask Processing revision " + repo.mapToHash("commit 4") + "\n" +
                     "subTask Processing revision " + repo.mapToHash("commit 3") + "\n" +
                     "decreaseTaskNestingLevel\n" +
-                    "asking The current HEAD does not contain all commits for the ticket (other refs: [refs/heads/master]). Restrict review to current HEAD?\n" +
+                    "asking The current HEAD does not contain all commits for the ticket (other refs: [refs/heads/main]). Restrict review to current HEAD?\n" +
                     "subTask Analyzing commits...\n",
                     uiWithAll.getLog());
 
@@ -492,7 +492,7 @@ public class GitChangeSourceTest {
                     "subTask Determining relevant commits...\n" +
                     "increaseTaskNestingLevel\n" +
                     "decreaseTaskNestingLevel\n" +
-                    "asking The current HEAD does not contain all commits for the ticket (other refs: [refs/heads/master]). Restrict review to current HEAD?\n" +
+                    "asking The current HEAD does not contain all commits for the ticket (other refs: [refs/heads/main]). Restrict review to current HEAD?\n" +
                     "subTask Analyzing commits...\n",
                     uiOnlyHead.getLog());
 
@@ -521,7 +521,7 @@ public class GitChangeSourceTest {
             repo.changeBinaryFile("B").commit("TIC-2: commit 3");
             repo.createAndSwitchBranch(repo.mapToHash("commit 2"), "myBranch");
             repo.changeBinaryFile("C").commit("TIC-2: commit 4 (in another branch)");
-            repo.merge("myBranch", "master");
+            repo.merge("myBranch", "main");
             repo.changeBinaryFile("A").commit("TIC-2: commit 6");
 
             final GitChangeSource src = createCs(repo);
@@ -572,7 +572,7 @@ public class GitChangeSourceTest {
             repo.addBinaryFile("B").commit("TIC-2: commit 2");
             repo.createAndSwitchBranch(repo.mapToHash("commit 1"), "myBranch");
             repo.addBinaryFile("C").commit("TIC-2: commit 3 (in another branch)");
-            repo.merge("myBranch", "master");
+            repo.merge("myBranch", "main");
             repo.changeBinaryFile("A").commit("TIC-2: commit 5");
             repo.changeBinaryFile("B").commit("TIC-2: commit 6");
             repo.changeBinaryFile("C").commit("TIC-2: commit 7");

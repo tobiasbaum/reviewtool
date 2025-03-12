@@ -51,6 +51,11 @@ public class TestdataRepo {
             }
 
             @Override
+            public FileBasedConfig openJGitConfig(Config arg0, FS arg1) {
+                return DEFAULT_SYSTEM_READER.openJGitConfig(arg0, arg1);
+            }
+
+            @Override
             public String getenv(String arg0) {
                 return DEFAULT_SYSTEM_READER.getenv(arg0);
             }
