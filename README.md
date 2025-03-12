@@ -12,7 +12,7 @@ Download the Eclipse update site zip from the "releases" page or build it yourse
 
 ## Configuration
 
-CoRT is usually configure for a whole team. Therefore, it has an XML configuration file that can be committed to version control and that is referenced from Eclipse's settings dialog.
+CoRT is usually configured for a whole team. Therefore, it has an XML configuration file that can be committed to version control and that is referenced from Eclipse's settings dialog.
 
 - The settings dialog can be found under "Window -> Preferences -> Reviewtool". You need to reference a configuration file there.
 - The configuration file can contain placeholders, for example for user names. These need to be configured in the settings dialog, too.
